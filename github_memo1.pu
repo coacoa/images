@@ -1,0 +1,27 @@
+@startuml
+title GitHub SSH接続でリポジトリをクローンする流れ
+
+actor User
+participant "ローカルPC" as PC
+participant "GitHub" as GH
+
+== SSHキーの生成 ==
+User -> PC : ssh-keygen 実行
+PC -> PC : 鍵ペア作成（id_ed25519, id_ed25519.pub）
+
+== 公開鍵の登録 ==
+User -> PC : 公開鍵コピー（cat ~/.ssh/id_ed25519.pub）
+User -> GH : GitHubの設定で\nSSHキーを追加
+
+== 接続確認 ==
+User -> PC : ssh -T git@github.com
+PC -> GH : SSH通信テスト
+GH --> PC : 認証成功メッセージ
+
+== クローン実行 ==
+User -> PC : git clone git@github.com:xxx/yyy.git
+PC -> GH : リポジトリにアクセス
+GH --> PC : データ転送
+PC --> User : クローン成功
+
+@enduml

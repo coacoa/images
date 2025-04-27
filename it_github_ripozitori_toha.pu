@@ -1,0 +1,34 @@
+@startuml
+title Git リポジトリの概念図
+
+package "普通のフォルダ" {
+  folder "プロジェクトフォルダ" {
+    file "main.py"
+    file "README.md"
+  }
+  note right
+    ただのファイルの集まり。
+    履歴は記録されない。
+  end note
+}
+
+package "Gitリポジトリ" {
+  folder "ローカルリポジトリ (.gitあり)" {
+    file "main.py"
+    file "README.md"
+    database ".git (履歴データ)"
+  }
+  note right
+    Git対応のフォルダ。\n
+    変更履歴が保存される！
+  end note
+}
+
+actor "開発者 (You)" as Dev
+cloud "GitHubなど (リモートリポジトリ)" as Remote
+
+Dev --> "ローカルリポジトリ (.gitあり)" : 作業・変更・コミット
+"ローカルリポジトリ (.gitあり)" --> Remote : push（変更を共有）
+Remote --> "ローカルリポジトリ (.gitあり)" : pull（最新を取得）
+
+@enduml

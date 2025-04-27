@@ -1,0 +1,36 @@
+@startuml
+title NixOS上での Hugo + Python venv + Docker 運用構成
+
+actor User
+
+node "NixOS Host" {
+  folder "ブログフォルダ\n~/blog" as BlogDir
+  component "Hugo (ネイティブ)" as HugoNative
+  component "Python venv\n(.venv)" as Venv
+}
+
+cloud "Podman Container" {
+  folder "/site" as ContainerDir
+  component "Hugo (Docker)" as HugoDocker
+}
+
+User --> HugoNative : hugo server
+User --> Venv : source .venv/bin/activate\npython summarize.py
+User --> HugoDocker : podman run -v ~/blog:/site ...
+
+HugoNative --> BlogDir : 直接参照
+Venv --> BlogDir : スクリプトからアクセス
+ContainerDir --> BlogDir : bind mount
+
+note right of HugoNative
+ホストに直接インストールされたHugo\n(Nixなどで管理)
+end note
+
+note right of Venv
+Pythonだけ分離される仮想環境\n依存管理に強い
+end note
+
+note right of HugoDocker
+OSごと分離した環境\nCI/CDや本番再現性に最適
+end note
+@enduml

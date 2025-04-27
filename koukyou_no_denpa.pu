@@ -1,0 +1,41 @@
+@startuml
+skinparam monochrome true
+skinparam packageStyle rectangle
+skinparam defaultTextAlignment center
+
+package "公共の電波（周波数帯）" {
+  [総務省] as MIC
+  [放送局] as Broadcasters
+  [通信事業者] as Telecoms
+  [一般企業・自治体] as Users
+  [市民・視聴者] as Citizens
+  [政治家・政党] as Politicians
+  [BPO／第三者機関] as Watchdogs
+}
+
+MIC --> Broadcasters : 放送免許の付与
+MIC --> Telecoms : 通信帯域の割当（入札）
+MIC --> Users : 業務用無線などの許可
+Broadcasters --> Citizens : テレビ・ラジオ放送
+Telecoms --> Citizens : 携帯・インターネット
+Broadcasters --> Politicians : 政治報道・番組出演
+Citizens --> Watchdogs : 苦情・意見
+Watchdogs --> MIC : 勧告・調査報告
+
+note right of Broadcasters
+  ● 公共の電波で\n
+    民間企業が収益化\n
+  ● 放送免許は極めて限られる\n
+  ● 偏向報道の疑念も
+end note
+
+note right of MIC
+  ● 電波行政の透明性が課題\n
+  ● 既得権化した免許制度
+end note
+
+note right of Citizens
+  ● 見る／聞くしかない立場\n
+  ● 「電波オークション」議論に注目
+end note
+@enduml

@@ -1,0 +1,28 @@
+@startuml
+title Git の基本構成と `origin` / `main` の関係
+
+actor "開発者 (You)" as Dev
+
+package "ローカル環境" {
+  [ローカルリポジトリ]
+  [main ブランチ] --> [ローカルリポジトリ]
+  [feature-xxx ブランチ] --> [ローカルリポジトリ]
+}
+
+package "リモート環境" {
+  [GitHub リポジトリ] as origin
+  [本家リポジトリ] as upstream
+}
+
+Dev --> [main ブランチ] : commit
+[main ブランチ] --> origin : push (git push origin main)
+origin --> [main ブランチ] : pull (git pull origin main)
+
+upstream --> [main ブランチ] : fetch/merge (git fetch upstream)
+
+note right of [feature-xxx ブランチ]
+  新機能用のブランチ
+  git checkout -b feature-xxx
+end note
+
+@enduml

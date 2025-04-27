@@ -1,0 +1,60 @@
+@startuml
+title .git フォルダの内部構造と役割
+
+package ".git/" {
+  class HEAD
+  class config
+  class description
+  class index
+
+  package "objects/" {
+    class "コミットオブジェクト"
+    class "ツリーオブジェクト"
+    class "ブロブ（ファイル内容）"
+  }
+
+  package "refs/" {
+    class "heads/main"
+    class "tags/v1.0"
+  }
+
+  package "logs/" {
+    class "HEADの移動履歴"
+  }
+}
+
+' 説明をnoteとして追加
+note right of HEAD
+  現在のブランチ情報を保持
+  例：ref: refs/heads/main
+end note
+
+note right of config
+  Gitリポジトリ固有の設定
+  （リモートURLなど）
+end note
+
+note right of description
+  リポジトリの説明
+end note
+
+note right of index
+  ステージにある変更情報
+  git add で登録された内容
+end note
+
+note right of objects/
+  Gitの全履歴がここに保存
+  各オブジェクトはハッシュ名で管理
+end note
+
+note right of refs/
+  ブランチやタグの参照情報
+  名前 → ハッシュへのリンク
+end note
+
+note right of logs/
+  コミットやHEADの履歴ログ
+end note
+
+@enduml

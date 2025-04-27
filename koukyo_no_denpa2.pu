@@ -1,0 +1,38 @@
+@startuml
+skinparam monochrome true
+skinparam defaultTextAlignment center
+skinparam packageStyle rectangle
+
+' 上から下へ、支配関係・影響力を表現
+rectangle "総務省（電波行政）" as MIC {
+}
+
+rectangle "放送局（テレビ・ラジオ）\n通信キャリア（携帯・インターネット）" as Media {
+}
+
+rectangle "政治家・スポンサー\n（番組内容への影響力）" as Power {
+}
+
+rectangle "市民・視聴者（情報の受け手）" as People {
+}
+
+MIC -down-> Media : 電波割当・免許制
+Power -left-> Media : 報道圧力・広告主影響
+Media -down-> People : 情報・番組を提供
+
+note right of MIC
+  ● 電波は国の資産\n
+  ● 割当権を握る
+end note
+
+note right of Media
+  ● 電波を使って\n商業放送・利益化\n
+  ● 免許が既得権化
+end note
+
+note right of People
+  ● 放送を「選ぶ」しかできない\n
+  ● 電波は公共財だが活用できない
+end note
+
+@enduml

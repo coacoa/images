@@ -1,0 +1,29 @@
+@startuml
+skinparam componentStyle rectangle
+
+title Hugoベースの自動ブログ生成フロー
+
+actor User
+rectangle "キーワードリスト\n(keywords.yaml)" as Keywords
+rectangle "記事データ\n(content/drafts/*.md)" as Drafts
+
+User --> Keywords : 気になるワードを登録
+
+rectangle "記事収集スクリプト\n(fetch_articles.py)" as Fetcher
+rectangle "要約・変換スクリプト\n(summarize_and_convert.py)" as Summarizer
+rectangle "アフィリエイト挿入\n(add_affiliates.py)" as Affiliate
+
+Fetcher --> Keywords : キーワード読み込み
+Fetcher --> Fetcher : ニュース収集
+Fetcher --> Summarizer : 要約依頼
+Summarizer --> Affiliate : 要約文＋タグ送信
+Affiliate --> Drafts : Markdown保存（draft:true）
+
+User --> Drafts : 記事チェック
+User --> Drafts : draft:false に変更
+
+rectangle "Hugoビルド\n(hugo)" as Hugo
+Hugo --> Drafts : 公開記事読み込み
+Hugo --> "公開サーバ\n(GitHub Pages等)" : ビルド＆デプロイ
+
+@enduml

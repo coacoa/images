@@ -1,0 +1,21 @@
+@startuml
+skinparam monochrome true
+skinparam defaultTextAlignment center
+skinparam packageStyle rectangle
+
+rectangle "オールドメディア\n（テレビ・新聞）" as OldMedia
+
+rectangle "ネットメディア\n（SNS・YouTube・ブログ）" as NetMedia
+
+rectangle "市民・ユーザー" as Citizens
+
+OldMedia -down-> Citizens : 一方向の情報発信
+NetMedia -down-> Citizens : 拡散・双方向
+
+Citizens -up-> NetMedia : 投稿・コメント・拡散
+Citizens -up-> OldMedia : クレーム・信頼離れ
+
+OldMedia -right-> NetMedia : 批判（誤情報・信頼性）
+NetMedia -left-> OldMedia : 反論（偏向・既得権）
+
+@enduml

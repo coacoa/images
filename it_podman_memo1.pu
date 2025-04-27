@@ -1,0 +1,25 @@
+@startuml
+start
+
+:イメージを取得する;
+:podman pull イメージ名;
+
+:コンテナを作成＆実行;
+:podman run [options] イメージ名;
+
+if (終了した？) then (Yes)
+  :ログを確認;
+  :podman logs コンテナ名;
+
+  :不要なら削除;
+  :podman rm コンテナ名;
+else (No)
+  :コンテナを操作;
+  :podman exec -it コンテナ名 bash;
+endif
+
+:不要なイメージやコンテナの掃除;
+:podman system prune;
+
+stop
+@enduml
