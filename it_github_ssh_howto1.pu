@@ -1,0 +1,32 @@
+@startuml
+package "Local PC" {
+  :Generate SSH key with ssh-keygen;
+  ' Command: ssh-keygen -t ed25519 -C "your_email@example.com"
+  
+  :Create private key and public key in ~/.ssh;
+  ' Keys: id_ed25519 (private), id_ed25519.pub (public)
+}
+
+package "GitHub" {
+  :Login to GitHub;
+  :Go to Settings -> SSH and GPG keys;
+  :Add new SSH key and paste public key;
+  ' Command: Copy content of ~/.ssh/id_ed25519.pub
+}
+
+package "Git Config" {
+  :Set user name and email with git config;
+  ' Command: git config --global user.name "Your Name"
+  
+  :Test connection using ssh -T git@github.com;
+  ' Command: ssh -T git@github.com
+}
+
+if (Connection successful?) then (yes)
+  :Ready for Git operations;
+else (no)
+  :Review SSH keys and settings;
+endif
+
+stop
+@enduml
