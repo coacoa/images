@@ -1,0 +1,25 @@
+@startuml
+package "NixOS Environment" {
+  :Install Hugo with nix-env;
+  :Clone Hugo site template from GitHub;
+}
+
+package "Hugo Site Generation" {
+  :Run Hugo command to generate site;
+  :Create static files for GitHub Pages;
+  :' Command: hugo --destination=public
+}
+
+package "GitHub Pages Deployment" {
+  :Push generated site to GitHub repository;
+  :Deploy static files to GitHub Pages;
+  :' Command: git push origin main
+}
+
+package "Automation with n8n" {
+  :Trigger site generation process;
+  :Push updates automatically to GitHub;
+}
+
+stop
+@enduml
