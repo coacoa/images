@@ -1,0 +1,42 @@
+@startuml
+package "Local PC" {
+  [Working Directory]
+  [Staging Area_Index]
+  [Local Repository]
+}
+
+package ".git フォルダ内部" {
+  [indexファイル]
+  [objectsディレクトリ]
+  [refsディレクトリ]
+}
+
+[Working Directory] -[#0000FF,dashed]-> [Staging Area_Index] : git add
+[Staging Area_Index] -[#00AA00,dashed]-> [Local Repository] : git commit
+[Local Repository] --> [indexファイル] : 更新
+[Local Repository] --> [objectsディレクトリ] : オブジェクト作成
+[Local Repository] --> [refsディレクトリ] : 参照情報更新
+
+' メモは separateにして、note as を使う
+note as N1
+Working Directory:
+普通に見えるフォルダ
+ファイル本体
+end note
+
+note as N2
+Staging Area (Index):
+.git/indexに存在
+git addで登録
+end note
+
+note as N3
+Local Repository:
+.git/objectsに保存
+git commitで追加
+end note
+
+[Working Directory] .. N1
+[Staging Area_Index] .. N2
+[Local Repository] .. N3
+@enduml
