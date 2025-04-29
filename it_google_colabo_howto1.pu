@@ -1,0 +1,39 @@
+@startuml
+actor User
+participant "Google Colab" as Colab
+participant "Podman Container" as Container
+participant "コンテナ内のスクリプト" as Script
+database "Google Drive (optional)" as Drive
+
+note right of Colab
+  ■ 無料版ストレージ目安
+    - 約30〜70GB利用可能
+  ■ RAM目安
+    - 12〜15GB
+  ■ セッション制限
+    - 90分〜最大12時間
+    - 放置で早期切断あり
+end note
+
+User -> Colab : Colabノートブック開く
+User -> Colab : Podmanインストール (apt installなど)
+User -> Colab : 動画ファイルアップロード or Driveマウント
+note right of Drive
+  ■ Google Drive経由なら
+    - アカウント容量に依存（通常15GB無料）
+    - 大容量ファイル対応可
+end note
+
+Colab -> Container : Podmanでコンテナ起動
+Container -> Script : 字幕付けスクリプト実行
+note right of Script
+  ■ 処理時間注意
+    - 長時間ジョブはセッション切断リスクあり
+  ■ ファイルサイズ注意
+    - 出力サイズ大きいとストレージ圧迫
+end note
+
+Script -> Container : 字幕入り動画を出力
+Container -> Colab : 出力ファイルをホストにコピー
+Colab -> User : 完成したファイルをダウンロード
+@enduml
