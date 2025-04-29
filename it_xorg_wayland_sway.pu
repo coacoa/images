@@ -1,0 +1,30 @@
+@startuml
+!theme spacelab
+
+package "ディスプレイ サーバー層" {
+    [Xorg] --> "従来の GUI アプリ"
+    [Wayland] --> "Wayland 対応アプリ"
+    [Wayland] --> [XWayland]
+    [XWayland] --> "従来の GUI アプリ"
+}
+
+package "ウィンドウマネージャ／コンポジタ層" {
+    [i3] --> [Xorg]
+    [Sway] --> [Wayland]
+}
+
+package "ユーザー操作" {
+    [GUI アプリ]
+    [GUI アプリ] --> [i3]
+    [GUI アプリ] --> [Sway]
+}
+
+note right of [XWayland]
+X11 アプリを Wayland 上で動かす互換レイヤー
+end note
+
+note right of [Sway]
+i3 と設定互換の Wayland ウィンドウマネージャ
+end note
+
+@enduml
