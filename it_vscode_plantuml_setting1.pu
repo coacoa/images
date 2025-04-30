@@ -1,0 +1,45 @@
+@startuml
+title Flatpak版 VS Code における PlantUML 設定の反映
+
+actor User as "ユーザー"
+
+== 設定ファイルのパス確認 ==
+
+User -> System : VS Code が Flatpak 版か確認
+note right
+ Flatpak 版であれば
+ 設定ファイルは通常と異なる
+end note
+
+User -> FileSystem : ~/.var/app/com.visualstudio.code/config/Code/User/settings.json を確認
+
+alt settings.json がない場合
+    User -> FileSystem : ディレクトリを作成
+    User -> FileSystem : 空の settings.json を作成
+end alt
+
+== 設定の追加 ==
+
+User -> settings.json : 以下の内容を追加
+note right
+{
+  "plantuml.exportOverwrite": true,
+  "plantuml.exportOutDir": "dist"
+}
+end note
+
+== 結果 ==
+
+note over settings.json
+この設定により：
+
+- PlantUML でエクスポートしたSVG/PNGが
+  連番 (`-1`, `-2`) で増えるのを防止
+
+- 出力先が `dist/` フォルダに固定され、整理しやすくなる
+end note
+
+User -> VSCode : VS Code を再起動
+VSCode -> PlantUML : 設定を読み込み
+
+@enduml
