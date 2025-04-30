@@ -1,0 +1,45 @@
+@startuml
+title PETボトルを使った3Dプリント実験の状況
+
+actor User as "ユーザー"
+participant "3Dプリンタ" as Printer
+participant "プリンターヘッド" as Head
+
+== 実験開始 ==
+User -> Printer : PETボトル素材での出力を指示
+Printer -> Head : 高温設定（例：270℃）に加熱
+
+== 出力実行 ==
+Head -> Printer : 加熱完了報告
+Printer -> User : 出力開始（実験的な造形）
+
+== トラブル発生 ==
+note right of Head
+ おそらく高温の影響で
+ ヘッド内部に損傷
+end note
+Head -> Printer : 故障発生（出力不能）
+Printer -> User : 出力停止（エラー通知）
+
+== 状況確認と挫折 ==
+User -> Head : 故障確認（焦げ付きや詰まり）
+note right of User
+ ヘッド交換がとても面倒だった…
+ 工具が必要で、分解に時間がかかった
+end note
+User -> User : 「たぶん高温設定が原因だ…」
+User -> User : 一旦実験を中断（挫折）
+
+== まとめ ==
+note over User
+【良かった点】
+- PETボトルの再利用という発想を実践できた
+- 材料供給コストがほぼゼロ
+
+【悪かった点】
+- 高温設定が必要でリスクが高い
+- プリンタヘッドがすぐに壊れた
+- ヘッド交換が非常に手間だった
+end note
+
+@enduml
