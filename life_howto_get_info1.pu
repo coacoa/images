@@ -1,0 +1,24 @@
+@startuml
+' アクティビティ図として明示
+' この宣言により、split などの構文が使えるようになる
+!pragma layout smetana
+skinparam style strictuml
+
+start
+
+split
+    :【重い情報・ストレスがたまる】;
+    :社会問題;
+    :時事ニュース;
+    :政治・経済;
+    :炎上・SNS議論;
+split again
+    :【リラックス・趣味系】;
+    :自然・旅の話;
+    :趣味（料理・音楽）;
+    :軽い雑談・ブログ;
+    :フィクションや創作;
+endsplit
+
+stop
+@enduml
