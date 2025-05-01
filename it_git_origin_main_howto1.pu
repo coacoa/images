@@ -1,0 +1,28 @@
+@startuml
+!define RECTANGLE class
+skinparam class {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+}
+
+package "あなたのPC (ローカル)" {
+    RECTANGLE LocalRepo {
+        + main ブランチ
+        + 作業ディレクトリ
+        + コミット履歴
+    }
+}
+
+package "GitHubなどのリモート (origin)" {
+    RECTANGLE RemoteRepo {
+        + main ブランチ
+        + リモートの履歴
+    }
+}
+
+LocalRepo -right-> RemoteRepo : git push origin main
+note on link
+ローカルの main ブランチの変更を\nリモート (origin) の main に送信
+end note
+@enduml
