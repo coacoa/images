@@ -1,38 +1,30 @@
 @startuml
 title 最近のPCにおけるOSインストール可否とBIOS設定の関係
 
-package "PC設定と要因" {
-    class "BIOSモード" {
-        +UEFI
-        +Legacy
-    }
+top to bottom direction
 
-    note right of "BIOSモード::UEFI"
+package "PC設定と要因" {
+
+    class "BIOSモード (UEFI)"
+    note right of "BIOSモード (UEFI)"
       現代的なファームウェア方式。高速起動対応。
       GPTパーティションとセットで使われる。
     end note
 
-    note right of "BIOSモード::Legacy"
+    class "BIOSモード (Legacy)"
+    note right of "BIOSモード (Legacy)"
       旧来のBIOS互換モード。
       一部の古いOSやツールで使用。
     end note
 
-    class "セキュアブート" {
-        +有効
-        +無効
-    }
-
-    note right of "セキュアブート::有効"
+    class "セキュアブート (有効)"
+    note right of "セキュアブート (有効)"
       Microsoftなどの署名付きOSしか起動不可。
       セキュリティは高いがLinuxでは障害になることも。
     end note
 
-    class "TPM" {
-        +有効
-        +無効
-    }
-
-    note right of "TPM::有効"
+    class "TPM (有効)"
+    note right of "TPM (有効)"
       Trusted Platform Module。
       Windows 11で必須。
       セキュリティ機能や暗号化に使用。
@@ -43,9 +35,16 @@ package "PC設定と要因" {
         +Linux (Ubuntuなど)
     }
 
-    "BIOSモード" --> "OSインストール可否"
-    "セキュアブート" --> "OSインストール可否"
-    "TPM" --> "OSインストール可否"
+    ' 🔽 レイアウト強制用の透明リンク（白色）
+    "BIOSモード (UEFI)" -down-> "BIOSモード (Legacy)" #white
+    "BIOSモード (Legacy)" -down-> "セキュアブート (有効)" #white
+    "セキュアブート (有効)" -down-> "TPM (有効)" #white
+    "TPM (有効)" -down-> "OSインストール可否" #white
+
+    "BIOSモード (UEFI)" --> "OSインストール可否"
+    "BIOSモード (Legacy)" --> "OSインストール可否"
+    "セキュアブート (有効)" --> "OSインストール可否"
+    "TPM (有効)" --> "OSインストール可否"
 }
 
 package "OSごとの要件" {
