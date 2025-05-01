@@ -1,0 +1,19 @@
+@startuml
+title Git Alias Flow from ~/.gitconfig
+
+actor Developer
+
+Developer -> GitConfig : ~/.gitconfig defines aliases
+note right of GitConfig
+  [alias]
+  acp = !git add . && git commit -m "$1" && git push
+end note
+
+Developer -> Terminal : git acp "message"
+Terminal -> Git : run git add .
+Terminal -> Git : run git commit -m "message"
+Terminal -> Git : run git push
+
+Git -> RemoteRepo : push to origin/main
+
+@enduml
