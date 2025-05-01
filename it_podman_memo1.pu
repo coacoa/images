@@ -1,25 +1,44 @@
 @startuml
+skinparam packageStyle rectangle
+skinparam defaultTextAlignment center
+
 start
 
-:イメージを取得する;
-:podman pull イメージ名;
+package "1. 環境準備" {
+  :Dockerfile を用意;
+  :requirements.txt を作成;
+}
 
-:コンテナを作成＆実行;
-:podman run [options] イメージ名;
+package "2. イメージのビルド" {
+  :podman build -t イメージ名 .;
+}
 
-if (終了した？) then (Yes)
-  :ログを確認;
-  :podman logs コンテナ名;
+package "3. イメージの確認（任意）" {
+  :podman images;
+}
 
-  :不要なら削除;
-  :podman rm コンテナ名;
+package "4. コンテナの作成・実行" {
+  :podman run [options] イメージ名;
+}
+
+if (コンテナ終了？) then (Yes)
+  package "5A. 終了後の処理" {
+    :ログ確認;
+    :podman logs コンテナ名;
+
+    :不要なら削除;
+    :podman rm コンテナ名;
+  }
 else (No)
-  :コンテナを操作;
-  :podman exec -it コンテナ名 bash;
+  package "5B. 実行中の操作" {
+    :中に入る;
+    :podman exec -it コンテナ名 bash;
+  }
 endif
 
-:不要なイメージやコンテナの掃除;
-:podman system prune;
+package "6. お掃除（任意）" {
+  :podman system prune;
+}
 
 stop
 @enduml
