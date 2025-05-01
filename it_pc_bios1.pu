@@ -1,0 +1,68 @@
+@startuml
+title 最近のPCにおけるOSインストール可否とBIOS設定の関係
+
+package "PC設定と要因" {
+    class "BIOSモード" {
+        +UEFI
+        +Legacy
+    }
+
+    note right of "BIOSモード::UEFI"
+      現代的なファームウェア方式。高速起動対応。
+      GPTパーティションとセットで使われる。
+    end note
+
+    note right of "BIOSモード::Legacy"
+      旧来のBIOS互換モード。
+      一部の古いOSやツールで使用。
+    end note
+
+    class "セキュアブート" {
+        +有効
+        +無効
+    }
+
+    note right of "セキュアブート::有効"
+      Microsoftなどの署名付きOSしか起動不可。
+      セキュリティは高いがLinuxでは障害になることも。
+    end note
+
+    class "TPM" {
+        +有効
+        +無効
+    }
+
+    note right of "TPM::有効"
+      Trusted Platform Module。
+      Windows 11で必須。
+      セキュリティ機能や暗号化に使用。
+    end note
+
+    class "OSインストール可否" {
+        +Windows 10/11
+        +Linux (Ubuntuなど)
+    }
+
+    "BIOSモード" --> "OSインストール可否"
+    "セキュアブート" --> "OSインストール可否"
+    "TPM" --> "OSインストール可否"
+}
+
+package "OSごとの要件" {
+    class "Windows要件" {
+        +UEFI必須
+        +セキュアブート推奨
+        +TPM 2.0必須 (Win11)
+    }
+
+    class "Linux要件" {
+        +UEFIまたはLegacy対応
+        +セキュアブート無効が推奨の場合あり
+        +TPM不要
+    }
+
+    "Windows要件" --> "OSインストール可否"
+    "Linux要件" --> "OSインストール可否"
+}
+
+@enduml
