@@ -1,0 +1,21 @@
+@startuml
+actor Developer
+participant "Host PC" as Host
+participant "Dockerfile + Context" as BuildContext
+participant "Podman Image" as Image
+participant "Podman Container" as Container
+participant "Prebuilt Container Image" as PrebuiltImage
+
+== 現状（毎回ビルドして時間がかかる） ==
+Developer -> Host : edit add_subtitles_comp.py
+Developer -> BuildContext : docker build . -t add_subtitles_comp
+BuildContext -> Image : create image
+Image -> Container : podman run add_subtitles_comp
+Container -> Container : execute script
+
+== 改善案（スクリプトだけマウントして即実行） ==
+Developer -> Host : edit add_subtitles_comp.py
+Developer -> Host : podman run -v ./script:/app add_subtitles_comp python /app/script.py
+Host -> PrebuiltImage : mount script from host
+PrebuiltImage -> Container : execute script
+@enduml

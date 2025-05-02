@@ -1,0 +1,26 @@
+@startuml
+actor User
+participant "収入確認" as IncomeCheck
+participant "課税判定" as TaxCheck
+participant "確定申告" as TaxReturn
+
+User -> IncomeCheck: フリマ収入を確認
+IncomeCheck -> TaxCheck: 年間20万円を超えたか？
+alt No（20万円以下）
+    TaxCheck -> User: 確定申告は不要
+else Yes（20万円超）
+    TaxCheck -> TaxReturn: 課税対象か判定
+    alt 売却益が課税対象（営利目的など）
+        TaxReturn -> User: 確定申告が必要
+    else 非課税対象（生活用動産など）
+        TaxReturn -> User: 確定申告は不要
+    end
+end
+
+note right of TaxReturn
+生活用動産とは？\n
+→ 日常生活で使用していたもの\n
+（例）古着・家具・家電・カバンなど\n
+※美術品・高額時計・宝石などは除く
+end note
+@enduml

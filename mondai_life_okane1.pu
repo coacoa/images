@@ -1,0 +1,30 @@
+@startuml
+actor User
+participant "貯金状況" as Savings
+participant "年間支出" as Expenses
+participant "ライフプラン計算" as Plan
+participant "対策検討" as Strategies
+
+User -> Savings: 貯金 2,000万円
+User -> Expenses: 年間赤字 150万円
+Expenses -> Plan: 2000 ÷ 150 = 約13年
+Plan -> User: 約63歳まで維持可能
+
+alt 年金が65歳から支給される
+    Strategies -> User: 2年の資金ギャップを対策する必要あり
+else 年金なし or 遅延
+    Strategies -> User: より長期対策が必要
+end
+
+User -> Strategies: 対策を検討
+Strategies -> User: 対策案を提示
+
+note right of Strategies
+🔹 対策案一覧\n
+1. 支出見直し → 赤字を月1万円減らす\n
+2. 軽い副収入（月2万円）で年収+24万円\n
+3. 年金開始後（65歳～）の収支確認\n
+4. 貯金の一部を低リスク運用（例：利回り1〜2%）\n
+5. 家計の記録と予測で見通しを可視化
+end note
+@enduml

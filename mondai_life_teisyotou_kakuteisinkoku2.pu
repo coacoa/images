@@ -1,0 +1,17 @@
+@startuml
+actor User
+participant "修理して使用" as UseRepair
+participant "販売" as Sell
+participant "課税判定" as TaxCheck
+participant "確定申告" as TaxReturn
+
+User -> UseRepair: 中古PC等を安く入手・修理・一時使用
+UseRepair -> Sell: フリマで販売
+Sell -> TaxCheck: 年間所得と営利性を確認
+alt 所得20万円以下、営利性弱い
+    TaxCheck -> User: 確定申告は不要（生活補助の範囲）
+else 所得20万円超、営利性あり
+    TaxCheck -> TaxReturn: 雑所得として処理
+    TaxReturn -> User: 確定申告が必要
+end
+@enduml
