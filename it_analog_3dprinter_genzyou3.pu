@@ -1,0 +1,81 @@
+@startuml
+skinparam sequenceParticipant underline
+skinparam sequenceMessageAlign center
+skinparam ParticipantPadding 20
+
+actor "ユーザー" as User
+participant "フィラメント準備" as Filament
+participant "デザイン作成" as Design
+participant "プリント準備" as PrintReady
+participant "プリント" as Printing
+participant "完成品" as Finished
+participant "現在の状態\n(未使用)" as Current
+participant "再出発の検討" as Restart
+
+== 当初の目的 ==
+
+User -> Design : 3Dソフトを使いたい
+User -> Filament : ペットボトルを再利用したい
+
+note right of Design
+当初の目的：
+- ペットボトル再利用
+- 3Dソフト体験
+- 物作りを始めたい
+end note
+
+== 作業フロー ==
+
+User -> Filament : フィラメント準備
+note right of Filament
+ペットボトルから作成：
+- 手間がかかる
+- 失敗しやすい
+- 加工中に臭いや健康リスクも
+end note
+
+Filament -> Design : 素材準備完了
+Design -> PrintReady : デザイン作成・調整
+PrintReady -> Printing : データ転送・プリント開始
+
+note right of PrintReady
+面倒な点：
+- PCから3Dプリンタへのデータ移動が煩雑
+end note
+
+Printing -> Finished : プリント完了
+
+note left of Printing
+悪かった点：
+- フィラメント生成が困難
+- 騒音が気になる
+- 時間がかかる
+- 失敗が多い
+end note
+
+== 結果と評価 ==
+
+note right of Finished
+良かった点：
+- クリエイティブな体験
+- リサイクルによる環境貢献
+- 物作りの体験
+end note
+
+Finished -> Current : 実際は未活用に
+
+== 再出発の検討 ==
+
+Current -> Restart : 活用方法の再考
+
+note right of Restart
+再利用案：
+- 小物・実用品の試作
+- 設計だけ外注
+- 静音小型機の導入
+- 市販フィラメントへ切替
+- 成功条件の見直し
+- 写真・記録で可視化
+end note
+
+@enduml
