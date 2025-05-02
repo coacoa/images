@@ -1,0 +1,62 @@
+@startuml
+actor "通報者" as Caller
+participant "警察・消防" as Rescue
+participant "自治体（市・県）" as Gov
+participant "地元企業\n（秋葉自動車など）" as Locals
+participant "テレビ報道" as TV
+participant "ネット世論" as Net
+participant "遺族" as Family
+participant "保険・補償機関" as Insure
+
+== 初動対応 ==
+
+Caller -> Rescue : 陥没事故を通報
+Rescue -> Gov : 情報連携・初動対応要請
+Gov -> Rescue : 「安全確認を優先せよ」と指示
+Rescue -> Locals : （間接的に）現場対応が遅延
+
+Locals -> Rescue : 先行して現場で安全確保
+note right of Locals : 地元企業が最初に現場に駆けつけた
+
+Rescue -> Caller : 救助準備（スロープ設置など）
+
+== メディアと世論 ==
+
+TV -> TV : 危険性・現場状況を報道（批判は控えめ）
+TV -> Rescue : 救助活動の様子を伝える
+
+Net -> Rescue : 「対応が遅い」と批判
+Net -> Gov : 「判断ミス」「無策」と強く非難
+
+Gov -> TV : 会見で「安全優先の判断」と釈明
+
+== 今後の課題 ==
+
+note left of Gov
+【老朽インフラ対策】
+- 地中空洞調査の徹底
+- インフラ老朽化データの統合管理
+- 優先順位をつけた更新
+
+【再発防止策】
+- AI/IoTによるモニタリング導入
+- 緊急対応手順の再整備と訓練
+- 指揮系統の見直しと即時判断力強化
+end note
+
+== 被害者補償と責任問題 ==
+
+Family -> Gov : 責任の所在と補償を求める
+Gov -> Insure : 保険制度の確認・協議
+Insure -> Family : 補償内容の説明（不十分との指摘あり）
+
+Net -> Gov : 「説明責任が不明確」と批判
+Gov -> Family : 遅れて謝罪・対応方針表明
+
+note right of Family
+補償範囲・責任主体・
+遺族への説明遅れが
+大きな社会的課題に
+end note
+
+@enduml
