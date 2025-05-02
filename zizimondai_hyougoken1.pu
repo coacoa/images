@@ -1,0 +1,68 @@
+@startuml
+actor 県民 as Kenmin
+participant "兵庫県知事\n（齋藤元彦）" as Chiji
+participant "県民局長\n（PC使用者）" as Kyokuchou
+participant "百条委員会" as Hyakujou
+participant "オールドメディア\n（TV・新聞など）" as OldMedia
+participant "SNS・ネットメディア" as SNS
+participant "県議会・政党" as Seiji
+participant "有識者・識者" as Yushikisha
+participant "全国の自治体幹部\n（知事・局長級）" as ZenkokuKanchou
+participant "有識者・メディア" as MediaExpert
+
+== 疑惑の発生 ==
+Kenmin -> Chiji : 疑惑・言動に不信感
+Chiji -> OldMedia : 会見・発言
+Chiji -> SNS : 発信・反論
+OldMedia -> Kenmin : 報道（編集あり）
+SNS -> Kenmin : 拡散・炎上・意見
+
+note over OldMedia, SNS
+報道のトーン・焦点が食い違い、
+相互に批判や疑念も生じる
+end note
+
+== 政治対応・説明責任 ==
+Kenmin -> Seiji : 説明責任を要求
+Seiji -> Chiji : 事情聴取・追及
+Chiji --> Kenmin : あいまいな説明
+
+Kenmin -> Yushikisha : 分析・解説を求める
+Yushikisha --> Kenmin : 見解分かれる
+
+note over Kenmin, Yushikisha
+情報が錯綜し、真相が見えず、
+モヤモヤが増幅…
+end note
+
+== 百条委員会とPC問題 ==
+Kenmin -> Hyakujou : 百条委員会に真相解明を求める
+Hyakujou -> Kyokuchou : 公用PCの中身を提出要求
+Kyokuchou --> Hyakujou : 「プライベートなので非公開」
+Hyakujou --> Kenmin : 回答は非公開に
+
+note over Hyakujou
+公私混同が問題なのに
+“私的”を理由に非開示？
+→ 調査不能な構造的矛盾
+end note
+
+Kenmin --> Hyakujou : 不信感・モヤモヤ増幅
+
+== 構造的問題への拡張 ==
+Kenmin -> MediaExpert : 「これが問題なら他は大丈夫なのか？」
+MediaExpert --> Kenmin : 「実は“氷山の一角”の可能性も」
+
+Kenmin -> ZenkokuKanchou : 不信・不安感
+ZenkokuKanchou --> Kenmin : 沈黙、または形式的なコメント
+
+note over ZenkokuKanchou
+構造的なパワハラ・上意下達文化が
+各地で共有されている可能性
+end note
+
+note over Kenmin
+「誰も責任取らない」空気に、
+あきらめとモヤモヤが広がる
+end note
+@enduml
