@@ -1,19 +1,48 @@
 @startuml
 
-' セクション1: ユーザーhogehogeのSSHキーアクセス
-box "PC上のユーザー: hogehoge" #LightBlue
-participant "PC (hogehoge)"
-participant "GitHub: hogehoge"
-"PC (hogehoge)" -> "GitHub: hogehoge" : git push (id_rsa 使用)
-"GitHub: hogehoge" --> "PC (hogehoge)" : OK またはエラー
-end box
+actor "User" as U
 
-' セクション2: ユーザーmogemogeのSSHキーアクセス
-box "PC上のユーザー: mogemoge" #LightGreen
-participant "PC (mogemoge)"
-participant "GitHub: mogemoge"
-"PC (mogemoge)" -> "GitHub: mogemoge" : git push (id_coa 使用)
-"GitHub: mogemoge" --> "PC (mogemoge)" : OK またはエラー
-end box
+participant "SSH Config" as SSH
+participant "GitHub (hogehoge)" as GH1
+participant "GitHub (mogemoge)" as GH2
+
+== hogehoge アカウントでの操作 ==
+U -> U : git clone git@github-hogehoge:hogehoge/repo.git
+U -> SSH : 接続 → github-hogehoge
+activate SSH
+SSH -> GH1 : 認証 (id_rsa)
+GH1 --> SSH : OK
+SSH --> U : 認証成功（hogehoge）
+
+U -> U : git remote -v
+note right of U
+  origin  git@github-hogehoge:hogehoge/repo.git
+end note
+
+== mogemoge アカウントでの操作 ==
+U -> U : git clone git@github-mogemoge:mogemoge/images.git
+U -> SSH : 接続 → github-mogemoge
+activate SSH
+SSH -> GH2 : 認証 (id_coa + passphrase)
+GH2 --> SSH : OK
+SSH --> U : 認証成功（mogemoge）
+
+U -> U : git remote -v
+note right of U
+  origin  git@github-mogemoge:mogemoge/images.git
+end note
+
+== 設定ファイル ~/.ssh/config ==
+note right of SSH
+  Host github-hogehoge
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_rsa
+
+  Host github-mogemoge
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_coa
+end note
 
 @enduml
