@@ -1,0 +1,33 @@
+@startuml
+actor "ユーザー" as User
+participant "ChatGPT" as GPT
+
+== 依頼開始 ==
+
+User -> GPT : 「ある事故の時系列を\nPlantUMLで図解して」
+GPT -> User : 「図にしたい内容や関係者を教えてください」
+
+== 詳細指定 ==
+
+User -> GPT : 「シーケンス図で、\nセクションタイトルを使って」
+note right of User
+「PlantUMLのシーケンス図で、
+== セクション == を使ってください」
+という言い方でOK
+end note
+
+GPT -> User : 「了解しました、構成案を示します」
+
+== 図の生成 ==
+
+User -> GPT : 「この内容で図を作って」
+GPT -> GPT : PlantUML構文を組み立てる
+GPT -> User : シーケンス図（コード）を返す
+
+== 修正依頼 ==
+
+User -> GPT : 「この図に課題や賠償の話も追加して」
+GPT -> GPT : noteやセクションを追加
+GPT -> User : 更新された図を返す
+
+@enduml
