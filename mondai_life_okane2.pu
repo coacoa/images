@@ -1,0 +1,23 @@
+@startuml
+actor User
+participant "現在の支出" as NowExpense
+participant "将来の支出予測" as FutureExpense
+participant "生活資金シミュレーション" as LifeSim
+participant "インフレ対策" as InflationStrategy
+
+User -> NowExpense: 年間支出150万円
+NowExpense -> FutureExpense: 毎年2%ずつ上昇と仮定
+FutureExpense -> LifeSim: 20年後 → 約222万円/年の支出
+LifeSim -> User: 貯金が早く尽きる可能性あり
+
+User -> InflationStrategy: 対策を検討
+InflationStrategy -> User: 対策一覧を提示
+
+note right of InflationStrategy
+🔹 インフレ対策の例\n
+1. 固定費の見直し（通信費、保険など）\n
+2. インフレ耐性のある資産保有（株・金など）\n
+3. 収入もインフレに強く（価格調整できる副収入）\n
+4. 支出を変動費中心にして調整余地を持つ
+end note
+@enduml
