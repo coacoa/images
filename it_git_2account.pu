@@ -1,0 +1,19 @@
+@startuml
+
+' セクション1: ユーザーhogehogeのSSHキーアクセス
+box "PC上のユーザー: hogehoge" #LightBlue
+participant "PC (hogehoge)"
+participant "GitHub: hogehoge"
+"PC (hogehoge)" -> "GitHub: hogehoge" : git push (id_rsa 使用)
+"GitHub: hogehoge" --> "PC (hogehoge)" : OK またはエラー
+end box
+
+' セクション2: ユーザーmogemogeのSSHキーアクセス
+box "PC上のユーザー: mogemoge" #LightGreen
+participant "PC (mogemoge)"
+participant "GitHub: mogemoge"
+"PC (mogemoge)" -> "GitHub: mogemoge" : git push (id_coa 使用)
+"GitHub: mogemoge" --> "PC (mogemoge)" : OK またはエラー
+end box
+
+@enduml
