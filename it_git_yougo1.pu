@@ -1,0 +1,36 @@
+@startuml
+allowmixing
+
+package "Gitリポジトリ" {
+  class "mainブランチ" as Main
+  class "featureブランチ" as Feature
+}
+
+actor "開発者A" as DevA
+actor "開発者B" as DevB
+
+DevA --> Feature : git checkout -b feature
+Feature --> DevA : コードを編集・コミット
+Feature --> GitHub : git push origin feature
+
+DevB --> Main : git pull origin main
+
+Main <.. Feature : プルリクエスト (Pull Request)
+Main <-- Feature : マージ (Merge)
+
+note right of Feature
+  🔹 Git用語 対訳メモ 🔹
+
+  branch     ：ブランチ（作業の分岐）
+  pull       ：プル（リモートから取得）
+  push       ：プッシュ（リモートへ送信）
+  merge      ：マージ（他ブランチと統合）
+  commit     ：コミット（変更を保存）
+  checkout   ：チェックアウト（ブランチ切替）
+  clone      ：クローン（リポジトリを複製）
+  fork       ：フォーク（コピーを作成）
+  rebase     ：リベース（履歴の付け替え）
+
+  ※操作に応じて上記用語を理解しておくと便利
+end note
+@enduml
