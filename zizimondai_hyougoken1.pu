@@ -17,6 +17,12 @@ Chiji -> SNS : 発信・反論
 OldMedia -> Kenmin : 報道（編集あり）
 SNS -> Kenmin : 拡散・炎上・意見
 
+note over OldMedia
+一部報道でバッシングが過熱。
+見出し・切り取り・印象操作。
+→ 問題の本質より人格攻撃が前面に
+end note
+
 note over OldMedia, SNS
 報道のトーン・焦点が食い違い、
 相互に批判や疑念も生じる
@@ -61,8 +67,14 @@ note over ZenkokuKanchou
 各地で共有されている可能性
 end note
 
+== 分断・長期化・疲弊 ==
+Kenmin -> Kenmin : 時間経過とともに解決せず
+Kenmin -> Kenmin : 知事擁護 vs 批判で県民が分断
+
 note over Kenmin
-「誰も責任取らない」空気に、
-あきらめとモヤモヤが広がる
+・問題は長期化・泥沼化  
+・誰も責任を取らず、制度も変わらず  
+・本質が議論されないまま、感情だけが消耗  
+・分断を煽る報道姿勢に強い不信感
 end note
 @enduml
