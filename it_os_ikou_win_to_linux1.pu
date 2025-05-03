@@ -1,0 +1,31 @@
+@startuml
+participant "💻 Windows PC" as Win
+actor "User 👨‍💻" as User
+participant "🐧 Linux PC" as Linux
+
+== 💻 Windows の良いところ ==
+User -> Win : 使いやすいGUIある？
+Win -> User : ✅ 直感的な操作感
+Win -> User : ✅ 市販ソフトが豊富（Adobe系、ゲームなど）
+Win -> User : ✅ GPUドライバのインストールが簡単
+Win -> User : ✅ インストールが簡単で初心者向き
+
+== 💻 Windows の悪いところ ==
+User -> Win : OSが重い、使いにくい
+Win -> User : ⚠️ OS自体の使い勝手が悪い
+Win -> User : ⚠️ アップデートが強制的で重い
+
+== 🐧 Linux の良いところ ==
+User -> Linux : 開発しやすいって本当？
+Linux -> User : ✅ 軽量で高速
+Linux -> User : ✅ パッケージ管理が強力（apt, yum）
+Linux -> User : ✅ 無料で使える（オープンソース）
+
+== 🐧 Linux の悪いところ ==
+User -> Linux : でも難しくない？
+Linux -> User : ⚠️ GPUドライバのインストールが難しい
+Linux -> User : ⚠️ GUIが不慣れな人には取っつきにくい
+Linux -> User : ⚠️ 一部のソフトが非対応（例：Photoshop）
+Linux -> User : ⚠️ ディストリビューションが多すぎて混乱しやすい
+
+@enduml
