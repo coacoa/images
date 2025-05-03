@@ -1,0 +1,49 @@
+@startuml
+skinparam sequenceParticipant underline
+skinparam maxMessageSize 120
+title 副業PC作業による収益戦略（目標：月10万円）
+
+participant "自分" as Me
+participant "YouTube視聴者" as Viewer
+participant "Amazonアフィリ" as Amazon
+participant "追加導線（ブログ/SNS）" as Channels
+participant "ツール（Whisper, GPT等）" as Tools
+participant "高単価/外部案件" as Expansion
+
+== スタート：現状の収益 ==
+
+Me -> Me : 月2,000円の収益（YouTube + Amazon）
+Me -> Me : 課題分析：再生数・CTR・商品単価
+
+== 第一段階：土台強化（目標：月1万円）==
+
+Me -> Viewer : 動画品質アップ＋誘導改善
+Me -> Tools : Whisperで文字起こし → SEO記事へ
+Tools -> Channels : note等に自動記事投稿
+Me -> Channels : SNSで記事・動画をシェア
+Viewer -> Amazon : 記事経由で購入
+Amazon -> Me : 月1万円達成（小手先＋導線強化）
+
+== 第二段階：収益最大化（目標：月5万円）==
+
+Me -> Expansion : 高単価ジャンルへ移行（教育・ガジェット・ソフト等）
+Me -> Expansion : サブスク・案件型アフィリに切替
+Expansion -> Amazon : 高額商品購入
+Expansion -> Viewer : 信頼される情報発信 → フォロワー増加
+Amazon -> Me : 月5万円到達（単価×成約率アップ）
+
+== 第三段階：仕組み化とスケール（目標：月10万円）==
+
+Me -> Tools : 動画/記事の半自動生成（ChatGPT + Whisper）
+Me -> Channels : 複数メディアで同時投稿
+Me -> Expansion : 案件型PR（企業提供品レビュー）
+Me -> Viewer : 複数導線から安定流入
+Amazon -> Me : 安定収益化
+note -> Me : noteのサブスク/販売収益
+Expansion -> Me : PR案件・収益分配モデル導入
+
+== ゴール：月10万円達成 ==
+
+Me -> Me : 成果を分析しつつ、仕組みを継続運用
+
+@enduml
