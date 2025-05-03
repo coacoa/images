@@ -1,0 +1,30 @@
+@startuml
+title 爆音回避プロセスの可視化（バイク・車）
+
+actor Person
+participant "環境音センサー\n（例：耳、スマホアプリ）" as Sensor
+participant "感情中枢\n（脳・感情）" as Emotion
+participant "対応策データベース\n（記憶・ネット検索）" as StrategyDB
+participant "実行機構\n（体・アプリ）" as Executor
+
+== セクション1: 騒音検知 ==
+
+Sensor -> Person : 爆音を検知
+Person -> Emotion : 「うるさい！」と感じる
+
+== セクション2: 感情反応 ==
+
+Emotion -> Person : 不快感・ストレス
+Person -> Emotion : どうにかしたい！
+
+== セクション3: 回避策の検討 ==
+
+Person -> StrategyDB : 対応策を探す
+StrategyDB -> Person : 耳栓／窓閉め／引っ越し／苦情／ノイズキャンセル
+
+== セクション4: アクション実行 ==
+
+Person -> Executor : 回避行動を実行（例：イヤホン装着）
+Executor -> Person : 爆音の軽減を実感
+
+@enduml
