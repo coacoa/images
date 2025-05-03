@@ -1,0 +1,25 @@
+@startuml
+' ❌ 古い記述（NG）:
+' !pragma graphviz_dot jdot
+
+' ✅ 新しい記述（OK）:
+!pragma layout smetana
+
+skinparam defaultTextAlignment center
+skinparam sequenceMessageAlign center
+
+actor "Developer 👨‍💻" as Dev
+participant "🤖 Git Bot\n[顔:●‿● 手:🤖]" as Git
+participant "🗃️ Remote Repo" as Remote
+
+== コミット ==
+Dev -> Git : commit（保存して）
+Git -> Git : ローカル記録
+
+== プッシュ ==
+Dev -> Git : push（リモートに送信）
+Git -> Remote : 転送中...
+Remote --> Git : 受信完了
+Git -> Dev : push成功！
+
+@enduml
