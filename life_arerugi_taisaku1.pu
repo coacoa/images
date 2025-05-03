@@ -1,0 +1,32 @@
+@startuml
+title タンスや布団でのアレルギー反応と回避行動
+
+actor User
+participant "収納（布団・服）" as Storage
+participant "空気中アレルゲン" as Allergen
+participant "体（鼻・目）" as Body
+participant "対策行動" as Action
+
+== 出し入れのトリガー ==
+User -> Storage : 布団・衣替えの服を出す
+Storage -> Allergen : ホコリ・ダニ・カビが舞い上がる
+Allergen -> Body : 鼻炎・目のかゆみ・くしゃみ発生
+
+== マスクを忘れた場合 ==
+alt ノーマスク
+  Body -> User : 強いアレルギー反応が出る
+  User -> Emotion : 「またやってしまった…」と後悔
+end
+
+== 回避のための習慣 ==
+User -> Action : 出し入れ前に「マスク装着」チェック
+User -> Action : 出し入れは換気しながら短時間で
+User -> Action : タンスの中に防ダニシートや除湿剤
+User -> Action : 洗える布団や防ダニカバーを導入
+User -> Action : 季節ごとに収納を掃除しておく
+
+== 効果 ==
+Action -> Allergen : 舞い上がる量が減る
+Allergen -> Body : 反応が軽減される
+Body -> User : 症状が出にくくなる
+@enduml
