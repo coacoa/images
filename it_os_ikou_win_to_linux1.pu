@@ -24,7 +24,7 @@ Linux -> User : ✅ 無料で使える（オープンソース）
 == 🐧 Linux の悪いところ ==
 User -> Linux : でも難しくない？
 Linux -> User : ⚠️ GPUドライバのインストールが難しい
-Linux -> User : ⚠️ GUIが不慣れな人には取っつきにくい
+Linux -> User : ⚠️ GUIの操作や見た目がWindowsと大きく異なり、初心者には戸惑いやすい
 Linux -> User : ⚠️ 一部のソフトが非対応（例：Photoshop）
 Linux -> User : ⚠️ ディストリビューションが多すぎて混乱しやすい
 Linux -> User : ⚠️ インストールを自分でやらないといけない、知識が必要
