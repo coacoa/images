@@ -20,6 +20,7 @@ User -> Linux : 開発しやすいって本当？
 Linux -> User : ✅ 軽量で高速
 Linux -> User : ✅ パッケージ管理が強力（apt, yum）
 Linux -> User : ✅ 無料で使える（オープンソース）
+Linux -> User : ✅ 慣れるとWindowsより使い勝手が良く感じることもある
 
 == 🐧 Linux の悪いところ ==
 User -> Linux : でも難しくない？
