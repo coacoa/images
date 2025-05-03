@@ -1,0 +1,33 @@
+@startuml
+title 中年期の感情の波と対処法
+
+actor User
+participant "身体の状態" as Body
+participant "感情反応" as Emotion
+participant "対処行動" as Coping
+
+== 日常でのきっかけ ==
+User -> Body : 疲労・睡眠不足・ホルモン変化
+Body -> Emotion : イライラ・不安感・落ち込み
+
+== 感情の気づき ==
+Emotion -> User : 些細なことで怒りやすくなる
+User -> Emotion : 「最近感情が不安定だ」と感じる
+
+== 対処行動の選択 ==
+User -> Coping : 深呼吸・ストレッチを試す
+User -> Coping : 気分記録や日記を書く
+User -> Coping : 人との距離をとる
+User -> Coping : 軽い運動・散歩を行う
+
+== 必要に応じた支援 ==
+alt 改善しない
+  User -> 医療機関 : 更年期チェック・相談
+  医療機関 -> User : HRT・漢方・カウンセリング提案
+else 改善する
+  Coping -> Emotion : 気分が落ち着く
+end
+
+Emotion -> User : 自分をコントロールしやすくなる
+
+@enduml
