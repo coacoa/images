@@ -1,24 +1,26 @@
 @startuml
-' アクティビティ図として明示
-' この宣言により、split などの構文が使えるようになる
-!pragma layout smetana
-skinparam style strictuml
+title 情報の選択による心の影響（シーケンス＋セクション構成）
 
-start
+actor User
+participant "ニュース選択" as Selector
+participant "精神状態" as Mood
 
-split
-    :【重い情報・ストレスがたまる】;
-    :社会問題;
-    :時事ニュース;
-    :政治・経済;
-    :炎上・SNS議論;
-split again
-    :【リラックス・趣味系】;
-    :自然・旅の話;
-    :趣味（料理・音楽）;
-    :軽い雑談・ブログ;
-    :フィクションや創作;
-endsplit
+== 重い情報系 ==
+User -> Selector : 時事ニュース/政治/炎上系を読む
+Selector -> Mood : ストレス・疲労が増す
+Mood -> User : 「心が重い」と感じる
 
-stop
+== リラックス系情報 ==
+User -> Selector : 自然・趣味・フィクションを選ぶ
+Selector -> Mood : リラックス効果・癒しを得る
+Mood -> User : 穏やかな気持ちになる
+
+== バランスを考える ==
+User -> Mood : 今日はどちらの情報に寄りすぎた？
+alt 情報バランスが偏っている
+  Mood -> User : 情報の質を見直すように促す
+else バランスが取れている
+  Mood -> User : 健康的な情報摂取
+end
+
 @enduml
