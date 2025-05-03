@@ -1,0 +1,35 @@
+@startuml
+title Blenderでのレンダリング遅延：原因と対処の流れ
+
+== 環境チェック ==
+User -> System : Blender起動（Ctrl+F12）
+System -> GPU : 使用状況を確認（nvidia-smi）
+alt GPUが未使用
+  System -> Blender : CPUレンダリングが選ばれている
+  note right: 設定を「GPU Compute」に変更
+end
+
+== パフォーマンス設定 ==
+User -> OS : power-profiles-daemonの確認
+alt 省電力モード
+  OS -> User : パフォーマンスモードへ切替推奨
+end
+
+== Blenderインストール形式 ==
+User -> OS : Blenderのインストール形式確認
+alt Snap/Flatpak
+  note right: Sandboxedで遅いことがある
+  User -> Website : blender.orgからバイナリDL
+end
+
+== ストレージと出力先 ==
+User -> Blender : 出力先ディレクトリを確認
+alt USB/HDDなど遅いメディア
+  note right: 出力先をSSDに変更
+end
+
+== 全体最適化 ==
+User -> Blender : レンダリング再実行（Ctrl+F12）
+Blender -> System : GPUが使われ高速化
+
+@enduml
