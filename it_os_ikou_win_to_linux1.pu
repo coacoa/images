@@ -27,5 +27,6 @@ Linux -> User : ⚠️ GPUドライバのインストールが難しい
 Linux -> User : ⚠️ GUIが不慣れな人には取っつきにくい
 Linux -> User : ⚠️ 一部のソフトが非対応（例：Photoshop）
 Linux -> User : ⚠️ ディストリビューションが多すぎて混乱しやすい
+Linux -> User : ⚠️ インストールを自分でやらないといけない、知識が必要
 
 @enduml
