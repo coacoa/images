@@ -1,0 +1,43 @@
+@startuml
+actor 視聴者 as Viewer
+participant "テレビ（旧メディア）" as TV
+participant "ネット動画\n（YouTube・SNS等）" as NetVideo
+participant "テレビ業界の出演者\n（芸能人・コメンテーター）" as Tarento
+
+== テレビの構造：一方通行 ==
+TV -> Viewer : 情報・意見・娯楽を一方的に発信
+Viewer --> TV : フィードバック不可能（局に届かない）
+Tarento -> TV : 内輪ノリ・予定調和のコメント
+
+note over TV
+・意図的な編集やカット  
+・不都合なことは報じない  
+・批判も届かない“閉じた世界”
+end note
+
+Viewer -> Viewer : 「ツッコミたいけど言えない…」  
+Viewer -> Viewer : 「都合の悪い話題はスルーされる」
+
+== ネット動画・SNSの構造：双方向 ==
+NetVideo -> Viewer : 発信
+Viewer -> NetVideo : コメント・いいね・低評価・引用リポスト
+
+note over NetVideo
+・誹謗中傷もあるが、反応が返る  
+・視聴者が声を上げれば議論が動く  
+・制作者も改善・謝罪・対話が可能
+end note
+
+Viewer -> Viewer : 「ちゃんと声が届く」  
+Viewer -> NetVideo : 「内容が悪ければ見ない・叩く」
+
+== 結果：構造的信頼格差 ==
+Viewer -> TV : 「一方通行で不透明」→ 不信感・モヤモヤ
+Viewer -> NetVideo : 「開かれていて正直」→ 相対的信頼
+
+note over Viewer
+テレビに感じる最大のモヤモヤ：  
+“不都合な真実は黙殺”され、  
+視聴者が無力なままにされていること。
+end note
+@enduml
