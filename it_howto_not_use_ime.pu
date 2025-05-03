@@ -1,0 +1,25 @@
+@startuml
+!theme cerulean
+
+package "Vim環境" {
+    actor User
+    component "Vim (Visualモード)" as vim
+    component "マッピング :'<,'>!python3 romaji2kanji.py" as vim_map
+}
+
+package "外部変換スクリプト" {
+    component "romaji2kanji.py" as script
+    component "pykakasi\n(ローマ字→かな)" as kakasi
+    component "MeCab\n(かな→漢字)" as mecab
+}
+
+User --> vim : ローマ字で文字入力
+vim --> vim_map : 範囲選択 + <Leader>k
+vim_map --> script : stdin経由でローマ字渡す
+script --> kakasi : ひらがなに変換
+kakasi --> script : ひらがな文字列
+script --> mecab : MeCabに渡す
+mecab --> script : 日本語文（漢字含む）
+script --> vim : stdoutで結果返す\n（選択範囲置換）
+
+@enduml
