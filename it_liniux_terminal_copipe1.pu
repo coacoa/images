@@ -1,0 +1,32 @@
+@startuml
+actor User
+participant "Terminal Emulator" as Terminal
+participant "OS Clipboard Manager" as Clipboard
+participant "Chrome"
+
+User -> Terminal : Ctrl+Shift+C
+activate Terminal
+Terminal -> Clipboard : Copy Selection
+deactivate Terminal
+
+User -> Chrome : Ctrl+Shift+V
+activate Chrome
+Chrome -> Clipboard : Paste Request
+Clipboard --> Chrome : Text Content
+deactivate Chrome
+
+== 正常系終了 ==
+
+== 失敗ケース例 ==
+
+User -> Terminal : Ctrl+Shift+C
+activate Terminal
+Terminal --> User : No Selection (Error)
+deactivate Terminal
+
+note right of Terminal
+  - テキストが選択されていない
+  - フォーカスが Chrome 側
+end note
+
+@enduml
