@@ -1,32 +1,23 @@
 @startuml
 actor User
-participant "Terminal Emulator" as Terminal
-participant "OS Clipboard Manager" as Clipboard
-participant "Chrome"
+participant "Terminal (ターミナル)" as Terminal
+participant "Vim"
+participant "Clipboard"
 
-User -> Terminal : Ctrl+Shift+C
-activate Terminal
-Terminal -> Clipboard : Copy Selection
-deactivate Terminal
+== 通常貼り付け（:set paste なし）==
 
-User -> Chrome : Ctrl+Shift+V
-activate Chrome
-Chrome -> Clipboard : Paste Request
-Clipboard --> Chrome : Text Content
-deactivate Chrome
+User -> Clipboard : Ctrl+Shift+C (コピー)
+User -> Terminal : Ctrl+Shift+V (ペースト)
+Terminal -> Vim : 貼り付け（オートインデント有効）
+Vim --> User : テキストが崩れる（インデント乱れ）
 
-== 正常系終了 ==
+== 貼り付け用モード（:set paste 有効）==
 
-== 失敗ケース例 ==
+User -> Vim : :set paste
+activate Vim
+User -> Terminal : Ctrl+Shift+V (ペースト)
+Terminal -> Vim : 貼り付け（整形無効）
+Vim --> User : テキストそのまま貼り付け成功
+deactivate Vim
 
-User -> Terminal : Ctrl+Shift+C
-activate Terminal
-Terminal --> User : No Selection (Error)
-deactivate Terminal
-
-note right of Terminal
-  - テキストが選択されていない
-  - フォーカスが Chrome 側
-end note
-
-@enduml
+User -> Vim : :set nopaste
