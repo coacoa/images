@@ -1,0 +1,22 @@
+@startuml
+actor User
+participant "FramePack-eichi\n(run from venv)" as FramePack
+participant "PyTorch" as Torch
+participant "GPU\n(3.94 GB VRAM)" as GPU
+
+User -> FramePack : 実行開始
+FramePack -> Torch : モデルロード（高負荷モデル）
+Torch -> GPU : メモリ要求（13.16 GiB）
+GPU -> Torch : メモリ不足（2.16 GiB free）
+Torch -> FramePack : CUDA OutOfMemoryError
+FramePack -> User : エラーメッセージ出力
+
+note over FramePack, GPU
+対応策候補：
+1. 解像度やフレーム数を下げる
+2. CPU実行
+3. GPUメモリ掃除
+4. PYTORCH_CUDA_ALLOC_CONF 設定
+5. GPU買い替え（VRAM 8GB以上推奨）
+end note
+@enduml
