@@ -1,0 +1,44 @@
+@startuml
+title Windows → Linux 移行作業フロー（Sequence Diagram）
+
+actor User
+participant "Windows PC" as Win
+participant "外部ストレージ" as USB
+participant "Linux PC" as Linux
+
+== バックアップ作業 ==
+
+User -> Win : 必要なデータの整理
+Win -> USB : ファイルのコピー（ドキュメント、画像など）
+note over USB
+外付けHDD や USBメモリ
+end note
+
+== インストール準備 ==
+
+User -> Win : インストーラ作成ツールを実行（Rufusなど）
+Win -> USB : Linuxブートメディアを作成
+note over USB
+例：Ubuntu, Zorin OS, Fedoraなど
+end note
+
+== Linuxインストール ==
+
+User -> Linux : USBから起動
+Linux -> Linux : パーティション設定・フォーマット
+User -> Linux : インストールを実行
+note over Linux
+デュアルブート or フルインストール選択
+end note
+
+== 移行後のセットアップ ==
+
+User -> Linux : 必要なアプリをインストール
+USB -> Linux : データを復元
+note over Linux
+設定ファイルやドキュメントも戻す
+end note
+
+Linux -> User : 環境完成！
+
+@enduml
