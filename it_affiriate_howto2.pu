@@ -9,6 +9,7 @@ participant "Amazonアフィリ" as Amazon
 participant "追加導線（ブログ/SNS）" as Channels
 participant "ツール（Whisper, GPT等）" as Tools
 participant "高単価/外部案件" as Expansion
+participant "フリマ/オークション\n（メルカリ・ヤフオク等）" as FleaMarket
 
 == スタート：現状の収益 ==
 
@@ -32,6 +33,11 @@ Expansion -> Amazon : 高額商品購入
 Expansion -> Viewer : 信頼される情報発信 → フォロワー増加
 Amazon -> Me : 月5万円到達（単価×成約率アップ）
 
+== 第二段階（補足）：追加収益導線（1〜3万円）==
+
+Me -> FleaMarket : 不用品販売・転売（PC関連・書籍など）
+FleaMarket -> Me : 月1〜3万円の利益確保
+
 == 第三段階：仕組み化とスケール（目標：月10万円）==
 
 Me -> Tools : 動画/記事の半自動生成（ChatGPT + Whisper）
@@ -41,6 +47,7 @@ Me -> Viewer : 複数導線から安定流入
 Amazon -> Me : 安定収益化
 note -> Me : noteのサブスク/販売収益
 Expansion -> Me : PR案件・収益分配モデル導入
+FleaMarket -> Me : 安定的な副収入の一部として機能
 
 == ゴール：月10万円達成 ==
 
