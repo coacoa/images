@@ -1,0 +1,36 @@
+@startuml
+hide footbox
+skinparam sequence {
+  ParticipantPadding 60
+  BoxPadding 20
+}
+
+participant "不快なこと" as Discomfort
+participant "自分" as Self
+participant "気持ちよく過ごす工夫" as Comfort
+
+== 情報の受けとり方 ==
+
+Discomfort -> Self : だらだらと読み続ける\n（SNS・動画）
+Discomfort -> Self : 不安になるニュース
+
+Self -> Comfort : 見るものをしぼる
+Self -> Comfort : おしらせを止める
+Self -> Comfort : 気持ちが明るくなる話を選ぶ
+
+== 時間の使い方 ==
+
+Discomfort -> Self : 夜ふかし
+Discomfort -> Self : ねるまえに\n長い時間スマホを見る
+
+Self -> Comfort : 毎朝おなじ時間に起きる
+Self -> Comfort : 起きたらすぐに日をあびる
+Self -> Comfort : 夜は決めた時間に終わりにする
+Self -> Comfort : 朝の流れを決めておく（例：顔を洗う→お茶をのむ）
+
+== 気もちの整理 ==
+
+Discomfort -> Self : 他人とくらべて\n気が重くなる
+Self -> Comfort : 思ったことを\nノートに書く
+
+@enduml

@@ -1,0 +1,17 @@
+@startuml
+title ネット・メディア社会への違和感の流れ（シーケンス図）
+
+actor 観察者 as User
+participant "①現象\n（テレビ・SNSでの公開）" as PHENOMENA
+participant "②疑問\n（なぜ公開？）" as QUESTION
+participant "③背景構造\n（SNS・社会）" as STRUCTURE
+participant "④感情\n（違和感・怒り）" as FEELING
+
+User -> PHENOMENA : 映像を目にする
+PHENOMENA -> QUESTION : なぜこんなに公開されている？
+QUESTION -> STRUCTURE : 背景に何があるのか？
+STRUCTURE -> QUESTION : SNS設計 / 承認欲求 / 危機感の欠如
+QUESTION -> FEELING : 理不尽さを感じる
+FEELING -> User : 違和感 / モヤモヤ / 怒りを覚える
+
+@enduml
