@@ -1,33 +1,68 @@
 @startuml
-title Blender Workflow - Sectioned Sequence Diagram
+title Blender Workflow - With Notes (Safe Version)
 
 actor User
-
-participant "VSE" as VSE
-participant "3D Modeling" as Modeling
-participant "Node Editor" as Node
-participant "Compositing" as Compositing
+participant VSE
+participant Modeling
+participant Node
+participant Compositing
 
 == VSE 編集 ==
 
 User -> VSE : 素材（動画・画像・音声）を読み込み
+note over VSE
+例: MP4, PNG, WAV など
+end note
+
 User -> VSE : タイムラインに配置・カット・編集
+note over VSE
+トリミング、フェード、順番入れ替えなど
+end note
 
 == 3D モデリング & レンダリング ==
 
 User -> Modeling : オブジェクト・ライト・カメラ設定
+note over Modeling
+モデリング、配置、視点など基本設定
+end note
+
 Modeling -> Modeling : アニメーション・マテリアル設定
+note over Modeling
+キーフレーム、質感、色などを追加
+end note
+
 User -> Modeling : レンダリング指示
+note over Modeling
+F12キーやバッチレンダーで実行
+end note
+
 Modeling -> Node : レンダリング結果を送信
+note over Node
+各種レンダーパス（Z, AO, Diffuse 等）をノードへ
+end note
 
 == ノード処理 ==
 
 Node -> Node : レンダーパス処理（Z合成、カラー調整など）
+note over Node
+背景合成、マスク処理、ブラーなど
+end note
+
 Node -> Compositing : 合成画像出力
+note over Compositing
+Final output image/frame を生成
+end note
 
 == コンポジット & 最終出力 ==
 
 Compositing -> VSE : 合成済み画像／映像をVSEに戻す
+note over VSE
+最終編集へ再統合
+end note
+
 VSE -> User : 最終動画を書き出し（例：MP4）
+note over VSE
+エクスポート設定で解像度や形式を選択
+end note
 
 @enduml
