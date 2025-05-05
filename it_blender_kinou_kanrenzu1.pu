@@ -1,0 +1,33 @@
+@startuml
+title Blender Workflow - Sectioned Sequence Diagram
+
+actor User
+
+participant "VSE" as VSE
+participant "3D Modeling" as Modeling
+participant "Node Editor" as Node
+participant "Compositing" as Compositing
+
+== VSE 編集 ==
+
+User -> VSE : 素材（動画・画像・音声）を読み込み
+User -> VSE : タイムラインに配置・カット・編集
+
+== 3D モデリング & レンダリング ==
+
+User -> Modeling : オブジェクト・ライト・カメラ設定
+Modeling -> Modeling : アニメーション・マテリアル設定
+User -> Modeling : レンダリング指示
+Modeling -> Node : レンダリング結果を送信
+
+== ノード処理 ==
+
+Node -> Node : レンダーパス処理（Z合成、カラー調整など）
+Node -> Compositing : 合成画像出力
+
+== コンポジット & 最終出力 ==
+
+Compositing -> VSE : 合成済み画像／映像をVSEに戻す
+VSE -> User : 最終動画を書き出し（例：MP4）
+
+@enduml
