@@ -14,6 +14,7 @@ Win -> User : ✅ インストールが簡単で初心者向き
 User -> Win : OSが重い、使いにくい
 Win -> User : ⚠️ OS自体の使い勝手が悪い
 Win -> User : ⚠️ アップデートが強制的で重い
+Win -> User : ⚠️ blender で処理中にOSの操作おかしくなる(chrome link がhtmlダウンロード)
 
 == 🐧 Linux の良いところ ==
 User -> Linux : 開発しやすいって本当？
@@ -29,5 +30,6 @@ Linux -> User : ⚠️ GUIの操作や見た目がWindowsと大きく異なり�
 Linux -> User : ⚠️ 一部のソフトが非対応（例：Photoshop）
 Linux -> User : ⚠️ ディストリビューションが多すぎて混乱しやすい
 Linux -> User : ⚠️ インストールを自分でやらないといけない、知識が必要
+Linux -> User : ⚠️ blender windowsみたいなOSがおかしくなることはないが、GPU絡みで動作不安定?
 
 @enduml
