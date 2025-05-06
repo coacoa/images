@@ -1,0 +1,36 @@
+@startuml
+title nvidia-smi 電力情報取得エラー診断フロー
+
+actor User
+
+== Step 1: 実行 ==
+User -> "nvidia-smi" : `nvidia-smi -q -d POWER` を実行
+
+== Step 2: 情報取得要求 ==
+"nvidia-smi" -> "NVIDIA ドライバ" : 電力情報取得を要求
+
+== Step 3: GPUデバイスとのやり取り ==
+"NVIDIA ドライバ" -> "GPU デバイス" : 電力センサー値を要求
+
+alt 電力センサー非搭載
+    "GPU デバイス" --> "NVIDIA ドライバ" : Power Draw = N/A
+    note right of "GPU デバイス"
+      例: GTX 1050, ノートPC向けOEMモデルなど
+    end note
+else アクセス制限・未対応
+    "GPU デバイス" --> "NVIDIA ドライバ" : Unknown Error
+    note right of "NVIDIA ドライバ"
+      ACPI制限や権限不足、OEM仕様による無効化
+    end note
+else ドライバのバグ・誤認識
+    "NVIDIA ドライバ" --> "nvidia-smi" : Power Limit = 5001W など異常値
+    note right of "NVIDIA ドライバ"
+      例: 新旧ドライバ間の非互換、
+      カーネルとの相性
+    end note
+end
+
+== Step 4: 表示 ==
+"nvidia-smi" --> User : Power Draw: N/A / ERR! を出力
+
+@enduml
