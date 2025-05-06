@@ -1,0 +1,33 @@
+@startuml
+!theme plain
+
+package "古いタブレットで使える音声翻訳" {
+  
+  node "VoiceTra" {
+    [Android 5.0以上] --> [軽量・精度高め]
+    [日本語対応◎]
+  }
+
+  node "Google翻訳（旧APK）" {
+    [Android 4.x〜対応可] --> [旧バージョンAPKを入手]
+    [リアルタイム音声OK]
+  }
+
+  node "Web版 Google翻訳" {
+    [軽量ブラウザ使用] --> [Via Browser など]
+    [マイク使用△]
+  }
+
+  node "LineageOS化" {
+    [カスタムROMでAndroid 9へ] --> [Google翻訳など安定動作]
+    [Nexus 2013向け]
+  }
+
+}
+
+actor User
+User --> "VoiceTra"
+User --> "Google翻訳（旧APK）"
+User --> "Web版 Google翻訳"
+User --> "LineageOS化"
+@enduml
