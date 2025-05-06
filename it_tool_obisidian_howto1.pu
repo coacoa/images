@@ -1,0 +1,22 @@
+@startuml
+title Obsidianの基本的な使い方（シーケンス図）
+
+actor User
+participant "Obsidian" as App
+participant "Vault（保管庫）" as Vault
+participant "ノート・Markdownファイル" as Note
+participant "プレビューや拡張機能" as Features
+
+User -> App : アプリを起動
+User -> Vault : 新しいVaultを作成 or 開く
+Vault -> Note : 新しいノート（.md）を作成
+User -> Note : Markdown形式でメモを記述
+User -> Features : プレビューで確認（Ctrl+E）
+
+User -> Features : プラグインを追加（例：PlantUML, Calendar）
+Features -> Note : ノートの表示や機能を拡張
+
+User -> Note : ノート同士を [[リンク]] でつなぐ
+User -> Vault : ノートを整理（フォルダやタグ）
+
+@enduml
