@@ -1,0 +1,35 @@
+@startuml
+' タイトル
+title 報道被害の現状と対策
+
+' 登場人物
+actor 視聴者
+participant "報道機関" as Media
+participant "被害当事者" as Victim
+participant "BPO/外部監視" as BPO
+participant "司法・法制度" as Law
+participant "支援団体/NPO" as Support
+
+== 現状：報道による被害の構造 ==
+
+Media -> Victim : 実名・映像・過剰な報道
+Victim -> Media : 抗議・訂正要求
+Victim -> Support : 心理的・法的支援を要請
+Media -> 視聴者 : センセーショナルな報道
+視聴者 -> Media : 注目・視聴（視聴率）
+
+== 問題の波及 ==
+
+Media -> Victim : 家族や周囲にも波及（取材・誹謗中傷）
+Victim -> Law : 名誉毀損・プライバシー侵害で法的措置
+Law -> Media : 削除命令・賠償判決など
+
+== 対策：構造的改善 ==
+
+BPO -> Media : 倫理勧告・ガイドライン強化要請
+Media -> BPO : 改善報告・対応協議
+Support -> Victim : 法律相談・メディア対応支援
+視聴者 -> Media : 不適切報道への批判・抗議
+視聴者 -> Victim : 支援・共感の声を届ける
+
+@enduml

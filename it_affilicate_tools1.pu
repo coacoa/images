@@ -1,0 +1,37 @@
+@startuml
+title 発信プラットフォームの特徴と活用シーケンス
+
+actor User
+participant "note" as Note
+participant "Qiita" as Qiita
+participant "Zenn" as Zenn
+participant "その他サービス" as Others
+
+== セクション1: note（収益化・体験談系） ==
+User -> Note : 体験談・ノウハウを投稿
+Note -> User : 有料記事・サブスク収益化
+Note -> User : 一般ユーザー層に広く届く
+
+== セクション2: Qiita（技術メモ共有） ==
+User -> Qiita : コード・Tipsを投稿
+Qiita -> User : エンジニア間での信頼構築
+Qiita -> User : 収益は発生しない
+
+== セクション3: Zenn（丁寧な技術解説） ==
+User -> Zenn : 高品質な技術記事を書く
+Zenn -> User : 技術マガジンで一部収益可
+Zenn -> User : 読みやすさと深さが評価される
+
+== セクション4: その他プラットフォーム ==
+User -> Others : 目的に応じて使い分け
+
+note right of Others
+Brain: note系 + アフィリエイト機能  
+はてなブログ: SEO強・広告収益OK  
+GitHub Pages: 高自由度な技術ブログ  
+Substack: メール購読で収益化  
+dev.to: 海外向け技術コミュニティ  
+X（旧Twitter）: 拡散・集客用
+end note
+
+@enduml
