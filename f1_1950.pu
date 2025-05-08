@@ -1,0 +1,54 @@
+@startuml
+title 1950 F1 Season - Points per Race
+
+participant "Farina" as Farina
+participant "Fangio" as Fangio
+participant "Fagioli" as Fagioli
+participant "Rosier" as Rosier
+participant "Parsons" as Parsons
+participant "Other Drivers" as Others
+
+== Race 1: British GP 🇬🇧 ==
+Farina -> Farina : 1st place (+8)
+Fagioli -> Fagioli : 2nd (+6)
+Fangio -> Fangio : 3rd (+4)
+note right of Farina: Fastest Lap (+1)\nTotal: 9 pts
+
+== Race 2: Monaco GP 🇲🇨 ==
+Fangio -> Fangio : 1st (+8)
+Ascari -> Ascari : 2nd (+6)
+Chiron -> Chiron : 3rd (+4)
+note right of Fangio: Fastest Lap (+1)\nTotal: 9 pts
+
+== Race 3: Indianapolis 500 🇺🇸 ==
+Parsons -> Parsons : 1st (+9 incl. FL)
+note right of Parsons: Total: 9 pts
+
+== Race 4: Swiss GP 🇨🇭 ==
+Farina -> Farina : 1st (+8)
+Fagioli -> Fagioli : 2nd (+6)
+Rosier -> Rosier : 3rd (+4)
+note right of Farina: Total: 17 pts
+
+== Race 5: Belgian GP 🇧🇪 ==
+Fangio -> Fangio : 1st (+9 incl. FL)
+note right of Fangio: Total: 18 pts
+
+== Race 6: French GP 🇫🇷 ==
+Fangio -> Fangio : 1st (+8)
+Fagioli -> Fagioli : 2nd (+6)
+Farina -> Farina : 3rd (+4)
+note right of Fangio: Fastest Lap (+1)\nTotal: 27 pts
+
+== Race 7: Italian GP 🇮🇹 ==
+Farina -> Farina : 1st (+8)
+Fagioli -> Fagioli : 2nd (+6)
+Rosier -> Rosier : 3rd (+4)
+note right of Farina: Total: 29 pts
+
+== Final Standings 🏁 ==
+note over Farina, Fangio
+Champion: Giuseppe Farina (30 pts)\n2nd: Fangio (27 pts)\n3rd: Fagioli (24 pts)
+end note
+
+@enduml
