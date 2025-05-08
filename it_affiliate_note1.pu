@@ -1,0 +1,35 @@
+@startuml
+title note収益化プロセス：手順・内容・価値の流れ
+
+actor Author
+participant "準備フェーズ" as Prep
+participant "記事内容" as Content
+participant "読者価値" as Value
+participant "収益" as Money
+
+== ステップ1: 準備 ==
+Author -> Prep : ターゲット読者を決める
+Author -> Prep : テーマ・ジャンルを決める
+Author -> Prep : プロフィールや信頼性を整える
+
+== ステップ2: コンテンツ作成 ==
+Author -> Content : 実体験ノウハウを書く
+Content -> Value : 再現性ある知識を提供
+
+Author -> Content : ニッチ特化の内容を書く
+Content -> Value : 共感・親近感を提供
+
+Author -> Content : テンプレート／資料を作成
+Content -> Value : 時短・即効性を提供
+
+Author -> Content : 一部無料＋有料記事を構成
+Content -> Value : 有料部分に購入動機を作る
+
+Author -> Content : 連載形式にして投稿を継続
+Content -> Value : 続きを読みたくさせる
+
+== ステップ3: 収益発生 ==
+Value -> Money : 読者が有料記事を購入
+Money -> Author : noteから収益を得る
+
+@enduml
