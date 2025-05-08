@@ -9,34 +9,54 @@ participant "GP5\n🇧🇪 Belgian GP" as GP5
 participant "GP6\n🇫🇷 French GP" as GP6
 participant "GP7\n🇮🇹 Italian GP" as GP7
 
-== 🇮🇹 Farina ==
+== 🇮🇹 Giuseppe Farina (Total: 28pt) ==
 GP1 -> GP1 : 1位 (+9pt)
-GP2 -> GP2 : R (Retired)
+GP7 -> GP7 : 1位 (+9pt)
 GP4 -> GP4 : 2位 (+6pt)
 GP6 -> GP6 : 3位 (+4pt)
-GP7 -> GP7 : 1位 (+9pt)
+GP2 -> GP2 : R (Retired)
 GP5 -> GP5 : 6位 (No Points)
+GP3 -> GP3 : No Points
 
-== 🇦🇷 Fangio ==
-GP1 -> GP1 : 2位 (+6pt)
+== 🇦🇷 Juan Manuel Fangio (Total: 33pt) ==
 GP2 -> GP2 : 1位 (+9pt)
 GP5 -> GP5 : 1位 (+9pt)
 GP6 -> GP6 : 1位 (+9pt)
+GP1 -> GP1 : 2位 (+6pt)
 GP3 -> GP3 : 7位 (No Points)
 
-== 🇮🇹 Fagioli ==
-GP1 -> GP1 : 3位 (+4pt)
+== 🇮🇹 Luigi Fagioli (Total: 30pt) ==
 GP4 -> GP4 : 1位 (+9pt)
 GP6 -> GP6 : 2位 (+6pt)
 GP7 -> GP7 : 2位 (+6pt)
+GP1 -> GP1 : 3位 (+4pt)
 GP2 -> GP2 : 5位 (No Points)
 GP5 -> GP5 : 7位 (No Points)
 
-== 🇺🇸 Parsons ==
+== 🇺🇸 Johnny Parsons (Total: 9pt) ==
 GP3 -> GP3 : 1位 (+9pt)
 
-== 🇫🇷 Rosier ==
+== 🇫🇷 Louis Rosier (Total: 7pt) ==
 GP4 -> GP4 : 4位 (+3pt)
 GP7 -> GP7 : 3位 (+4pt)
 GP1 -> GP1 : 6位 (No Points)
+
+== 🇩🇪 Hermann Lang (Total: 8pt) ==
+GP5 -> GP5 : 3位 (+5pt)
+GP6 -> GP6 : 4位 (+3pt)
+GP1 -> GP1 : No Points
+GP4 -> GP4 : No Points
+GP2 -> GP2 : No Points
+
+== 🇮🇹 Piero Taruffi (Total: 9pt) ==
+GP2 -> GP2 : 2位 (+6pt)
+GP7 -> GP7 : 5位 (No Points)
+GP1 -> GP1 : 4位 (+3pt)
+GP5 -> GP5 : No Points
+
+== 🇮🇹 Felice Bonetto (Total: 6pt) ==
+GP7 -> GP7 : 4位 (+2pt)
+GP6 -> GP6 : No Points
+GP1 -> GP1 : 5位 (No Points)
+GP3 -> GP3 : No Points
 @enduml
