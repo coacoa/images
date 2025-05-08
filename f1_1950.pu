@@ -1,54 +1,42 @@
 @startuml
-title 1950 F1 Season - Points per Race
+title 1950 F1 Season - Points by GP, Grouped by Driver
 
-participant "Farina" as Farina
-participant "Fangio" as Fangio
-participant "Fagioli" as Fagioli
-participant "Rosier" as Rosier
-participant "Parsons" as Parsons
-participant "Other Drivers" as Others
+participant "GP1\n🇬🇧 British GP" as GP1
+participant "GP2\n🇲🇨 Monaco GP" as GP2
+participant "GP3\n🇺🇸 Indy 500" as GP3
+participant "GP4\n🇨🇭 Swiss GP" as GP4
+participant "GP5\n🇧🇪 Belgian GP" as GP5
+participant "GP6\n🇫🇷 French GP" as GP6
+participant "GP7\n🇮🇹 Italian GP" as GP7
 
-== Race 1: British GP 🇬🇧 ==
-Farina -> Farina : 1st place (+8)
-Fagioli -> Fagioli : 2nd (+6)
-Fangio -> Fangio : 3rd (+4)
-note right of Farina: Fastest Lap (+1)\nTotal: 9 pts
+== 🇮🇹 Farina ==
+GP1 -> GP1 : 1位 (+9pt)
+GP2 -> GP2 : R (Retired)
+GP4 -> GP4 : 2位 (+6pt)
+GP6 -> GP6 : 3位 (+4pt)
+GP7 -> GP7 : 1位 (+9pt)
+GP5 -> GP5 : 6位 (No Points)
 
-== Race 2: Monaco GP 🇲🇨 ==
-Fangio -> Fangio : 1st (+8)
-Ascari -> Ascari : 2nd (+6)
-Chiron -> Chiron : 3rd (+4)
-note right of Fangio: Fastest Lap (+1)\nTotal: 9 pts
+== 🇦🇷 Fangio ==
+GP1 -> GP1 : 2位 (+6pt)
+GP2 -> GP2 : 1位 (+9pt)
+GP5 -> GP5 : 1位 (+9pt)
+GP6 -> GP6 : 1位 (+9pt)
+GP3 -> GP3 : 7位 (No Points)
 
-== Race 3: Indianapolis 500 🇺🇸 ==
-Parsons -> Parsons : 1st (+9 incl. FL)
-note right of Parsons: Total: 9 pts
+== 🇮🇹 Fagioli ==
+GP1 -> GP1 : 3位 (+4pt)
+GP4 -> GP4 : 1位 (+9pt)
+GP6 -> GP6 : 2位 (+6pt)
+GP7 -> GP7 : 2位 (+6pt)
+GP2 -> GP2 : 5位 (No Points)
+GP5 -> GP5 : 7位 (No Points)
 
-== Race 4: Swiss GP 🇨🇭 ==
-Farina -> Farina : 1st (+8)
-Fagioli -> Fagioli : 2nd (+6)
-Rosier -> Rosier : 3rd (+4)
-note right of Farina: Total: 17 pts
+== 🇺🇸 Parsons ==
+GP3 -> GP3 : 1位 (+9pt)
 
-== Race 5: Belgian GP 🇧🇪 ==
-Fangio -> Fangio : 1st (+9 incl. FL)
-note right of Fangio: Total: 18 pts
-
-== Race 6: French GP 🇫🇷 ==
-Fangio -> Fangio : 1st (+8)
-Fagioli -> Fagioli : 2nd (+6)
-Farina -> Farina : 3rd (+4)
-note right of Fangio: Fastest Lap (+1)\nTotal: 27 pts
-
-== Race 7: Italian GP 🇮🇹 ==
-Farina -> Farina : 1st (+8)
-Fagioli -> Fagioli : 2nd (+6)
-Rosier -> Rosier : 3rd (+4)
-note right of Farina: Total: 29 pts
-
-== Final Standings 🏁 ==
-note over Farina, Fangio
-Champion: Giuseppe Farina (30 pts)\n2nd: Fangio (27 pts)\n3rd: Fagioli (24 pts)
-end note
-
+== 🇫🇷 Rosier ==
+GP4 -> GP4 : 4位 (+3pt)
+GP7 -> GP7 : 3位 (+4pt)
+GP1 -> GP1 : 6位 (No Points)
 @enduml
