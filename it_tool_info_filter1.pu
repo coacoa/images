@@ -1,0 +1,22 @@
+@startuml
+actor User
+participant Browser
+participant Extension as "拡張機能\n(uBlock Origin など)"
+participant FilterRules as "フィルタルール"
+participant WebPage as "ウェブページ"
+
+User -> Browser : ニュースサイトへアクセス
+Browser -> WebPage : ページリクエスト
+WebPage --> Browser : HTMLコンテンツ返却
+
+Browser -> Extension : DOM解析開始
+Extension -> FilterRules : ブロック対象キーワードを取得
+Extension -> Browser : キーワードにマッチする要素を検索
+alt マッチした場合
+    Extension -> Browser : 対象要素を非表示
+else マッチしない場合
+    Extension -> Browser : そのまま表示
+end
+
+Browser -> User : 最終表示されたページ
+@enduml
