@@ -1,25 +1,59 @@
 @startuml
-actor あなた as User
-participant "SNS/動画" as SNS
-participant "コメント欄" as Comments
-participant "政治・選挙情報" as Info
-participant "信頼できるメディア" as Trusted
-participant "ツール・拡張機能" as Tools
+hide footbox
+skinparam sequence {
+  ParticipantPadding 60
+  BoxPadding 20
+}
 
-== 課題の認識 ==
-User -> SNS : 政治関連の動画や投稿を見る
-SNS -> Comments : 誹謗中傷や過激な発言を表示
-User -> User : 心が疲れる、避けたいと感じる
+box "公共 テレビ構造" #lightgray
+participant "公共 テレビの出演者\n（タレント・コメンテーター）" as Tarento
+participant "公共 テレビ（旧メディア）" as TV
+end box
 
-== 目的の明確化 ==
-User -> User : 投票に向けて知識を得たい
+actor "自分（視聴者）" as Viewer
 
-== 対処方法の選択 ==
-User -> Tools : コメント非表示・拡張機能を導入
-User -> Trusted : 信頼できる情報源で調べる
-Trusted -> Info : 中立的な解説・ボートマッチなどを提供
-Info --> User : 冷静な知識を得る
+box "ネット動画構造" #lightblue
+participant "ネット動画\n（YouTube・SNSなど）" as NetVideo
+participant "ネットの出演者\n（タレント・コメンテーター）" as NetTarento
+end box
 
-== ゴール ==
-User -> User : 感情を守りながら投票の準備ができる
+
+== テレビの構造：一方通行 ==
+Tarento -> TV : 台本・予定調和のコメント
+TV -> Viewer : 一方的な情報・娯楽
+Viewer --> TV : フィードバック不可（声が届かない）
+
+note over TV
+・編集で都合よく見せる  
+・不都合な話題は避ける  
+・反応は無視されやすい
+end note
+
+Viewer -> TV : 「ツッコミたいけど言えない…」  
+Viewer -> TV : 「もやもやして終わる」
+Viewer -> Tarento : 「専門家でもないのになんで出てんの？」
+NetVideo -> Viewer : 公共テレビの内容もネットから切り抜き版を見る
+
+== ネットの構造：やりとりできる ==
+NetVideo -> Viewer : 発信・動画・意見
+Viewer -> NetVideo : コメント・いいね・低評価・リポスト
+
+note over NetVideo
+・賛否の反応が返る  
+・議論が起きて変化する  
+・制作者と直接やりとりできる
+end note
+
+Viewer -> Viewer : 「声が届く」  
+Viewer -> NetVideo : 「気に入らなければ見ない・批判する」
+
+== 構造の差が生む感情のちがい ==
+Viewer -> TV : 「一方通行で不透明」→ 不信感・距離を置く
+Viewer -> NetVideo : 「反応が返る」→ 信頼しやすい
+
+note over Viewer
+テレビへのモヤモヤは  
+「都合の悪いことが出ない」こと。  
+自分はただの受け手で終わってしまう。
+end note
 @enduml
