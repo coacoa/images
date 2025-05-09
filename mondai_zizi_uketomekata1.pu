@@ -1,0 +1,25 @@
+@startuml
+actor あなた as User
+participant "SNS/動画" as SNS
+participant "コメント欄" as Comments
+participant "政治・選挙情報" as Info
+participant "信頼できるメディア" as Trusted
+participant "ツール・拡張機能" as Tools
+
+== 課題の認識 ==
+User -> SNS : 政治関連の動画や投稿を見る
+SNS -> Comments : 誹謗中傷や過激な発言を表示
+User -> User : 心が疲れる、避けたいと感じる
+
+== 目的の明確化 ==
+User -> User : 投票に向けて知識を得たい
+
+== 対処方法の選択 ==
+User -> Tools : コメント非表示・拡張機能を導入
+User -> Trusted : 信頼できる情報源で調べる
+Trusted -> Info : 中立的な解説・ボートマッチなどを提供
+Info --> User : 冷静な知識を得る
+
+== ゴール ==
+User -> User : 感情を守りながら投票の準備ができる
+@enduml
