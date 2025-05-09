@@ -1,0 +1,51 @@
+@startuml
+title 世界中のテレビ視聴を紹介する動画への違和感
+
+skinparam handwritten true
+skinparam shadowing false
+skinparam backgroundColor #FAFAFA
+skinparam noteBackgroundColor #FFFDE7
+skinparam defaultTextAlignment center
+
+actor 動画視聴者
+participant "紹介者（YouTubeなど）" as Presenter
+participant "Linux + IPTV ツール" as Tool
+participant "海外/国内TV放送" as Broadcaster
+
+== 紹介の流れ ==
+Presenter -> 動画視聴者 : 「Linuxで世界中のテレビが見られるよ！」
+Presenter -> Tool : 「IPTVアプリやURLを使えばOK」
+Tool -> Broadcaster : 放送リクエスト（非公式）
+Broadcaster --> Tool : 映像配信（本来は制限あり）
+
+== 問題点（見えない部分） ==
+note right of Tool
+実は多くが違法配信ストリーム\n（無断転載・放送権侵害）
+end note
+
+== ユーザーのモヤモヤ ==
+動画視聴者 -> 動画視聴者 : 「これって合法なの？NHKとか…？」
+動画視聴者 -> 動画視聴者 : 「紹介者は悪気なく勧めてるけど\n倫理的に大丈夫…？」
+
+== 違和感の本質 ==
+note left of 動画視聴者
+・無邪気に拡散していることに疑問\n・違法性に触れずに誘導している\n・見た人が真似してしまうリスク
+end note
+
+== 代替案の提示 ==
+動画視聴者 -> Broadcaster : 「正規の方法で見られないの？」
+Broadcaster -> 動画視聴者 : 「NHK WORLD やBBC公式などなら合法で視聴可能」
+
+== 気づき ==
+note right
+あなたのモヤモヤは\n健全なリテラシーの表れ
+end note
+
+legend bottom
+*「世界中のテレビが見られる」という紹介動画には、
+  魅力と引き換えに法的・倫理的なリスクが含まれていることが多い。
+  感覚的な違和感を大事にし、正規ルートを選ぶのが賢明。
+endlegend
+
+footer 作成者：あなたのモヤモヤに共感するGPTより（2025年）
+@enduml
