@@ -1,0 +1,26 @@
+@startuml
+title Windows vs Linux: アップデート体験の流れ
+
+actor User as WinUser
+actor User as LinuxUser
+participant "Windows OS" as WinOS
+participant "Linux OS" as LinuxOS
+
+== Windowsのアップデート体験 ==
+WinUser -> WinOS : PC起動
+WinOS -> WinUser : アップデート通知
+WinOS -> WinUser : 強制アップデート開始
+note right of WinUser : 作業中なのに！
+WinOS -> WinUser : 自動で再起動
+WinUser -> WinUser : 不満・ストレス
+
+== Linuxのアップデート体験 ==
+LinuxUser -> LinuxOS : PC起動
+LinuxOS -> LinuxUser : `apt update && apt upgrade`
+LinuxOS -> LinuxUser : 更新内容表示
+LinuxUser -> LinuxUser : 納得してアップデート
+
+== 構造的な違い（シーケンス図内で比較） ==
+note right of WinOS : 強制的な更新\n不透明な変更内容\n再起動などの不安
+note right of LinuxOS : 手動か自動化できる\n透明な更新内容\n自由な設定
+@enduml
