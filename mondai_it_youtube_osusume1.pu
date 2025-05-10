@@ -1,0 +1,27 @@
+@startuml
+title YouTubeおすすめに「興味なし」が効かない問題の流れ
+
+box "ユーザー側"
+  participant User
+end box
+
+box "YouTubeシステム"
+  participant RecommendationEngine as Engine
+  participant FeedbackProcessor as Feedback
+end box
+
+User -> Engine : 動画一覧を確認
+User -> Feedback : 「興味なし」を選択
+Feedback -> Engine : フィードバック通知
+Engine --> User : 類似動画を一時的に非表示
+
+... 時間が経過 ...
+
+User -> Engine : 再度おすすめを確認
+Engine --> User : 類似動画が再表示される
+
+note over User
+フィードバックが反映されていないように感じる
+何度も同じタイプの動画が表示される
+end note
+@enduml
