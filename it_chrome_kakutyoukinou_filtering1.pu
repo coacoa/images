@@ -1,0 +1,23 @@
+@startuml
+actor User
+participant "Chromeブラウザ" as Browser
+participant "拡張機能\n(uBlock Origin等)" as Extension
+participant "Webページ" as WebPage
+participant "キーワード設定" as FilterList
+
+User -> Browser : Webページにアクセス
+Browser -> WebPage : HTMLリクエスト
+WebPage --> Browser : HTMLコンテンツ受信
+
+Browser -> Extension : DOM読み込み完了通知
+Extension -> FilterList : キーワード一覧取得
+Extension -> Browser : DOMスキャン開始
+
+alt キーワードに一致する要素あり
+    Extension -> Browser : 該当要素を非表示にする
+else 一致なし
+    Extension -> Browser : そのまま表示
+end
+
+Browser -> User : 表示されたページ内容
+@enduml
