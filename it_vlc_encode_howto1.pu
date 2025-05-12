@@ -1,0 +1,28 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam defaultTextAlignment center
+
+actor User
+
+package "MP4 Codec 確認方法" {
+    
+    package "1. ffprobe を使う" {
+        User --> (実行: `ffprobe -v error ...`)
+        (実行: `ffprobe -v error ...`) --> (結果: コーデック名を表示)
+        (結果: コーデック名を表示) --> (例: h264, aac)
+    }
+
+    package "2. mediainfo を使う" {
+        User --> (実行: `mediainfo input.mp4`)
+        (実行: `mediainfo input.mp4`) --> (結果: 詳細な情報を表示)
+        (結果: 詳細な情報を表示) --> (例: コーデック, ビットレート)
+    }
+
+    package "3. VLCメディアプレイヤーを使う" {
+        User --> (VLCで再生)
+        (VLCで再生) --> (メニュー → ツール → コーデック情報)
+        (メニュー → ツール → コーデック情報) --> (コーデック情報がGUIで表示)
+    }
+}
+
+@enduml
