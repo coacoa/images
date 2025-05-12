@@ -1,0 +1,31 @@
+@startuml
+title 電子工作のテストケース
+
+actor User
+
+participant "準備フェーズ" as Prep
+participant "実験フェーズ" as Experiment
+participant "応用フェーズ" as Apply
+
+== 準備 ==
+User -> Prep : 必要な道具を準備（はんだごて、テスター、ブレッドボード）
+note right of Prep : はんだごてセット（1,500〜3,000円）
+note right of Prep : テスター（1,000〜2,000円）
+note right of Prep : ブレッドボード（500〜1,000円）
+User -> Prep : 電気回路の基本を学ぶ（電圧、電流、抵抗）
+
+== 実験 ==
+User -> Experiment : LED点灯回路を作成
+User -> Experiment : 回路の動作確認
+alt 回路が動作する
+  User -> Experiment : 原理を確認
+else
+  User -> Experiment : 配線や部品を再確認
+end
+
+== 応用 ==
+User -> Apply : 新しい回路を作成
+User -> Apply : モーターやセンサーを使った応用回路の構築
+User -> Apply : 修理・応用の挑戦
+
+@enduml
