@@ -1,0 +1,35 @@
+@startuml
+autonumber
+
+actor User
+participant "TTY (コンソール)" as TTY
+participant "Shell (bash/zsh/fish)" as Shell
+participant "Display Manager\n(sddm/lightdm/gdm)" as DM
+participant "Window Manager\n(i3/sway/xfwm)" as WM
+participant "Desktop Apps\n(ブラウザ、エディタなど)" as APPS
+participant "Emotion" as EM
+
+== PC起動 ==
+User -> TTY : 電源ON → ログイン画面
+TTY -> Shell : ユーザー認証 → シェル起動
+
+== デスクトップ環境に入るか？ ==
+Shell -> User : startxする？それともDM使う？
+User -> EM : GUI使いたい？
+
+alt GUIを使いたい
+    Shell -> DM : start display manager
+    DM -> WM : ログイン後、WM起動
+    WM -> APPS : ウィンドウ環境起動
+    APPS -> User : GUIアプリが使える！
+    User -> EM : 快適！
+else CUIで充分
+    Shell -> Shell : CLI作業を続ける
+    User -> EM : 軽くて速いけど無骨…
+end
+
+== アプリを起動 ==
+User -> APPS : ブラウザやファイラを起動
+APPS -> EM : サクサク or モッサリ？
+
+@enduml
