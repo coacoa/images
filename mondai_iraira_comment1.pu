@@ -1,0 +1,34 @@
+@startuml
+actor Viewer
+participant YouTube
+participant "Comment Section" as CS
+participant "Other Viewer" as OV
+participant "Emotion" as EM
+
+== 視聴者が動画を見る ==
+Viewer -> YouTube : 動画を見る
+
+== コメントを読む ==
+Viewer -> CS : コメントを読む
+CS -> EM : 感情反応（怒り、不快）
+
+== ストレスが増す ==
+EM -> Viewer : イライラ・ストレス
+
+== コメントを書くか悩む ==
+Viewer -> EM : 自制 or 衝動？
+
+alt 衝動的になる
+    Viewer -> CS : 攻撃的なコメントを書く
+    CS -> OV : コメントが表示される
+    OV -> EM : 新たな感情反応
+    EM -> OV : 攻撃的な返信 or さらに炎上
+else 自制する
+    Viewer -> Viewer : コメントを書かない
+end
+
+== アルゴリズムが反応 ==
+CS -> YouTube : コメント活発 → おすすめ強化
+YouTube -> Viewer : 類似動画をおすすめ
+
+@enduml
