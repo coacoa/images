@@ -7,33 +7,53 @@ participant "Hardware\n(BIOS/UEFI)" as HW
 participant "Bootloader\n(GRUB/systemd-boot)" as BL
 participant "Linux Kernel\n(NixOS Kernel)" as Kernel
 participant "Init System\n(systemd)" as Init
-participant "Login Manager\n(sddm, greetd など)" as LoginMgr
-participant "Window System\n(X11 or Wayland)" as WinSys
-participant "Window Manager\n(i3 or sway)" as WM
-participant "User Apps\n(Terminal, Browser, etc)" as App
+participant "Login Manager\n(sddm/greetd)" as LoginMgr
+participant "Window System\n(X11 / Wayland)" as WinSys
 
 == Boot ==
 User -> HW : Power on
 HW -> BL : Load Bootloader
-BL -> Kernel : Load NixOS Kernel + initrd
-Kernel -> Init : Handoff to init=/nix/store/...
-
-== System Init ==
-Init -> LoginMgr : Launch Login Manager
+BL -> Kernel : Load Kernel + initrd
+Kernel -> Init : Start systemd
+Init -> LoginMgr : Start login manager
 
 == Login ==
-User -> LoginMgr : Login with credentials
+User -> LoginMgr : Authenticate
 
-== Session Start ==
+== Window System Start ==
 LoginMgr -> WinSys : Start X11 or Wayland
-alt Using X11
-    WinSys -> WM : Start i3
-else Using Wayland
-    WinSys -> WM : Start sway
+
+== Window Manager Start ==
+'=== ウィンドウマネージャ分類 ===
+' - タイル型 (Tiling WM): i3, sway, dwm
+' - スタック型 (Stacking WM): openbox, xfwm4
+' - デスクトップ環境 (Desktop Env): GNOME, KDE
+
+alt Tile WM
+    alt Using X11
+        WinSys -> "i3 or dwm" : Start Tiling WM (X11)
+    else Using Wayland
+        WinSys -> "sway" : Start Tiling WM (Wayland)
+    end
+else Stack WM
+    WinSys -> "openbox or xfwm4" : Start Stacking WM
+else Desktop Env (DE)
+    WinSys -> "GNOME/KDE" : Start full DE session
 end
 
-== Desktop ==
-WM -> App : Launch user apps (via .xsession or sway config)
-User -> App : Use Terminal, Browser, etc
+== Application Launch ==
+"WM or DE" -> "User Apps" : Start terminal, editors, IDE
+User -> "User Apps" : Launch editor or IDE
+
+alt Editor (TUI)
+    "User Apps" -> "vim / nvim" : Open text editor (TUI)
+    "User Apps" -> "emacs -nw" : Open emacs in terminal
+else Editor (GUI)
+    "User Apps" -> "emacs (GUI)" : Start Emacs GUI
+    "User Apps" -> "VSCode" : Launch Visual Studio Code
+    "User Apps" -> "Other IDEs (JetBrains etc.)" : Launch full IDE
+end
+
+"User Apps" -> User : Code / Edit / Configure
 
 @enduml
