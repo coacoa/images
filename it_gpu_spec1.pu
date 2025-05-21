@@ -16,9 +16,9 @@ participant "2025" as Y2025
 ' ---- GPU登場 ----
 Y2016 -> Y2017 : GTX 1050 Ti 4GB（あなた）\n→ 軽量推論○
 Y2017 -> Y2018 : GTX 1050 4GB（あなた）\n→ 軽量用途
-Y2019 -> Y2020 : GTX 1650 Super 4GB（あなた）\n→ 推論◎ 学習△
-Y2019 -> Y2020 : RTX 2060 6GB（あなた）\n→ 推論◎ 軽〜中学習○
-Y2019 -> Y2020 : Quadro T3000 6GB（あなた）\n→ AI用途○（ワークステーション向け）
+Y2019 -> Y2020 : GTX 1650 4GB（あなた）\n→ 推論△ / 学習×
+Y2019 -> Y2020 : RTX 2060 6GB（あなた）\n→ 推論◎ / 軽〜中学習○
+Y2019 -> Y2020 : Quadro RTX 3000 6GB（あなた）\n→ Tensorあり / AI実用可
 
 Y2018 -> Y2019 : RTX 2080（Turing/Tensor）
 Y2020 -> Y2022 : RTX 3080（Ampere）
@@ -26,23 +26,19 @@ Y2023 -> Y2023 : H100（Hopper）
 
 ' ---- 備考 ----
 note right of Y2016
-GTX 1050 Ti\nCUDA対応\nVRAM 4GB\n→ 推論可 / 学習は厳しい
+GTX 1050 Ti\nCUDA対応 / Tensorなし\n→ 推論可 / 学習は困難
 end note
 
 note right of Y2019
-GTX 1650 Super\nコスパ推論\nVRAM 4GB\n→ 軽量学習も一部可
+GTX 1650（無印）\n→ VRAM 4GB / Tensorなし\n→ 推論△ / 学習は難
 
-RTX 2060\nTensorコアあり\n→ 軽量モデル学習に最適
+RTX 2060\nTensorコアあり（Turing）\n→ 軽量モデル学習に最適
 
-Quadro T3000\nプロ向けワークステーションGPU\n→ Tensor非搭載
+Quadro RTX 3000\nTensorコアあり\n→ 安定性重視 / AI実用可能
 end note
 
 note right of Y2023
-H100\n大規模モデル向け\n→ LLMや生成AI向け
-end note
-
-note right of Y2025
-Blackwell世代（予定）\n→ 未定
+H100\nLLM・生成AI向け\n→ 高性能・高価格帯
 end note
 
 @enduml
