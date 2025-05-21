@@ -1,0 +1,44 @@
+@startuml
+title YouTube コメント可視化
+
+participant "Left" as left #LightBlue
+participant "Mid-left" as mleft #Aquamarine
+participant "Middle" as middle #White
+participant "Mid-right" as mright #MistyRose
+participant "Right" as right #LightCoral
+
+== Healthy Discussion Zone ==
+middle -> middle : "今の政府では、基礎も怪しい先々ごちゃごち\nゃする前に、今のうちに強制送還しながら、\n今回限りの版おして追い出せ、怪我をした家\n庭には、情けない政府が保証しろよ\n(@@藤本修司-b2f)"
+middle -> middle : "サムネがあばれるくんすぎてビビる\n(@@紫音-k9r)"
+middle -> middle : "極刑望む\n(@@guttyao)"
+right -> middle : "正直、最近感覚麻痺ってきてるなーって感じ\nてしまうのは 中国籍の人間で、事故を起こ\nしてしまってちゃんと降りて大丈夫か聞いた\nり（本当は救急手配とか、警察呼ぶとかしな\nいといけん）\n事件の後に警察に出頭をするあたり 意外と\n普段はちゃんとしてる人なんだろうなという\n印象はある。  飲酒運転があまりにも悪す\nぎてその要素完全に消えるんだけどね？悪い\nものは悪いし、轢き逃げしたことには変わり\nないしね。\n(@@tomach6299)"
+middle -> middle : "強制送還しろや！\n(@@33R-f5g)"
+middle -> middle : "しかし民度が低いな\n(@@mokachan6280)"
+middle -> middle : "民度が低くてウンザリ\nしかもそれを恥じてない\n(@@blue-ao-blue)"
+middle -> middle : "飲んで運転するのが文化なら日本では受け入\nれられない強制送還！\n(@@saka5173)"
+middle -> middle : "岩屋の宝\n(@@マーケ-u2c)"
+middle -> middle : "必ず懲役実刑に処して下さい!!!!! 💢\n(@@Ranakoooo)"
+middle -> middle : "左寄りの思想に落ちぶれた自民にいつまでも\n政治を任せているからこうなる\n(@@n.o5986)"
+middle -> middle : "こういう場合、飲ませた飲食店も罰あるんじ\nゃ？\n(@@OS-yy4pd)"
+middle -> middle : "なんだこのサムネ、ニョキっと出てる感じ。\n(@@アスファルター7ニスモふぁん)"
+middle -> middle : "フィリピンの大統領は、迷惑系\nYouTuber に厳しく対処したよ。さ\nて、次は日本の番だね\n(@@プリオプリコ)"
+middle -> middle : "この系統、全部百田尚樹に見えるw\n(@@zq5562)"
+middle -> middle : "中華料理店も運転の可能性を認識してたら処\n罰やね。\n(@@yasu421)"
+middle -> middle : "二度と来られないように強制送還するべき。\n(@@junkokirara4369)"
+left -> middle : "飲酒運転・ひき逃げとか情状酌量の余地なし\nで死刑でいいでしょ😢　なんか🙏みたいな事\nしてるけど、それで許されたと思って現場か\nら逃げたの終わってんね😮\n(@@N03T0227)"
+middle -> middle : "日本人への無差別テロということでよろしく\nお願いします\n(@@555nya666)"
+right -> middle : "我是中国人，我支持对犯罪嫌疑人判重罪，最\n好判死刑\n(@@guibinzhao-c9t)"
+middle -> middle : "クロちゃんついに捕まったのかと思った\n(@@リタ-f9v)"
+right -> middle : "飲酒　轢き逃げ　中国人\nこれで無罪くるか？\n(@@abyssoftokyo)"
+middle -> middle : "不起訴にすんなよな！検察！ちゃんと仕事し\nろ！重罰にしろよな！\n(@@MY-tt4ot)"
+right -> middle : "子供が殺されそうになった。中国人に厳罰を\n。\n(@@kao6857)"
+middle -> middle : "1週間後...精神疾患持ちので不起訴です\n！\n(@@Pちゃん-z3s)"
+middle -> middle : "きもちわる\n(@@mitochan67)"
+middle -> middle : "岩屋の宝\n(@@ぴえまぎ)"
+middle -> middle : "コレで国外退去できなかったら終わってる。\nどうせこんな奴は年食うと生活保護を申請す\nるに決まってる\n(@@TN-cv3nc)"
+middle -> middle : "百田尚樹さんかと思いました。\n(@@sirasawa744)"
+
+== Toxic Comment Zone ==
+right -> middle : ⚠ "また中国籍？悪いことにしにくるんなら日本\nに来るなよ\n散々日本の悪口向こうでは言うくせに\n(@@ジャガーマン-l5h)"
+
+@enduml
