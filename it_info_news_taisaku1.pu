@@ -1,0 +1,26 @@
+@startuml
+actor User
+participant "ニュースサイト（例：Yahoo）" as NewsSite
+participant "uBlock Origin などの拡張機能" as uBlock
+participant "自作フィルタ（キーワード/カテゴリ除外）" as FilterRule
+participant "ノイズ記事（芸能・炎上・誹謗中傷）" as Noise
+participant "読みたい記事（政治・経済・技術など）" as GoodContent
+
+== ニュースサイトアクセス ==
+User -> NewsSite : サイトにアクセス
+NewsSite -> User : 記事をすべて表示
+NewsSite -> Noise : 芸能・ゴシップ記事も多数含む
+NewsSite -> GoodContent : 読む価値のある記事も含む
+
+== uBlock Originによるフィルタ処理 ==
+User -> uBlock : フィルタ定義を追加（例：has-text(炎上), 離婚）
+uBlock -> FilterRule : 適用ルールを読み込む
+uBlock -> NewsSite : DOMをスキャン
+FilterRule -> uBlock : ノイズ要素を判定・非表示指示
+uBlock -> User : ノイズを消したクリーンなページを表示
+
+== 結果 ==
+User --> GoodContent : 読みたい情報だけを読む
+User -x Noise : ノイズには接触せずストレス低減
+
+@enduml

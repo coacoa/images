@@ -1,0 +1,20 @@
+@startuml
+actor User
+participant "足の親指の爪" as Nail
+participant "皮膚" as Skin
+participant "絆創膏" as BandAid
+participant "汗・環境" as Sweat
+participant "対策" as Measures
+
+User -> Nail : 爪が伸びる
+Nail -> Skin : サイドに食い込む
+Skin -> User : 痛み発生
+
+User -> BandAid : 貼って皮膚を引っ張る
+BandAid -> Skin : 圧力軽減 → 痛み緩和
+Sweat -> BandAid : 剥がれる
+
+User -> Measures : 汗に強いテープを使う\n(キネシオなど)
+Measures -> BandAid : 剥がれにくくなる
+User -> Measures : 指サックやガーゼも併用
+@enduml
