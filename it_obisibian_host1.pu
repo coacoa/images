@@ -1,0 +1,26 @@
+@startuml
+title Obsidian CMS 的利用とホスティング方法の比較
+
+actor User
+participant "Obsidian (Markdown)" as Obsidian
+participant "Static Site Generator\n(Hugo, Jekyll など)" as Generator
+participant "Cloudflare R2\n(+ Workers/Pages)" as R2
+participant "GitHub Pages" as GitHub
+
+== Cloudflare R2 による公開 ==
+
+User -> Obsidian : ノートを作成
+Obsidian -> Generator : Markdown を静的HTMLに変換
+Generator -> R2 : public/ をアップロード
+R2 -> R2 : Cloudflare Workers/Pages で公開設定
+User -> R2 : Webサイトにアクセス
+
+== GitHub Pages による公開 ==
+
+User -> Obsidian : ノートを作成
+Obsidian -> Generator : Markdown を静的HTMLに変換
+Generator -> GitHub : リポジトリに push
+GitHub -> GitHub : 自動で Pages にデプロイ
+User -> GitHub : Webサイトにアクセス
+
+@enduml
