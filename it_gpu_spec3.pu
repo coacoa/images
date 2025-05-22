@@ -1,0 +1,24 @@
+@startuml
+actor User as ユーザー
+participant "目的の確認" as 目的
+participant "GPU候補の選定" as 候補
+participant "互換性チェック" as 互換性
+participant "最終判断" as 判断
+
+ユーザー -> 目的 : 「生成AI用途で使いたい」
+目的 -> 候補 : VRAM 8GB以上を推奨\n（画像生成・動画生成）
+候補 -> 候補 : NVIDIAかRadeonか選択
+
+候補 -> 互換性 : CUDA必須？→ Yes
+互換性 -> 候補 : NVIDIAを優先候補に
+
+alt NVIDIAを選ぶ
+  候補 -> 判断 : RTX 3060 (12GB)\nRTX A2000\nRTX 3090 など
+  判断 -> ユーザー : ✅ 安定して使える
+else Radeonを選ぶ
+  候補 -> 互換性 : ROCm対応？→ 難しい
+  判断 -> ユーザー : ⚠ 多くのAIツール非対応
+end
+
+ユーザー -> 判断 : 最終的にNVIDIAを選ぶ
+@enduml
