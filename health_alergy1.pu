@@ -1,0 +1,24 @@
+@startuml
+actor User
+participant "汗・刺激" as Sweat
+participant "皮膚" as Skin
+participant "対策" as Measures
+participant "医療" as Medical
+
+User -> Sweat: 暑さ・運動で汗が出る
+Sweat -> Skin: 汗がたまる・刺激になる
+Skin -> User: かゆみ・ヒリヒリ・赤み
+
+User -> Measures: こまめに拭く（押さえる）
+User -> Measures: ぬるま湯で洗顔・保湿
+User -> Measures: 通気性の良い服装・素材選び
+User -> Measures: 肌に優しい化粧品・日焼け止め
+User -> Measures: 冷やして一時的にかゆみ緩和
+
+alt 症状が長引く or 悪化
+  User -> Medical: 皮膚科受診・アレルギー検査
+  Medical -> User: ステロイド or 抗アレルギー薬
+end
+
+Measures -> Skin: 炎症を防ぐ・快適に
+@enduml
