@@ -1,0 +1,31 @@
+@startuml
+skinparam dpi 160
+skinparam defaultFontSize 16
+skinparam ParticipantPadding 20
+skinparam ArrowThickness 2
+skinparam ArrowFontSize 14
+
+actor "User" as User
+participant ".bashrc" 
+participant ".xinitrc"
+participant ".xprofile"
+participant ".xinputrc"
+participant ".xmodmap"
+participant "X session"
+participant "Window Manager\n(e.g. dwm, xfce)"
+
+User -> ".xinitrc": startx を使うとき
+".xinitrc" -> ".xprofile": 読み込むこともある
+".xinitrc" -> ".xinputrc": IM（fcitx/ibus）設定
+".xinitrc" -> ".xmodmap": キー設定読み込み
+".xinitrc" -> "Window Manager\n(e.g. dwm, xfce)": 起動
+
+User -> "X session": ディスプレイマネージャ（GDMなど）
+"X session" -> ".xprofile": 自動実行される
+"X session" -> ".xinputrc": 入力メソッド設定
+"X session" -> ".xmodmap": 使われることもある
+"X session" -> "Window Manager\n(e.g. dwm, xfce)": 起動
+
+User -> ".bashrc": ターミナル起動時
+
+@enduml
