@@ -1,0 +1,39 @@
+@startuml
+title dwm で Windowsキーを Mod に、VSCode では Alt の代わりに使いたい場合
+
+actor User
+participant "dwm" as WM
+participant "X Server"
+participant "VSCode"
+participant "xkb options"
+participant "Xremap"
+
+== 通常の起動と操作 ==
+User -> WM : Super（Winキー）でウィンドウ操作 (Mod4Mask)
+note right of WM
+  config.h で modkey を Mod4Mask に設定  
+  → Windowsキーが Mod キーとして働く
+end note
+
+User -> VSCode : Alt+D を押したいが効かない
+
+== 解決策①: Alt と Super を入れ替える ==
+User -> "xkb options" : setxkbmap -option altwin:swap_alt_win
+"xkb options" -> "X Server" : キー動作を切り替え
+note right of "X Server"
+  Altキー ↔ Superキー 入れ替え  
+  → VSCodeでは Win+D = Alt+D のように動作
+end note
+
+== 解決策②: アプリごとのキー変換 ==
+User -> Xremap : VSCode にだけ Win+D → Alt+D のマッピング
+Xremap -> "X Server" : 特定アプリにキー変換適用
+note right of VSCode
+  Win+D を Alt+D として受け取れる
+end note
+
+== 解決策③: VSCode 側で変更 ==
+User -> VSCode : ショートカットを Ctrl+D に変更
+VSCode -> VSCode : 内部で再マップ
+
+@enduml

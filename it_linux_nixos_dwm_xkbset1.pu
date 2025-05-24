@@ -1,0 +1,33 @@
+@startuml
+title xkbset m が無効になる原因のシーケンス図
+
+actor User
+participant "X Server" as X
+participant "dwm"
+participant "xkbset"
+participant "外部イベント (USB, suspend など)" as Events
+participant "監視スクリプト" as Watcher
+
+== 起動時 ==
+User -> X : startx などでXセッション起動
+X -> dwm : dwm 起動
+User -> xkbset : xkbset m 実行
+xkbset -> X : マウスキー有効化 (AccessX 機能)
+
+== 途中で無効化される原因 ==
+Events -> X : 入力デバイスの再認識 / サスペンド復帰
+X -> X : AccessX 設定がリセットされる
+note right of X
+  このタイミングで  
+  xkbset の設定が消える
+end note
+
+== 対策①: 定期再設定 ==
+User -> Watcher : 監視スクリプト起動 (xkbset_loop.sh)
+Watcher -> X : xkbset q で状態確認（定期）
+alt マウスキーが無効になったら
+  Watcher -> xkbset : xkbset m 実行
+  xkbset -> X : 再度マウスキー有効化
+end
+
+@enduml
