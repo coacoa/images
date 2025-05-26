@@ -1,0 +1,22 @@
+@startuml
+actor "キーボード" as Keyboard
+participant "xmodmap" as Xmodmap
+participant "Xサーバー" as Xserver
+participant "アプリケーション" as App
+
+Keyboard -> Xserver : キー入力
+Xserver -> Xmodmap : キーイベントを渡す
+Xmodmap -> Xserver : キーマッピング適用
+Xserver -> App : 変換後のキーを渡す
+
+== 対して kmonad ==
+
+actor "キーボード" as Keyboard2
+participant "kmonad" as Kmonad
+participant "OS (カーネル)" as Kernel
+participant "アプリケーション" as App2
+
+Keyboard2 -> Kmonad : キー入力を直接読む (/dev/input)
+Kmonad -> Kernel : 仮想入力イベントを送信 (/dev/uinput)
+Kernel -> App2 : 通常のキーイベントとして渡す
+@enduml
