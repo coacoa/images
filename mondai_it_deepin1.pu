@@ -1,0 +1,29 @@
+@startuml
+title Deepin OS における通信の可視化と検証手順
+
+actor User as U
+participant "Deepin OS\n（仮想環境）" as D
+participant "Wireshark / tcpdump\n（ホスト側）" as T
+participant "インターネット\n（外部通信先）" as Net
+database "通信ログ.pcap" as Log
+
+U -> D : Deepinを起動
+D -> Net : 初期通信（DNS, HTTP等）を自動送信
+D -> T : ネットワーク通信を\nミラーリング
+T -> Log : 通信内容を記録\n（pcap形式）
+
+U -> T : 通信ログを解析（Wireshark使用）
+T -> U : 送信先のIPやデータ内容を表示
+
+U -> Net : 送信先のIPをGeoIPなどで確認
+Net -> U : 所在地情報（例：中国）を返す
+
+U -> D : ファイアウォールで通信を遮断
+U -> D : 動作確認（App Store等）
+
+note right of D
+  通信先が遮断されている場合に  
+  Deepinのアプリがどう挙動するかを観察
+end note
+
+@enduml
