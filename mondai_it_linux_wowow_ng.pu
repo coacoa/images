@@ -1,0 +1,38 @@
+@startuml
+title WOWOWオンデマンドがLinuxで再生できない問題（シーケンス図）
+
+actor User
+participant "Linux Browser\n(Chrome/Firefox)" as Browser
+participant "WOWOW Server" as Server
+participant "DRM Module\n(Widevineなど)" as DRM
+
+== アクセスと再生要求 ==
+User -> Browser: WOWOWオンデマンドにアクセス
+Browser -> Server: 再生ページをリクエスト
+Server --> Browser: DRM付きプレイヤーを返す
+
+== DRMのチェック ==
+Browser -> DRM: Widevineモジュールを呼び出す
+DRM --> Browser: 対応環境を確認
+
+alt DRM未対応 または 無効
+  Browser --> User: 「再生できません」エラー表示
+  note right of Browser
+    ・LinuxのFirefoxなどでは<br>
+    DRMが無効または非対応の可能性
+  end note
+else 対応済み
+  Browser -> Server: DRM認証・トークンを送信
+  Server --> Browser: 映像ストリームを配信
+  Browser --> User: 再生開始
+end
+
+== 対策 ==
+User -> Browser: UA偽装／Chrome利用を試す
+note right of User
+  ・ユーザーエージェントを<br>
+    Windowsなどに偽装<br>
+  ・公式Chromeなら成功することも
+end note
+
+@enduml
