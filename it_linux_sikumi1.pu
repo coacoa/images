@@ -1,30 +1,74 @@
 @startuml
+skinparam sequence {
+  ArrowColor Black
+  LifeLineBorderColor Black
+  LifeLineBackgroundColor White
+}
+
 autonumber
 
-' 左から右に向かって「低レイヤ → 高レイヤ」
-participant "Hardware\n(CPU, GPU,\nDisk, etc)" as HW
-participant "Kernel\n(init, systemd,\ndevices, syscalls)" as Kernel
-participant "Display Manager\n(GDM, LightDM, etc)" as DM
-participant "Desktop Env\n(GNOME, XFCE, etc)" as DE
-participant "Shell\n(bash, zsh)" as Shell
 participant "User" as User
+participant "Display Manager\n(GDM, LightDM, etc)" as DM
+participant "Kernel\n(systemd, pam)" as Kernel
+participant "App Launcher\n(bash, rofi, dmenu)" as Launcher
 
-== 起動 ==
-HW -> Kernel : 電源投入\n→ ブートローダ → カーネル起動
-Kernel -> Kernel : init → systemd 開始
+== X11セッション ==
+participant "[X11]\n(Xorg Server)" as X11 #aliceblue
+participant "[WM / DE]\n(XFCE, i3, LXQt, KDE, etc)" as X11DE #skyblue
 
-== ログインマネージャ起動 ==
-Kernel -> DM : systemd により GDM / LightDM を起動
-DM -> User : ログイン画面表示（ユーザー入力待ち）
+User -> DM : ログイン（X11セッション選択）
+DM -> Kernel : PAM認証
+DM -> X11 : Xorg 起動
+X11 -> X11DE : DE / WM 起動
+X11DE -> Launcher : アプリ起動
 
-== ログイン処理 ==
-User -> DM : ユーザー名とパスワード入力
-DM -> Kernel : 認証処理（pam経由）
-Kernel --> DM : 認証OK
+note right of X11DE
+💠 X11専用 or 高互換:
+- xrandr ✔️
+- xdotool ✔️
+- dmenu ✔️
+- xinput ✔️
+- picom ✔️
+- redshift ✔️
+end note
 
-== セッション開始 ==
-DM -> DE : GNOME / XFCE セッション起動
-DE -> Shell : ターミナル起動（オプション）
-Shell -> User : シェル操作受付
+note left of X11
+🧱 主にX11使用（デフォルトまたは選択肢）:
+- Ubuntu (XFCE, MATE)
+- Zorin OS (Lite)
+- Arch Linux（選択自由）
+- NixOS（構成次第）
+- Debian（構成次第）
+end note
+
+== Waylandセッション ==
+participant "[Wayland]\n(Protocol Layer)" as Wayland #lightgreen
+participant "[WM / DE]\n(GNOME, KDE, Sway, Weston)" as WaylandDE #palegreen
+
+User -> DM : ログイン（Waylandセッション選択）
+DM -> Wayland : Wayland Compositor 起動
+Wayland -> WaylandDE : DE / WM 起動
+WaylandDE -> Launcher : アプリ起動
+
+note right of WaylandDE
+💠 Wayland専用 or推奨:
+- wlr-randr ✔️
+- wofi ✔️（dmenu代替）
+- waybar ✔️
+- mako ✔️
+- grim / slurp ✔️
+- kanshi ✔️
+- wl-clipboard ✔️
+end note
+
+note left of Wayland
+🧬 主にWayland採用（デフォルト優先）:
+- Fedora Workstation (GNOME)
+- Ubuntu (GNOME)
+- KDE Neon（KDE Plasma Wayland）
+- Zorin OS (GNOME版)
+- NixOS（Wayland対応あり）
+- Arch Linux（Sway, Wayfire など可）
+end note
 
 @enduml
