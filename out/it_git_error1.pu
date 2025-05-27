@@ -1,0 +1,43 @@
+@startuml
+actor User
+participant "Git (ローカル)" as Local
+participant "GitHub (リモート)" as Remote
+
+== push 試行 ==
+
+User -> Local : git push
+Local -> Remote : push main
+Remote --> Local : エラー！リモートの履歴に差分あり\n(rejected: fetch first)
+
+== pull 試行 ==
+
+User -> Local : git pull
+Local -> Remote : fetch changes
+Remote --> Local : リモート履歴を取得
+Local --> User : エラー！ブランチが分岐している\n(hint: rebase or merge必要)
+
+== 解決方法の選択 ==
+
+alt マージで解決
+User -> Local : git pull --no-rebase
+Local -> Remote : fetch + merge
+Remote --> Local : 成功
+User -> Local : git push
+Local -> Remote : push main
+Remote --> Local : push成功
+
+else リベースで解決
+User -> Local : git pull --rebase
+Local -> Remote : fetch + rebase
+Remote --> Local : 成功
+User -> Local : git push
+Local -> Remote : push main
+Remote --> Local : push成功
+
+else 強制Push（危険！）
+User -> Local : git push --force
+Local -> Remote : 上書きpush
+Remote --> Local : push成功（履歴破壊のリスク）
+
+end
+@enduml
