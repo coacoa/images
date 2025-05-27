@@ -71,4 +71,23 @@ note left of Wayland
 - Arch Linux（Sway, Wayfire など可）
 end note
 
+== X11 から Wayland への移行理由と流れ ==
+note over X11, Wayland
+1. セキュリティ向上
+  - X11は設計上古く、他のアプリから入力や表示を
+    傍受されやすい問題あり。
+2. パフォーマンスとモダン機能
+  - WaylandはGPUをより効率的に使い、遅延が減少。
+  - タッチ操作・高DPI対応が改善。
+3. シンプルな設計
+  - Waylandは軽量でモジュール化されており保守が容易。
+4. ツールの移行
+  - 従来のX11ツールは非対応多数→Wayland対応ツールへ。
+5. 利用者選択肢増加
+  - 多くのDEがWayland対応を進め、選択肢が増加中。
+
+※ 現状はまだX11も併用可能だが、将来的に
+   Waylandが主流になる見込み。
+end note
+
 @enduml
