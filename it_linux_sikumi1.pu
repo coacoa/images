@@ -1,0 +1,30 @@
+@startuml
+autonumber
+
+' 左から右に向かって「低レイヤ → 高レイヤ」
+participant "Hardware\n(CPU, GPU,\nDisk, etc)" as HW
+participant "Kernel\n(init, systemd,\ndevices, syscalls)" as Kernel
+participant "Display Manager\n(GDM, LightDM, etc)" as DM
+participant "Desktop Env\n(GNOME, XFCE, etc)" as DE
+participant "Shell\n(bash, zsh)" as Shell
+participant "User" as User
+
+== 起動 ==
+HW -> Kernel : 電源投入\n→ ブートローダ → カーネル起動
+Kernel -> Kernel : init → systemd 開始
+
+== ログインマネージャ起動 ==
+Kernel -> DM : systemd により GDM / LightDM を起動
+DM -> User : ログイン画面表示（ユーザー入力待ち）
+
+== ログイン処理 ==
+User -> DM : ユーザー名とパスワード入力
+DM -> Kernel : 認証処理（pam経由）
+Kernel --> DM : 認証OK
+
+== セッション開始 ==
+DM -> DE : GNOME / XFCE セッション起動
+DE -> Shell : ターミナル起動（オプション）
+Shell -> User : シェル操作受付
+
+@enduml
