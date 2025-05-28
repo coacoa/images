@@ -1,0 +1,45 @@
+@startuml
+actor Creator
+participant "YouTube チャンネル" as Channel
+participant "YouTube パートナープログラム" as YPP
+participant "AdSense アカウント" as AdSense
+participant "収益化管理" as Revenue
+participant "グッズ販売サービス\n(SUZURI/BOOTH/Spring)" as Shop
+participant "ファン支援サービス\n(FANBOX/Patreon)" as Support
+participant "ファン" as Fan
+
+== 登録者1000人達成 ==
+Creator -> Channel : コンテンツ投稿を継続
+Channel -> Channel : 登録者1000人 + 再生時間4000時間を達成
+
+== 収益化申請 ==
+Creator -> YPP : YouTubeパートナープログラムに申請
+YPP -> Creator : チャンネル審査開始
+
+== AdSense連携 ==
+Creator -> AdSense : AdSenseアカウントと連携
+AdSense -> YPP : アカウント承認情報を送信
+
+== 審査結果 ==
+YPP -> Creator : 審査通過（収益化開始）
+
+== 広告収益化開始 ==
+Creator -> Revenue : 広告設定・収益確認
+Revenue -> Creator : 収益レポート反映
+
+== スキル活用コンテンツ ==
+Creator -> Channel : イラスト・3D作品の制作動画を投稿
+Creator -> Channel : 作業ライブ配信やメイキング解説
+
+== グッズ販売 ==
+Creator -> Shop : 自作グッズを登録（Tシャツ、ステッカー等）
+Shop -> Channel : YouTubeと連携（Merch Shelfやリンク）
+Fan -> Shop : 商品購入
+Shop -> Creator : 売上収益を送金
+
+== ファン支援（外部プラットフォーム） ==
+Creator -> Support : 限定コンテンツを投稿（月額/単発支援）
+Fan -> Support : 支援（月額会員やチップ）
+Support -> Creator : 支援金を受け取り
+
+@enduml
