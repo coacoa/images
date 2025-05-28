@@ -1,0 +1,25 @@
+@startuml
+title VSCodeアップデート手順比較: NixOS vs Zorin OS
+
+actor User
+
+User -> ZorinOS: sudo apt update
+User -> ZorinOS: sudo apt upgrade code
+ZorinOS -> VSCode: アップデート実行
+VSCode --> ZorinOS: 新バージョンに更新完了
+
+== NixOSのケース ==
+
+User -> NixOS: nix-env -u vscode
+alt configuration.nix に vscode を書いてない
+    NixOS -> nixpkgs: VSCodeの新バージョン取得
+    nixpkgs --> NixOS: パッケージ提供
+    NixOS -> VSCode: アップデート実行
+    VSCode --> NixOS: 新バージョンに更新完了
+else configuration.nix に vscode がある
+    User -> NixOS: vscode を systemPackages から削除
+    User -> NixOS: nix-env -iA nixpkgs.vscode
+    note right of User: 手動で回避が必要
+end
+
+@enduml
