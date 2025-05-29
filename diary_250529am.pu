@@ -15,12 +15,14 @@ participant "10" as T10
 participant "11" as T11
 participant "12" as T12
 
-T2 -> T2: <font color=red>前日は深夜2時頃に就寝</font>
-T10 -> T10: 起床（実際は10時）前と同じ,<font color=blue>割と過ごしやすい天候</font>
+T0 -> T2: <font color=red>nenagara net pc iziri korega yokunai</font>
+T2 -> T2: <font color=red>neru noga ososugiru</font>
+T2 -> T10: <font color=blue>suiminzikan ha tyoudoii</font>
+T10 -> T10: kisyou <font color=blue>sugosiyasui kikou</font>
 T10 -> T11: フリマで買ったYoga BookでYouTube見る
-T10 -> T11: みずほで駐車場代振込、面倒
-T10 -> T12: うだうだしながらPCを起動（つらい時間、月末の振込思い出して鬱）
-T12 -> T12: 昼はちぢみを食べる
+T10 -> T11: <font color=red>みずほで駐車場代振込、面倒</font>
+T10 -> T12: <font color=red>うだうだしながらPCを起動（つらい時間、月末の振込思い出して鬱）</font>
+T11 -> T12: <font color=red>hiru ha gyouza don taberu itumo kono menyu ninattyau</font>
 
 == 改善メモ（AM） ==
 note over T2, T12
