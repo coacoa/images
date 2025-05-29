@@ -1,0 +1,35 @@
+@startuml
+actor User
+participant "Package Manager" as PM
+participant "xbindkeys"
+participant "Config File (~/.xbindkeysrc)" as CFG
+participant "Shell"
+participant "xkbset"
+
+== Installation ==
+User -> PM : Install xbindkeys
+PM -> xbindkeys : Install binary
+
+== Configuration ==
+User -> CFG : Create/edit ~/.xbindkeysrc
+note right of CFG
+  Binds:
+  "Alt+Tab" -> execute:
+  xkbset m
+  xkbset ma 70 7 7 5 5
+end note
+
+== Start xbindkeys ==
+User -> xbindkeys : Run xbindkeys process
+
+== Runtime Behavior ==
+User -> xbindkeys : Press Alt+Tab
+xbindkeys -> CFG : Match keybinding
+xbindkeys -> Shell : Execute bound command
+Shell -> xkbset : Run `xkbset m`
+Shell -> xkbset : Run `xkbset ma 70 7 7 5 5`
+note right of xkbset
+  Enables mouse keys
+  and sets acceleration
+end note
+@enduml
