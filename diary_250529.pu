@@ -1,0 +1,65 @@
+@startuml
+title 2025年5月29日 の一日（時間軸＋改善メモ・段組版）
+
+participant "0" as T0
+participant "1" as T1
+participant "2" as T2
+participant "3" as T3
+participant "4" as T4
+participant "5" as T5
+participant "6" as T6
+participant "7" as T7
+participant "8" as T8
+participant "9" as T9
+participant "10" as T10
+participant "11" as T11
+participant "12" as T12
+participant "13" as T13
+participant "14" as T14
+participant "15" as T15
+participant "16" as T16
+participant "17" as T17
+participant "18" as T18
+participant "19" as T19
+participant "20" as T20
+participant "21" as T21
+participant "22" as T22
+participant "23" as T23
+
+T2 -> T2: <font color=red>前日は深夜2時頃に就寝</font>
+T10 -> T10: 起床（実際は10時）前と同じ,<font color=blue>割と過ごしやすい天候</font>
+T10 -> T11: フリマでkatta yoga book de youtube miru
+T10 -> T11: mizuho de tyuusyazyoudai furikomu mendoi
+T10 -> T12: うだうだしながらPCを起動して過ごす（つらい時間,月末の振り込み思い出して鬱）
+T12 -> T12: 昼は
+T13 -> T17: 午後はPC作業（Linux動画で勉強、共感、ニュース動画で不満）
+T17 -> T18: 夕方は夕食下ごしらえ手伝い
+T18 -> T19: 夕食を食べる
+T20 -> T23: 今に至る（自由時間）
+
+== 改善メモ①（行動・生活習慣） ==
+note over T2, T10
+<color:red>・夜は早めに寝る（次回は深夜2時→0時）</color>  
+<color:red>・次回はもっと早く起床（理想は8時台）</color>  
+<color:blue>・午前中に散歩やサイクリングなど軽い運動を入れる</color>
+end note
+
+== 改善メモ②（午前の過ごし方） ==
+note over T10, T12
+<color:red>・起床後のだらだら時間を減らす</color>  
+<color:blue>・スムーズにPC作業に移れる工夫をする</color>
+end note
+
+== 改善メモ③（午後の作業・感情） ==
+note over T13, T17
+<color:blue>・9時からPC作業を開始する</color>  
+<color:orange>・ニュース動画でたまった不満を整理・対処する</color>  
+<color:blue>・夏に向けて服装・行動を工夫する</color>
+end note
+
+== 改善メモ④（夜のリフレッシュ） ==
+note over T19
+<color:blue>・19時ごろお風呂に入る前に軽い運動をする</color>
+end note
+
+@enduml

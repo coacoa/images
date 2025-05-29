@@ -1,0 +1,29 @@
+@startuml
+title 2025年5月29日 の一日（PMパート）
+
+participant "13" as T13
+participant "14" as T14
+participant "15" as T15
+participant "16" as T16
+participant "17" as T17
+participant "18" as T18
+participant "19" as T19
+participant "20" as T20
+participant "21" as T21
+participant "22" as T22
+participant "23" as T23
+
+T13 -> T17: 午後はPC作業（Linux動画で勉強、共感、ニュース動画で不満）
+T17 -> T18: 夕方は夕食下ごしらえ手伝い
+T18 -> T19: 夕食を食べる
+T20 -> T23: 今に至る（自由時間）
+
+== 改善メモ（PM） ==
+note over T13, T23
+<color:blue>・9時からPC作業を開始する</color>  
+<color:orange>・ニュース動画でたまった不満を整理・対処する</color>  
+<color:blue>・夏に向けて服装・行動を工夫する</color>  
+<color:blue>・19時ごろお風呂に入る前に軽い運動をする</color>
+end note
+
+@enduml
