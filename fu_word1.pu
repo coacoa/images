@@ -6,18 +6,19 @@ participant kaiteki as kaiteki
 
 == meet ==
 
-fukai -> self : 「tipa」
-fukai -> self : 「kuso」
+fukai -> self : tipa,kuso,wakewakaran yokomoji
+fukai -> self : youtube de ironna douga\n miteruto yokomozi wo futuuni muisiki\n nitukatteru
 kaiteki -> self : zibun to dousedai ka soreyori\n uenosedaikaraha amarikannzinai
 
 == seiri ==
 
-self -> self : 日本語を大切にしたい\n自分に気づく
-self -> self : なぜ不快に感じたのか考える
+self -> self : nihongo taisetuni sitai
+self -> self : naze fukai ninarunoka?
+self -> self : zidaini tuiteikenai?
 
 == taisaku ==
 
-self -> fukai: 否定せず理解を試みる姿勢
-self -> fukai: 多様性を認める\n無理に合わせない
+self -> fukai: kinisinai
+self -> kaiteki: kaitekina douga sika minai
 
 @enduml

@@ -1,0 +1,34 @@
+@startuml
+actor User
+participant Device
+participant App
+participant Network
+participant Tracker
+participant "検出ツール\n（例: GlassWire, NetGuard,\nPi-hole, Wireshark）" as Monitor
+
+== ユーザーは端末を使う ==
+User -> Device : 操作（アプリ起動）
+
+== アプリが通信する ==
+Device -> App : アプリ動作
+App -> Network : 通信開始（APIアクセスなど）
+
+== 情報が外部に出る ==
+Network -> Tracker : ユーザー情報を送信（位置情報など）
+
+== 通信を監視 ==
+Network -> Monitor : 通信記録/検出ログ
+Monitor -> User : 通信可視化（アプリ名・送信先）
+
+note right of Monitor
+例：\n- GlassWire（Windows）\n- NetGuard（Android）\n- Pi-hole（家庭内DNS）\n- Wireshark（全通信の詳細解析）
+end note
+
+== ユーザーの安心感 ==
+User -> Monitor : 「何が送られているか見える！」
+note right of User
+見える化によって
+不安が軽減される
+end note
+
+@enduml
