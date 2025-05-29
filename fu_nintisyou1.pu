@@ -1,0 +1,31 @@
+@startuml
+title 高齢親の鍵紛失問題と対策の可視化（シーケンス図）
+
+actor 親 as Parent
+actor 子ども as Child
+participant 鍵 as Key
+participant スマートタグ as Tag
+participant スマートロック as SmartLock
+participant ショック後悔 as Shock
+participant 費用負担 as Cost
+participant 解決策リスト as Solutions
+
+== 問題の発生 ==
+Parent -> Key : 鍵を持ち歩く
+Key -> Parent : 紛失（どこに置いたか忘れる）
+Parent -> Child : 「鍵がない！」と連絡
+Child -> Cost : 鍵交換（数千円）
+Cost -> Shock : 家族の精神的ダメージ
+
+== 現実的な対策 ==
+Child -> Tag : スマートタグ導入（例：AirTag）
+Tag -> Parent : 鍵の場所をスマホで追跡可能に
+
+Child -> SmartLock : 鍵不要なスマートロックを設置
+SmartLock -> Parent : 暗証番号・スマホで開錠可能
+
+== 予備策 ==
+Child -> Solutions : キーボックス設置、スペアキー管理など
+Solutions -> Parent : 「安心して出入りできるようにする」
+
+@enduml

@@ -1,0 +1,39 @@
+@startuml
+actor User
+participant "C100PA (Chrome OS 84)" as C100PA
+participant "Androidアプリ" as AndroidApp
+participant "Chrome拡張" as ChromeExt
+participant "Linux (Crostini)" as Linux
+participant "YouTube Premium" as Premium
+
+== Brave を使う ==
+User -> C100PA: Playストアを開く
+C100PA -> AndroidApp: Brave をインストール
+AndroidApp -> User: 広告なしYouTube視聴可能
+
+== NewPipe を使う ==
+User -> C100PA: F-Droid サイトを開く
+C100PA -> AndroidApp: NewPipe をインストール
+AndroidApp -> User: 広告なし・軽量YouTube視聴可能
+
+== uBlock Origin 拡張 ==
+User -> C100PA: Chrome 拡張を開く
+C100PA -> ChromeExt: uBlock Origin を追加
+ChromeExt -> User: 広告なしYouTube視聴可能
+note right of ChromeExt
+Chromeバージョンが古くて\n追加できない可能性あり
+end note
+
+== Linux (Crostini) ==
+User -> C100PA: Linux環境を起動
+C100PA -> Linux: Firefox をインストール
+Linux -> User: uBlock Origin + YouTube広告ブロック
+note right of Linux
+C100PAではやや重くなる可能性
+end note
+
+== YouTube Premium ==
+User -> Premium: 有料プランに加入
+Premium -> User: 広告なしYouTubeを公式に利用可能
+
+@enduml
