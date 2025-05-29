@@ -15,23 +15,29 @@ participant "22" as T22
 participant "23" as T23
 participant "24" as T24
 
-T12 -> T14: youtube minagara pc sagyou,korewo kaitekinisuruniwa?
-T12 -> T14: youtube flim noaru,race game ,piano sound etc
-T12 -> T14: yoga ha 6h kurai battery motu? douga tamani tomaru?
-T12 -> T14: linux zorinos tairyou fairu folder sousa de filemanager app katamaru,,,
-T14 -> T15: <font color=red>douga ai kanren ikemarumaru toka umaikedo uzai,,,</font>
-T14 -> T15: <font color=red>furima de gaming pc toka gpu toka sirabete korega zikanno muda,,,</font>
-T16 -> T17: <font color=red>korei oyaga wasuremono de oosawagi,,, ninntisyou? komatta </font>
-T13 -> T17: 午後はPC作業（Linux動画で勉強、共感、ニュース動画で不満）
+T12 -> T14: youtube 見ながら\nPC作業。これを快適にするには？
+T12 -> T14: youtube flim のある、\nrace game, piano sound etc
+T12 -> T14: Yoga は6hくらい battery 持つ？\n動画たまに止まる？
+T12 -> T14: Linux ZorinOS、\n大量ファイル操作で file manager 固まる…
+
+T14 -> T15: <color:red>動画AI関連、\n「いけまるまる」とか上手いけどウザい…</color>
+T14 -> T15: <color:red>フリマで Gaming PC や GPU\n調べて時間の無駄…</color>
+
+T16 -> T17: <color:red>高齢親が忘れ物で大騒ぎ…\n認知症？ 困った</color>
+
+T13 -> T17: 午後は PC作業（Linux動画で勉強・共感、\nニュース動画で不満）
+
 T17 -> T18: 夕方は夕食下ごしらえ手伝い
 T18 -> T19: 夕食を食べる
-T19 -> T20: <color:blue>asus c100pa de brave irete</color>\n <color:blue>youtube koukokunasi! batterimo 4,5zikanmotu?</color>
+
+T19 -> T20: <color:blue>ASUS C100PA で Brave 入れて\nYouTube広告なし！\nBattery も4〜5時間持つ？</color>
+
 T20 -> T24: 今に至る（自由時間）
 
 == 改善メモ（PM） ==
 note over T13, T23
-<color:red>・ニュース動画でたまった不満を整理・対処する</color>  
-<color:blue>・夏に向けて服装・行動を工夫する</color>  
+<color:red>・ニュース動画でたまった不満を整理・対処する</color>\n
+<color:blue>・夏に向けて服装・行動を工夫する</color>\n
 <color:blue>・19時ごろお風呂に入る前に軽い運動をする</color>
 end note
 
