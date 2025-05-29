@@ -18,6 +18,9 @@ participant "24" as T24
 T12 -> T14: youtube minagara pc sagyou,korewo kaitekinisuruniwa?
 T12 -> T14: youtube flim noaru,race game ,piano sound etc
 T12 -> T14: yoga ha 6h kurai battery motu? douga tamani tomaru?
+T12 -> T14: linux zorinos tairyou fairu folder sousa de filemanager app katamaru,,,
+T14 -> T15: <font color=red>douga ai kanren ikemarumaru toka umaikedo uzai,,,</font>
+T14 -> T15: <font color=red>furima de gaming pc toka gpu toka sirabete korega zikanno muda,,,</font>
 T13 -> T17: 午後はPC作業（Linux動画で勉強、共感、ニュース動画で不満）
 T17 -> T18: 夕方は夕食下ごしらえ手伝い
 T18 -> T19: 夕食を食べる
@@ -25,7 +28,7 @@ T20 -> T24: 今に至る（自由時間）
 
 == 改善メモ（PM） ==
 note over T13, T23
-<color:orange>・ニュース動画でたまった不満を整理・対処する</color>  
+<color:red>・ニュース動画でたまった不満を整理・対処する</color>  
 <color:blue>・夏に向けて服装・行動を工夫する</color>  
 <color:blue>・19時ごろお風呂に入る前に軽い運動をする</color>
 end note

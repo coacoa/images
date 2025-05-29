@@ -1,0 +1,23 @@
+@startuml
+' 左から右の順序：不快ワード → 自分 → 快適ワード
+participant fukai as fukai
+actor 自分 as self
+participant kaiteki as kaiteki
+
+== meet ==
+
+fukai -> self : 「tipa」
+fukai -> self : 「kuso」
+kaiteki -> self : zibun to dousedai ka soreyori\n uenosedaikaraha amarikannzinai
+
+== seiri ==
+
+self -> self : 日本語を大切にしたい\n自分に気づく
+self -> self : なぜ不快に感じたのか考える
+
+== taisaku ==
+
+self -> fukai: 否定せず理解を試みる姿勢
+self -> fukai: 多様性を認める\n無理に合わせない
+
+@enduml
