@@ -1,0 +1,37 @@
+@startuml
+title 2025年5月30日 の一日（AMパート）
+
+participant "0" as T0
+participant "1" as T1
+participant "2" as T2
+participant "3" as T3
+participant "4" as T4
+participant "5" as T5
+participant "6" as T6
+participant "7" as T7
+participant "8" as T8
+participant "9" as T9
+participant "10" as T10
+participant "11" as T11
+participant "12" as T12
+
+T0 -> T2: <font color=red>nenagara net pc iziri korega yokunai</font>
+T2 -> T2: <font color=red>neru noga ososugiru</font>
+T2 -> T10: <font color=blue>suiminzikan ha tyoudoii</font>
+T10 -> T10: kisyou <font color=blue>samuikurai,,,kotosiha reikadatouresii</font>
+T10 -> T11: yoga book tohikakude temotino c100pa to firehd10 7th de youtube koukokunasi zikkou
+T10 -> T11: yoga book win10 chrome,c100pa brave,firehd10 7th firefox exten
+T10 -> T11: fuji24h ame nanode yameruhoukou,daiannha?
+T10 -> T12: <font color=red>うだうだしながらPCを起動（つらい時間、月末の振込思い出して鬱）</font>
+T11 -> T12: <font color=red>hiru ha gyouza don taberu itumo kono menyu ninattyau</font>
+
+== 改善メモ（AM） ==
+note over T2, T12
+<color:red>・夜は早めに寝る（次回は深夜2時→0時）-> muzui </color>  
+<color:red>・次回はもっと早く起床（理想は8時台）</color>  
+<color:blue>・午前中に散歩やサイクリングなど軽い運動を入れる</color>  
+<color:red>・起床後のだらだら時間を減らす</color>  
+<color:blue>・スムーズにPC作業に移れる工夫をする</color>
+end note
+
+@enduml
