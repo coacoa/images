@@ -1,0 +1,28 @@
+@startuml
+actor User
+participant "Windows10\n(Explorer)" as Win
+participant "NixOS\n(Nautilus)" as Naut
+participant "NixOS\n(Thunar)" as Thun
+participant "NixOS\n(Dolphin)" as Dol
+
+User -> Win : ファイル操作\n(慣れている)
+User -> NixOS : 移行開始
+
+alt GNOMEを選択
+    NixOS -> Naut : Nautilusを起動
+    User -> Naut : 「見た目違う…？でも操作できる」
+else Xfceを選択
+    NixOS -> Thun : Thunarを起動
+    User -> Thun : 「軽いけど\n機能少ない？」
+else KDEを選択
+    NixOS -> Dol : Dolphinを起動
+    User -> Dol : 「機能多い！でもちょっと重い？」
+end
+
+User -> NixOS : 複数のDEを入れてしまう
+NixOS -> Naut : Nautilusも起動可
+NixOS -> Thun : Thunarも起動可
+NixOS -> Dol : Dolphinも起動可
+User -> User : 「どれが標準なのかわからない…」
+
+@enduml
