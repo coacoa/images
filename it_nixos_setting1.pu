@@ -1,20 +1,55 @@
 @startuml
-title Nixpkgs に Overlay を適用する流れ
+title Flake + NixOS + Home Manager + Overlay 構成の流れ
 
 actor User
-participant "NixOS\n(configuration.nix)" as Config
-participant "pkgs (Nixpkgs)" as Pkgs
-participant "Overlay\n(custom override)" as Overlay
-participant "最終的な\npkgs.st or pkgs.dwm" as FinalPkgs
+participant "flake.nix" as Flake
+participant "Nixpkgs\n(pkgs)" as Pkgs
+participant "Overlay" as Overlay
+participant "NixOS設定\n(configuration.nix)" as NixOSConfig
+participant "HomeManager設定\n(home.nix)" as HMConfig
+participant "最終的なパッケージ群\n(patched pkgs)" as FinalPkgs
 
-User -> Config : 定義を書く（nixpkgs.overlays に\nOverlay を指定）
-Config -> Overlay : import ./overlays/suckless.nix
-Overlay -> Pkgs : super.st などの元のパッケージを参照
-Overlay --> Overlay : overrideAttrs / src / patches を指定
-Overlay -> FinalPkgs : カスタムされた st / dwm を返す
+== 最小構成: configuration.nix のみ ==
+User -> NixOSConfig : /etc/nixos/configuration.nix を編集
+NixOSConfig -> Pkgs : systemPackages に st/dwm を指定
+Pkgs --> User : 通常のパッケージが適用された環境
 
-Config -> FinalPkgs : environment.systemPackages で使用
+== Flake + NixOS ==
+User -> Flake : nixos-rebuild switch --flake .
+Flake -> Pkgs : nixpkgs.url を取得
+Flake -> NixOSConfig : systems."x86_64-linux".nixosConfigurations
+NixOSConfig -> Pkgs : systemPackages に指定
+Pkgs --> User : Flake経由で構成された環境
 
-FinalPkgs --> User : パッチが反映されたバイナリとして提供
+== Flake + Home Manager + configuration.nix ==
+User -> Flake : nixos-rebuild switch --flake .
+Flake -> NixOSConfig : システム構成
+Flake -> HMConfig : ユーザ設定
+NixOSConfig -> Pkgs : systemPackages に指定
+HMConfig -> Pkgs : home.packages に指定
+Pkgs --> User : システム＋ユーザ両方の環境構成
+
+== Flake + Overlay + configuration.nix ==
+User -> Flake : nixos-rebuild switch --flake .
+Flake -> Overlay : overlays = [ sucklessOverlay ]
+Overlay -> Pkgs : st/dwm を overrideAttrs
+Flake -> NixOSConfig : systemPackages に patched パッケージを使用
+Pkgs --> User : パッチ適用済みシステム
+
+== Home Manager + Overlay（Flake無し）==
+User -> HMConfig : ~/.config/nixpkgs/home.nix を編集
+HMConfig -> Overlay : オーバーレイ指定
+Overlay -> Pkgs : patched st/dwm 取得
+Pkgs --> User : ユーザ環境に反映（home-manager switch）
+
+== フル構成: Flake + Home Manager + Overlay ==
+User -> Flake : nixos-rebuild switch --flake .
+Flake -> Overlay : sucklessOverlay 読み込み
+Overlay -> Pkgs : patched st/dwm を提供
+Flake -> NixOSConfig : システム構成
+Flake -> HMConfig : ユーザ構成
+NixOSConfig -> Pkgs : patched st を指定
+HMConfig -> Pkgs : patched st を指定
+Pkgs --> User : フル構成の最終環境が反映
 
 @enduml
