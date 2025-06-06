@@ -1,0 +1,38 @@
+@startuml
+title WindowsからLinuxへの移行計画（2025年）
+
+actor User
+participant "2025_01" as Jan
+participant "2025_02" as Feb
+participant "2025_03" as Mar
+participant "2025_04" as Apr
+participant "2025_05" as May
+participant "2025_06" as Jun
+participant "2025_07" as Jul
+participant "2025_08" as Aug
+participant "2025_09" as Sep
+participant "2025_10" as Oct
+participant "2025_11" as Nov
+participant "2025_12" as Dec
+
+User -> Jan : 現状調査と移行計画立案
+User -> Feb : データバックアップ\nLinuxディストリ選定
+User -> Mar : テスト環境構築（VM/LiveUSB）\n評価・問題抽出
+User -> Apr : 実機へLinuxインストール
+User -> May : データ復元と環境移行
+User -> Jun : アプリケーション移行と設定調整
+User -> Jul : 動作検証・トラブル対応
+User -> Aug : 自動化スクリプト作成
+User -> Sep : 追加ツール導入と設定最適化
+User -> Oct : 運用テスト開始
+User -> Nov : 問題フィードバック反映
+User -> Dec : 移行完了・振り返り
+
+== windows ==
+User -> Apr : windows 7 linux 3
+User -> Apr : windows main game
+== linux ==
+Apr -> Jun : windows 1 liunx 9
+Apr -> Jun : linux main windows game only
+
+@enduml
