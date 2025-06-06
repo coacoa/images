@@ -1,0 +1,20 @@
+@startuml
+title Nixpkgs に Overlay を適用する流れ
+
+actor User
+participant "NixOS\n(configuration.nix)" as Config
+participant "pkgs (Nixpkgs)" as Pkgs
+participant "Overlay\n(custom override)" as Overlay
+participant "最終的な\npkgs.st or pkgs.dwm" as FinalPkgs
+
+User -> Config : 定義を書く（nixpkgs.overlays に\nOverlay を指定）
+Config -> Overlay : import ./overlays/suckless.nix
+Overlay -> Pkgs : super.st などの元のパッケージを参照
+Overlay --> Overlay : overrideAttrs / src / patches を指定
+Overlay -> FinalPkgs : カスタムされた st / dwm を返す
+
+Config -> FinalPkgs : environment.systemPackages で使用
+
+FinalPkgs --> User : パッチが反映されたバイナリとして提供
+
+@enduml
