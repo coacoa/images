@@ -1,0 +1,34 @@
+@startuml
+' タイムライン風に表示
+skinparam sequenceMessageAlign center
+skinparam ParticipantPadding 20
+
+' 登場人物
+actor Developer
+participant "Local Git\n(ローカル)" as Local
+participant "Remote GitHub\n(リモート)" as Remote
+
+== push 失敗のシナリオ ==
+
+Developer -> Local : git commit
+Developer -> Local : git push origin main
+Local -> Remote : push main
+Remote --> Local : ❌ Rejected\n"fetch first"
+
+note right of Remote
+リモートには新しい変更がある。
+ローカルはそれを持っていない。
+→ 安全のため push 拒否
+end note
+
+== 解決：pull --rebase で対応 ==
+
+Developer -> Local : git pull origin main --rebase
+Local -> Remote : fetch latest changes
+Remote --> Local : 最新のコミット取得
+Local -> Local : rebase で自分の変更を再適用
+Developer -> Local : git push origin main
+Local -> Remote : push main
+Remote --> Local : ✅ push 完了！
+
+@enduml

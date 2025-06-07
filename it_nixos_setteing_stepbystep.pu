@@ -1,0 +1,27 @@
+@startuml
+actor User
+participant "NixOS System" as System
+participant "Home Manager" as HM
+participant "Flake System" as Flake
+participant "Overlays" as Overlay
+
+== Step 1: Basic NixOS ==
+User -> System : edit configuration.nix
+System -> System : define basic services, packages
+
+== Step 2: Home Manager (non-flake) ==
+User -> HM : enable home-manager in configuration.nix
+System -> HM : apply home-manager configs via nixos-rebuild
+
+== Step 3: Flake Migration ==
+User -> Flake : write flake.nix\n(inputs, outputs)
+Flake -> System : load configuration.nix
+Flake -> HM : import home.nix\nfrom flake module
+System -> System : rebuild using flake\n(--flake .#hostname)
+
+== Step 4: Overlay Introduction ==
+User -> Overlay : define overlays in flake.nix
+Overlay -> Flake : overlays = [ ... ]
+Flake -> System : apply overlay via nixpkgs.overlays
+
+@enduml
