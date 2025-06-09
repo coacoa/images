@@ -1,0 +1,27 @@
+@startuml
+title Blender VSE 分散レンダリング構成（複数PC）
+
+actor User
+participant "ノートPC\n(編集用)" as Editor
+participant "共有ストレージ\n(NFS/rsync/sambaなど)" as Storage
+participant "デスクトップPC-1\n(レンダリング用)" as Render1
+participant "デスクトップPC-2\n(レンダリング用)" as Render2
+
+User -> Editor : Blender VSE で編集作業
+Editor -> Storage : .blend + 素材をアップロード
+note right of Storage
+  相対パスで素材を管理
+  各PCが同じ構成でアクセスできるように
+end note
+
+User -> Render1 : CLIレンダリング開始（例：1〜250フレーム）
+Render1 -> Storage : .blend 読み込み + レンダリング
+Render1 -> Storage : 出力フレーム保存
+
+User -> Render2 : CLIレンダリング開始（例：251〜500フレーム）
+Render2 -> Storage : .blend 読み込み + レンダリング
+Render2 -> Storage : 出力フレーム保存
+
+User -> Storage : 出力動画をFFmpegで結合
+
+@enduml
