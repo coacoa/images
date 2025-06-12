@@ -1,0 +1,39 @@
+@startuml
+title NixOSをArch Linuxのように使う：概念シーケンス図
+
+actor User
+participant "Arch Linux" as Arch
+participant "NixOS" as Nix
+
+== 目的: Archのように使いたい ==
+
+User -> Arch : pacman -S <package>
+User -> Arch : /etcを手動編集
+User -> Arch : systemctl restart xxxx
+
+User -> Nix : nix-env -iA <package>
+User -> Nix : configuration.nix に記述
+User -> Nix : nixos-rebuild switch
+
+== 共通点: 似ている部分 ==
+
+Arch --> User : 軽量・ローリングリリース
+Nix --> User : 軽量・unstableで最新可
+Arch --> User : 手動インストール自由
+Nix --> User : nix-shellやnix-envで対応可
+
+== 相違点: 違う部分 ==
+
+User -> Arch : 設定即反映が可能
+User -> Nix : rebuildが必要
+
+User -> Arch : AURから豊富なパッケージ
+User -> Nix : nixpkgsにないと手作業
+
+== 工夫で近づける ==
+
+User -> Nix : Home Manager導入
+User -> Nix : Impermanenceで実験的に使う
+User -> Nix : nix-indexでパッケージ検索
+
+@enduml
