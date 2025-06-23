@@ -1,0 +1,35 @@
+@startuml
+title 2025年6月23日 の一日（改善案込み）
+
+participant "0時" as T0
+participant "1時" as T1
+participant "2時" as T2
+participant "3時" as T3
+participant "4時" as T4
+participant "5時" as T5
+participant "6時" as T6
+participant "7時" as T7
+participant "8時" as T8
+participant "9時" as T9
+participant "10時" as T10
+participant "11時" as T11
+participant "12時" as T12
+
+T0 -> T0: <font color=red>0時就寝を目指す</font>
+T0 -> T8: <font color=blue>8時に起床（理想）</font>
+T3 -> T8: <font color=orange>実際は8時半に起床（なぜ？）</font>
+T8 -> T9: <font color=blue>軽い散歩やストレッチ</font>
+T9 -> T12: <font color=blue>PC作業スムーズ開始</font>
+T11 -> T12: 昼食（いつもの餃子丼）
+
+== 改善メモ（AM） ==
+note over T0, T12
+<color:red>・夜は0時就寝を目標に設定</color>  
+<color:red>・起床時間を8時台に早める（今回は8:30）</color>  
+<color:gray>　→ 3時就寝では厳しい。前倒し必要</color>  
+<color:blue>・朝に軽い運動を取り入れる</color>  
+<color:red>・起床後のだらだら時間を減らす</color>  
+<color:blue>・PC作業をスムーズに始められるよう準備</color>
+end note
+
+@enduml
