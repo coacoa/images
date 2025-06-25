@@ -1,0 +1,16 @@
+@startuml
+actor User as ユーザー
+participant "PC/スマホ" as Device
+participant "Wi-Fiルーター\n192.168.0.1" as Router
+participant "インターネット\n(プロバイダー網)" as Internet
+participant "外部サービス\n(例：Google, Dropbox, DNS)" as External
+
+ユーザー -> Device : 操作（Webアクセス、同期など）
+Device -> Router : パケット送信（TCP/IP）
+Router -> Internet : NAT処理・パケット転送
+Internet -> External : 通信開始（HTTPS, DNSなど）
+External --> Internet : レスポンス返却
+Internet --> Router : パケット戻り
+Router --> Device : 通信結果を返す
+Device --> ユーザー : アプリに表示
+@enduml
