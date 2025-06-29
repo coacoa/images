@@ -1,0 +1,31 @@
+@startuml
+left to right direction
+
+skinparam componentStyle rectangle
+
+' プロバイダーやルーター
+cloud "インターネット" as Internet
+rectangle "ルーター (192.168.1.1)" as Router
+
+' Proxmox ホスト
+node "Proxmox Host\n(192.168.1.202)" as Proxmox {
+    [VM: NixOS\n(192.168.1.6)]
+}
+
+' NixOS の中のサービスたち
+node "VM: NixOS\n(192.168.1.6)" as NixOS {
+    [Podman Container:\nn8n (5678)] as n8n
+    [Podman Container:\nHugo (8080)] as hugo
+}
+
+Internet --> Router
+Router --> Proxmox
+Proxmox --> NixOS
+NixOS --> n8n : localhost:5678
+NixOS --> hugo : localhost:8080
+
+' 任意: 外部からのアクセスルート
+Internet --> hugo : port forward?
+Internet --> n8n : reverse proxy?
+
+@enduml
