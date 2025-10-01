@@ -1,0 +1,32 @@
+@startuml
+title パスワード vs パスキー 認証フロー（シンプル比較）
+
+skinparam ParticipantPadding 20
+skinparam BoxPadding 15
+skinparam SequenceMessageAlign center
+
+' ===== 左側: パスワード認証 =====
+box "パスワード認証" #LightSalmon
+participant "ユーザー" as U1
+participant "サーバ" as S1
+
+U1 -> S1 : (1) ユーザー名 + パスワード送信 <color:red>(盗まれる可能性あり)</color>
+S1 -> S1 : (2) サーバ側DBで照合
+S1 -> U1 : (3) 成功/失敗を返す
+end box
+
+... ...
+
+' ===== 右側: パスキー認証 =====
+box "パスキー認証" #LightGreen
+participant "ユーザー端末\n(秘密鍵を保持)" as U2
+participant "サーバ\n(公開鍵を保持)" as S2
+
+S2 -> U2 : (1) ワンタイムチャレンジ送信
+U2 -> U2 : (2) 秘密鍵で署名（秘密鍵は端末から出ない）
+U2 -> S2 : (3) 署名結果を返送（<color:green>盗まれても再利用不可</color>)
+S2 -> S2 : (4) 公開鍵で署名を検証
+S2 -> U2 : (5) 成功/失敗を返す
+end box
+
+@enduml
