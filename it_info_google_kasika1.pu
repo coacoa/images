@@ -1,0 +1,27 @@
+@startuml
+title Google アカウント — 基本的なデータの流れ
+
+actor ユーザー as User
+participant "端末 (ブラウザ / アプリ)" as Device
+participant "Google サービス" as Services
+participant "Google サーバ" as Server
+participant "ユーザー制御\n(My Activity / Privacy / Takeout)" as UserControls
+
+== データ送信 ==
+User -> Device : 入力 (検索/メール/位置情報など)
+Device -> Services : HTTPS リクエスト
+Services -> Server : 保存・解析
+
+== 利用 ==
+Server -> Services : 結果提供 (広告/検索結果/レコメンド)
+
+== ユーザーによる制御 ==
+User -> UserControls : 履歴確認 / 設定変更 / Takeout要求
+UserControls -> Server : 削除 / 設定反映 / データ提供
+
+note over Server, Services
+- サーバに保存されるのは入力データや利用ログ
+- 通信は暗号化されるがサーバ側では復号・解析される
+end note
+
+@enduml
