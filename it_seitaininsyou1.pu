@@ -1,0 +1,39 @@
+@startuml
+title Android 指紋認証データの流れ
+
+actor User as U
+participant "Fingerprint Sensor" as Sensor
+participant "TEE / StrongBox\n(HW Secure Area)" as TEE
+participant "App / Browser" as App
+participant "Server (Relying Party)" as RP
+
+== 登録 (Enroll) ==
+U -> Sensor: 指を置く
+Sensor -> TEE: 特徴点抽出データ送信
+TEE -> TEE: テンプレート生成 & 保存 (ローカルのみ)
+note right of TEE
+  - 指紋テンプレートは端末内に保存
+  - ネットワークには送られない
+end note
+
+== 認証 (Auth) ==
+App -> U: 認証要求 (指紋を求める)
+U -> Sensor: 指を置く
+Sensor -> TEE: 特徴点送信
+TEE -> TEE: テンプレートと照合
+alt 照合成功
+    TEE -> TEE: 秘密鍵使用許可
+    TEE -> App: 署名付き応答
+    App -> RP: 署名応答を送信
+    RP -> RP: 公開鍵で検証
+    RP --> App: 成功/失敗を返す
+else 照合失敗
+    TEE -> App: 認証失敗通知
+end
+
+note over App, RP
+- ネットに送られるのは「署名付き応答」のみ
+- 指紋データそのものは外部に出ない
+end note
+
+@enduml
