@@ -1,5 +1,5 @@
 @startuml
-title Windows10 サポート後の選択肢（横並び + 共通タスク上段）
+title Windows10 サポート終了後の選択肢（横並びカード・文字列安全版）
 
 skinparam rectangle {
   RoundCorner 15
@@ -8,14 +8,14 @@ skinparam rectangle {
   FontSize 12
 }
 
-' ===== 共通タスク（最上段に配置） =====
-rectangle "共通タスク\n\n【番号付き手順】\n1. フルバックアップ（外付け/クラウド）\n2. Microsoftアカウント / ライセンス整理\n3. テスト環境で検証\n   - ライブUSBで確認\n   - VMで業務ソフト動作確認" #LightGray as Common
+' ===== 共通タスク =====
+rectangle "共通タスク\n番号付き手順\n1. フルバックアップ（外付け/クラウド）\n2. Microsoftアカウント / ライセンス整理\n3. テスト環境で検証（ライブUSB / VM）" #LightGray as Common
 
 ' ===== 横並びの選択肢カード =====
-rectangle "① Windows 継続派\n\n【手順】\n1. 必要条件確認\n   - CPU世代（Win11対応）\n   - TPM2.0 / SecureBoot\n   - RAM 8GB以上\n   - SSD / ドライバ確認\n2. PC性能OK?\n   - Yes → Windows11アップグレード\n   - No → 新PC購入" #LightBlue as Win below Common
+rectangle "① Windows 継続派\n手順\n1. 必要条件確認\n   - CPU世代（Win11対応）\n   - TPM2.0 / SecureBoot\n   - RAM 8GB以上\n   - SSD / ドライバ確認\n2. PC性能OK?\n   - Yes → Windows11アップグレード\n   - No → 新PC購入" #LightBlue as Win right of Common
 
-rectangle "② 併用派 (Linuxメイン)\n\n【手順】\n1. Linuxを日常/業務用に設定\n2. WindowsはVM/サブ用途\n3. データ・メール移行 / 周辺機器確認\n4. デュアルブート or Linuxメイン+VM選択\n5. 必要ソフト互換性確認 (Wine/Proton)" #LightYellow as Mix right of Win
+rectangle "② 併用派 (Linuxメイン)\n手順\n1. Linuxを日常/業務用に設定\n2. WindowsはVM/サブ用途\n3. データ・メール移行 / 周辺機器確認\n4. デュアルブート or Linuxメイン+VM選択\n5. 必要ソフト互換性確認 (Wine/Proton)" #LightYellow as Mix right of Win
 
-rectangle "③ Windows 離脱派\n\n【手順】\n1. 代替アプリ/周辺機器確認\n2. 移行可能?\n   - Yes → Linux/BSD 完全移行\n   - No → Windowsオフライン専用残置\n3. セキュリティ設定 / バックアップ実施" #LightGreen as Linux right of Mix
+rectangle "③ Windows 離脱派\n手順\n1. 代替アプリ/周辺機器確認\n2. 移行可能?\n   - Yes → Linux/BSD 完全移行\n   - No → Windowsオフライン専用残置\n3. セキュリティ設定 / バックアップ実施" #LightGreen as Linux right of Mix
 
 @enduml
