@@ -1,0 +1,39 @@
+@startuml
+title SSH鍵 vs Passkey (番号付き解説)
+
+actor User as U
+
+group SSH鍵 (id_ed25519)
+participant "① クライアントPC\n~/.ssh/id_ed25519" as SSHKey
+participant "③ サーバー\n~/.ssh/authorized_keys" as Server
+
+U -> SSHKey : 署名 (秘密鍵使用)
+SSHKey -> Server : 署名送信
+Server -> Server : 公開鍵で検証
+Server --> SSHKey : 認証成功/失敗
+
+note right of SSHKey
+① 秘密鍵はPC上のファイルとして保存
+② ファイルコピーで他端末に移行可能
+④ フィッシング耐性は低め（コピー可能なため）
+④ パスフレーズ・ssh-agent・ハードウェアキーで保護可能
+end note
+
+group Passkey (FIDO2/WebAuthn)
+participant "⑤ Authenticator\n(TPM/StrongBox/USBキー)" as Authn
+participant "⑦ Relying Party\n(Webサービス)" as RP
+
+U -> Authn : ⑥ 生体/PINでユーザー検証
+Authn -> Authn : 秘密鍵でチャレンジ署名
+Authn -> RP : 署名応答送信
+RP -> RP : 公開鍵で検証
+RP --> Authn : 認証成功/失敗
+
+note right of Authn
+⑤ 秘密鍵は端末内またはセキュリティキーに非エクスポータブルで保持
+⑥ ユーザー検証（生体/PIN）必須
+⑦ RP IDバインドでフィッシング耐性高
+⑧ クラウド同期で複数端末に復元可能（設定次第）
+end note
+
+@enduml
