@@ -1,0 +1,42 @@
+@startuml
+title Android パスキー：スマホ紛失時の対応
+
+actor User as U
+participant "紛失スマホ\n(Authenticator/TEE)" as LostPhone
+participant "クラウド同期サービス\n(例: Google)" as Cloud
+participant "Relying Party\n(サイト/アプリ)" as RP
+participant "アカウント回復/管理コンソール" as Recovery
+participant "管理者/Admin" as Admin
+participant "別端末\n(PC/他スマホ)" as Other
+
+== 紛失報告 ==
+U -> Recovery : スマホ紛失報告
+Recovery -> Cloud : 紛失端末の同期トークン無効化
+Cloud -> Recovery : 無効化完了
+Recovery -> RP : 紛失端末の公開鍵リボーク（オプション）
+Recovery --> U : 別端末での復旧手順送付
+
+== 復旧フロー ==
+alt ユーザに別端末で同期済み資格情報がある
+Other -> Cloud : 同期済みパスキーで署名生成
+Other -> RP : サインイン成功
+Other -> RP : 新端末で再登録
+else 同期無しだがアカウントパスワードで復旧可能
+U -> RP : パスワード＋MFAでログイン
+U -> RP : 新端末でパスキー再登録
+else 復旧不可
+Recovery -> Admin : 管理者介入（本人確認後）
+Admin -> RP : 鍵リボーク・アカウント一時停止
+Admin --> Recovery : 復旧完了連絡
+Recovery --> U : 復旧手順通知
+end
+
+note over Recovery, Admin
+推奨:
+
+* 事前にバックアップ認証器を登録
+* クラウド同期をMFAで保護
+* リモートワイプ / 鍵リボーク手順を運用化
+  end note
+
+@enduml
