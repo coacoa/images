@@ -1,0 +1,60 @@
+@startuml
+title Password+MFA と Passkey+MFA（独立番号付き）
+
+actor User as U
+participant "① Client / Browser (Password)" as ClientPwd
+participant "② Auth Server (RP) (Password)" as ServerPwd
+participant "③ Authenticator (Phone/App/Key) (Password)" as AuthnPwd
+participant "④ SecondFactor (TOTP / SMS / Push / HWKey)" as SecondPwd
+
+== Password + MFA ==
+U -> ClientPwd : ① パスワード入力
+ClientPwd -> ServerPwd : ① パスワード送信/検証
+ServerPwd -> ClientPwd : ② MFAチャレンジ要求
+ClientPwd -> U : ④ TOTPコード入力要求 / Push通知
+alt TOTP
+U -> ClientPwd : ④ TOTPコード入力
+ClientPwd -> ServerPwd : ④ コード送信/検証
+else Push
+ClientPwd -> AuthnPwd : ③ プッシュ通知
+AuthnPwd -> ClientPwd : ③ 承認/拒否
+ClientPwd -> ServerPwd : ④ 承認結果送信
+end
+ServerPwd --> ClientPwd : ② 認証成功/失敗
+ClientPwd --> U : ログイン結果
+
+participant "⑤ Client / Browser (Passkey)" as ClientPK
+participant "⑥ Auth Server (RP) (Passkey)" as ServerPK
+participant "⑦ Authenticator (Passkey / Phone/App/Key)" as AuthnPK
+participant "⑧ SecondFactor (optional TOTP / SMS / Push / HWKey)" as SecondPK
+
+== Passkey (WebAuthn) + optional additional MFA ==
+U -> ClientPK : ⑤ サインイン開始 (WebAuthn)
+ClientPK -> AuthnPK : ⑦ 認証器に署名要求
+U -> AuthnPK : ⑦ 生体/PINでユーザー検証
+AuthnPK -> ClientPK : ⑦ 署名応答送信
+ClientPK -> ServerPK : ⑥ 署名送信
+ServerPK -> ServerPK : ⑥ 公開鍵で検証
+alt 追加MFA必要
+ServerPK -> ClientPK : ⑥ 追加MFAチャレンジ (例: 管理者承認 / SMS / OTP)
+ClientPK -> U : ⑧ チャレンジ処理
+ClientPK -> ServerPK : ⑧ 追加MFA結果送信
+end
+ServerPK --> ClientPK : ⑥ 認証成功/失敗
+ClientPK --> U : ログイン結果
+
+note right
+Password側:
+① クライアント操作・入力
+② 認証サーバーでの処理・チャレンジ生成・検証
+③ 認証器（Push通知やOTPアプリ）
+④ 第二要素（TOTP/SMS/Push/HardwareKey）
+
+Passkey側:
+⑤ クライアント操作・入力（サインイン開始）
+⑥ 認証サーバーでの処理・公開鍵検証・チャレンジ発行
+⑦ 認証器での署名とユーザー検証（生体/PIN）
+⑧ 第二要素（必要に応じた追加MFA）
+end note
+
+@enduml
