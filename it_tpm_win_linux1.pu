@@ -1,0 +1,508 @@
+@startuml
+!theme plain
+
+title 国民と旧来型メディアの「信頼 ⇔ 不信」構造
+
+participant 国民
+participant 旧来型メディア
+
+== 信頼層（理想的関係） ==
+国民 -> 旧来型メディア: 情報を信頼し、社会を理解する
+旧来型メディア -> 国民: 公正・中立な報道、権力監視、事実検証
+
+note over 国民,旧来型メディア: 双方に信頼の循環がある
+
+== 断絶 ==
+note over 国民,旧来型メディア: SNS台頭・誤報・偏向報道・既得権益の露呈
+
+== 不信層（現実の関係） ==
+旧来型メディア -> 国民: 扇動的報道、視聴率優先、政治的編集
+国民 -> 旧来型メディア: 不信・批判・離反（テレビ離れ・紙離れ）
+国民 -> 国民: SNSで事実検証・独自情報共有（メディア不在の情報空間）
+
+note over 国民: 「もはや自分で確かめるしかない」という諦念と覚醒が混在
+@enduml
+
+
+@startuml
+!theme plain
+
+title 信頼 ⇔ 不信 の構造（2025 政治・報道・国民）
+
+participant 国民
+participant 政治
+participant メディア
+
+== 信頼層 ==
+国民 -> 政治: 期待・支持
+政治 -> 国民: 説明責任・成果報告
+メディア -> 国民: 公平報道・検証
+
+== 断絶 ==
+note over 国民, 政治: 疑念・説明不足・報道不信
+
+== 不信層 ==
+国民 -> 政治: 無関心・批判
+政治 -> メディア: 圧力・敵視
+メディア -> 国民: 扇動的報道・断片的情報
+国民 -> メディア: SNSでの反発・不信感
+@enduml
+
+
+@startuml
+title ブロックチェーンによる税金使途の可視化フロー
+
+start
+
+partition "市民(支払者)" {
+:支払い（商品代金）;
+}
+
+partition "ウォレット" {
+:トランザクション作成（用途タグを付与）;
+}
+
+partition "スマートコントラクト" {
+fork
+:税額自動計算;
+fork again
+:分配先アドレス決定;
+fork again
+:支払・分配命令を発行;
+end fork
+}
+
+partition "ブロックチェーン(台帳)" {
+:トランザクション永続化\n(取引ID, タグ, ハッシュ);
+if (即時入金成功?) then (yes)
+:税の受領を記録;
+else (no)
+:リトライまたはエラーログ;
+stop
+endif
+}
+
+partition "税務当局" {
+:入金確認と予算科目への割当;
+:使途タグに基づく予算執行要求を公開;
+if (使途承認が必要?) then (yes)
+partition "担当部署" {
+:執行申請の審査;
+:承認 or 差戻し;
+}
+endif
+}
+
+partition "監査ノード" {
+:定期スキャン（タグ別集計）;
+:異常検出時にアラート生成;
+}
+
+stop
+@enduml
+
+
+@startuml
+title 税の自動算出と分配フロー（ブロックチェーン版）
+
+actor "市民(支払者)" as User
+participant "マーチャント\n(販売者)" as Merchant
+participant "ウォレット\n(支払者)" as Wallet
+participant "スマートコントラクト\n(TaxSplitter)" as Contract
+participant "ブロックチェーン\n(台帳)" as Ledger
+participant "税務当局" as TaxAuthority
+participant "監査ノード\n(Auditor)" as Auditor
+
+== 購入と税額算出 ==
+User -> Merchant : 商品購入リクエスト
+Merchant -> Wallet : 請求情報 (金額, 税率, 用途タグ)
+Wallet -> Contract : 支払いトランザクション（額＋メタデータ）
+Contract -> Contract : 税率適用・分配額計算
+
+== 自動分配 ==
+Contract -> Ledger : 税（国税）トランザクション記録 (タグ: 国税)
+Contract -> Ledger : 地方税トランザクション記録 (タグ: 地方税)
+Contract -> Ledger : 支払者・受取者・用途タグを含むメタデータ保存
+Contract -> TaxAuthority : 通知（入金確定、取引ID）
+
+== 透明性と検証 ==
+Ledger -> Auditor : ブロックチェーンの読み取り（ハッシュ/トランザクションID）
+Auditor -> TaxAuthority : 監査レポート（不整合検出時アラート）
+Auditor -> User : 公開ビュー（使途タグ別の集計）
+
+note right of Ledger
+すべてのトランザクションは
+改ざん不可能な形で台帳に残る
+end note
+@enduml
+
+
+@startuml
+' PlantUML: Sequence diagram with two major branches for the Prime Minister's decision flow
+' Shows two alternative paths: 1) 連立継続 (coalition remains) 2) 連立解消 (coalition dissolved)
+
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantPadding 10
+skinparam sequenceLifeLineBorderColor Black
+skinparam sectionFontSize 14
+
+title 高市総理（仮） の意思決定フロー — 連立維持 vs 連立解消
+
+participant "有権者\n(Voters)" as V
+participant "総理 (高市)\nPrime Minister" as PM
+participant "自民党\n(LDP)" as LDP
+participant "公明党\n(Komei)" as KOMEI
+participant "維新/第三極\n(Options)" as ISHIN
+participant "官僚/省庁\n(Bureaucracy)" as B
+participant "国会/野党\n(Parliament)" as DIET
+participant "メディア\n(Media)" as M
+
+== 健全: 情報収集・意思決定準備 ==
+V -> PM: 世論の反応・要望
+PM -> B: 情報収集（影響分析・リスク評価）
+B -> PM: 政策案とインパクト試算
+PM -> LDP: 党内説明・調整
+LDP -> PM: 内部合意の有無を報告
+
+== 意思決定: 主要分岐 (alt: 連立維持 / 連立解消) ==
+alt 連立維持
+  PM -> KOMEI: 継続協議（譲歩/条件提示）
+  KOMEI -> PM: 条件付き承認または追加要求
+  PM -> LDP: 妥協案提示
+  LDP -> PM: 党内承認
+  note right of PM
+    連立継続を選んだ場合の流れ
+  end note
+  PM -> DIET: 政策提出・説明
+  DIET -> DIET: 採決・成立の試み
+  DIET -> M: 成果の広報
+else 連立解消
+  PM -> KOMEI: 連立解消・関係再定義
+  KOMEI -> PM: 閣外協力か独自路線かの決断
+  PM -> LDP: 緊急会議（後続戦略）
+  PM -> ISHIN: 新たな連携の打診/交渉
+  ISHIN -> PM: 条件提示または拒否
+  PM -> B: 緊急政策調整・代替案作成
+  PM -> DIET: 臨時国会や協議の要請
+  note right of PM
+    連立解消を選んだ場合の流れ（不確実性・混乱リスク高）
+  end note
+  DIET -> M: 政局報道・世論反応の増幅
+end
+
+== 結果の短期影響 (opt) ==
+opt 連立維持の短期影響
+  M -> V: 安定感の演出（または批判）
+  DIET -> B: 予算・政策遂行の継続
+  note over DIET,B
+    政策実行の速度はやや緩慢だが安定性は保たれる
+  end note
+end
+
+opt 連立解消の短期影響
+  M -> V: 不安感・不確実性の拡大
+  V -> DIET: 批判・支持率低下の反応
+  DIET -> B: 予算可決や法案成立の遅延
+  note over DIET,B
+    市場や行政、外交への波及も懸念される
+  end note
+end
+
+== 中長期の分岐とガバナンスリスク ==
+PM -> LDP: 政党戦略の再構築（候補者調整、選挙戦略）
+PM -> M: 政権の説明責任を果たすための広報
+
+== 下層: 誹謗中傷/対立の拡大 ==
+M -> V: 扇動的報道や断片的情報の流布
+V -> PM: 攻撃的な反応・信頼失墜
+PM -> DIET: 強硬対応・法的措置の検討
+DIET -> PM: 政治的コストと法的リスクの増大
+
+@enduml
+
+
+@startuml
+' PlantUML: Sequence diagram with section dividers
+' Visualizes: higher = constructive discussion, lower = abusive/toxic
+' Use == Section == lines to separate levels vertically.
+
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantPadding 10
+skinparam sequenceLifeLineBorderColor Black
+skinparam sectionFontSize 14
+
+title 可視化: 上が健全・下が誹謗中傷 の議論スケール
+
+participant User as U
+participant "Participant A\n(発言者)" as A
+participant "Participant B\n(反論者)" as B
+participant Moderator as M
+participant System as S
+
+== 健全: 課題提示・情報提供 ==
+U -> A: 質問（事実確認）
+A -> U: 回答（根拠付き）
+note right of A
+  事実と根拠を示す発言
+end note
+
+== 建設的: 意見交換・反論 ==
+U -> B: 反論・追加質問
+B -> A: 具体例を提示して反論
+A -> B: 補足・謝意
+note left of B
+  論点に基づく反論・感情は控えめ
+end note
+
+== 偏向・感情化: 個人攻撃に近づく兆候 ==
+B -> A: 強い否定（感情的）
+A -> M: 仲裁要請
+M -> B: 発言の落ち着きを促す
+note right of M
+  モデレーションが必要になる段階
+end note
+
+== 下層: 誹謗中傷・人格否定 ==
+B -> A: 人格攻撃（侮辱）
+A -> S: モデレーション報告
+S -> M: 自動警告（アルゴリズム）
+M -> B: 一時的な発言停止・注意
+note over B,A
+  コミュニティガイドライン違反の可能性
+end note
+
+' Optional: loop to show escalation path
+loop エスカレーションの流れ
+  B -> A: エスカレーション
+  A -> M: 報告
+  M -> B: 対応（警告/停止/教育）
+end
+
+@enduml
+
+@startuml
+title PINを拒否してパスワードを優先させる流れ（日本語）
+
+actor ユーザー
+participant "サインイン画面\n(ロック画面)" as Signin
+participant "サインイン オプション\n(鍵アイコン等)" as Options
+participant "設定\n(アカウント→サインイン オプション)" as Settings
+participant "Ngcフォルダー\n(PINデータ)" as Ngc
+participant "グループポリシー / MDM\n(組織管理)" as Policy
+participant "再起動/キャッシュ" as Cache
+
+ユーザー -> Signin: PCを起動してサインイン画面表示
+Signin -> ユーザー: デフォルトでPIN入力欄を表示
+ユーザー -> Signin: 「サインイン オプション」を選択
+Signin -> Options: 利用可能な方法を表示（PIN/パスワード等）
+Options -> ユーザー: パスワードアイコンを選択できるか？
+alt パスワードが選べる場合
+  ユーザー -> Signin: パスワードでサインイン（回避成功）
+  Signin -> Settings: （任意）ログイン後にSettingsを開く
+  Settings -> Ngc: PINを削除する操作を実行（推奨）
+  Ngc -> Settings: 削除成功
+  Settings -> ユーザー: 次回からパスワードが優先表示される
+else パスワードが選べない／グレーアウトの場合
+  Options -> Policy: ポリシー確認（PINが強制されているか）
+  alt ポリシーで強制されている場合
+    Policy -> ユーザー: 管理者に相談が必要（個人で解除不可）
+  else ポリシーによる強制でない場合
+    Settings -> Ngc: Ngcリセット（管理者コマンドで削除）
+    Ngc -> Cache: キャッシュの影響をクリア
+    Cache -> Signin: サインイン画面を更新
+    Signin -> ユーザー: パスワードが選べるようになる
+  end
+end
+
+note right of Ngc
+Ngcリセットは管理者権限が必要:
+takeown /f "...Ngc" /r /d y
+icacls "...Ngc" /grant Administrators:F /t
+rmdir /s /q "...Ngc"
+再起動を忘れずに
+end note
+
+@enduml
+
+
+@startuml
+title サインイン方法変更: PIN→パスワードにしたのにパスワードが選べない
+
+actor ユーザー
+participant "設定\n[アカウント > サインイン オプション]" as Settings
+participant "ローカル アカウント\n(資格情報ストア)" as LocalStore
+participant "Ngc フォルダー\n(PINデータ)" as Ngc
+participant "資格情報プロバイダー\n(Winlogon)" as CredProv
+participant "サインイン画面\n(ロック画面)" as Signin
+participant "グループ ポリシー / MDM" as Policy
+participant "Windows Update / キャッシュ" as Cache
+
+ユーザー -> Settings: Microsoft アカウント → ローカル アカウントに切替\nPINを削除したつもり
+Settings -> Ngc: PIN削除処理
+Ngc -> LocalStore: PINデータ残存の可能性
+Ngc --> Settings: 削除成功/失敗の状態
+Settings -> CredProv: 優先サインイン方法を更新
+Policy -> CredProv: (組織ポリシーがPINを強制する場合あり)
+Cache -> Signin: サインイン画面のUI状態をキャッシュ
+CredProv -> Signin: 利用可能なサインイン方法を列挙
+Signin -> ユーザー: PINのみ表示（パスワード非表示）
+
+note over Policy,Ngc
+考えられる要因:
+- NgcフォルダーにPINデータが残っている
+- 資格情報プロバイダーがPINを優先表示
+- グループポリシー/MDMでPIN必須
+- キャッシュやWindowsの不具合
+end note
+@enduml
+
+
+@startuml
+title Sign-in flow: PIN->Password changed but Password not selectable
+
+actor User
+participant "Settings\n(Sign-in options)" as Settings
+participant "Local Account\n(OS Credential Store)" as LocalStore
+participant "Ngc\n(PIN data folder)" as Ngc
+participant "Credential Providers\n(Winlogon / GINA)" as CredProv
+participant "Sign-in Screen\n(Lock screen)" as Signin
+participant "Group Policy / MDM" as Policy
+participant "Windows Update / Cache" as Cache
+
+User -> Settings: Switch MS account -> Local account\nRemove/disable PIN?
+Settings -> Ngc: Attempt to remove PIN
+Ngc -> LocalStore: PIN data present (may be cached)
+Ngc --> Settings: Removal succeeded/failed
+Settings -> CredProv: Update preferred sign-in method
+Policy -> CredProv: (may enforce PIN / Hello)
+Cache -> Signin: Cached credential UI state (still shows PIN)
+CredProv -> Signin: Populate available options\n(order: PIN first if present)
+Signin -> User: Shows PIN option (Password not shown)
+User -> Signin: Open "Sign-in options"
+Signin -> CredProv: Query available providers
+CredProv -> LocalStore: Check Password provider availability
+LocalStore --> CredProv: Password provider available
+CredProv -> Signin: But UI hides/selects PIN by default\n(or Password option disabled by policy)
+Signin -> User: Password not selectable (grayed or missing)
+
+note over Policy,Ngc: Possible causes:
+note over Policy,Ngc: - Ngc (PIN) still exists or cached\n- Credential provider order prefers PIN\n- Group Policy / MDM enforces Hello/PIN\n- Corrupted settings or Windows bug
+@enduml
+
+
+@startuml
+title TPMが役立つ非盗難シナリオ
+
+actor "攻撃者(リモート/ローカル)" as Att
+participant "マシン" as Host
+participant "OS" as OS
+participant "TPM 2.0" as TPM
+
+== ブート改ざん（rootkit） ==
+Att -> OS: 不正ブートローダ書換試行
+OS -> TPM: 起動計測値を読み出し/比較
+TPM --> OS: 異常なら鍵は出さない
+note right: 改ざんを検出して起動阻止/鍵供給拒否
+
+== マルウェアが鍵を狙う ==
+Att -> OS: マルウェア侵入
+OS -> TPM: ディスク鍵要求
+alt OSが改ざん/異常
+  TPM --> OS: 鍵を返さない
+else 正常
+  TPM --> OS: 鍵を返す（安全に復号）
+end
+
+== リモートアテステーション ==
+Host -> RemoteServer: 証明要求
+Host -> TPM: アテステーション用の署名取得
+TPM --> Host: 署名（端末状態を証明）
+Host -> RemoteServer: 署名送付（アクセス可否判定）
+@enduml
+
+
+@startuml
+title TPM利用の違い：PC盗難シナリオ
+
+actor "攻撃者" as Attacker
+participant "TPM 2.0" as TPM
+participant "Windows 11" as Win11
+participant "Windows 10" as Win10
+participant "Linux" as Linux
+
+== Windows 11 (TPM 2.0必須) ==
+Attacker -> Win11: PCを盗む
+Win11 -> TPM: ディスク復号鍵を要求
+TPM --> Win11: 状態を検証 (Secure Boot/Measured Boot)
+alt 改ざんや不正起動
+  Win11 <- TPM: 鍵を返さない
+  Attacker -> Win11: データ読めない
+else 正常起動
+  TPM --> Win11: BitLocker鍵提供
+  Win11 -> User: Windows Helloで認証
+end
+
+== Windows 10 (TPM任意) ==
+Attacker -> Win10: PCを盗む
+alt TPMなしPC
+  Win10 -> Attacker: ディスク暗号化されていない
+  Attacker -> Win10: データ読み取り可能
+else TPMありPC
+  Win10 -> TPM: BitLocker鍵要求
+  TPM --> Win10: 鍵提供（オプション）
+end
+
+== Linux (TPM任意) ==
+Attacker -> Linux: PCを盗む
+alt TPM未設定
+  Linux -> Attacker: LUKS鍵をユーザーが入力
+  note right: パスワードが弱ければ突破可能
+else TPM連携あり
+  Linux -> TPM: LUKS鍵を要求
+  TPM --> Linux: 状態検証後に鍵提供
+end
+@enduml
+
+
+@startuml
+title TPM利用の流れ比較（Linux vs Windows 11）
+
+actor User
+
+participant "TPM 2.0" as TPM
+participant "Linux OS" as Linux
+participant "Windows 11" as Win
+
+== 起動 ==
+User -> Linux: 電源ON
+Linux -> TPM: (任意) 改ざんチェック(IMA)
+note right: TPM利用はオプション
+
+User -> Win: 電源ON
+Win -> TPM: Secure Boot / Measured Boot
+note right: TPM必須、改ざん検知を標準化
+
+== ディスク暗号化 ==
+Linux -> TPM: (任意) LUKSの鍵を保管
+note right: ユーザーが設定すれば利用可能
+
+Win -> TPM: BitLockerの鍵を格納
+Win <- TPM: 改ざんなければ自動復号
+note right: 標準機能で統合
+
+== 認証 ==
+Linux -> User: パスワード or 鍵ファイル
+note right: TPM連携は追加設定が必要
+
+Win -> TPM: Windows Helloの秘密鍵
+Win -> User: PINや生体認証
+Win <- TPM: 鍵で認証
+note right: OS標準でTPMに依存
+
+== OS利用中 ==
+Linux -> TPM: (必要なら) tpm2-toolsで操作
+note right: 開発者/管理者向けに限定
+
+Win -> TPM: Credential Guard / Device Guard
+note right: 資格情報をTPM連携で保護
+@enduml

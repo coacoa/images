@@ -1,0 +1,36 @@
+@startuml
+title 公共電波におけるソフトとハード（シーケンス図・番号付き）
+
+actor 視聴者 as User
+
+participant "① 放送塔・送信設備\n(ハード)" as Tower #LightBlue
+participant "② 番組制作会社\n(ソフト-制作)" as Prod #LightYellow
+participant "③ 出演者・クリエイター\n(ソフト-制作)" as Creators #LightYellow
+participant "④ 放送局・編成担当\n(ソフト-運営)" as Broadcaster #LightSalmon
+participant "⑤ 広告代理店・スポンサー\n(ソフト-運営)" as Sponsor #LightSalmon
+participant "⑥ 規制・ルール（総務省など）\n(ソフト-運営)" as Gov #LightSalmon
+
+' 制作サイドの流れ
+Creators -> Prod : 企画・出演
+Prod -> Broadcaster : 番組納入
+
+' 運営サイドの流れ
+Sponsor -> Broadcaster : 広告資金
+Gov -> Broadcaster : 免許・規制
+
+' 放送局から電波を通じて
+Broadcaster -> Tower : 番組送出
+Tower -> User : 電波で配信
+
+note over Tower
+  ハードは公共インフラとして維持すべき
+end note
+
+note over Broadcaster
+  ソフトは時代に合わせ改革が必要
+end note
+
+@enduml
+
+
+

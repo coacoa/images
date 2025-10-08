@@ -1,0 +1,123 @@
+@startuml
+title 選挙におけるステマ流れと偽コメント排除（シーケンス図）
+
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 14
+skinparam sequenceParticipantPadding 35
+skinparam sequenceMessageSpacing 25
+
+actor "政党・候補者" as Candidate
+participant "ステルスマーケター" as Stealth
+participant "SNS/インフルエンサー" as Media
+participant "有権者" as Voter
+participant "SNSシステム" as Platform
+
+== 準備段階 ==
+Candidate -> Stealth : ステマ戦略指示
+note right of Candidate
+  政党や候補者が秘密裏に情報操作を依頼
+end note
+
+== 情報拡散 ==
+Stealth -> Media : 投稿・拡散依頼
+Media -> Platform : 投稿送信
+Platform -> Voter : 情報拡散
+note right of Media
+  有権者に届き、自然な意見として受け取られる
+end note
+
+== 偽コメント排除 ==
+Voter -> Platform : コメント投稿
+alt 同じアカウントの重複コメント
+    Platform -> Platform : コメントを無視 / 重複カウントしない
+    note right of Platform
+      botやスパムの影響を排除
+      統計・世論集計から重複除外
+    end note
+else 新規コメント
+    Platform -> Voter : 表示
+end
+
+== 世論形成 ==
+Voter -> Voter : 情報共有・信念形成
+
+== 投票行動 ==
+Voter -> Candidate : 投票
+
+== ステマ抑制策 ==
+note right of Candidate
+  情報の透明性確保
+end note
+
+note right of Platform
+  SNSの偽情報対策
+end note
+
+note right of Voter
+  メディアリテラシー教育
+  公職選挙法等で不正広告規制
+  同じアカウントの重複コメントはカウントしない
+end note
+
+@enduml
+
+@startuml
+title 選挙におけるステマの流れ（簡略版）
+
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 14
+skinparam sequenceParticipantPadding 35
+skinparam sequenceMessageSpacing 25
+
+actor "政党・候補者" as Candidate
+participant "ステルスマーケター" as Stealth
+participant "SNS/インフルエンサー" as Media
+participant "有権者" as Voter
+participant "SNSシステム" as Platform
+
+== ステマ指示 ==
+Candidate -[#FF0000]-> Stealth : ステマ戦略指示
+note right of Candidate
+  政党・候補者が秘密裏に情報操作を依頼
+end note
+
+== 情報拡散 ==
+Stealth -[#0000FF]-> Media : 投稿・拡散依頼
+Media -[#0000FF]-> Platform : 投稿送信
+Platform -[#0000FF]-> Voter : 情報拡散
+note right of Media
+  有権者に届き、自然な意見として受け取られる
+end note
+
+== 偽コメント排除 ==
+Voter -[#800080]-> Platform : コメント投稿
+alt 同じアカウントの重複コメント
+    Platform -[#800080]-> Platform : コメント無視 / 重複カウント除外
+    note right of Platform
+      botやスパムの影響を排除
+      統計・世論集計から重複除外
+    end note
+else 新規コメント
+    Platform -[#800080]-> Voter : 表示
+end
+
+== 世論形成・投票 ==
+Voter -[#008000]-> Voter : 情報共有・信念形成
+Voter -[#FF0000]-> Candidate : 投票
+
+== ステマ抑制策 ==
+note right of Candidate
+  情報の透明性確保
+end note
+
+note right of Platform
+  SNSの偽情報対策
+end note
+
+note right of Voter
+  メディアリテラシー教育
+  公職選挙法等で不正広告規制
+  同じアカウントの重複コメントはカウントしない
+end note
+
+@enduml
