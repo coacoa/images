@@ -1,4 +1,518 @@
 @startuml
+actor 国民
+participant ネット世論
+participant 自民党
+participant 高市総裁
+participant 公明党
+participant 野党勢力
+participant 報道機関
+
+== 連立解消の決断 ==
+高市総裁 -> 公明党 : 「連立を解消する」と通告
+自民党 -> 国民 : 「公明との連立を解消」と発表
+報道機関 -> 国民 : 大きく報道
+
+== ネット世論の反応 ==
+ネット世論 -> 高市総裁 : 「筋を通した」と支持
+ネット世論 -> 自民党 : 「よくやった！」の声多数
+
+== 政権運営フェーズ ==
+alt 自民党 単独で過半数維持
+  自民党 -> 国民 : 単独政権を続行
+  報道機関 -> 国民 : 「自民単独政権」と解説
+else 過半数割れ
+  自民党 -> 野党勢力 : 協力や新連立を模索
+  公明党 -> 野党勢力 : 協力を探る動き
+  報道機関 -> 国民 : 「政界再編の可能性」と報道
+end
+
+== 選挙への影響 ==
+国民 -> 自民党 : 一部選挙区で苦戦
+国民 -> 公明党 : 支持母体で結束強化
+ネット世論 -> 国民 : 「変化を求める世論」が拡散
+
+@enduml
+
+
+@startuml
+actor 国民
+participant ネット世論
+participant 自民党
+participant 高市総裁
+participant 公明党
+participant 報道機関
+
+== 現状 ==
+自民党 -> 公明党 : 連立維持・選挙協力
+公明党 -> 自民党 : 政策協力を提供
+報道機関 -> 国民 : 「自公連立の摩擦」を報道
+
+== ネット世論の声 ==
+ネット世論 -> 自民党 : 「公明党と手を切れ！」の圧力
+ネット世論 -> 高市総裁 : 「公明党と距離を置け」と期待
+
+== 自民党内議論 ==
+高市総裁 -> 自民党 : 保守色強化を主張
+自民党 -> 公明党 : 関係再考のシグナル
+
+== 公明党の反応 ==
+公明党 -> 自民党 : 「それなら連立解消も検討」と応答
+報道機関 -> 国民 : 「連立解消の可能性」を大きく報道
+
+== 将来の決定 ==
+alt 自民が公明と決別
+  自民党 -> 国民 : 「公明と連立解消」と発表
+  高市総裁 -> 国民 : 「自民は独自路線で行く」と強調
+else 維持
+  自民党 -> 公明党 : 「やはり連立維持」と確認
+  報道機関 -> 国民 : 「連立継続」と報道
+end
+
+@enduml
+
+
+@startuml
+actor 国民
+participant 自民党
+participant 公明党
+participant 報道機関
+
+== 現状 ==
+国民 -> 自民党 : 政権運営を委ねる（選挙）
+自民党 -> 公明党 : 連立維持を打診
+公明党 -> 自民党 : 政策協力を実施
+
+== 問題の発生 ==
+報道機関 -> 国民 : 「政治とカネ」問題を報道
+公明党 -> 自民党 : 説明と対応を要求
+自民党 -> 公明党 : 明確な対応を示せず摩擦
+
+== 協議フェーズ ==
+公明党 -> 公明党 : 幹部会で協議
+alt 連立解消論が強まる
+  公明党 -> 自民党 : 「連立解消もやむなし」と伝達
+  報道機関 -> 国民 : 「連立解消の可能性」と報道
+else 連立維持論が勝る
+  公明党 -> 自民党 : 「連立維持」を確認
+  報道機関 -> 国民 : 「連立継続」と報道
+end
+
+== 将来の決定 ==
+alt 解消決定
+  公明党 -> 国民 : 「自民との連立を解消する」と発表
+  自民党 -> 国民 : 単独政権 or 新連立の模索
+else 維持決定
+  公明党 -> 国民 : 「自民との連立を継続」と発表
+  自民党 -> 国民 : 安定政権を強調
+end
+
+@enduml
+
+
+@startuml
+
+[*] --> 連立関係安定
+
+state 連立関係安定 {
+}
+
+state 離脱検討中 {
+}
+
+state 連立解消決定 {
+}
+
+state 連立維持決定 {
+}
+
+連立関係安定 --> 離脱検討中 : 新たな論点・対立
+離脱検討中 --> 連立解消決定 : 党として離脱判断
+離脱検討中 --> 連立維持決定 : 継続判断
+連立維持決定 --> 連立関係安定
+
+@enduml
+
+
+@startuml
+title Windows 10 サポート終了対応シーケンス図
+
+actor "ユーザー" as User
+participant "Windows 10 PC" as PC
+participant "サポート情報サイト" as Info
+participant "判断ロジック\n(社内・個人ポリシー)" as Policy
+participant "ネットワーク管理者\nまたは設定担当" as Admin
+participant "代替OS検討者" as AltOS
+participant "ログ/記録システム" as Log
+
+== サポート終了確認 ==
+User -> Info : Microsoft公式サポート終了日を確認
+Info --> User : 終了日(2025-10-14予定など)
+
+== 使用状況チェック ==
+User -> PC : 現在の用途を確認（メイン/サブ）
+User -> Policy : 使用ソフトのサポート継続可否を照会
+Policy --> User : 結果（継続可能 / 終了）
+
+== 判定フェーズ ==
+alt ソフト・セキュリティ両方継続不可
+    User -> Admin : ネット遮断要求
+    Admin -> PC : オフライン化（LAN/無線停止）
+    User -> AltOS : 代替OS（Linuxなど）検討開始
+    AltOS -> Log : 検討開始ログを記録
+else ソフトは利用可能だがネットリスクあり
+    User -> Admin : 制限付き接続に変更（更新停止・外部通信制限）
+    Admin -> Log : 制限設定を記録
+else 問題なし（限定利用）
+    User -> Log : 状況記録（限定的継続使用）
+end
+
+== 移行・記録 ==
+User -> AltOS : 新環境へ移行手順の準備
+AltOS -> Log : 移行日程・完了記録
+Log --> User : 全対応完了通知
+
+@enduml
+
+@startuml
+title 「旧メディア印象操作の簡略図＋改善策」
+
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 13
+skinparam sequenceParticipantPadding 20
+skinparam sequenceMessageSpacing 12
+
+actor "政治家" as Politician
+participant "記者クラブ（記者＋カメラマン）" as KishaClub
+participant "旧メディア" as OldMedia
+participant "国民（SNS含む）" as Citizens
+
+== 裏側での発言,音声流出 ==
+KishaClub -> KishaClub : 「政治家を悪く見せる写真を撮ろう」「印象を悪くする記事を書いてやる」  
+KishaClub -> Citizens : オフレコ音声が流出・拡散
+
+== 歪んだ情報の伝達 ==
+OldMedia -> Citizens : 歪められた記事・映像を報道
+
+== 炎上 ==
+Citizens -> OldMedia : 信頼低下・批判拡散
+Citizens -> KishaClub : 信頼低下・批判拡散
+
+== 記者クラブの問題点 ==
+note over KishaClub
+  ・政治家へのアクセスを独占  
+  ・閉鎖的な組織で内部情報を握る  
+  ・取材競争が少なく、影響力が強い  
+  → 印象操作や記事の恣意的編集が可能
+end note
+
+== 改善・改革案 ==
+note over KishaClub, OldMedia
+  ・政治家との情報共有の透明化  
+  ・取材機会の平等化（フリーランス・ネットメディアも参加）  
+  ・記事・映像のチェック体制強化（内部/外部監査）  
+  ・誤報・印象操作の迅速な訂正  
+  ・市民参加型のフィードバックや苦情受付  
+  → 信頼回復と公正な報道を目指す
+end note
+
+@enduml
+
+
+@startuml
+title 「旧メディア印象操作の簡略図（裏側発言＋記者クラブの前提）」
+
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 13
+skinparam sequenceParticipantPadding 20
+skinparam sequenceMessageSpacing 12
+
+actor "政治家" as Politician
+participant "記者クラブ（記者＋カメラマン）" as KishaClub
+participant "旧メディア" as OldMedia
+participant "国民（SNS含む）" as Citizens
+
+== 裏側での発言,音声流出 ==
+KishaClub -> KishaClub : 「政治家を悪く見せる写真を撮ろう」「印象を悪くする記事を書いてやる」  
+KishaClub -> Citizens : オフレコ音声が流出・拡散
+
+== 歪んだ情報の伝達 ==
+OldMedia -> Citizens : 歪められた記事・映像を報道
+
+== 炎上 ==
+Citizens -> OldMedia : 信頼低下・批判拡散
+Citizens -> KishaClub : 信頼低下・批判拡散
+
+== 記者クラブの問題点 ==
+note over KishaClub
+  ・政治家へのアクセスを独占  
+  ・閉鎖的な組織で内部情報を握る  
+  ・取材競争が少なく、影響力が強い  
+  → 印象操作や記事の恣意的編集が可能
+end note
+
+@enduml
+
+
+@startuml
+title 「旧メディア印象操作の簡略図（裏側発言あり）」
+
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 13
+skinparam sequenceParticipantPadding 20
+skinparam sequenceMessageSpacing 12
+
+actor "政治家" as Politician
+participant "記者クラブ（記者＋カメラマン）" as KishaClub
+participant "旧メディア" as OldMedia
+participant "国民（SNS含む）" as Citizens
+
+== 裏側での発言 ==
+KishaClub -> KishaClub : 「政治家を悪く見せる写真を撮ろう」  
+KishaClub -> KishaClub : 「印象を悪くする記事を書いてやる」
+
+== 音声流出 ==
+KishaClub -> Citizens : オフレコ音声が流出・拡散
+
+== 炎上 ==
+Citizens -> OldMedia : 信頼低下・批判拡散
+
+== 歪んだ情報の伝達 ==
+OldMedia -> Citizens : 歪められた記事・映像を報道
+
+@enduml
+
+
+@startuml
+title 「旧メディアの印象操作と国民への影響」
+
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 13
+skinparam sequenceParticipantPadding 25
+skinparam sequenceMessageSpacing 15
+
+actor "政治家" as Politician
+participant "記者クラブ（記者＋カメラマン）" as KishaClub
+participant "旧メディア(新聞・テレビ)" as OldMedia
+participant "国民（SNS/ネットユーザー含む）" as Citizens
+
+== 裏側での発言 ==
+KishaClub -> KishaClub : 政治家を悪く見せる算段
+
+== 音声流出 ==
+KishaClub -> Citizens : オフレコ音声が流出・拡散
+note right of Citizens
+  「印象操作してる！」と炎上
+end note
+
+== 炎上 ==
+Citizens -> OldMedia : 信頼を失う
+Citizens -> Politician : 支持/同情も発生
+
+== 歪んだ情報の伝達 ==
+OldMedia -> Citizens : 歪められた記事・映像を報道
+note right of Citizens
+  世論誘導を受けつつ  
+  ネットで批判・議論
+end note
+
+@enduml
+
+
+@startuml
+title 「旧メディアの印象操作と国民への影響」
+
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 14
+skinparam sequenceParticipantPadding 35
+skinparam sequenceMessageSpacing 25
+
+actor "政治家" as Politician
+participant "記者クラブ（記者＋カメラマン）" as KishaClub
+participant "旧メディア(新聞・テレビ)" as OldMedia
+participant "国民（SNS/ネットユーザー含む）" as Citizens
+
+== 裏側での発言 ==
+KishaClub -> KishaClub : 「政治家を悪く見せる写真を撮ろう」  
+KishaClub -> KishaClub : 「印象を悪くする記事を書いてやる」
+
+== 音声流出 ==
+KishaClub -> Citizens : オフレコ音声がネットに流出
+note right of Citizens
+  国民がSNSで音声を拡散  
+  「旧メディアは印象操作している！」  
+end note
+
+== 炎上 ==
+Citizens -> Citizens : 怒り・拡散・批判
+
+== 歪んだ情報の伝達 ==
+OldMedia -> Citizens : 歪められた情報を報道
+note right of Citizens
+  ・印象操作された記事や映像を受け取る  
+  ・一方的な世論誘導を受ける  
+end note
+
+== 信頼低下 ==
+Citizens -> OldMedia : 「旧メディアは信用できない」  
+OldMedia -> OldMedia : ブランド失墜・不信感拡大
+Politician -> Politician : 一時的にイメージ悪化
+
+== 根本原因の議論 ==
+note over Citizens
+  ネット上で議論拡大：  
+  ・記者クラブという閉鎖的システムが問題  
+  ・公平・公正な報道を妨げている  
+  ・旧メディア不信の源泉  
+end note
+
+@enduml
+
+
+@startuml
+title 「旧メディアの印象操作と国民への影響」
+
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 14
+skinparam sequenceParticipantPadding 35
+skinparam sequenceMessageSpacing 25
+
+actor "政治家" as Politician
+participant "記者クラブ（記者＋カメラマン）" as KishaClub
+participant "旧メディア(新聞・テレビ)" as OldMedia
+participant "SNS/ネットユーザー" as NetUser
+participant "国民" as Citizens
+
+== 裏側での発言 ==
+KishaClub -> KishaClub : 「政治家を悪く見せる写真を撮ろう」  
+KishaClub -> KishaClub : 「印象を悪くする記事を書いてやる」
+
+== 音声流出 ==
+KishaClub -> NetUser : 内部音声が流出
+note right of KishaClub
+  オフレコのやり取りがネットに流出
+end note
+
+== 炎上 ==
+NetUser -> NetUser : 怒り・拡散
+note right of NetUser
+  「旧メディアは印象操作している！」  
+  「公正な報道じゃない！」  
+end note
+
+== 歪んだ情報の伝達 ==
+OldMedia -> Citizens : 歪められた情報を報道
+note right of Citizens
+  ・印象操作された記事や映像を受け取る  
+  ・世論が誘導される  
+end note
+
+== 信頼低下 ==
+NetUser -> OldMedia : 信頼を失う
+OldMedia -> OldMedia : ブランド失墜・不信感拡大
+Politician -> Politician : 一時的にイメージ悪化
+
+== 根本原因の議論 ==
+note over NetUser, Citizens
+  ネット上では炎上を超えて議論に発展  
+  ・記者クラブという閉鎖的システムが問題  
+  ・公平・公正な報道を妨げている  
+  ・旧メディア不信の本当の源泉  
+end note
+
+@enduml
+
+
+@startuml
+title 「旧メディアの印象操作」炎上と記者クラブ批判の構造
+
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 14
+skinparam sequenceParticipantPadding 35
+skinparam sequenceMessageSpacing 25
+
+actor "政治家" as Politician
+participant "記者クラブ記者" as Reporter
+participant "カメラマン" as Cameraman
+participant "旧メディア(新聞・テレビ)" as OldMedia
+participant "SNS/ネットユーザー" as NetUser
+
+== 裏側での発言 ==
+Reporter -> Cameraman : 「政治家を悪く見せる写真を撮ろう」
+Reporter -> Reporter : 「印象を悪くする記事を書いてやる」
+
+== 音声流出 ==
+Reporter -> NetUser : 内部音声が流出
+note right of Reporter
+  オフレコのやり取りがネットに流出
+end note
+
+== 炎上 ==
+NetUser -> NetUser : 怒り・拡散
+note right of NetUser
+  「旧メディアは最初から印象操作している」  
+  「報道は公正ではない」  
+end note
+
+== 信頼低下 ==
+NetUser -> OldMedia : 信頼を失う
+OldMedia -> OldMedia : ブランド失墜・不信感拡大
+Politician -> Politician : 一時的にイメージ悪化
+
+== 根本原因の議論 ==
+note over NetUser
+  ネット上では炎上を超えて議論に発展  
+  ・記者クラブという閉鎖的システムが問題  
+  ・公平・公正な報道を妨げている  
+  ・旧メディア不信の本当の源泉  
+end note
+
+@enduml
+
+
+@startuml
+title 「旧メディアが印象操作をしている音声流出」炎上構造
+
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 14
+skinparam sequenceParticipantPadding 35
+skinparam sequenceMessageSpacing 25
+
+actor "政治家" as Politician
+participant "記者クラブ記者" as Reporter
+participant "カメラマン" as Cameraman
+participant "旧メディア(新聞・テレビ)" as OldMedia
+participant "SNS/ネットユーザー" as NetUser
+
+== 裏側での発言 ==
+Reporter -> Cameraman : 「政治家を悪く見せる写真を撮ろう」
+Reporter -> Reporter : 「印象を悪くする記事を書いてやる」
+
+== 音声流出 ==
+Reporter -> NetUser : 内部音声が流出
+note right of Reporter
+  オフレコの会話が録音されネットに流出
+end note
+
+== 炎上 ==
+NetUser -> NetUser : 怒り・拡散
+note right of NetUser
+  「旧メディアは最初から印象操作している」  
+  「報道は公正ではない」  
+end note
+
+== 信頼低下 ==
+NetUser -> OldMedia : 信頼を失う
+OldMedia -> OldMedia : ブランド失墜・不信感拡大
+Politician -> Politician : 一時的にイメージ悪化
+note over OldMedia, NetUser
+  炎上の主因は旧メディア側への不信感  
+  政治家本人よりも「報道の公正性」が問題視される
+end note
+
+@enduml
+
+
+@startuml
 !theme plain
 
 title 国民と旧来型メディアの「信頼 ⇔ 不信」構造
