@@ -1,4 +1,1164 @@
 @startuml
+title Linux パッケージ管理の進化と層構造（①〜⑤）
+
+actor User
+participant Kernel as "① Kernel 層\n(Linux Kernel)"
+participant Traditional as "② 従来パッケージ管理\n(apt / dnf / pacman)"
+participant Universal as "③ 新世代パッケージ\n(Snap / Flatpak / AppImage)"
+participant Nix as "④ 宣言的パッケージ管理\n(Nix / Nixpkgs / Flakes)"
+participant App as "⑤ アプリ層\n(CLI / GUI アプリ)"
+
+== 基本的な流れ ==
+User -> Traditional : apt install firefox など
+Traditional -> Kernel : パッケージをシステムに導入
+Kernel -> App : CLI/GUIアプリを利用可能
+
+User -> Universal : snap install code / flatpak install firefox
+Universal -> App : サンドボックスで実行
+Universal -> Kernel : コンテナ的に隔離された環境で動作
+
+User -> Nix : nix profile install firefox
+Nix -> Kernel : ハッシュ付きストアに格納
+Nix -> App : 再現可能な環境で実行
+
+== 各層の説明 ==
+note over Kernel
+① **カーネル層**
+ハードウェアを直接制御する中心部。
+全てのアプリやパッケージはここを経由して動作する。
+end note
+
+note over Traditional
+② **従来パッケージ管理 (apt / dnf / pacman)**
+OSに統合された標準方式。軽量で高速だが、
+他のディストロとの互換性が低い。
+end note
+
+note over Universal
+③ **新世代パッケージ (Snap / Flatpak / AppImage)**
+アプリ単位で独立。サンドボックス化され安全。
+ディストロ間共通で配布できるがサイズは大きめ。
+end note
+
+note over Nix
+④ **宣言的パッケージ管理 (Nix)**
+設定ファイルに基づき環境を完全再現。
+依存関係をハッシュで管理し、衝突がない。
+開発・再現性重視の用途に最適。
+end note
+
+note over App
+⑤ **アプリ層**
+実際にユーザーが利用するソフトウェア。
+CLI（vim, git）や GUI（Firefox, VSCode）など。
+end note
+
+@enduml
+
+
+@startuml
+title Linux パッケージ管理方式の比較（APT / DNF / Snap / Flatpak / AppImage / Nix）
+
+actor User
+participant Kernel as "Linux Kernel"
+participant PackageManager as "従来のパッケージ管理\n(apt / dnf / pacman)"
+participant UniversalPkg as "新世代パッケージ\n(Snap / Flatpak / AppImage)"
+participant NixPkg as "宣言的パッケージ管理\n(Nix / Nixpkgs / Flakes)"
+participant AppLayer as "アプリ層\n(GUI・CLIアプリ)"
+
+== インストールの流れ ==
+User -> PackageManager : apt install firefox
+PackageManager -> Kernel : システム依存で構成
+Kernel -> AppLayer : アプリをOSの一部として利用
+
+User -> UniversalPkg : flatpak install firefox\nsnap install code
+UniversalPkg -> Kernel : サンドボックス内で動作
+UniversalPkg -> AppLayer : 独立したアプリ環境を提供
+
+User -> NixPkg : nix-env -iA nixpkgs.firefox\nまたは flake.nix を適用
+NixPkg -> Kernel : 再現可能な環境を構築 (/nix/store)
+NixPkg -> AppLayer : 宣言ファイルに基づく構成・実行環境を提供
+
+== 各方式の特徴 ==
+note over PackageManager
+📦 **従来方式 (apt, dnf, pacman)**  
+- OS統合型  
+- 軽量で安定  
+- root権限が必要  
+- 依存関係が壊れることもある  
+- ディストロ固有
+end note
+
+note over UniversalPkg
+📦 **新方式 (Snap / Flatpak / AppImage)**  
+- 依存関係を封入（コンテナ的）  
+- 各ディストロ共通で配布可能  
+- Snap: Canonical主導、自動更新  
+- Flatpak: Wayland向け、GUI中心  
+- AppImage: インストール不要・ポータブル
+end note
+
+note over NixPkg
+📦 **Nix パッケージ管理**  
+- 宣言的・再現可能な環境構築  
+- すべての依存関係をハッシュ管理  
+- `/nix/store` に分離され他環境と衝突しない  
+- システムにもユーザーにも適用可  
+- Home Manager, Flakes などと連携可能
+end note
+
+note over AppLayer
+🧩 **アプリ層**  
+- CLIアプリ（vim, htop）  
+- GUIアプリ（ブラウザ, IDE）  
+- パッケージ形式により動作環境が異なる
+end note
+
+@enduml
+
+
+@startuml
+title Linux パッケージ管理方式の位置づけ（Debian, Ubuntu, Fedora など）
+
+actor User
+participant Kernel as "Linux Kernel"
+participant PackageManager as "従来のパッケージ管理\n(apt / dnf / pacman)"
+participant UniversalPkg as "新世代パッケージ\n(Snap / Flatpak / AppImage)"
+participant AppLayer as "アプリ層\n(GUI・CLIアプリ)"
+
+== インストールの流れ ==
+User -> PackageManager : apt install firefox\n(システムの一部として導入)
+PackageManager -> Kernel : パッケージ依存関係を解決しインストール
+Kernel -> AppLayer : システム内でアプリを利用可能に
+
+User -> UniversalPkg : snap install code\n(flatpak install firefox)
+UniversalPkg -> AppLayer : サンドボックス内で動作
+UniversalPkg -> Kernel : コンテナ的に分離された実行環境
+
+== 各方式の特徴 ==
+note over PackageManager
+📦 **従来方式 (apt, dnf, pacman)**  
+- OSに統合されたパッケージ管理  
+- 軽量・安定  
+- root権限が必要  
+- システム依存が強い
+end note
+
+note over UniversalPkg
+📦 **新方式 (Snap / Flatpak / AppImage)**  
+- 依存関係を含めて1パッケージに封入  
+- 各ディストリ間で共通利用が可能  
+- アップデートが自動（Snap）  
+- サイズが大きい、起動が遅い傾向あり
+end note
+
+note over AppLayer
+🧩 アプリ層  
+- CLIアプリ（vim, htop）  
+- GUIアプリ（ブラウザ, IDE, Office など）  
+- 配布形式は複数方式で提供される
+end note
+
+@enduml
+
+
+@startuml
+title 🌈 Linuxディストリビューション系統図（色分け版）
+
+actor User #white
+
+participant Kernel as "Linux Kernel\n(共通エンジン)" #lightgray
+
+participant Debian as "Debian系\n(.deb / apt)" #lightblue
+participant Ubuntu as "Ubuntu系\n(使いやすさ重視)" #skyblue
+
+participant Fedora as "Fedora系\n(.rpm / dnf)" #lightcoral
+
+participant Arch as "Arch系\n(pacman)" #palegreen
+
+participant Nix as "Nix系\n(nix package system)" #lightgoldenrodyellow
+
+== 基盤 ==
+User -> Kernel : 「Linuxを使いたい」
+
+note over Kernel
+全ディストリ共有の心臓部
+ハードウェアとの通信を担当
+end note
+
+== 派生 ==
+Kernel -> Debian : 安定重視で派生
+Debian -> Ubuntu : デスクトップ向け改善
+Ubuntu -> User : 初心者にも扱いやすいUI
+
+Kernel -> Fedora : Red Hat系の実験場
+Fedora -> User : 企業向け最新機能を提供
+
+Kernel -> Arch : ミニマル・自己構築志向
+Arch -> User : 手動構築で柔軟性を実現
+
+Kernel -> Nix : 宣言的・再現可能な環境管理
+Nix -> User : 環境をコードで再現
+
+== 系統比較 ==
+note over Debian, Ubuntu
+🩵 安定性重視  
+apt / .deb ベース  
+サーバー・デスクトップ両対応
+end note
+
+note over Fedora
+❤️ 最新技術テストベッド  
+Red Hat Enterprise Linux と近い構成
+end note
+
+note over Arch
+💚 ミニマル・ローリングリリース  
+必要なものだけ自分で構築
+end note
+
+note over Nix
+💛 宣言的構成管理  
+環境をまるごと再現可能
+end note
+@enduml
+
+
+@startuml
+title Linuxカーネルから派生する主要ディストリビューション系統
+
+actor User
+participant Kernel as "Linux Kernel\n(共通のエンジン)"
+participant Debian as "Debian系\n(.deb / apt)"
+participant Ubuntu as "Ubuntu系\n(使いやすさ重視)"
+participant Fedora as "Fedora系\n(.rpm / dnf)"
+participant Arch as "Arch系\n(pacman)"
+participant Nix as "Nix系\n(nix package system)"
+
+== 基盤 ==
+User -> Kernel : 「Linuxを使いたい」
+
+note over Kernel
+全てのディストリビューションが共有する心臓部
+ハードウェアとのやり取りを担当
+end note
+
+== 派生 ==
+Kernel -> Debian : 安定性・保守性重視で派生
+Debian -> Ubuntu : デスクトップ向けに改良
+Ubuntu -> User : わかりやすいUI・初心者向け体験を提供
+
+Kernel -> Fedora : 最新技術検証のための開発系統
+Fedora -> User : RHELと互換性の高い環境を提供
+
+Kernel -> Arch : ミニマルでカスタム自在な構成を提供
+Arch -> User : 手動で全て構築する柔軟性を提供
+
+Kernel -> Nix : 宣言的・再現可能な構成管理を実現
+Nix -> User : 環境をコードで定義し再現可能
+
+== 比較 ==
+note over Debian, Ubuntu
+「.deb」「apt」ベースの伝統的システム
+安定・信頼性が高い
+end note
+
+note over Fedora
+Red Hat 系の源流
+企業向けの最新機能テストベッド
+end note
+
+note over Arch
+軽量・ローリングリリース
+「自分で作るLinux」
+end note
+
+note over Nix
+構成を宣言的に管理
+複数環境の再現が容易
+end note
+@enduml
+
+
+@startuml
+title Linuxカーネルから派生する主要ディストリビューション系統
+
+actor User
+participant Kernel as "Linux Kernel\n(共通のエンジン)"
+participant Debian as "Debian系\n(.deb / apt)"
+participant Ubuntu as "Ubuntu系\n(使いやすさ重視)"
+participant Fedora as "Fedora系\n(.rpm / dnf)"
+participant Arch as "Arch系\n(pacman)"
+participant Nix as "Nix系\n(nix package system)"
+
+== 基盤 ==
+User -> Kernel : 「Linuxを使いたい」
+
+note over Kernel
+全てのディストリビューションが共有する心臓部
+ハードウェアとのやり取りを担当
+end note
+
+== 派生 ==
+Kernel -> Debian : 安定性・保守性重視で派生
+Debian -> Ubuntu : デスクトップ向けに改良
+Ubuntu -> (User) : わかりやすいUI・初心者向け体験を提供
+
+Kernel -> Fedora : 最新技術検証のための開発系統
+Fedora -> (User) : RHELと互換性の高い環境を提供
+
+Kernel -> Arch : ミニマルでカスタム自在な構成を提供
+Arch -> (User) : 手動で全て構築する柔軟性を提供
+
+Kernel -> Nix : 宣言的・再現可能な構成管理を実現
+Nix -> (User) : 環境をコードで定義し再現可能
+
+== 比較 ==
+note over Debian, Ubuntu
+「.deb」「apt」ベースの伝統的システム
+安定・信頼性が高い
+end note
+
+note over Fedora
+Red Hat 系の源流
+企業向けの最新機能テストベッド
+end note
+
+note over Arch
+軽量・ローリングリリース
+「自分で作るLinux」
+end note
+
+note over Nix
+構成を宣言的に管理
+複数環境の再現が容易
+end note
+@enduml
+
+
+
+@startuml
+title ブートモード別のOS起動シーケンス比較（番号付き）
+
+== Legacy BIOS モード ==
+actor "ユーザー" as U
+participant "① BIOS (Legacy)" as B
+participant "② MBR（マスターブートレコード）" as M
+participant "③ ブートローダ\n（GRUB / Windows Boot Mgr）" as L
+participant "④ OS本体\n（Linux / Windows）" as O
+
+U -> B : ① 電源を入れる
+B -> M : ② ディスク先頭512バイト(MBR)を読み込む
+M -> L : ③ ブートローダを実行
+L -> O : ④ OSカーネルをロード
+O --> U : ⑤ OS起動完了
+
+note right of L
+🟢 Linux → OK (GRUBがMBR対応)  
+🟡 Windows 10以前 → OK  
+🔴 Windows 11 → 非対応 (MBR不可)
+end note
+
+== UEFI モード ==
+actor "ユーザー" as U2
+participant "① UEFIファームウェア" as F
+participant "② EFI System Partition (ESP)" as E
+participant "③ EFIブートローダ\n（GRUB / systemd-boot / Windows Boot Mgr）" as L2
+participant "④ OS本体\n（Linux / Windows）" as O2
+
+U2 -> F : ① 電源を入れる
+F -> E : ② EFIパーティションをスキャン（.efiファイル探索）
+E -> L2 : ③ 選択されたEFIブートローダを実行
+L2 -> O2 : ④ OSカーネルをロード
+O2 --> U2 : ⑤ OS起動完了
+
+note right of L2
+🟢 Linux → ✅ UEFI対応済み  
+🟢 Windows 10/11 → ✅ 必須（特に11）  
+🔒 Secure Boot → 有効時は署名必須
+end note
+
+== まとめ ==
+note over B,F
+📘 まとめ  
+・Linux → Legacy / UEFI どちらも起動可  
+・Windows 11 → UEFI + GPT 必須  
+・デュアルブート時 → 両方UEFIで統一が安全  
+・Legacyモード混在はトラブルの原因になりやすい
+end note
+@enduml
+
+
+@startuml
+title ブートモード別のOS起動シーケンス比較
+
+== Legacy BIOS モード ==
+actor "ユーザー" as U
+participant "BIOS (Legacy)" as B
+participant "MBR" as M
+participant "ブートローダ (GRUB / Windows Boot Mgr)" as L
+participant "OS (Linux / Windows)" as O
+
+U -> B : 電源投入
+B -> M : ディスクの先頭512バイト(MBR)を読み込む
+M -> L : ブートローダを実行
+L -> O : OSカーネルをロード
+O --> U : OS起動完了
+
+note right of L
+Linux → OK (GRUB対応)
+Windows 10以前 → OK
+Windows 11 → ❌ 非対応 (MBR不可)
+end note
+
+== UEFI モード ==
+actor "ユーザー" as U2
+participant "UEFIファームウェア" as F
+participant "EFI System Partition (ESP)" as E
+participant "EFIブートローダ\n(GRUB / systemd-boot / Windows Boot Manager)" as L2
+participant "OS (Linux / Windows)" as O2
+
+U2 -> F : 電源投入
+F -> E : EFIパーティションをスキャン (.efi)
+E -> L2 : 選択されたEFIブートローダを実行
+L2 -> O2 : OSカーネルをロード
+O2 --> U2 : OS起動完了
+
+note right of L2
+Linux → ✅ UEFI対応
+Windows 10/11 → ✅ 必須 (特に11)
+Secure Boot → 要署名
+end note
+
+== まとめ ==
+note over B,F
+・Linux は Legacy / UEFI どちらも可  
+・Windows 11 は UEFI + GPT 必須  
+・デュアルブート時は同一モードで統一するのが安全
+end note
+@enduml
+
+
+@startuml
+title Linux: カーネルからアプリまで（Wayland / X11 を含む・主要選択肢付き）
+
+actor User
+participant Kernel as "Linux Kernel"
+participant Shell as "Shell / Terminal"
+participant ShellApp as "CLI アプリ (vim, emacs, htop)"
+participant DisplayServer as "ディスプレイサーバ層\n(Wayland / X11)"
+participant DMDE as "Display Manager / Desktop Environment / WM"
+participant GUIApp as "GUI アプリ (ブラウザ, エディタ, IDE)"
+
+== 流れ ==
+User -> Kernel : システムコールを発行
+Kernel -> Shell : CLI操作を提供
+Shell -> ShellApp : CLIアプリを実行
+Kernel -> DisplayServer : 画面描画を制御
+DisplayServer -> DMDE : GUI表示とデスクトップ環境を提供
+DMDE -> GUIApp : GUIアプリを表示・操作
+
+== 各層の役割と主な選択肢 ==
+
+note over Kernel
+🧩 **カーネル層**
+- Linux Kernel（全ディストロ共通）
+- 各ディストロが異なるパッチ・設定を適用
+例: Ubuntu kernel, Fedora kernel, NixOS kernel
+end note
+
+note over Shell
+💻 **Shell 層**
+- CLI操作のインターフェイス  
+主な選択肢：
+  - bash（標準的）
+  - zsh（機能拡張が豊富）
+  - fish（直感的補完）
+  - dash（軽量・スクリプト用）
+  - nushell（モダン・構造化出力）
+end note
+
+note over DisplayServer
+🖥️ **ディスプレイサーバ層**
+- GUI描画の基盤  
+主な選択肢：
+  - **X11 (X.Org)**: 古参・互換性広い・リモート描画可  
+  - **Wayland**: 軽量・セキュア・低遅延  
+Wayland上の代表的コンポジタ：
+  - Mutter (GNOME)
+  - KWin (KDE Plasma)
+  - Weston (リファレンス)
+  - Hyprland (モダン・アニメーション)
+  - Sway (i3互換・Wayland)
+end note
+
+note over DMDE
+🪟 **DM / DE / WM 層**
+GUI環境の操作感や外観を定義  
+
+**Display Manager (ログイン画面)**
+  - GDM (GNOME)
+  - SDDM (KDE)
+  - LightDM (軽量)
+  - LXDM, Ly など  
+
+**Desktop Environment (デスクトップ環境)**
+  - GNOME（統合型・Wayland推し）
+  - KDE Plasma（高機能・カスタマイズ性）
+  - XFCE（軽量安定）
+  - LXQt（超軽量）
+  - Cinnamon（Linux Mint系）
+  - MATE（クラシックUI）
+  - Budgie, Pantheon, Deepin など  
+
+**Window Manager (WM単体派)**
+  - i3 / Sway（タイル型）
+  - dwm / xmonad / awesome（ハッカー向け）
+  - Openbox / Fluxbox / IceWM（軽量フローティング）
+  - Hyprland（Wayland対応タイル＋アニメ）
+end note
+
+note over GUIApp
+🧠 **GUI アプリ層**
+- 実際に使うアプリ  
+代表例：
+  - ブラウザ（Firefox, Chromium, Brave）
+  - エディタ（VSCode, Gedit, Kate）
+  - 画像編集（GIMP, Krita）
+  - ファイルマネージャ（Nautilus, Dolphin, Thunar）
+end note
+
+@enduml
+
+
+@startuml
+title Linux: カーネルからアプリまで（Wayland / X11 を含む）
+
+actor User
+participant Kernel as "Linux Kernel"
+participant Shell as "Shell / Terminal"
+participant ShellApp as "CLI アプリ (vim, emacs, htop)"
+participant DisplayServer as "ディスプレイサーバ層\n(Wayland / X11)"
+participant DMDE as "Display Manager / Desktop Environment"
+participant GUIApp as "GUI アプリ (ブラウザ, エディタ, IDE)"
+
+== 流れ ==
+User -> Kernel : システムコールを発行
+Kernel -> Shell : CLI操作を提供
+Shell -> ShellApp : CLIアプリを実行
+Kernel -> DisplayServer : 画面描画を制御
+DisplayServer -> DMDE : GUI表示とデスクトップ環境を提供
+DMDE -> GUIApp : GUIアプリを表示・操作
+
+note over Kernel
+カーネルはハードウェアとユーザー空間の仲介者
+end note
+
+note over DisplayServer
+Wayland / X11 は GUI の描画を管理する層  
+- **X11**: 伝統的、リモート描画も可能  
+- **Wayland**: 新世代、軽量でセキュア
+end note
+
+note over DMDE
+Display Manager と Desktop Environment は  
+GUI の見た目・操作感を提供  
+(例: GDM+GNOME, SDDM+KDE)
+end note
+
+note over GUIApp
+ユーザーが利用するアプリケーション層  
+(ブラウザ, エディタ, IDE など)
+end note
+
+@enduml
+
+
+@startuml
+title 小選挙区＋比例代表（復活当選：賛否両論付き）
+
+actor 有権者 as Voter
+participant "候補A（重複立候補）" as Candidate
+participant "選挙管理委員会" as Election
+participant "政党（比例名簿）" as Party
+
+== 投票 ==
+Voter -> Candidate : 小選挙区票
+Voter -> Party : 比例票
+
+== 小選挙区結果 ==
+Election -> Candidate : 落選
+note right
+  【批判】
+  ●ここで落ちた＝有権者のNoでは？
+  ●なのにまだ続くの？
+end note
+
+== 比例代表 ==
+Election -> Party : 政党の得票に応じて議席配分
+Party -> Candidate : 名簿上位のため「復活当選」
+
+note over Candidate
+  【賛成意見】
+  ●小選挙区だけだと死票が多すぎる
+  ●政党支持票を反映するのは公平
+  ●専門家や経験者を国会に残す必要もある
+
+  【批判意見】
+  ●負けた人が議員になるのは不自然
+  ●民意を逆転させてない？
+  ●結局「政党の都合優先」では？
+end note
+
+@enduml
+
+
+@startuml
+title 小選挙区＋比例代表（復活当選のシンプル図）
+
+actor 有権者 as Voter
+participant "候補A（重複立候補）" as Candidate
+participant "選挙管理委員会" as Election
+participant "政党（比例名簿）" as Party
+
+== 投票 ==
+Voter -> Candidate : 小選挙区票
+Voter -> Party : 比例票
+
+== 小選挙区結果 ==
+Election -> Candidate : 落選
+note right
+  ●普通ならここで終了のはず
+end note
+
+== 比例代表 ==
+Election -> Party : 政党の得票に応じて議席配分
+Party -> Candidate : 名簿上位のため「復活当選」
+
+note over Candidate
+  【批判メモ】
+  ●有権者がNoと言ったのに復活？
+  ●なぜ負けた人が議員になれる？
+  ●これって民意の逆転では？
+end note
+
+@enduml
+
+
+@startuml
+title 小選挙区 ＋ 比例代表（重複立候補 → 復活当選）の流れ（批判メモ付き）
+
+actor 有権者 as Voter
+participant "小選挙区候補A\n(地域候補)" as LocalCandidateA
+participant "小選挙区候補B\n(地域候補)" as LocalCandidateB
+participant "政党（比例名簿）" as PartyList
+participant "開票所 / 選管" as ElectionCommission
+participant "議席配分" as SeatAllocation
+participant "当選者発表" as WinnerAnnouncement
+
+== 投票 ==
+Voter -> LocalCandidateA : 小選挙区票（個人に投票）
+Voter -> PartyList : 比例票（政党に投票）
+note over Voter
+  ●「人」ではなく「政党」にも1票必要？
+  ●結局どっちを信じろって話？
+end note
+
+== 開票（小選挙区） ==
+ElectionCommission -> ElectionCommission : 小選挙区票を集計
+ElectionCommission -> WinnerAnnouncement : 小選挙区の当選者決定
+WinnerAnnouncement -> LocalCandidateA : 小選挙区で当選（例）
+note over LocalCandidateB
+  ●ここで落選したら普通は終わりでは？
+  ●「落ちたのにまだチャンスある」って何？
+end note
+
+== 開票（比例） ==
+ElectionCommission -> ElectionCommission : 比例票を集計（政党別）
+ElectionCommission -> SeatAllocation : 各政党に議席数を割当て
+
+== 比例名簿で議席割当 ==
+SeatAllocation -> PartyList : 割当議席数に基づく名簿上位から当選者決定
+
+alt 候補者が重複立候補していた場合
+    note right of PartyList
+      ① 小選挙区で当選 → 比例枠は次点へ繰り下がる
+      ② 小選挙区で落選だが名簿上位 → 比例で復活当選
+
+      【批判メモ】
+      ●「ゾンビ当選」って呼ばれる理由ここ！
+      ●国民に「No」と言われた人がなぜ議員に？
+      ●これって民意の否定では？
+    end note
+    PartyList -> WinnerAnnouncement : 比例で当選者（名簿上位）を通知
+else 比例-only候補の場合
+    PartyList -> WinnerAnnouncement : 名簿上位者が当選
+    note right
+      ●そもそも選挙区で顔見せすらしてない人が議員に？
+      ●政党に忠誠心ある方が得なのでは？
+    end note
+end
+
+== 最終発表 ==
+WinnerAnnouncement -> LocalCandidateA : 小選挙区当選（既に当選）
+WinnerAnnouncement -> LocalCandidateB : 比例で当選（復活当選の例）
+
+note over WinnerAnnouncement
+  【総評】
+  ●「選挙で負けても議員になれる可能性がある制度」
+  ●これで本当に“選挙の緊張感”あるの？
+  ●なぜ日本はこんな仕組みを維持してる？
+end note
+
+@enduml
+
+
+
+@startuml
+title 小選挙区 ＋ 比例代表（重複立候補 → 復活当選）の流れ
+
+actor 有権者 as Voter
+participant "小選挙区候補A\n(地域候補)" as LocalCandidateA
+participant "小選挙区候補B\n(地域候補)" as LocalCandidateB
+participant "政党（比例名簿）" as PartyList
+participant "開票所 / 選管" as ElectionCommission
+participant "議席配分" as SeatAllocation
+participant "当選者発表" as WinnerAnnouncement
+
+== 投票 ==
+Voter -> LocalCandidateA : 小選挙区票（個人に投票）
+Voter -> PartyList : 比例票（政党に投票）
+
+== 開票（小選挙区） ==
+ElectionCommission -> ElectionCommission : 小選挙区票を集計
+ElectionCommission -> WinnerAnnouncement : 小選挙区の当選者決定
+WinnerAnnouncement -> LocalCandidateA : 小選挙区で当選（例）
+
+== 開票（比例） ==
+ElectionCommission -> ElectionCommission : 比例票を集計（政党別）
+ElectionCommission -> SeatAllocation : 各政党に議席数を割当て
+
+== 比例名簿で議席割当 ==
+SeatAllocation -> PartyList : 割当議席数に基づく名簿上位から当選者決定
+
+alt 候補者が重複立候補していた場合
+    note right of PartyList
+      ① 小選挙区で当選 → 比例枠は次点へ繰り下がる
+      ② 小選挙区で落選だが名簿上位 → 比例で復活当選（ゾンビ当選）
+    end note
+    PartyList -> WinnerAnnouncement : 比例で当選者（名簿上位）を通知
+else 比例-only候補の場合
+    PartyList -> WinnerAnnouncement : 名簿上位者が当選
+end
+
+== 最終発表 ==
+WinnerAnnouncement -> LocalCandidateA : 小選挙区当選（既に当選）
+WinnerAnnouncement -> LocalCandidateB : 比例で当選（復活当選の例）
+@enduml
+
+
+@startuml
+title Linux ディストリビューション比較: Ubuntu, Fedora, Debian, NixOS
+
+actor User
+participant Kernel as "Linux Kernel"
+participant Shell as "Shell / Terminal"
+participant ShellApp as "CLI アプリ (vim, emacs, htop)"
+participant DMDE as "Display Manager / Desktop Environment"
+participant GUIApp as "GUI アプリ (ブラウザ, エディタ, IDE)"
+
+== 共通: カーネルと上位層 ==
+User -> Kernel : システムコールを発行
+Kernel -> Shell : CLI操作を提供
+Shell -> ShellApp : CLIアプリを実行
+Kernel -> DMDE : GUI表示とデスクトップ環境提供
+DMDE -> GUIApp : GUIアプリを表示・操作
+
+== Ubuntu の特徴 ==
+note over Kernel, GUIApp
+- 初心者向け、安定重視
+- パッケージ管理: apt/dpkg
+- デフォルト DE: GNOME
+- 標準アプリ充実、コミュニティが活発
+end note
+
+== Fedora の特徴 ==
+note over Kernel, GUIApp
+- 最新技術やソフトウェアを重視
+- パッケージ管理: dnf/rpm
+- デフォルト DE: GNOME
+- Red Hat 系で開発向き、アップデート頻繁
+end note
+
+== Debian の特徴 ==
+note over Kernel, GUIApp
+- 安定性最優先、長期サポート
+- パッケージ管理: apt/dpkg
+- デフォルト DE: GNOME, Xfce など選択可
+- 保守的、サーバ利用に向く
+end note
+
+== NixOS の特徴 ==
+note over Kernel, GUIApp
+- 宣言的設定、完全再現性重視
+- パッケージ管理: nix / nixpkgs
+- DE は自由に選択可能 (GNOME, KDE, Xfce, i3 など)
+- 設定はFlakeやconfiguration.nixで一元管理
+- 開発者・上級者向け、環境再現性に優れる
+end note
+
+@enduml
+
+@startuml
+title Linux: カーネルからアプリまで（Shell と DE 内アプリ含む）
+
+actor User
+participant Kernel as "Linux Kernel"
+participant Shell as "Shell / Terminal"
+participant ShellApp as "CLI アプリ (vim, emacs, htop)"
+participant DMDE as "Display Manager / Desktop Environment"
+participant GUIApp as "GUI アプリ (ブラウザ, エディタ, IDE)"
+
+== 流れ ==
+User -> Kernel : システムコールを発行
+Kernel -> Shell : CLI操作を提供
+Shell -> ShellApp : CLIアプリを実行
+Kernel -> DMDE : GUI表示とデスクトップ環境提供
+DMDE -> GUIApp : GUIアプリを表示・操作
+
+note over Kernel
+カーネルはハードウェアとユーザー空間の仲介者
+end note
+
+note over Shell
+シェルはCLI操作の窓口、CLIアプリを起動
+end note
+
+note over ShellApp
+ターミナル内で動くアプリ例: vim, emacs, htop
+end note
+
+note over DMDE
+Display ManagerとDesktop EnvironmentはGUI操作の窓口
+標準アプリも内包 (ファイルマネージャ, 端末, 設定ツール)
+end note
+
+note over GUIApp
+ユーザーが追加で使うGUIアプリ例: ブラウザ, エディタ, IDE
+end note
+
+@enduml
+
+@startuml
+title Linux: カーネルからアプリまで（シンプル版）
+
+actor User
+participant Kernel as "Linux Kernel"
+participant Shell as "Shell / Terminal"
+participant DMDE as "Display Manager / Desktop Environment"
+participant App as "Applications"
+
+== 流れ ==
+User -> Kernel : システムコールを発行
+Kernel -> Shell : CLI操作やコマンド提供
+Kernel -> DMDE : GUI表示とデスクトップ環境提供
+Shell -> App : CLIアプリを実行
+DMDE -> App : GUIアプリを表示・操作
+
+note over Kernel
+カーネルはハードウェアとユーザー空間の仲介者
+end note
+
+note over Shell
+シェルはCLI操作の窓口、コマンドや開発ツールを提供
+end note
+
+note over DMDE
+Display ManagerとDesktop EnvironmentはGUI操作の窓口
+end note
+
+note over App
+アプリケーション例: ブラウザ, エディタ, IDE, メディアプレイヤー
+end note
+
+@enduml
+
+@startuml
+title Linux: カーネルとハードウェアの関係（シーケンス図）
+
+actor "ユーザー空間 (User Space)" as User
+participant "Linux Kernel" as Kernel
+participant "ハードウェア (Hardware)" as HW
+
+== システム動作の流れ ==
+
+User -> Kernel : システムコールを発行\n(例: ファイル操作・プロセス作成)
+Kernel -> HW : デバイスドライバを通じて操作\n(例: ディスクI/O・ネットワーク送信)
+HW --> Kernel : 実行結果や割り込みを返す
+Kernel --> User : 戻り値・処理結果を返す
+
+note over Kernel
+カーネルは「仲介者」\nハードウェアを直接触らずに安全に操作するための層
+end note
+
+@enduml
+
+@startuml
+title Linux: カーネルと上位レイヤーの選択肢（シーケンス図）
+
+actor "ユーザー空間 (User Space)" as User
+participant "Linux Kernel" as Kernel
+participant "ディストリビューション (Distribution)" as Distro
+participant "初期化 / サービス (Init/Service)" as Init
+participant "パッケージ管理 (Package Manager)" as Pkg
+participant "シェル / ターミナル (Shell/Terminal)" as Shell
+participant "デスクトップ / GUI (DM/DE)" as GUI
+participant "アプリケーション (Applications)" as App
+
+== カーネルと上位層の流れ ==
+
+User -> Kernel : システムコールを発行
+Kernel -> Distro : 基本機能を提供
+Distro -> Init : 起動とサービス管理を選択
+Distro -> Pkg : ソフトウェア管理を選択
+Distro -> Shell : 標準シェル・ターミナルを選択
+Distro -> GUI : DM と DE を選択
+GUI -> App : ユーザー向けアプリを提供
+Shell -> App : CLI 操作や開発ツールを提供
+Pkg -> App : パッケージからアプリを提供
+
+== 選択肢の例 ==
+
+note over Distro
+ディストリビューション例:
+- Ubuntu: 初心者向け・安定
+- Arch: カスタマイズ自由
+- NixOS: 宣言的設定
+end note
+
+note over Init
+Init system例:
+- systemd (標準)
+- runit, openrc, s6 (軽量派)
+end note
+
+note over Pkg
+パッケージ管理例:
+- apt/dpkg (Debian系)
+- dnf/rpm (Fedora系)
+- pacman (Arch)
+- nix (NixOS)
+end note
+
+note over Shell
+シェル/ターミナル例:
+- bash, zsh, fish
+- gnome-terminal, alacritty, konsole
+end note
+
+note over GUI
+GUI例:
+- DM: gdm, sddm, lightdm, ly
+- DE: GNOME, KDE, Xfce, LXQt, i3/sway
+end note
+
+note over App
+アプリ例:
+- ブラウザ, エディタ, IDE, メディアプレイヤー
+end note
+
+@enduml
+
+
+
+@startuml
+skinparam dpi 150
+skinparam defaultFontName Arial
+hide empty description
+
+title Linux: カーネルのみ（シンプル表示）
+
+package "ハードウェア" as HW {
+  [CPU・メモリ・ディスク・ネットワーク]
+}
+
+package "カーネル" as K {
+  [Linux Kernel (ハードウェアとユーザー空間の橋渡し)]
+}
+
+HW --> K
+
+note bottom of K
+  カーネルはプロセス管理、メモリ管理、デバイス制御、ネットワークなどを担当
+end note
+
+@enduml
+
+
+@startuml
+title 自転車青切符制度と「国民不在」の情報構造
+
+actor 国民
+participant メディア
+participant 国会
+participant 警察庁
+participant 有識者
+participant 政府
+
+== 第1段階：内部検討 ==
+警察庁 -> 有識者 : 取締り効率化について協議
+有識者 -> 警察庁 : 青切符制度を提案
+note right
+国民の意見を聞く前に方向性が固まる
+end note
+
+== 第2段階：形式的なパブリックコメント ==
+警察庁 -> 国民 : Web上で意見募集（告知は限定的）
+国民 -> 警察庁 : 一部のみ意見提出
+note over 警察庁
+集まった意見は政策にほとんど反映されない
+end note
+
+== 第3段階：政策決定と報道 ==
+警察庁 -> 国会 : 計画と実施時期を報告
+国会 -> 政府 : 承認し、告知を指示
+政府 -> メディア : 資料とプレスリリースを提供
+メディア -> 国民 : 「来年から青切符制度開始」と報道
+note over 政府, メディア
+【情報のボトルネック】
+・政府と旧来メディアが情報を独占  
+・決定後に一方的に発表  
+・公開討論の仕組みが存在しない
+end note
+
+== 第4段階：国民の反応 ==
+国民 -> 国民 : 「えっ、いつ決まったの!?」
+note over 国民
+多くの国民は初めて報道で知る  
+→ 意思決定に関われない構造
+end note
+
+== 第5段階：望ましい構造 ==
+国民 -> 政府 : 「決定前に議論を！」
+メディア -> 国民 : 賛否両論や背景を報道
+警察庁 -> 国民 : 目的と安全効果を説明
+note over 国民, メディア
+【理想的な姿】
+・決定前に情報共有と対話  
+・メディアは広報ではなく議論の場に  
+・国民が「知らせる側」にも回る社会
+end note
+@enduml
+
+
+@startuml
+' ===========================================================
+' Bicycle Blue Ticket System - Missing Public Discussion
+' ===========================================================
+
+' 自転車青切符制度と国民不在の情報構造
+title Bicycle Blue Ticket System - Info Flow Problem
+
+actor Citizen
+participant Media
+participant Parliament
+participant PoliceAgency
+participant Experts
+participant Gov as Government
+
+== Step 1: Internal Planning ==
+PoliceAgency -> Experts : Discuss enforcement efficiency
+Experts -> PoliceAgency : Suggest blue ticket system
+note right
+Direction decided internally without citizen input
+end note
+
+== Step 2: Formal Public Comment ==
+PoliceAgency -> Citizen : Announce public comment online (low visibility)
+Citizen -> PoliceAgency : Few opinions submitted
+note over PoliceAgency
+Little reflection of public feedback
+end note
+
+== Step 3: Policy Decision and Announcement ==
+PoliceAgency -> Parliament : Report plan and schedule
+Parliament -> Government : Approve and instruct for public notice
+Government -> Media : Provide documents and press release
+Media -> Citizen : News: "Blue ticket system starts next year"
+note over Government, Media
+[Information bottleneck]
+- Government and legacy media control the info flow  
+- Only post-decision announcements  
+- No structure for open discussion
+end note
+
+== Step 4: Citizen Reaction ==
+Citizen -> Citizen : "Wait, when was this decided?"
+note over Citizen
+Citizens receive notice, not participate in decision
+end note
+
+== Step 5: Ideal Future ==
+Citizen -> Government : "Dialogue before announcement"
+Media -> Citizen : Report pros, cons, and context
+PoliceAgency -> Citizen : Explain safety goals
+note over Citizen, Media
+[Ideal]
+- Share info before decision  
+- Media acts as discussion space, not PR  
+- Citizens become co-thinkers, not mere recipients
+end note
+
+@enduml
+
+
+
+
+@startuml
+' ==========================================================
+'  シーケンス図：自転車青切符制度に対する「不快感の構造」
+' ==========================================================
+
+title 自転車青切符制度の導入プロセスと国民の違和感
+
+actor 国民
+participant 報道機関
+participant 警察庁
+participant 国会
+participant 有識者会議
+
+== 第1段階：行政内部での立案 ==
+警察庁 -> 有識者会議 : 「自転車違反を取り締まりやすくしたい」
+有識者会議 -> 警察庁 : 「青切符制度を導入すべき」と提言
+note right: この段階では国民の参加はない
+
+== 第2段階：形式的な意見募集 ==
+警察庁 -> 国民 : パブリックコメントをWEBで公示（気づく人は少数）
+国民 -> 警察庁 : 一部の意見が届くが、反映は限定的
+note over 警察庁 : 実質的には「確認のための手続き」
+
+== 第3段階：制度決定と施行 ==
+警察庁 -> 国会 : 閣議決定・施行時期を報告
+国会 -> 警察庁 : 了承（形式的な審議）
+警察庁 -> 報道機関 : 「来年から青切符導入」と発表
+
+== 第4段階：国民の受け止め ==
+報道機関 -> 国民 : 「違反すれば罰金」のニュースを報道
+国民 -> 国民 : 「え？いつ決まったの？」「説明聞いてない」
+note over 国民 : 制度の目的よりも「いきなり決まった感」が先に来る
+
+== 第5段階：本来あるべき姿（理想） ==
+国民 -> 警察庁 : 「事故防止が目的なら教育やインフラ整備も必要」
+警察庁 -> 国民 : 「次回は意見反映を検討します（予定）」
+note over 国民,警察庁
+  理想：事前の議論と合意
+  現実：事後の告知と既成事実化
+end note
+
+@enduml
+
+
+@startuml
 actor 国民
 participant ネット世論
 participant 自民党
