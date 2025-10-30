@@ -1,4 +1,556 @@
 @startuml
+title Linux: 自動ログインと GNOME Keyring の仕組み
+
+actor User
+participant "Display Manager\n(GDM / SDDM / LightDM)" as DM
+participant "Session Manager\n(GNOME / KDE / Xfce)" as SM
+participant "GNOME Keyring\n(Seahorse / keyring-daemon)" as KR
+participant "Remote Desktop\n(VNC / RDP / xrdp)" as RD
+participant "App / Network Service\n(例: Chrome, NetworkManager)" as APP
+
+== 起動・ログイン処理 ==
+User -> DM : 電源投入 → ログイン画面表示
+DM -> SM : 自動ログインを実行（ユーザーPW入力なし）
+SM -> KR : セッション開始時にKeyringを開こうとする
+KR -> User : 🔐 「Keyringのパスワードを入力してください」
+note right
+Keyringは暗号化された「秘密情報(SSH鍵/ネットPW)」を保存  
+→ 自動ログインでは認証情報が提供されず解錠できない
+end note
+
+== リモートデスクトップ接続 ==
+User -> RD : RDP/VNCなどで接続（ログイン済みセッションを利用）
+RD -> SM : デスクトップセッションを転送表示
+APP -> KR : 保存済みパスワード(例: Wi-Fi, Mail)を要求
+KR -> User : 🔒 再びKeyringパスワードを要求
+
+== オプション ==
+note over KR
+・ログインPWとKeyringPWを同一化すれば自動解錠可能  
+　→ ただし「自動ログイン」ではOSがPWを渡さないため不可  
+・対応策：  
+　1️⃣ Keyringを無効化する  
+　2️⃣ Keyring PWを空に設定する（セキュリティ低下注意）  
+　3️⃣ PAM設定で自動解錠を有効にする（例: gnome-keyring-pam）
+end note
+
+@enduml
+
+
+@startuml Linux_Caps_Ctrl_Tools
+title Linux: Caps LockをCtrlとして追加するフローと主要ツール
+
+actor User
+participant Kernel as "① Kernel (Input Layer)"
+participant DEConfig as "② 設定機構\n(設定ツール/ファイル)"
+participant XKB as "③ XKB (X Keyboard Extension)"
+participant DisplayServer as "④ Display Server"
+participant App as "⑤ アプリケーション"
+
+note over DisplayServer: X11 Server or Wayland Compositor
+
+== 設定の適用 (X11 & Wayland共通) ==
+User -> DEConfig: 1. 設定ツールで 'ctrl:nocaps' を適用
+DEConfig -> XKB: 2. XKBルール/オプションをロード
+XKB -> DisplayServer: 3. XKBキーマップを適用
+
+note left of DEConfig
+  **X11 時代の主なツール:**
+  - setxkbmap (XKBオプション一時適用)
+  - xmodmap (古い/非推奨。キーコードを直接操作)
+  - xcape (キーの押し方を拡張: Tap/Hold)
+
+  **Wayland 時代の強力な選択肢 (Kernelレベル):**
+  - keyd (Wayland/X11/TTY全体対応のデーモン)
+  - kanata, xremap (より高度な層/マクロ設定)
+  - input-remapper (GUIツール)
+end note
+
+== X11 環境での動作フロー ==
+User -> Kernel: Caps Lockキーを押す (Scan Code)
+Kernel -> DisplayServer: 4. Keycodeに変換しX Serverへ送信
+DisplayServer -> XKB: 5. XKB定義を参照 (内部処理)
+XKB -> DisplayServer: Keycode 66 (Caps) を Keycode 37 (Ctrl) の意味に変換
+DisplayServer -> App: 6. Ctrlイベントとして送信 (KeyDown/KeyUp)
+
+note right of DisplayServer: X11の特徴: X Server内でXKBによる\n変換が一元的に行われる。
+
+== Wayland 環境での動作フロー ==
+User -> Kernel: Caps Lockキーを押す (Scan Code)
+Kernel -> DisplayServer: 4. Keycodeに変換しCompositorへ送信
+DisplayServer -> DisplayServer: 5. Compositorが設定 (XKB) を参照し、\nイベントを内部的に変換
+DisplayServer -> App: 6. Ctrlイベントとして送信 (Input Event)
+
+note left of DisplayServer: Waylandの特徴: Compositorが変換を担う。\nXKB設定はCompositorへの「指示」として機能する。
+
+@enduml
+
+@startuml Linux_Caps_Ctrl_Final
+title Linux: Caps LockをCtrlとして追加する詳細フロー (Option: ctrl:nocaps)
+
+actor User
+participant Kernel as "① Kernel (Input Layer)"
+participant DEConfig as "② 設定機構\n(gsettings/xorg.conf/CLI)"
+participant XKB as "③ XKB (X Keyboard Extension)"
+participant DisplayServer as "④ Display Server"
+participant App as "⑤ アプリケーション"
+
+note over DisplayServer: X11 Server or Wayland Compositor
+
+== 設定の適用 (X11 & Wayland共通) ==
+User -> DEConfig: 1. システム設定で 'ctrl:nocaps' を選択
+DEConfig -> XKB: 2. XKBルール/オプションをロード
+XKB -> DisplayServer: 3. XKBキーマップを適用
+
+note right of XKB: XKBはキーボードマッピングの標準フレームワーク。\nDisplay Serverに適用される。
+
+== X11 環境での動作フロー ==
+User -> Kernel: Caps Lockキーを押す (Scan Code)
+Kernel -> DisplayServer: 4. Keycodeに変換しX Serverへ送信
+DisplayServer -> XKB: 5. XKB定義を参照 (内部処理)
+XKB -> DisplayServer: Keycode 66 (Caps) を Keycode 37 (Ctrl) の意味に変換
+DisplayServer -> App: 6. Ctrlイベントとして送信 (KeyDown/KeyUp)
+
+note right of DisplayServer: X11の特徴: X Server内でXKBによる\n変換が一元的に行われる。
+
+== Wayland 環境での動作フロー ==
+User -> Kernel: Caps Lockキーを押す (Scan Code)
+Kernel -> DisplayServer: 4. Keycodeに変換しCompositorへ送信
+DisplayServer -> DisplayServer: 5. Compositorが設定 (XKB) を参照し、\nイベントを内部的に変換
+DisplayServer -> App: 6. Ctrlイベントとして送信 (Input Event)
+
+note left of DisplayServer: Waylandの特徴: Compositorが変換を担う。\nXKB設定はCompositorへの「指示」として機能する。
+
+@enduml
+@startuml Linux_Caps_Ctrl_No_Group_Fixed
+title Linux: Caps LockをCtrlとして追加する詳細フロー (Option: ctrl:nocaps)
+
+actor User
+participant Kernel as "① Kernel (Input Layer)"
+participant DEConfig as "② 設定機構\n(gsettings/xorg.conf/CLI)"
+participant XKB as "③ XKB (X Keyboard Extension)"
+participant DisplayServer as "④ Display Server"
+participant App as "⑤ アプリケーション"
+
+note over DisplayServer
+  X11 Server or Wayland Compositor
+end note
+
+== 設定の適用 (X11 & Wayland共通) ==
+User -> DEConfig: 1. システム設定で 'ctrl:nocaps' を選択
+DEConfig -> XKB: 2. XKBルール/オプションをロード
+XKB -> DisplayServer: 3. XKBキーマップを適用
+
+note right of XKB
+  XKBはキーボードマッピングの標準フレームワーク。\n
+  Display Serverに適用される。
+end note
+
+== X11 環境での動作フロー ==
+User -> Kernel: Caps Lockキーを押す (Scan Code)
+Kernel -> DisplayServer: 4. Keycodeに変換しX Serverへ送信
+DisplayServer -> XKB: 5. XKB定義を参照 (内部処理)
+XKB -> DisplayServer: Keycode 66 (Caps) を Keycode 37 (Ctrl) の意味に変換
+DisplayServer -> App: 6. Ctrlイベントとして送信 (KeyDown/KeyUp)
+
+note right of DisplayServer
+  X11の特徴: X Server内でXKBによる\n
+  変換が一元的に行われる。
+end note
+
+== Wayland 環境での動作フロー ==
+User -> Kernel: Caps Lockキーを押す (Scan Code)
+Kernel -> DisplayServer: 4. Keycodeに変換しCompositorへ送信
+DisplayServer -> DisplayServer: 5. Compositorが設定 (XKB) を参照し、\nイベントを内部的に変換
+DisplayServer -> App: 6. Ctrlイベントとして送信 (Input Event)
+
+@enduml
+
+
+@startuml Linux_Caps_Ctrl_No_Group_Fixed
+title Linux: Caps Lock -> Ctrl リマップの詳細フロー (Groupなし・最終修正)
+
+actor User
+participant Kernel as "① Kernel (Input Layer)"
+participant DEConfig as "② 設定機構\n(gsettings/xorg.conf/CLI)"
+participant XKB as "③ XKB (X Keyboard Extension)"
+participant DisplayServer as "④ Display Server"
+participant App as "⑤ アプリケーション"
+
+note over DisplayServer
+  X11 Server or Wayland Compositor
+end note
+
+== 設定の適用 (X11 & Wayland共通) ==
+User -> DEConfig: 1. システム設定で 'ctrl:swapcaps' を選択
+DEConfig -> XKB: 2. XKBルール/オプションをロード
+XKB -> DisplayServer: 3. XKBキーマップを適用
+
+note right of XKB
+  XKBはキーボードマッピングの標準フレームワーク。\n
+  Display Serverに適用される。
+end note
+
+== X11 環境での動作フロー ==
+User -> Kernel: Caps Lockキーを押す (Scan Code)
+Kernel -> DisplayServer: 4. Keycodeに変換しX Serverへ送信
+DisplayServer -> XKB: 5. XKB定義を参照 (内部処理)
+XKB -> DisplayServer: Keycode 66 (Caps) を Keycode 37 (Ctrl) の意味に変換
+DisplayServer -> App: 6. Ctrlイベントとして送信 (KeyDown/KeyUp)
+
+note right of DisplayServer
+  X11の特徴: X Server内でXKBによる\n
+  変換が一元的に行われる。
+end note
+
+== Wayland 環境での動作フロー ==
+User -> Kernel: Caps Lockキーを押す (Scan Code)
+Kernel -> DisplayServer: 4. Keycodeに変換しCompositorへ送信
+DisplayServer -> DisplayServer: 5. Compositorが設定 (XKB) を参照し、\nイベントを内部的に変換
+DisplayServer -> App: 6. Ctrlイベントとして送信 (Input Event)
+
+note right of DisplayServer
+  Waylandの特徴: Compositorが変換を担う。\n
+  XKB設定はCompositorへの「指示」として機能する。
+end note
+
+@enduml
+
+@startuml Linux_Caps_Ctrl_No_Group
+title Linux: Caps Lock -> Ctrl リマップの詳細フロー (Groupなし)
+
+actor User
+participant Kernel as "① Kernel (Input Layer)"
+participant DEConfig as "② 設定機構\n(gsettings/xorg.conf/CLI)"
+participant XKB as "③ XKB (X Keyboard Extension)"
+participant DisplayServer as "④ Display Server"
+participant App as "⑤ アプリケーション"
+
+note over DisplayServer
+  X11 Server or Wayland Compositor
+end note
+
+== 設定の適用 (X11 & Wayland共通) ==
+User -> DEConfig: 1. システム設定で 'ctrl:swapcaps' を選択
+DEConfig -> XKB: 2. XKBルール/オプションをロード
+XKB -> DisplayServer: 3. XKBキーマップを適用
+
+note right of XKB
+  XKBはキーボードマッピングの標準フレームワークで、\n
+  Display Serverに適用される。
+end note
+
+== X11 環境での動作フロー ==
+User -> Kernel: Caps Lockキーを押す (Scan Code)
+Kernel -> DisplayServer: 4. Keycodeに変換しX Serverへ送信
+DisplayServer -> XKB: 5. XKB定義を参照 (内部処理)
+XKB -> DisplayServer: Keycode 66 (Caps) を Keycode 37 (Ctrl) の意味に変換
+DisplayServer -> App: 6. Ctrlイベントとして送信 (KeyDown/KeyUp)
+
+note right of DisplayServer
+  **X11の特徴:** X Server内でXKBによる\n
+  変換が一元的に行われる。
+end note
+
+== Wayland 環境での動作フロー ==
+User -> Kernel: Caps Lockキーを押す (Scan Code)
+Kernel -> DisplayServer: 4. Keycodeに変換しCompositorへ送信
+DisplayServer -> DisplayServer: 5. Compositorが設定 (XKB) を参照し、\nイベントを内部的に変換
+DisplayServer -> App: 6. Ctrlイベントとして送信 (Input Event)
+
+note left of DisplayServer:
+  **Waylandの特徴:** Compositorが変換を担う。\n
+  XKB設定はCompositorへの「指示」として機能する。
+end note
+
+@enduml
+
+@startuml Linux_Caps_Ctrl_Detail_Fixed
+title Linux: Caps Lock -> Ctrl リマップの詳細フロー
+
+actor User
+participant Kernel as "① Kernel (Input Layer)"
+participant DEConfig as "② 設定機構\n(gsettings/xorg.conf/CLI)"
+participant XKB as "③ XKB (X Keyboard Extension)"
+participant DisplayServer as "④ Display Server"
+participant App as "⑤ アプリケーション"
+
+note over DisplayServer
+  X11 Server or Wayland Compositor
+end note
+
+== 設定の適用 ==
+User -> DEConfig: 1. システム設定で 'ctrl:swapcaps' を選択
+DEConfig -> XKB: 2. XKBルール/オプションをロード
+XKB -> DisplayServer: 3. XKBキーマップを適用
+
+note right of XKB
+  **XKB:**
+  キーボードマッピングの標準フレームワーク。\n
+  X11/Wayland (Compositor) の両方で利用される。
+end note
+
+== X11 環境での動作 ==
+group X11 (キーマップ変換)
+    User -> Kernel: Caps Lockキーを押す (Scan Code)
+    Kernel -> DisplayServer: 4. Keycodeに変換しX Serverへ送信
+    DisplayServer -> XKB: 5. XKB定義を参照
+    XKB -> DisplayServer: Keycode 66 (Caps) を Keycode 37 (Ctrl) の意味に変換
+    DisplayServer -> App: 6. Ctrlイベントとして送信 (KeyDown/KeyUp)
+end
+
+note right of DisplayServer
+  X11では、XKBによる変換が\n
+  X Server内部で一元的に行われる。
+end note
+
+== Wayland 環境での動作 ==
+group Wayland (Compositor処理)
+    User -> Kernel: Caps Lockキーを押す (Scan Code)
+    Kernel -> DisplayServer: 4. Keycodeに変換しCompositorへ送信
+    DisplayServer -> DisplayServer: 5. Compositorが設定 (XKB) を参照し、\n  イベントを内部的に変換
+    DisplayServer -> App: 6. Ctrlイベントとして送信 (Input Event)
+
+    note left of DisplayServer:
+      GNOME/KDEなどのCompositorがキーマップ変換を担う。\n
+      XKB設定はCompositorへの「指示」として機能する。
+    end note
+end
+
+@enduml
+
+@startuml Linux_Caps_Ctrl_Detail_Fixed
+title Linux: Caps Lock -> Ctrl リマップの詳細フロー
+
+actor User
+participant Kernel as "① Kernel (Input Layer)"
+participant DEConfig as "② 設定機構\n(gsettings/xorg.conf/CLI)"
+participant XKB as "③ XKB (X Keyboard Extension)"
+participant DisplayServer as "④ Display Server"
+participant App as "⑤ アプリケーション"
+
+note over DisplayServer
+  X11 Server or Wayland Compositor
+end note
+
+== 設定の適用 ==
+User -> DEConfig: 1. システム設定で 'ctrl:swapcaps' を選択
+DEConfig -> XKB: 2. XKBルール/オプションをロード
+XKB -> DisplayServer: 3. XKBキーマップを適用
+
+note right of XKB
+  **XKB:**
+  キーボードマッピングの標準フレームワーク。\n
+  X11/Wayland (Compositor) の両方で利用される。
+end note
+
+== X11 環境での動作 ==
+group X11 (キーマップ変換)
+    User -> Kernel: Caps Lockキーを押す (Scan Code)
+    Kernel -> DisplayServer: 4. Keycodeに変換しX Serverへ送信
+    DisplayServer -> XKB: 5. XKB定義を参照
+    XKB -> DisplayServer: Keycode 66 (Caps) を Keycode 37 (Ctrl) の意味に変換
+    DisplayServer -> App: 6. Ctrlイベントとして送信 (KeyDown/KeyUp)
+end
+
+note right of DisplayServer
+  X11では、XKBによる変換が\n
+  X Server内部で一元的に行われる。
+end note
+
+== Wayland 環境での動作 ==
+group Wayland (Compositor処理)
+    User -> Kernel: Caps Lockキーを押す (Scan Code)
+    Kernel -> DisplayServer: 4. Keycodeに変換しCompositorへ送信
+    DisplayServer -> DisplayServer: 5. Compositorが設定 (XKB) を参照し、\n  イベントを内部的に変換
+    DisplayServer -> App: 6. Ctrlイベントとして送信 (Input Event)
+
+    note left of DisplayServer: 
+      GNOME/KDEなどのCompositorがキーマップ変換を担う。\n
+      XKB設定はCompositorへの「指示」として機能する。
+    end note
+end
+
+@enduml
+
+@startuml Linux_Caps_Ctrl_Detail
+title Linux: Caps Lock -> Ctrl リマップの詳細フロー
+
+actor User
+participant Kernel as "① Kernel (Input Layer)"
+participant DEConfig as "② 設定機構\n(gsettings/xorg.conf/CLI)"
+participant XKB as "③ XKB (X Keyboard Extension)"
+participant DisplayServer as "④ Display Server"
+participant App as "⑤ アプリケーション"
+
+note over DisplayServer
+  X11 Server or Wayland Compositor
+end note
+
+== 設定の適用 ==
+User -> DEConfig: 1. システム設定で 'ctrl:swapcaps' を選択
+DEConfig -> XKB: 2. XKBルール/オプションをロード
+XKB -> DisplayServer: 3. XKBキーマップを適用
+
+note right of XKB
+  **XKB:**
+  キーボードマッピングの標準フレームワーク。\n
+  X11/Wayland (Compositor) の両方で利用される。
+end note
+
+== X11 環境での動作 ==
+group X11 (キーマップ変換)
+    User -> Kernel: Caps Lockキーを押す (Scan Code)
+    Kernel -> DisplayServer: 4. Keycodeに変換しX Serverへ送信
+    DisplayServer -> XKB: 5. XKB定義を参照
+    XKB -> DisplayServer: Keycode 66 (Caps) を Keycode 37 (Ctrl) の意味に変換
+    DisplayServer -> App: 6. Ctrlイベントとして送信 (KeyDown/KeyUp)
+end
+
+note right of DisplayServer
+  X11では、XKBによる変換が\n
+  X Server内部で一元的に行われる。
+end note
+
+== Wayland 環境での動作 ==
+group Wayland (Compositor処理)
+    User -> Kernel: Caps Lockキーを押す (Scan Code)
+    Kernel -> DisplayServer: 4. Keycodeに変換しCompositorへ送信
+    DisplayServer -> DisplayServer: 5. Compositorが設定 (XKB) を参照し、\n  イベントを内部的に変換
+    DisplayServer -> App: 6. Ctrlイベントとして送信 (Input Event)
+
+    note left of DisplayServer: 
+      * GNOME/KDEなどのCompositorが\n  キーマップ変換を担う。
+      * XKB設定はCompositorへの\n  「指示」として機能する。
+    end note
+end
+
+@enduml
+
+@startuml Caps_Ctrl_X11_Wayland
+title Caps Lock -> Ctrl リマップ (X11/Wayland対応版)
+
+actor User
+participant OS as "OS (Kernel/System)"
+participant Settings as "設定機構\n(gsettings/xorg.conf)"
+participant Server as "Display Server"
+participant App as "アプリケーション"
+
+note over Server
+  X11 or Wayland Compositor
+end note
+
+== Windows (参考: PowerToys利用の概念) ==
+group Windows Flow
+    User -> Settings: 1. PowerToysで Caps Lock -> Ctrl を設定
+    Settings -> Server: 2. イベントフックを有効化
+    User -> OS: Caps Lockキーを押す
+    OS -> Server: 3. Keycode受信
+    Server -> Settings: 4. フックしたイベントを変換
+    Settings -> Server: 5. Ctrlイベントとして再送信
+    Server -> App: 6. Ctrlとして処理される
+end
+
+== Linux: X11 環境 ==
+group X11 Flow (標準的)
+    User -> Settings: 1. setxkbmap / xorg.conf で設定
+    Settings -> Server: 2. XKB設定 (ctrl:swapcaps) をロード
+    User -> OS: Caps Lockキーを押す
+    OS -> Server: 3. Keycode受信
+    Server -> Server: 4. XKBで定義されたキーマップを参照し変換
+    Server -> App: 5. Ctrlとして処理される
+end
+
+== Linux: Wayland 環境 ==
+group Wayland Flow (Compositor依存)
+    User -> Settings: 1. gsettings / 環境設定ファイルで設定
+    Settings -> Server: 2. XKB設定 (ctrl:swapcaps) をCompositorに通知
+    User -> OS: Caps Lockキーを押す
+    OS -> Server: 3. Keycode受信
+    Server -> Server: 4. Compositor内でキーイベントを処理・変換
+    Server -> App: 5. Ctrlとして処理される
+end
+
+note right of Settings
+  Waylandの場合:
+  GNOME/KDEの設定が優先され、
+  Compositor (Server) がその設定に基づいて処理を行う。
+end note
+
+@enduml
+
+
+@startuml Simplest_Caps_Ctrl_Remap
+title Caps Lock -> Ctrl リマップ (最簡略版)
+
+actor User
+participant OS as "OS (Win/Linux)"
+participant Remapper as "キーリマップ機能"
+participant App as "アプリケーション"
+
+== Windows (PowerToys利用の概念) ==
+
+User -> Remapper : 1. PowerToysをインストール・設定
+Remapper -> OS : 2. キーボードイベントをフック
+User -> OS : Caps Lockキーを押す
+OS -> Remapper : 3. Caps Lockイベントを受信
+Remapper -> OS : 4. Ctrlイベントに変換して送信
+OS -> App : 5. Ctrlとして処理される
+
+== Linux (XKB利用の概念) ==
+
+User -> OS : 1. setxkbmap / gsettings で設定
+OS -> Remapper : 2. XKBオプション (ctrl:swapcaps) を適用
+User -> OS : Caps Lockキーを押す
+OS -> Remapper : 3. Caps Lockイベントを受信
+Remapper -> OS : 4. Ctrlイベントとして処理
+OS -> App : 5. Ctrlとして処理される
+
+note over Remapper, App: **Remapperは、WindowsではPowerToys、LinuxではXKB設定を指す**
+
+@enduml
+
+@startuml Linux_Package_Management_Layers
+title Linux パッケージ管理の進化と層構造（①〜⑤）
+
+actor User
+participant Kernel as "① Kernel 層\n(Linux Kernel)"
+participant Traditional as "② 従来パッケージ管理\n(apt / dnf / pacman)"
+participant Universal as "③ 新世代パッケージ\n(Snap / Flatpak / AppImage)"
+participant Nix as "④ 宣言的パッケージ管理\n(Nix / Nixpkgs / Flakes)"
+participant App as "⑤ アプリ層\n(CLI / GUI アプリ)"
+
+== 基本的なパッケージ導入の流れ ==
+
+group 従来パッケージ管理 (②)
+    User -> Traditional : apt install firefox など
+    Traditional -> Kernel : 依存関係解決とシステムに導入
+    Kernel -> App : アプリを利用可能
+end
+
+group 新世代パッケージ (③)
+    User -> Universal : snap install code / flatpak install firefox
+    Universal -> Kernel : サンドボックス/コンテナ技術を利用
+    Universal -> App : 隔離された環境で実行
+end
+
+group 宣言的パッケージ管理 (④)
+    User -> Nix : nix profile install firefox / nixos-rebuild
+    Nix -> Kernel : 独立したハッシュ付きストアに格納 (Nix Store)
+    Nix -> App : 再現可能な環境で実行
+end
+
+== 各層の説明 (シーケンスとは独立) ==
+
+note over Kernel: ① **カーネル層**\nハードウェアを直接制御する中心部。\n全てのアプリはここを経由して動作する。
+note over Traditional: ② **従来パッケージ管理 (apt / dnf)**\nOSに統合された標準方式。軽量だが、\n他のディストロとの互換性が低い。
+note over Universal: ③ **新世代パッケージ (Snap / Flatpak)**\nアプリ単位で独立。サンドボックス化され安全。\nディストロ間共通で配布できるがサイズは大きめ。
+note over Nix: ④ **宣言的パッケージ管理 (Nix)**\n設定ファイルに基づき環境を完全再現。\n依存関係をハッシュで管理し、衝突がない。
+note over App: ⑤ **アプリ層**\n実際にユーザーが利用するソフトウェア。\nCLI（vim, git）や GUI（Firefox, VSCode）など。
+
+@enduml
+
+@startuml
 title Linux パッケージ管理の進化と層構造（①〜⑤）
 
 actor User
