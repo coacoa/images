@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<title>主要エディタ比較（Vim / Neovim / GVim / Emacs+Evil / Helix）</title>
+<style>
+ body{font-family:Inter,system-ui,sans-serif;padding:24px;background:#0f1724;color:#e6eef6;}
+ h1{font-size:1.6rem;margin-bottom:12px}
+ h2{margin-top:32px;color:#7dd3fc}
+ table{width:100%;border-collapse:collapse;margin-top:12px}
+ th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.05);text-align:left;vertical-align:top}
+ th{color:#7dd3fc;font-weight:600}
+ .small{color:#9aa4b2;font-size:0.85rem}
+ code{color:#a8e6ff}
+</style>
+</head>
+<body>
+<h1>主要エディタ比較表（特徴・操作性・強み/弱み）</h1>
+<p class="small">Vim / Neovim / GVim / Emacs(Evil) / Helix の特徴と操作感をまとめた表。</p>
+
+<h2>1. エディタの概要比較</h2>
+<table>
+<thead><tr><th>エディタ</th><th>概要</th><th>特徴</th></tr></thead>
+<tbody>
+<tr><td><strong>Vim</strong></td><td>vi の後継で軽量・高速。端末で完結する伝統的エディタ。</td><td>最も安定していて設定が軽い。モダン機能は少なめ。</td></tr>
+<tr><td><strong>Neovim (nvim)</strong></td><td>Vim を再設計した後継。Lua ベースで拡張性が高い。</td><td>プラグインが豊富、LSP/Tree-sitter 標準対応。</td></tr>
+<tr><td><strong>GVim</strong></td><td>Vim の GUI 版。端末ではなくウィンドウアプリ。</td><td>メニューやフォント設定が簡単。クリップボード連携が強い。</td></tr>
+<tr><td><strong>Emacs + Evil</strong></td><td>Emacs のキーバインドを Vim 風に変換する層。</td><td>Vim の操作性 + Emacs の生態系。重めだが最強クラス。</td></tr>
+<tr><td><strong>Helix</strong></td><td>Rust 製の次世代モーダルエディタ。設定ほぼ不要。</td><td>LSP/Tree-sitter が標準、超高速。Vim とは操作体系が異なる。</td></tr>
+</tbody></table>
+
+<h2>2. 操作方法の比較（ざっくり）</h2>
+<table>
+<thead><tr><th>操作項目</th><th>Vim / Neovim / GVim</th><th>Emacs + Evil</th><th>Helix</th></tr></thead>
+<tbody>
+<tr><td><strong>移動</strong></td><td><code>h j k l</code></td><td>同じ（Evil が再現）</td><td><code>h j k l</code> + Helix 独自の選択モード</td></tr>
+<tr><td><strong>コピー</strong></td><td><code>yy</code> / <code>"+y</code></td><td>同じ（レジスタ再現）</td><td><code>y</code> のみ（レジスタ概念なし）</td></tr>
+<tr><td><strong>貼り付け</strong></td><td><code>p</code> / <code>"+p</code></td><td>同じ</td><td><code>p</code></td></tr>
+<tr><td><strong>選択</strong></td><td>Visual モード</td><td>同じ</td><td>常時「選択モード」前提（Kakoune 系）</td></tr>
+<tr><td><strong>設定</strong></td><td><code>vimrc</code> / Lua（Neovim）</td><td>Elisp（強力だが難度高）</td><td>ほぼ設定不要（toml）</td></tr>
+</tbody></table>
+
+<h2>3. 強み・弱み</h2>
+<table>
+<thead><tr><th>エディタ</th><th>強み</th><th>弱み</th></tr></thead>
+<tbody>
+<tr><td><strong>Vim</strong></td><td>軽い・安定・どこでも動く</td><td>現代的機能は追加しにくい</td></tr>
+<tr><td><strong>Neovim</strong></td><td>最先端・プラグイン強力・開発向け最高</td><td>環境構築が少し複雑</td></tr>
+<tr><td><strong>GVim</strong></td><td>フォント/GUI 操作が簡単・初心者に優しい</td><td>ターミナル版ほど普及していない</td></tr>
+<tr><td><strong>Emacs + Evil</strong></td><td>Vim 操作 + Emacs の巨大エコシステム</td><td>起動が重い・設定が深い</td></tr>
+<tr><td><strong>Helix</strong></td><td>設定ほぼ不要・高速・LSP 完備・初心者に優しい</td><td>Vim とは操作体系が全く違う／拡張性まだ弱い</td></tr>
+</tbody></table>
+
+<h2>4. どれを使うべきか（用途別おすすめ）</h2>
+<ul>
+<li><strong>軽くてどこでも使えるもの → Vim</strong></li>
+<li><strong>開発環境として最強にしたい → Neovim</strong></li>
+<li><strong>GUI で使いたい / クリップボードを自然に使いたい → GVim</strong></li>
+<li><strong>“Vim の操作感” を維持しつつ Emacs の超パワーを得たい → Emacs+Evil</strong></li>
+<li><strong>設定したくない / 次世代モーダルを使いたい → Helix</strong></li>
+</ul>
+
+<p class="small">追加したいエディタ（Kakoune / Zed / VSCode + Vim extension など）があれば拡張します。</p>
+
+
+<h2>5. 主要キー割り当て一覧（抜粋）</h2>
+<table>
+<thead><tr><th>操作</th><th>Vim / Neovim / GVim</th><th>Emacs + Evil</th><th>Helix</th></tr></thead>
+<tbody>
+<tr><td>ノーマルモード移動</td><td><code>h j k l</code></td><td><code>h j k l</code>（Evil）</td><td><code>h j k l</code></td></tr>
+<tr><td>行コピー</td><td><code>yy</code> / <code>"+y</code></td><td><code>yy</code> / <code>"+y</code></td><td><code>yy</code>（環境依存）</td></tr>
+<tr><td>貼り付け</td><td><code>p</code> / <code>"+p</code></td><td><code>p</code> / <code>"+p</code></td><td><code>p</code></td></tr>
+<tr><td>削除（行）</td><td><code>dd</code></td><td><code>dd</code></td><td><code>d</code>（選択ベース）</td></tr>
+<tr><td>ビジュアル選択</td><td><code>v / V / Ctrl-v</code></td><td><code>v / V / Ctrl-v</code></td><td>選択が基本（Kakoune 型）</td></tr>
+<tr><td>サーチ</td><td><code>/ pattern</code></td><td><code>/ pattern</code></td><td><code>/ pattern</code></td></tr>
+<tr><td> undo / redo </td><td><code>u / Ctrl-r</code></td><td><code>u / Ctrl-r</code></td><td><code>u / Ctrl-r</code></td></tr>
+</tbody>
+</table>
+
+<h2>6. ステップアップ学習法（初心者→中級者→上級者）</h2>
+<ol>
+<li><strong>基礎（まずは慣れる）</strong>
+  <ul>
+    <li>基本移動（h j k l）、i,aでの挿入、Escでノーマルに戻るを体に覚えさせる</li>
+    <li>1 日 10 分だけでも繰り返す（小さな編集に意図的に使う）</li>
+  </ul>
+</li>
+<li><strong>実務で使う（応用）</strong>
+  <ul>
+    <li>ビジュアル選択、行コピー（yy / p）、単語移動（w,b,e）を頻繁に使う</li>
+    <li>レジスタ（"a, "+ など）を導入してテンプレートや断片を保存する</li>
+    <li>設定ファイル（vimrc / init.vim / init.lua）に自分の好みを一つずつ追加する</li>
+  </ul>
+</li>
+<li><strong>拡張（中級→上級）</strong>
+  <ul>
+    <li>LSP / Tree-sitter / プラグイン管理（vim-plug, packer, lazy.nvim）を導入</li>
+    <li>マルチカーソルや複雑なマクロを学ぶ（recording と実用的なマクロ）</li>
+    <li>Emacs ユーザーは Evil を試し、Emacs の利点（org-mode など）と組み合わせる</li>
+  </ul>
+</li>
+<li><strong>最適化（上級）</strong>
+  <ul>
+    <li>キーマッピングを自分で最適化する（頻出コマンドを短く）</li>
+    <li>自動化スクリプト（vimscript / lua / elisp）で繰り返し作業を削減</li>
+    <li>複数マシンで同じ設定を同期（dotfiles + Git）</li>
+  </ul>
+</li>
+</ol>
+
+<p class="small">Tips: 新しいエディタを試すときは「短期間で完全移行」を狙わず、まずは小さなタスクで新しい操作を試すのが成功のコツ。</p>
+
+
+
+<h2>5. 主要キー割り当て一覧（抜粋）</h2>
+<table>
+<thead><tr><th>操作</th><th>Vim / Neovim / GVim</th><th>Emacs + Evil</th><th>Helix</th></tr></thead>
+<tbody>
+<tr><td>ノーマルモード移動</td><td><code>h j k l</code></td><td><code>h j k l</code>（Evil）</td><td><code>h j k l</code></td></tr>
+<tr><td>行コピー</td><td><code>yy</code> / <code>"+y</code></td><td><code>yy</code> / <code>"+y</code></td><td><code>yy</code>（環境依存）</td></tr>
+<tr><td>貼り付け</td><td><code>p</code> / <code>"+p</code></td><td><code>p</code> / <code>"+p</code></td><td><code>p</code></td></tr>
+<tr><td>削除（行）</td><td><code>dd</code></td><td><code>dd</code></td><td><code>d</code>（選択ベース）</td></tr>
+<tr><td>ビジュアル選択</td><td><code>v / V / Ctrl-v</code></td><td><code>v / V / Ctrl-v</code></td><td>選択が基本（Kakoune 型）</td></tr>
+<tr><td>サーチ</td><td><code>/ pattern</code></td><td><code>/ pattern</code></td><td><code>/ pattern</code></td></tr>
+<tr><td> undo / redo </td><td><code>u / Ctrl-r</code></td><td><code>u / Ctrl-r</code></td><td><code>u / Ctrl-r</code></td></tr>
+</tbody>
+</table>
+
+<h2>6. ステップアップ学習法（初心者→中級者→上級者）</h2>
+<ol>
+<li><strong>基礎（まずは慣れる）</strong>
+  <ul>
+    <li>基本移動（h j k l）、i,aでの挿入、Escでノーマルに戻るを体に覚えさせる</li>
+    <li>1 日 10 分だけでも繰り返す（小さな編集に意図的に使う）</li>
+  </ul>
+</li>
+<li><strong>実務で使う（応用）</strong>
+  <ul>
+    <li>ビジュアル選択、行コピー（yy / p）、単語移動（w,b,e）を頻繁に使う</li>
+    <li>レジスタ（"a, "+ など）を導入してテンプレートや断片を保存する</li>
+    <li>設定ファイル（vimrc / init.vim / init.lua）に自分の好みを一つずつ追加する</li>
+  </ul>
+</li>
+<li><strong>拡張（中級→上級）</strong>
+  <ul>
+    <li>LSP / Tree-sitter / プラグイン管理（vim-plug, packer, lazy.nvim）を導入</li>
+    <li>マルチカーソルや複雑なマクロを学ぶ（recording と実用的なマクロ）</li>
+    <li>Emacs ユーザーは Evil を試し、Emacs の利点（org-mode など）と組み合わせる</li>
+  </ul>
+</li>
+<li><strong>最適化（上級）</strong>
+  <ul>
+    <li>キーマッピングを自分で最適化する（頻出コマンドを短く）</li>
+    <li>自動化スクリプト（vimscript / lua / elisp）で繰り返し作業を削減</li>
+    <li>複数マシンで同じ設定を同期（dotfiles + Git）</li>
+  </ul>
+</li>
+</ol>
+
+<p class="small">Tips: 新しいエディタを試すときは「短期間で完全移行」を狙わず、まずは小さなタスクで新しい操作を試すのが成功のコツ。</p>
+
+</body>
+</html>
+
