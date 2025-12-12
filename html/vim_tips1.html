@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Vim のレジスタとポインタ的イメージ — わかりやすい図解</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa4b2;--accent:#7dd3fc;--panel:#0b1220}
+    body{font-family: Inter, system-ui, -apple-system, 'Hiragino Kaku Gothic ProN', 'IPAGothic', sans-serif; background: linear-gradient(180deg,#071029, #071a2a); color:#e6eef6; padding:24px;}
+    header{display:flex;align-items:center;gap:16px}
+    h1{font-size:1.4rem;margin:0}
+    p.lead{color:var(--muted);margin:6px 0 20px}
+    .wrap{display:grid;grid-template-columns:1fr 420px;gap:18px}
+    .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 6px 20px rgba(2,6,23,0.6)}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.04);text-align:left}
+    th{color:var(--accent);font-weight:600}
+    pre{background:#071025;padding:12px;border-radius:8px;overflow:auto;font-size:0.9rem}
+    .svgwrap{display:flex;flex-direction:column;gap:12px}
+    .hint{color:var(--muted);font-size:0.88rem}
+    .small{font-size:0.85rem;color:var(--muted)}
+    @media (max-width:980px){.wrap{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header>
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="3" width="20" height="18" rx="3" stroke="#7dd3fc" stroke-width="1.2" fill="none"/><path d="M7 9h10M7 13h6" stroke="#7dd3fc" stroke-width="1.2" stroke-linecap="round"/></svg>
+    <div>
+      <h1>Vim のレジスタを図で理解する</h1>
+      <p class="lead">`"a` や `"+` の意味、C のポインタ風の考え方、実際の違いを <strong>表＋SVG 図</strong> でわかりやすく解説します。</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card">
+      <h2>要点まとめ</h2>
+      <ul>
+        <li><strong>レジスタは名前付きの“箱”</strong>：`"a` は常に a レジスタ（箱）を指す。</li>
+        <li><strong>`"+` は OS のクリップボードに接続する特殊な箱</strong>（Vim が clipboard 対応なら）。</li>
+        <li><strong>`y` は書き込み、`p` は読み出し</strong>：`"a` + `y` で a レジスタにコピー。</li>
+        <li><strong>C のポインタと似た比喩は有用</strong>：ただし実体はメモリアドレスではなく名前付きストレージ。</li>
+      </ul>
+
+      <h3>よく使うコマンド例</h3>
+      <pre><code>Shift+V → Shift+G  （行選択全選択）
+"+y               （選択を + レジスタ（system clipboard）に yank）
+"ay               （選択を a レジスタに yank）
+"ap               （a レジスタの内容を現在カーソル位置に貼り付け）
+</code></pre>
+
+      <h3>レジスタ一覧（簡易）</h3>
+      <table>
+        <thead><tr><th>レジスタ</th><th>用途</th></tr></thead>
+        <tbody>
+          <tr><td><code>"</code>（無名）</td><td>通常の yank/delete の既定の受け口</td></tr>
+          <tr><td><code>"0</code></td><td>直前の yank が入る（y コマンド専用）</td></tr>
+          <tr><td><code>"a ~ "z</code></td><td>ユーザー定義の名前付きレジスタ（永続的ではない）</td></tr>
+          <tr><td><code>"+</code></td><td>OS clipboard（+clipboard が有効な場合）</td></tr>
+          <tr><td><code>"*</code></td><td>X11 の選択バッファ（マウス選択と連動する場合あり）</td></tr>
+        </tbody>
+      </table>
+
+      <p class="small">補足：`+clipboard` 非対応の Vim（`-clipboard`）だと `"+` は機能しません。`:version` で確認できます。</p>
+
+    </section>
+
+    <aside class="card">
+      <h3>図で見る（SVG）</h3>
+      <div class="svgwrap">
+        <!-- SVG: レジスタと clipboard の関係 -->
+        <svg viewBox="0 0 600 320" width="100%" height="220" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <style>.t{font:14px/1.1 'Noto Sans JP', sans-serif;fill:#dff6ff}.box{fill:#071025;stroke:#2b6b86;stroke-width:2;rx:8}.arrow{stroke:#7dd3fc;stroke-width:2;marker-end:url(#arr)}</style>
+            <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7dd3fc"/></marker>
+          </defs>
+
+          <!-- Vim buffers -->
+          <rect x="18" y="18" width="180" height="120" class="box"/>
+          <text x="28" y="38" class="t">Vim のレジスタ領域</text>
+          <rect x="30" y="52" width="120" height="28" rx="6" fill="#071b2a" stroke="#235b72"/>
+          <text x="38" y="72" class="t">"a レジスタ</text>
+
+          <rect x="30" y="88" width="120" height="28" rx="6" fill="#071b2a" stroke="#235b72"/>
+          <text x="38" y="108" class="t">"b レジスタ</text>
+
+          <rect x="30" y="124" width="120" height="28" rx="6" fill="#071b2a" stroke="#235b72"/>
+          <text x="38" y="144" class="t">"0 / 無名 / 他</text>
+
+          <!-- OS clipboard outside -->
+          <rect x="420" y="54" width="150" height="80" class="box"/>
+          <text x="434" y="74" class="t">OS Clipboard</text>
+          <text x="434" y="92" class="t">("+ レジスタ と接続)</text>
+
+          <!-- arrows -->
+          <path d="M 150 80 L 320 80" class="arrow"/>
+          <text x="230" y="72" class="t">"+ を指定して yank ("+y)</text>
+
+          <!-- pointer analogy: C pointer -->
+          <rect x="18" y="164" width="260" height="120" class="box"/>
+          <text x="28" y="186" class="t">C のメモリモデル（比喩）</text>
+          <rect x="36" y="204" width="96" height="28" rx="6" fill="#071b2a" stroke="#3a7b4a"/>
+          <text x="46" y="224" class="t">bufferA</text>
+          <rect x="36" y="236" width="96" height="28" rx="6" fill="#071b2a" stroke="#3a7b4a"/>
+          <text x="46" y="256" class="t">bufferB</text>
+
+          <path d="M 160 220 L 320 220" class="arrow"/>
+          <text x="210" y="212" class="t">char *p = bufferA; と似た考え方</text>
+
+          <rect x="320" y="196" width="220" height="64" rx="8" fill="#081822" stroke="#294a6a"/>
+          <text x="336" y="216" class="t">Vim のレジスタは固定の“箱”</text>
+          <text x="336" y="234" class="t">（ポインタ演算やアドレス書換は無い）</text>
+        </svg>
+
+        <p class="hint">図の読み方：左が Vim 内部の“箱”、右が OS のクリップボード。`"+` 指定で Vim が OS 側へコピーを書き込みます。</p>
+      </div>
+
+      <h4>よくある混乱</h4>
+      <ul class="small">
+        <li>`"+` と `"*` の違い：環境（Xorg / Wayland / OS）によって振る舞いが異なりやすい。</li>
+        <li>`"a` を指定して yank しても、元の無名レジスタは必ずしも上書きされないケースがある（操作の種類に依存）。</li>
+      </ul>
+
+    </aside>
+
+    <section class="card" style="grid-column:1/ -1">
+      <h2>場面別の使い方例</h2>
+      <ol>
+        <li><strong>システムクリップボードへコピーしたい</strong>
+          <pre><code>Shift+V → Shift+G   （行を全部選択）
+"+y                 （選択を system clipboard にコピー）
+</code></pre>
+        </li>
+        <li><strong>作業用の一時保存（a レジスタ）</strong>
+          <pre><code>"ay                （選択→a レジスタ）
+... 別の作業 ...
+"ap                （a レジスタを貼る）
+</code></pre>
+        </li>
+        <li><strong>C のポインタ風に考える時の注意</strong>
+          <p class="small">ポインタは "アドレスを変更できる" が、Vim のレジスタは常に同じ“箱”です。ですから "参照渡し" というよりは単なる "名前付きコピー先" とイメージしてください。</p>
+        </li>
+      </ol>
+
+      <h3>最後に：確認コマンド</h3>
+      <pre><code>:version | grep clipboard   " +clipboard があるか確認
+:registers                     " 現在のレジスタ内容を一覧表示
+</code></pre>
+
+      <p class="small">もっと簡潔な PNG/SVG が欲しい、或いはこの HTML を印刷用やスライド用に整形したいなら言ってください。調整して出力します。</p>
+    </section>
+
+  </main>
+</body>
+</html>
+
