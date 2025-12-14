@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>it_life_idea_pc_hainetu_danbou</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      line-height: 1.7;
+      margin: 0;
+      padding: 24px;
+    }
+    h1, h2, h3 {
+      color: #93c5fd;
+    }
+    section {
+      margin-bottom: 28px;
+      padding: 18px;
+      border-radius: 10px;
+      background: #020617;
+      border: 1px solid #1e293b;
+    }
+    ul {
+      margin-left: 1.4em;
+    }
+    code {
+      background: #020617;
+      color: #a7f3d0;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .warning {
+      color: #fecaca;
+      background: #1f2937;
+      padding: 12px;
+      border-left: 4px solid #ef4444;
+      border-radius: 6px;
+    }
+    svg {
+      width: 100%;
+      height: auto;
+      background: #fff;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>IT Life Idea</h1>
+<h2>冬場のPC排熱を暖房代わりに使えないか？</h2>
+
+<section>
+  <h3>アイデア概要</h3>
+  <ul>
+    <li>PCは基本的に<strong>電気ヒーター</strong>と同じ</li>
+    <li>消費電力 ≒ 発生する熱量</li>
+    <li>どうせ使うPCなら、排熱を「無駄」にしない</li>
+    <li>小部屋・デスク周りの補助暖房として活用</li>
+  </ul>
+</section>
+
+<section>
+  <h3>基本原理（超重要）</h3>
+  <ul>
+    <li>100W消費するPC → 約100Wの熱を放出</li>
+    <li>200〜300W運用 → 小型電気ストーブ並み</li>
+    <li>効率そのものは「最初から100%」</li>
+    <li>問題は<strong>熱の集め方・向き</strong></li>
+  </ul>
+</section>
+
+<section>
+  <h3>現実的な活用パターン</h3>
+  <ul>
+    <li>古いPCを常時稼働（サーバー用途）</li>
+    <li>CPU負荷を意図的にかける（夜間）</li>
+    <li>排気を足元 or 室内中央へ誘導</li>
+    <li>デスク下暖房・書斎暖房として使用</li>
+  </ul>
+</section>
+
+<section>
+  <h3>構成イメージ（概念図）</h3>
+
+  <svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
+    <rect x="40" y="110" width="200" height="80" fill="#e5e7eb" stroke="#000"/>
+    <text x="140" y="155" text-anchor="middle" fill="#000">PC / Server</text>
+
+    <polygon points="260,130 340,150 260,170" fill="#f97316"/>
+    <text x="300" y="115" text-anchor="middle" fill="#000">排熱</text>
+
+    <rect x="360" y="80" width="220" height="140" fill="#bbf7d0" stroke="#000"/>
+    <text x="470" y="130" text-anchor="middle" fill="#000">部屋 / デスク周辺</text>
+    <text x="470" y="160" text-anchor="middle" fill="#000">体感温度UP</text>
+  </svg>
+</section>
+
+<section>
+  <h3>実用テクニック</h3>
+  <ul>
+    <li>ケース背面に<strong>ダクト（簡易）</strong>を付ける</li>
+    <li>段ボール＋アルミシートで風向き調整</li>
+    <li>床方向に向けると体感効果が高い</li>
+    <li>静音ファン必須（夜間用）</li>
+  </ul>
+</section>
+
+<section>
+  <h3>おすすめ用途（NixOSとの相性）</h3>
+  <ul>
+    <li>ホームサーバー（24h稼働）</li>
+    <li>バックアップサーバー</li>
+    <li>動画エンコード・ビルド専用機</li>
+    <li>自宅LANのルーター兼用</li>
+  </ul>
+</section>
+
+<section>
+  <h3>注意点（重要）</h3>
+  <div class="warning">
+    <ul>
+      <li>密閉しすぎると<strong>熱暴走</strong></li>
+      <li>可燃物を近づけない</li>
+      <li>電気代は暖房と同じく増える</li>
+      <li>「主暖房」にはならない</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h3>結論</h3>
+  <ul>
+    <li>PC排熱は<strong>補助暖房として優秀</strong></li>
+    <li>サーバー用途と相性が良い</li>
+    <li>「IT × 生活改善」の好例</li>
+    <li>冬の古いPC再利用としてアリ</li>
+  </ul>
+</section>
+
+</body>
+</html>
+
