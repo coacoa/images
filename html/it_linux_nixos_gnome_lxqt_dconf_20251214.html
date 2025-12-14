@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>it_linux_nixos_gnome_lxqt_dconf_memo</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #1e1e1e;
+      color: #eaeaea;
+      line-height: 1.6;
+      margin: 2rem;
+    }
+    h1, h2 {
+      border-bottom: 1px solid #444;
+    }
+    code, pre {
+      background: #2a2a2a;
+      padding: 0.2em 0.4em;
+      border-radius: 4px;
+    }
+    pre {
+      padding: 1em;
+      overflow-x: auto;
+    }
+    table {
+      border-collapse: collapse;
+      margin: 1em 0;
+    }
+    th, td {
+      border: 1px solid #555;
+      padding: 0.5em 0.8em;
+    }
+  </style>
+</head>
+<body>
+
+<h1>GNOME と LXQt 併用時の dconf メモ</h1>
+
+<h2>summary</h2>
+<ul>
+  <li>dconf は GNOME 系設定</li>
+  <li>LXQt では前提ではない</li>
+  <li>home.nix では条件付きで使う</li>
+</ul>
+
+<h2>nix_example</h2>
+
+<pre><code>
+dconf.settings = {
+  "org/gnome/desktop/interface" = {
+    color_scheme = "prefer_dark";
+  };
+};
+</code></pre>
+
+<h2>daily_memo</h2>
+<p>
+LXQt のみ起動時に dconf 警告が出ることがある。
+</p>
+
+</body>
+</html>
+

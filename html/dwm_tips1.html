@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>dwm vs sway vs i3 vs Hyprland</title>
+<style>
+body { font-family: sans-serif; line-height: 1.6; padding: 20px; }
+table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+th, td { border: 1px solid #999; padding: 8px; text-align: left; }
+th { background: #eee; }
+h2 { margin-top: 40px; }
+code { background: #f5f5f5; padding: 2px 4px; }
+</style>
+</head>
+<body>
+
+<h1>dwm / sway / i3 / Hyprland 比較</h1>
+
+<table>
+<tr><th>WM</th><th>方式</th><th>長所</th><th>短所</th></tr>
+
+<tr>
+<td><strong>dwm</strong></td>
+<td>X11（極小・Cソース編集）</td>
+<td>
+<ul>
+<li>最軽量・最速</li>
+<li>キーバインドがすべて C で管理 → 変更が永久</li>
+<li>ソースを読んで理解する楽しさ</li>
+<li>パッチ文化で自由度最高</li>
+</ul>
+</td>
+<td>
+<ul>
+<li>設定変更に再コンパイルが必要</li>
+<li>Wayland の時代には古い（X11限定）</li>
+<li>マルチモニタや複雑なコンポジットは弱い</li>
+</ul>
+</td>
+</tr>
+
+<tr>
+<td><strong>sway</strong></td>
+<td>Wayland の i3 互換 WM</td>
+<td>
+<ul>
+<li>i3 と同じ設定で Wayland が使える</li>
+<li>超安定・クセが少ない</li>
+<li>dwl よりドキュメントが豊富</li>
+</ul>
+</td>
+<td>
+<ul>
+<li>アニメーション弱い</li>
+<li>カスタム性は Hyprland に劣る</li>
+</ul>
+</td>
+</tr>
+
+<tr>
+<td><strong>i3</strong></td>
+<td>X11 タイリング WM</td>
+<td>
+<ul>
+<li>dwm より習得が簡単</li>
+<li>設定ファイルだけで完結</li>
+<li>ドキュメントや例が豊富</li>
+</ul>
+</td>
+<td>
+<ul>
+<li>軽いが dwm ほどではない</li>
+<li>Wayland 移行が前提なら将来は sway へ</li>
+</ul>
+</td>
+</tr>
+
+<tr>
+<td><strong>Hyprland</strong></td>
+<td>Wayland：アニメーション系の新世代 WM</td>
+<td>
+<ul>
+<li>見た目が最強（アニメーション・ぼかし）</li>
+<li>設定が読みやすい</li>
+<li>複雑なウィンドウ操作・レイアウトが簡単</li>
+</ul>
+</td>
+<td>
+<ul>
+<li>軽さは dwm より劣る</li>
+<li>比較的新しく安定性が環境差で変動</li>
+</ul>
+</td>
+</tr>
+
+</table>
+
+<h2>dwm を軸にするとどうなる？</h2>
+<ul>
+<li>最軽量の体験をまず知る（基準値になる）</li>
+<li>キーバインド・レイアウトの思想が理解しやすい</li>
+<li>sway/i3/Hyprland が「どれくらい重いのか」が感覚で分かる</li>
+<li>自分が「どこまで自動化したいか」を考えられる</li>
+</ul>
+
+<h2>dwm の基本操作（最初に覚えるところ）</h2>
+<table>
+<tr><th>操作</th><th>キー</th></tr>
+
+<tr><td>端末を開く</td><td><code>Mod + Shift + Enter</code></td></tr>
+<tr><td>アプリを閉じる</td><td><code>Mod + Shift + C</code></td></tr>
+<tr><td>次のウィンドウへ移動</td><td><code>Mod + J</code></td></tr>
+<tr><td>前のウィンドウへ移動</td><td><code>Mod + K</code></td></tr>
+<tr><td>現在のウィンドウを master に変更</td><td><code>Mod + Enter</code></td></tr>
+<tr><td>レイアウト変更（tile / monocle / floating）</td><td><code>Mod + Space</code></td></tr>
+<tr><td>フロート切替</td><td><code>Mod + Shift + Space</code></td></tr>
+<tr><td>ウィンドウを閉じる</td><td><code>Mod + Shift + C</code></td></tr>
+<tr><td>再起動</td><td><code>Mod + Shift + R（パッチ必要）</code></td></tr>
+
+</table>
+
+<h2>どれが「dwm の思想に近い」か？</h2>
+<ul>
+<li><strong>dwm</strong> → 本家</li>
+<li><strong>dwl</strong> → dwm の Wayland 版（まだ発展途上）</li>
+<li><strong>i3 / sway</strong> → ルールベースは近いが「設定ファイル方式」</li>
+<li><strong>Hyprland</strong> → 完全に別物（アニメ重視）</li>
+</ul>
+
+</body>
+</html>
+
