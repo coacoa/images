@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>it_life_idea_html_to_obsidian_steps</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      line-height: 1.8;
+      margin: 0;
+      padding: 24px;
+    }
+    h1, h2, h3 {
+      color: #a5b4fc;
+    }
+    section {
+      margin-bottom: 28px;
+      padding: 18px;
+      border-radius: 10px;
+      background: #020617;
+      border: 1px solid #1e293b;
+    }
+    ul {
+      margin-left: 1.4em;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+    th, td {
+      border: 1px solid #334155;
+      padding: 10px;
+    }
+    th {
+      background: #020617;
+      color: #93c5fd;
+    }
+    code {
+      background: #020617;
+      color: #a7f3d0;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>HTMLメモ → Obsidian 導入ステップ</h1>
+
+<section>
+  <h2>前提</h2>
+  <ul>
+    <li>今は <strong>HTMLメモがメイン</strong></li>
+    <li>SVG・構成図・公開前提</li>
+    <li>NixOS / IT構成を整理中</li>
+    <li>Obsidianは「補助」として検討</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Stage 0：今やっている状態（最適）</h2>
+  <ul>
+    <li>HTMLで1テーマ＝1ファイル</li>
+    <li>ファイル名は意味重視</li>
+    <li>Git管理・GitHub想定</li>
+    <li>構造化・説明力が育つ</li>
+  </ul>
+  <p>
+    👉 <strong>この段階では Obsidian は不要</strong>
+  </p>
+</section>
+
+<section>
+  <h2>Stage 1：HTMLが「重く」なり始めたら</h2>
+  <ul>
+    <li>下書きが増えた</li>
+    <li>未整理メモが溜まる</li>
+    <li>関連テーマが増えた</li>
+    <li>「どこに書いたか」迷う</li>
+  </ul>
+  <p>
+    👉 <strong>Obsidian検討開始</strong>
+  </p>
+</section>
+
+<section>
+  <h2>Stage 2：Obsidianを「下書き置き場」として使う</h2>
+  <ul>
+    <li>HTMLにする前の断片メモ</li>
+    <li>思考ログ・検討途中</li>
+    <li>リンクで関係を結ぶ</li>
+    <li>図はラフでOK</li>
+  </ul>
+
+<pre><code>
+example_md_note.md
+
+- 旧PC再利用
+- [[nixos_network]]
+- [[homeserver_security]]
+</code></pre>
+
+  <p>
+    👉 <strong>HTMLはまだ触らない</strong>
+  </p>
+</section>
+
+<section>
+  <h2>Stage 3：HTMLに昇格する基準</h2>
+  <table>
+    <tr>
+      <th>状態</th>
+      <th>判断</th>
+    </tr>
+    <tr>
+      <td>考えが固まった</td>
+      <td>HTML化</td>
+    </tr>
+    <tr>
+      <td>人に説明できる</td>
+      <td>HTML化</td>
+    </tr>
+    <tr>
+      <td>構成図が必要</td>
+      <td>HTML化</td>
+    </tr>
+    <tr>
+      <td>まだ迷っている</td>
+      <td>Obsidianに残す</td>
+    </tr>
+  </table>
+</section>
+
+<section>
+  <h2>Stage 4：役割分離が完成</h2>
+  <ul>
+    <li>Obsidian：思考・下書き・リンク</li>
+    <li>HTML：完成版・公開版・保存版</li>
+    <li>Git：履歴と差分</li>
+  </ul>
+</section>
+
+<section>
+  <h2>やらなくていいこと</h2>
+  <ul>
+    <li>最初から全部Obsidian</li>
+    <li>HTMLをやめる</li>
+    <li>無理にツール統一</li>
+    <li>流行への即追従</li>
+  </ul>
+</section>
+
+<section>
+  <h2>結論</h2>
+  <ul>
+    <li>今は <strong>HTMLメモを続ける段階</strong></li>
+    <li>Obsidianは「思考が溢れたら」</li>
+    <li>導入は段階的でOK</li>
+    <li>最終成果物はHTMLで正解</li>
+  </ul>
+</section>
+
+</body>
+</html>
+
