@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>CSS Toggle Learning Demo</title>
+
+<!-- ===== CSS（切り替え対象） ===== -->
+<style id="style-demo">
+body {
+  background: #0f172a;
+  color: #e5e7eb;
+  font-family: system-ui, sans-serif;
+  padding: 20px;
+}
+
+.box {
+  background: #020617;
+  border: 2px solid #38bdf8;
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 16px;
+}
+
+.highlight {
+  color: #22d3ee;
+  font-weight: bold;
+}
+
+button {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #1d4ed8;
+}
+</style>
+
+<style>
+/* ===== UI用CSS（これは常に有効） ===== */
+pre {
+  background: #020617;
+  border: 1px solid #334155;
+  padding: 14px;
+  overflow-x: auto;
+  margin-top: 16px;
+  font-size: 14px;
+}
+code { color: #a7f3d0; }
+hr { margin: 30px 0; }
+</style>
+</head>
+
+<body>
+
+<h1>CSS Toggle 学習デモ</h1>
+
+<p>
+このページは <span class="highlight">ボタンでCSSをON/OFF</span> して  
+「どの記述が、どこに影響しているか」を目で確認するための教材。
+</p>
+
+<button onclick="toggleCSS()">CSS を ON / OFF 切り替え</button>
+
+<div class="box">
+  <h2>表示テスト領域</h2>
+  <p>
+    この <span class="highlight">文字色・背景・枠線</span> が  
+    CSSによって変化する。
+  </p>
+</div>
+
+<hr>
+
+<h2>今 ON になっている CSS</h2>
+
+<pre><code id="cssSource"></code></pre>
+
+<hr>
+
+<h2>HTML 構造（影響を受ける側）</h2>
+
+<pre><code>&lt;div class="box"&gt;
+  &lt;h2&gt;表示テスト領域&lt;/h2&gt;
+  &lt;p&gt;
+    この &lt;span class="highlight"&gt;文字色&lt;/span&gt; が変わる
+  &lt;/p&gt;
+&lt;/div&gt;</code></pre>
+
+<script>
+let enabled = true;
+const styleEl = document.getElementById("style-demo");
+const cssSource = document.getElementById("cssSource");
+
+cssSource.textContent = styleEl.innerHTML.trim();
+
+function toggleCSS() {
+  enabled = !enabled;
+  styleEl.disabled = !enabled;
+
+  cssSource.textContent = enabled
+    ? styleEl.innerHTML.trim()
+    : "/* CSS は現在 OFF */";
+}
+</script>
+
+</body>
+</html>
+

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>AS3とHTML/CSSの object・instance・class 対応メモ</title>
+  <style>
+    body { font-family: system-ui, sans-serif; line-height: 1.7; padding: 24px; }
+    h1, h2, h3 { border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+    code, pre { background: #f5f5f5; padding: 4px 6px; }
+    pre { padding: 12px; overflow-x: auto; }
+    table { border-collapse: collapse; margin: 16px 0; }
+    th, td { border: 1px solid #aaa; padding: 6px 10px; }
+    th { background: #eee; }
+    .note { background: #eef; padding: 12px; margin: 12px 0; }
+  </style>
+</head>
+<body>
+
+<h1>AS3 と HTML / CSS の object・instance・class 対応メモ</h1>
+
+<h2>結論まとめ</h2>
+<ul>
+  <li>CSS の <code>.class</code> は AS3 の class（設計図）ではない</li>
+  <li>HTML 要素（DOM要素）そのものが instance</li>
+  <li>CSS は「個別操作」ではなく「条件一致した集合」を操作する</li>
+</ul>
+
+<h2>AS3 の考え方（おさらい）</h2>
+<pre><code>class Box {
+  public var color:String;
+}
+
+var box1:Box = new Box();
+var box2:Box = new Box();
+
+box1.color = "red";
+box2.color = "blue";</code></pre>
+
+<ul>
+  <li><strong>class</strong> = 設計図</li>
+  <li><strong>instance</strong> = 実体</li>
+  <li><strong>box1.color</strong> = 個別インスタンス操作</li>
+</ul>
+
+<h2>HTML / CSS の考え方</h2>
+<pre><code>&lt;div class="box"&gt;&lt;/div&gt;
+&lt;div class="box"&gt;&lt;/div&gt;</code></pre>
+
+<pre><code>.box {
+  color: red;
+}</code></pre>
+
+<div class="note">
+  <strong>.box</strong> は「boxというラベルが付いた要素すべて」を意味する。
+</div>
+
+<h2>対応表</h2>
+<table>
+  <tr><th>AS3</th><th>HTML / CSS</th></tr>
+  <tr><td>class</td><td>CSS class（意味は別物）</td></tr>
+  <tr><td>instance</td><td>DOM要素</td></tr>
+  <tr><td>instance名</td><td>基本的に存在しない</td></tr>
+  <tr><td>box1.color</td><td>JS: element.style.color</td></tr>
+</table>
+
+<h2>HTML での「インスタンス名」に近いもの</h2>
+<pre><code>&lt;div id="box1" class="box"&gt;&lt;/div&gt;</code></pre>
+
+<pre><code>#box1 {
+  color: red;
+}</code></pre>
+
+<pre><code>document.getElementById("box1");</code></pre>
+
+<p>
+  <strong>id</strong> は AS3 のインスタンス名に一番近い概念。
+</p>
+
+<h2>class は何に近いのか？</h2>
+<p>
+  AS3 で複数インスタンスに同じ属性を付けるための「タグ」「属性」に近い。
+</p>
+
+<pre><code>// AS3 的発想
+box1.type = "enemy";
+box2.type = "enemy";</code></pre>
+
+<pre><code>/* CSS */
+.enemy { }</code></pre>
+
+<h2>決定的な違い</h2>
+<ul>
+  <li>AS3：命令型（1個ずつ操作）</li>
+  <li>CSS：宣言型（条件に一致する集合を操作）</li>
+</ul>
+
+<pre><code>.box.highlight button:hover {
+  background: red;
+}</code></pre>
+
+<h2>JS を使うと AS3 感覚に近づく</h2>
+<pre><code>const box1 = document.getElementById("box1");
+box1.style.color = "red";</code></pre>
+
+<h2>直感的なたとえ</h2>
+<ul>
+  <li>AS3：「box1 に赤を塗れ」</li>
+  <li>CSS：「条件を満たす箱は赤」</li>
+</ul>
+
+<h2>まとめ</h2>
+<ul>
+  <li>CSS class は設計図ではない</li>
+  <li>DOM要素 = インスタンス</li>
+  <li>id = インスタンス名に最も近い</li>
+  <li>Flash経験者は JS と CSS を役割分担で理解すると楽</li>
+</ul>
+
+</body>
+</html>
+

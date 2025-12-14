@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Web学習インタラクティブ教材 アイデアメモ</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.7;
+      padding: 24px;
+      background: #fdfdfd;
+    }
+    h1, h2, h3 {
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 4px;
+    }
+    ul { margin-left: 1.2em; }
+    li { margin: 6px 0; }
+    .section {
+      border: 1px solid #ddd;
+      padding: 16px;
+      margin: 16px 0;
+      background: #fafafa;
+    }
+    .idea {
+      background: #eef;
+      padding: 10px;
+      margin: 8px 0;
+    }
+    code {
+      background: #f0f0f0;
+      padding: 2px 6px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Web学習インタラクティブ教材 アイデアメモ</h1>
+
+<p>
+Flash/AS3時代の感覚を活かしつつ、HTML / CSS / JavaScript の学習と実用を兼ねた
+「触れる教材」を作るためのメモ。
+</p>
+
+<div class="section">
+<h2>目的</h2>
+<ul>
+  <li>HTML / CSS / JS を「動き」で理解する</li>
+  <li>ボタン操作・キー入力・音など即時フィードバック</li>
+  <li>勉強用コンテンツそのものを自作する</li>
+  <li>Flash時代のインタラクティブ学習体験をWebで再構築</li>
+</ul>
+</div>
+
+<div class="section">
+<h2>やりたいコンテンツ案</h2>
+
+<h3>① HTML / CSS / JS 可視化教材</h3>
+<div class="idea">
+<ul>
+  <li>ボタンを押すと <code>class</code> が付く / 外れる</li>
+  <li>CSS が即座に反映される</li>
+  <li>対応する CSS / JS のコードを同時表示</li>
+  <li>どの記述がどこに影響しているかを視覚的に理解</li>
+</ul>
+</div>
+
+<h3>② キーボード練習（Vim 等）</h3>
+<div class="idea">
+<ul>
+  <li>押したキーを画面に表示</li>
+  <li>hjkl 移動の可視化</li>
+  <li>operator + motion の流れを表示</li>
+  <li>身体感覚で覚える練習用ミニアプリ</li>
+</ul>
+</div>
+
+<h3>③ ミニゲーム / ミニアプリ</h3>
+<div class="idea">
+<ul>
+  <li>ボタンやキー入力で遊べる簡単ゲーム</li>
+  <li>反応が楽しいことを重視</li>
+  <li>学習の合間のモチベーション維持</li>
+</ul>
+</div>
+
+<h3>④ ピアノ練習ミニアプリ</h3>
+<div class="idea">
+<ul>
+  <li>PCキーボードをピアノ鍵盤に見立てる</li>
+  <li>キー入力で音が鳴る</li>
+  <li>視覚的に鍵盤が反応</li>
+  <li>Web Audio API の学習も兼ねる</li>
+</ul>
+</div>
+</div>
+
+<div class="section">
+<h2>共通コンセプト</h2>
+<ul>
+  <li>1 HTML = 1 テーマ</li>
+  <li>ローカルで完結（ビルド不要）</li>
+  <li>nvim / emacs どちらでも編集可能</li>
+  <li>GitHub Pages にそのまま載せられる</li>
+</ul>
+</div>
+
+<div class="section">
+<h2>技術スタック（最小）</h2>
+<ul>
+  <li>HTML：構造</li>
+  <li>CSS：見た目・状態の可視化</li>
+  <li>JavaScript：イベント・ロジック</li>
+  <li>SVG：図解・キー配置・構造説明</li>
+</ul>
+</div>
+
+<div class="section">
+<h2>段階的ステップ案</h2>
+<ol>
+  <li>ボタンで CSS を切り替える HTML</li>
+  <li>キーボード入力を表示する HTML</li>
+  <li>キー入力 + 状態管理</li>
+  <li>音を出す（ピアノ）</li>
+</ol>
+</div>
+
+<div class="section">
+<h2>メモ</h2>
+<ul>
+  <li>Flash時代の timeline 的理解を JS に置き換える</li>
+  <li>CSS は「条件」、JS は「命令」</li>
+  <li>教材を作ることで理解が定着する</li>
+</ul>
+</div>
+
+</body>
+</html>
+
