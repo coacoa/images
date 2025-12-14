@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>it_linux_nixos_homeserver_step1_current_state</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background-color: #111;
+      color: #eee;
+      line-height: 1.6;
+      margin: 0;
+      padding: 24px;
+    }
+    h1, h2, h3 {
+      color: #7dd3fc;
+    }
+    section {
+      margin-bottom: 32px;
+      padding: 16px;
+      border: 1px solid #333;
+      border-radius: 8px;
+      background-color: #1a1a1a;
+    }
+    code, pre {
+      background-color: #000;
+      color: #a7f3d0;
+      padding: 4px 6px;
+      border-radius: 4px;
+    }
+    pre {
+      padding: 12px;
+      overflow-x: auto;
+    }
+    ul {
+      margin-left: 1.5em;
+    }
+    svg {
+      width: 100%;
+      height: auto;
+      border: 1px solid #333;
+      background-color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+<h1>IT Linux NixOS Homeserver</h1>
+<h2>Step1 : Current State</h2>
+
+<section>
+  <h3>目的</h3>
+  <ul>
+    <li>古いノートPC（Lenovo U350 / Core2Duo / RAM 8GB）の再利用</li>
+    <li>NixOS を使った簡易ルーター兼ホームサーバー構成</li>
+    <li>危険な通信をメインPCから切り離す</li>
+    <li>ネットワーク接続状況の可視化</li>
+  </ul>
+</section>
+
+<section>
+  <h3>ハードウェア構成</h3>
+  <ul>
+    <li>有線LAN × 1（固定IP設定済み）</li>
+    <li>Wi-Fi × 1（AP / クライアント用途）</li>
+    <li>キーボード不調のためリモート操作前提</li>
+  </ul>
+</section>
+
+<section>
+  <h3>OS / 環境</h3>
+  <ul>
+    <li>OS : NixOS</li>
+    <li>操作 : SSH / リモート前提</li>
+    <li>GUI : 軽量環境検討中（LXQt など）</li>
+  </ul>
+</section>
+
+<section>
+  <h3>現在のネットワーク構成（概念図）</h3>
+
+  <svg viewBox="0 0 800 360" xmlns="http://www.w3.org/2000/svg">
+    <rect x="20" y="140" width="200" height="80" fill="#e5e7eb" stroke="#000"/>
+    <text x="120" y="185" text-anchor="middle" fill="#000">Internet</text>
+
+    <rect x="300" y="60" width="240" height="100" fill="#bfdbfe" stroke="#000"/>
+    <text x="420" y="100" text-anchor="middle" fill="#000">NixOS Router / Homeserver</text>
+    <text x="420" y="130" text-anchor="middle" fill="#000">LAN + Wi-Fi</text>
+
+    <rect x="300" y="220" width="240" height="80" fill="#bbf7d0" stroke="#000"/>
+    <text x="420" y="265" text-anchor="middle" fill="#000">Windows 10 PC</text>
+
+    <line x1="220" y1="180" x2="300" y2="110" stroke="#000" stroke-width="2"/>
+    <line x1="420" y1="160" x2="420" y2="220" stroke="#000" stroke-width="2"/>
+  </svg>
+</section>
+
+<section>
+  <h3>Step1 でやること</h3>
+  <ul>
+    <li>ネットワーク構成をHTMLで可視化</li>
+    <li>現状をGitHubで管理できる形にする</li>
+    <li>HTML / SVG の学習を兼ねる</li>
+  </ul>
+</section>
+
+<section>
+  <h3>次のステップ（予定）</h3>
+  <ul>
+    <li>iptables / nftables による通信制御</li>
+    <li>DNS / DHCP の整理</li>
+    <li>通信ログの可視化</li>
+  </ul>
+</section>
+
+</body>
+</html>
+
