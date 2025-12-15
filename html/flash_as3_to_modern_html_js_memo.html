@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>flash_as3_to_modern_html_js_memo</title>
+  <style>
+    body {
+      background: #1e1e1e;
+      color: #ddd;
+      font-family: sans-serif;
+      line-height: 1.7;
+      padding: 20px;
+    }
+    h1, h2, h3 {
+      color: #9cdcfe;
+    }
+    section {
+      border: 1px solid #444;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+    .box {
+      width: 100px;
+      height: 100px;
+      background: #4fc1ff;
+      position: relative;
+      margin-top: 10px;
+    }
+    button {
+      margin-top: 10px;
+      padding: 6px 12px;
+    }
+    pre {
+      background: #111;
+      padding: 12px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>Flash(AS3) → 現代HTML / JS 対応メモ</h1>
+
+<section>
+  <h2>1. MovieClip と div の対応</h2>
+
+  <h3>Flash (AS3)</h3>
+  <pre>
+var mc:MyClip = new MyClip();
+mc.x = 100;
+mc.y = 50;
+addChild(mc);
+  </pre>
+
+  <h3>HTML + JavaScript</h3>
+  <pre>
+&lt;div id="mc"&gt;&lt;/div&gt;
+
+const mc = document.getElementById("mc");
+mc.style.left = "100px";
+mc.style.top  = "50px";
+  </pre>
+
+  <div id="mc_example" class="box"></div>
+</section>
+
+<section>
+  <h2>2. instance name → id / class</h2>
+
+  <h3>Flash</h3>
+  <pre>
+mc.visible = false;
+  </pre>
+
+  <h3>HTML</h3>
+  <pre>
+mc.style.display = "none";
+  </pre>
+</section>
+
+<section>
+  <h2>3. 入れ子構造（addChild）</h2>
+
+  <h3>Flash</h3>
+  <pre>
+parent_mc.addChild(child_mc);
+  </pre>
+
+  <h3>HTML</h3>
+  <pre>
+&lt;div id="parent"&gt;
+  &lt;div id="child"&gt;&lt;/div&gt;
+&lt;/div&gt;
+  </pre>
+</section>
+
+<section>
+  <h2>4. イベント（クリック）</h2>
+
+  <h3>Flash</h3>
+  <pre>
+mc.addEventListener(MouseEvent.CLICK, onClick);
+
+function onClick(e:MouseEvent):void {
+  trace("clicked");
+}
+  </pre>
+
+  <h3>HTML</h3>
+  <pre>
+mc.addEventListener("click", () =&gt; {
+  console.log("clicked");
+});
+  </pre>
+
+  <button id="click_btn">クリック</button>
+</section>
+
+<section>
+  <h2>5. enterFrame → requestAnimationFrame</h2>
+
+  <h3>Flash</h3>
+  <pre>
+addEventListener(Event.ENTER_FRAME, loop);
+
+function loop(e:Event):void {
+  mc.x += 1;
+}
+  </pre>
+
+  <h3>HTML</h3>
+  <pre>
+function loop() {
+  x += 1;
+  mc.style.left = x + "px";
+  requestAnimationFrame(loop);
+}
+loop();
+  </pre>
+
+  <div id="anim_box" class="box"></div>
+</section>
+
+<section>
+  <h2>6. timeline が無い代わりに</h2>
+
+  <ul>
+    <li>CSS animation</li>
+    <li>JavaScript 状態管理</li>
+    <li>requestAnimationFrame</li>
+  </ul>
+
+  <pre>
+@keyframes move {
+  from { transform: translateX(0); }
+  to   { transform: translateX(200px); }
+}
+  </pre>
+</section>
+
+<section>
+  <h2>7. TypeScript（AS3 に近い書き味）</h2>
+
+  <pre>
+class Box {
+  x: number = 0;
+  el: HTMLElement;
+
+  constructor(el: HTMLElement) {
+    this.el = el;
+  }
+
+  move() {
+    this.x += 1;
+    this.el.style.left = this.x + "px";
+  }
+}
+  </pre>
+</section>
+
+<section>
+  <h2>まとめ（Flash脳での理解）</h2>
+
+  <ul>
+    <li>div = MovieClip</li>
+    <li>id = instance name</li>
+    <li>class = 見た目や役割</li>
+    <li>timeline は自分で作る</li>
+    <li>JS / TypeScript が AS3 の後継</li>
+  </ul>
+</section>
+
+<script>
+  // click demo
+  document.getElementById("click_btn").onclick = () => {
+    alert("clicked!");
+  };
+
+  // animation demo
+  const box = document.getElementById("anim_box");
+  let x = 0;
+  function loop() {
+    x += 1;
+    box.style.left = x + "px";
+    requestAnimationFrame(loop);
+  }
+  loop();
+</script>
+
+</body>
+</html>
+
