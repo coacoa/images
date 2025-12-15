@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>html_css_js_side_by_side_learning</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #f0f0f0;
+    }
+
+    h1 {
+      text-align: center;
+      padding: 10px;
+      margin: 0;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      height: calc(100vh - 60px);
+    }
+
+    /* ===== 左：グラフィック ===== */
+    .visual {
+      background: #fafafa;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .controls button {
+      margin: 4px;
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+
+    .house {
+      width: 260px;
+      border: 2px solid #555;
+      background: white;
+    }
+
+    .roof {
+      width: 0;
+      height: 0;
+      border-left: 130px solid transparent;
+      border-right: 130px solid transparent;
+      border-bottom: 80px solid #bbb;
+      margin: 0 auto;
+    }
+
+    .walls {
+      padding: 20px;
+      text-align: center;
+    }
+
+    .door {
+      width: 60px;
+      height: 90px;
+      margin: 20px auto 0;
+      background: #666;
+      transition: transform 0.4s;
+      transform-origin: left center;
+    }
+
+    /* ===== CSS ON ===== */
+    .decorated .roof { border-bottom-color: orange; }
+    .decorated .walls { background: #e3f2fd; }
+    .decorated .door { background: #795548; }
+
+    .door-open { transform: rotateY(-70deg); }
+
+    /* ===== 右：ソースコード ===== */
+    .code {
+      background: #fdfdfd;
+      color: #222;
+      padding: 10px;
+      overflow-y: auto;
+      font-size: 13px;
+    }
+
+    pre {
+      margin: 0 0 16px 0;
+      padding: 10px;
+      background: #f5f5f5;
+      color: #111;
+      border: 1px solid #ddd;
+    }
+
+    .highlight {
+      outline: 2px solid #ff9800;
+      background: #fff3e0;
+    }
+
+    .label {
+      color: #1976d2;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<h1>HTML / CSS / JS を左右分割で理解</h1>
+
+<div class="container">
+
+  <!-- ===== 左：見た目 ===== -->
+  <div class="visual">
+    <div class="controls">
+      <button onclick="toggleCSS(); highlight('css')">CSS（装飾）</button>
+      <button onclick="toggleDoor(); highlight('js')">JS（ドア操作）</button>
+      <button onclick="highlight('html')">HTML（骨組み）</button>
+    </div>
+
+    <div id="house" class="house">
+      <div class="roof"></div>
+      <!-- ▲ roof は CSS の border トリックで三角形を作っている -->
+      <div class="walls">
+        <p>家の骨組み</p>
+        <div id="door" class="door"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 右：コード ===== -->
+  <div class="code">
+
+    <div id="code-html">
+      <span class="label">HTML</span>
+      <pre>&lt;div id="house" class="house"&gt;
+  &lt;!-- 屋根（CSSで三角形） --&gt;
+  &lt;div class="roof"&gt;&lt;/div&gt;
+
+  &lt;!-- 壁（普通の四角形） --&gt;
+  &lt;div class="walls"&gt;
+    &lt;p&gt;家の骨組み&lt;/p&gt;
+    &lt;div id="door" class="door"&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+    </div>
+
+    <div id="code-css">
+      <span class="label">CSS</span>
+      <pre>/* ▼ 三角形の屋根 */
+.roof {
+  width: 0;
+  height: 0;
+  border-left: 130px solid transparent;
+  border-right: 130px solid transparent;
+  border-bottom: 80px solid #bbb;
+}
+
+/* ▼ 四角形の壁 */
+.walls {
+  padding: 20px;
+  background: white;
+}
+
+/* 装飾ON時 */
+.decorated .roof { border-bottom-color: orange; }
+.decorated .walls { background: #e3f2fd; }
+.decorated .door { background: #795548; }</pre>
+    </div>
+
+    <div id="code-js">
+      <span class="label">JavaScript</span>
+      <pre>function toggleCSS() {
+  house.classList.toggle('decorated');
+}
+
+function toggleDoor() {
+  door.classList.toggle('door-open');
+}</pre>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const house = document.getElementById('house');
+  const door = document.getElementById('door');
+
+  function toggleCSS() {
+    house.classList.toggle('decorated');
+  }
+
+  function toggleDoor() {
+    door.classList.toggle('door-open');
+  }
+
+  function highlight(type) {
+    ['html','css','js'].forEach(t => {
+      document.getElementById('code-' + t).classList.remove('highlight');
+    });
+    document.getElementById('code-' + type).classList.add('highlight');
+  }
+</script>
+
+</body>
+</html>
+
