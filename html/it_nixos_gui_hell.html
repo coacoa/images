@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>NixOS GUI地獄まとめ（flakesあり／なし）</title>
+  <style>
+    body { font-family: system-ui, sans-serif; line-height: 1.7; margin: 2em; }
+    h1, h2, h3 { border-bottom: 1px solid #ccc; padding-bottom: 0.3em; }
+    code, pre { background: #f5f5f5; padding: 0.3em 0.5em; }
+    pre { overflow-x: auto; }
+    .bad { color: #b00020; }
+    .good { color: #006400; }
+    .box { border: 1px solid #ccc; padding: 1em; margin: 1em 0; }
+  </style>
+</head>
+<body>
+
+<h1>NixOS GUI設定地獄まとめ</h1>
+<p>今回の <strong>LXQt / XFCE / GNOME / Home Manager</strong> を巡るトラブルを、<br>
+<strong>flakes なし</strong> と <strong>flakes あり</strong> の場合でどう変わるか整理する。</p>
+
+<hr />
+
+<h2>今回起きたこと（時系列）</h2>
+<ul>
+  <li>LXQt + Openbox で Alt+Mouse / Wheel が Workspace を奪う</li>
+  <li>Blender の操作が破壊される</li>
+  <li>設定を home.nix に突っ込む</li>
+  <li>Openbox / LXQt / XFCE / xmodmap / xkb / xbindkeys が干渉</li>
+  <li>home-manager switch がエラー地獄</li>
+  <li>XFCE の move_mod が存在せず activation 失敗</li>
+  <li>GNOME に逃げたら一瞬で安定</li>
+</ul>
+
+<hr />
+
+<h2>flakes <span class="bad">なし</span> の世界</h2>
+
+<div class="box">
+<h3>特徴</h3>
+<ul>
+  <li>home.nix / configuration.nix が巨大化</li>
+  <li>DE 切り替えが「設定の上書き合戦」</li>
+  <li>if 文で無理やり分岐</li>
+</ul>
+</div>
+
+<h3>実際に起きた地獄</h3>
+<ul class="bad">
+  <li>LXQt 用設定が GNOME でも評価される</li>
+  <li>dconf が LXQt でエラー</li>
+  <li>xfconf が GNOME で無意味</li>
+  <li>activation script が壊れる</li>
+  <li>home-manager switch が通らない</li>
+</ul>
+
+<h3>精神状態</h3>
+<ul>
+  <li>「どこが効いてるのかわからない」</li>
+  <li>「消すと別の所が壊れる」</li>
+  <li>「GUI はやはり地雷なのか？」</li>
+</ul>
+
+<hr />
+
+<h2>flakes <span class="good">あり</span> の世界</h2>
+
+<div class="box">
+<h3>構造</h3>
+<pre><code>flake.nix
+hosts/
+  gnome.nix
+  lxqt.nix
+home/
+  gnome.nix
+  lxqt.nix
+</code></pre>
+</div>
+
+<h3>何が変わるか</h3>
+<ul class="good">
+  <li>GNOME と LXQt が完全に別世界</li>
+  <li>dconf は GNOME 専用</li>
+  <li>xfconf は XFCE 専用</li>
+  <li>評価されない設定は「存在しない」</li>
+</ul>
+
+<h3>操作</h3>
+<pre><code># GNOME に切替
+sudo nixos-rebuild switch --flake .#gnome
+
+# LXQt に切替
+
+sudo nixos-rebuild switch --flake .#lxqt </code></pre>
+
+<h3>精神状態</h3>
+<ul>
+  <li>「壊れたら別 profile に戻せばいい」</li>
+  <li>「これは GNOME の問題、これは LXQt」</li>
+  <li>「GUI は主流 DE が正解」</li>
+</ul>
+
+<hr />
+
+<h2>Blender 視点での比較</h2>
+
+<table border="1" cellpadding="6">
+<tr><th></th><th>flakes なし</th><th>flakes あり</th></tr>
+<tr><td>Alt+Mouse</td><td class="bad">WM が奪う</td><td class="good">GNOME 側で一元管理</td></tr>
+<tr><td>Wheel Drag</td><td class="bad">Workspace 切替</td><td class="good">Blender が正常</td></tr>
+<tr><td>切り戻し</td><td class="bad">手作業</td><td class="good">profile 切替</td></tr>
+</table>
+
+<hr />
+
+<h2>教訓</h2>
+<ul>
+  <li>軽量 DE = 安定ではない</li>
+  <li>Blender / Krita / GUI アプリは GNOME/KDE 前提</li>
+  <li>NixOS では <strong>構造</strong> が安定性</li>
+  <li>flakes は「実験する人」のための保険</li>
+</ul>
+
+<hr />
+
+<h2>結論</h2>
+<p><strong>今回の地獄は flakes を使えば「地獄にならなかった」</strong></p>
+<ul>
+  <li>GNOME に逃げた判断は正解</li>
+  <li>GUI を使うなら主流 DE</li>
+  <li>軽量は「CLI が主」な人向け</li>
+</ul>
+
+<p>このメモは将来また地雷を踏んだときの<strong>自分用警告書</strong>。</p>
+
+</body>
+</html>
+
