@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>NixOS 25 Jellyfin 導入メモ</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      line-height: 1.6;
+      margin: 40px;
+      background-color: #f8f8f8;
+    }
+    h1, h2, h3 {
+      color: #333;
+    }
+    pre {
+      background: #222;
+      color: #eee;
+      padding: 10px;
+      overflow-x: auto;
+    }
+    code {
+      color: #ffd479;
+    }
+    section {
+      background: #fff;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>NixOS 25 で Jellyfin を使うまでのメモ</h1>
+
+<section>
+  <h2>目的</h2>
+  <ul>
+    <li>NixOS 25 に Jellyfin をインストール</li>
+    <li>NAS 上の MP3 / MP4 を再生できる状態にする</li>
+    <li>HTML メモとして手順を残す</li>
+  </ul>
+</section>
+
+<section>
+  <h2>環境</h2>
+  <ul>
+    <li>OS: NixOS 25</li>
+    <li>デスクトップ: LXQt</li>
+    <li>NAS マウント先: <code>/mnt/nas</code></li>
+    <li>Jellyfin ポート: 8096</li>
+  </ul>
+</section>
+
+<section>
+  <h2>1. Jellyfin の有効化</h2>
+  <p><code>/etc/nixos/configuration.nix</code> に以下を追加する。</p>
+  <pre><code>services.jellyfin.enable = true;</code></pre>
+  <p>設定を反映：</p>
+  <pre><code>sudo nixos-rebuild switch</code></pre>
+</section>
+
+<section>
+  <h2>2. サービス確認</h2>
+  <pre><code>systemctl status jellyfin</code></pre>
+  <p><code>active (running)</code> になっていれば OK。</p>
+</section>
+
+<section>
+  <h2>3. Web UI にアクセス</h2>
+  <p>ブラウザで以下にアクセス：</p>
+  <pre><code>http://&lt;NixOSのIP&gt;:8096</code></pre>
+  <p>初回セットアップで管理者アカウントを作成する。</p>
+</section>
+
+<section>
+  <h2>4. NAS 上のメディアを追加</h2>
+  <p>NAS の構成例：</p>
+  <pre><code>/mnt/nas/
+├── Movies/
+├── TV/
+└── Music/</code></pre>
+  <p>Jellyfin WebUI で以下を設定：</p>
+  <ol>
+    <li>管理 → ライブラリ</li>
+    <li>ライブラリを追加</li>
+    <li>種類を選択（Movies / Music）</li>
+    <li>対応するフォルダを指定</li>
+    <li>保存 → スキャン</li>
+  </ol>
+</section>
+
+<section>
+  <h2>5. 権限確認（重要）</h2>
+  <p>Jellyfin は <code>jellyfin</code> ユーザーで動作する。</p>
+  <pre><code>sudo -u jellyfin ls /mnt/nas/Music</code></pre>
+  <p>見えない場合の対処：</p>
+  <pre><code>sudo usermod -aG users jellyfin
+sudo chmod -R 755 /mnt/nas/Music
+sudo systemctl restart jellyfin</code></pre>
+</section>
+
+<section>
+  <h2>6. 再生確認</h2>
+  <ul>
+    <li>MP3: 再生可能</li>
+    <li>MP4: 再生可能</li>
+  </ul>
+  <p>PC やスマホのブラウザから再生できた。</p>
+</section>
+
+<section>
+  <h2>7. ここまででできたこと</h2>
+  <ul>
+    <li>Jellyfin 導入</li>
+    <li>NAS メディア認識</li>
+    <li>アカウント作成</li>
+    <li>MP3 / MP4 再生成功</li>
+  </ul>
+</section>
+
+<section>
+  <h2>次にやりたいこと</h2>
+  <ul>
+    <li>NVENC によるハードウェアエンコード</li>
+    <li>自動ライブラリ更新</li>
+    <li>メタデータ自動取得</li>
+    <li>監視カメラ録画との連携</li>
+  </ul>
+</section>
+
+<section>
+  <h2>所感</h2>
+  <p>NixOS + Jellyfin は安定しており、NAS 連携も簡単。
+  家庭用メディアサーバとして十分実用的。</p>
+</section>
+
+</body>
+</html>
+
