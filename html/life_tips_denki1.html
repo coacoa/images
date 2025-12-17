@@ -2,39 +2,33 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>24時間稼働 電気代計算ツール（初心者向け拡張版）</title>
+  <title>電流回路で学ぶ電気代計算</title>
   <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f6f7f9;
-      padding: 20px;
-    }
-    .card {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      max-width: 500px;
-      margin: auto;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-    }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f6f7f9; padding: 20px; }
+    .card { background: white; border-radius: 12px; padding: 20px; max-width: 600px; margin: auto; box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
     h1 { font-size: 1.4rem; }
     label { display: block; margin-top: 12px; }
     input { width: 100%; padding: 8px; font-size: 1rem; margin-top: 4px; }
     button { margin-top: 16px; width: 100%; padding: 10px; font-size: 1rem; border-radius: 8px; border: none; cursor: pointer; background: #2563eb; color: white; }
-    .result, .formula { margin-top: 16px; padding: 12px; background: #eef2ff; border-radius: 8px; display: none; }
+    .result, .formula, .memo { margin-top: 16px; padding: 12px; background: #eef2ff; border-radius: 8px; display: none; }
     .toggle { background: #e5e7eb; color: #111; }
     .tip { font-size: 0.9rem; color: #333; margin-top: 8px; background: #f1f5f9; padding: 8px; border-radius: 6px; }
+    svg { width: 100%; height: 120px; margin-top: 20px; }
+    .wire { fill: none; stroke: #888; stroke-width: 4; }
+    .current { fill: none; stroke: #f59e0b; stroke-width: 4; stroke-linecap: round; }
+    .battery { fill: none; stroke: #ef4444; stroke-width: 4; }
+    .plusminus { font-size: 14px; fill: #111; font-weight: bold; }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>💡 24時間稼働 電気代計算（初心者向け）</h1>
+    <h1>🔋 四角回路で学ぶ電気代計算</h1>
 
-    <p class="tip">💡 ここでは、PCや家電を24時間使ったときの電気代が簡単に計算できます。<br>電気の単位や計算式も見ながら理解できます。</p>
+    <p class="tip">💡 四角の回路で電流がどのように流れるかをアニメーションで学べます。<br>※実際には交流なので流れは揺れます。</p>
 
-    <label>消費電力（W: ワット）<input id="power" type="number" value="7" /></label>
-    <label>電圧（V: ボルト）<input id="volt" type="number" value="100" /></label>
-    <label>電流（A: アンペア、自動計算）<input id="amp" type="number" disabled /></label>
+    <label>消費電力（W）<input id="power" type="number" value="7" /></label>
+    <label>電圧（V）<input id="volt" type="number" value="12" /></label>
+    <label>電流（A、自動計算）<input id="amp" type="number" disabled /></label>
     <label>電気料金（円 / kWh）<input id="price" type="number" value="27" /></label>
     <label>稼働日数（日）<input id="days" type="number" value="30" /></label>
 
@@ -43,6 +37,19 @@
 
     <div id="result" class="result"></div>
     <div id="formula" class="formula"></div>
+    <div id="memo" class="memo"></div>
+
+    <svg viewBox="0 0 500 120">
+      <!-- バッテリー -->
+      <line x1="50" y1="40" x2="50" y2="60" class="battery" />
+      <line x1="60" y1="40" x2="60" y2="60" class="battery" />
+      <text x="45" y="35" class="plusminus">+</text>
+      <text x="65" y="35" class="plusminus">-</text>
+      <!-- 四角回路 -->
+      <path class="wire" d="M60,50 h150 v40 h-150 z" />
+      <!-- 電流（アニメーション） -->
+      <circle class="current" r="6" cx="60" cy="50" />
+    </svg>
   </div>
 
   <script>
@@ -52,32 +59,56 @@
       const price = Number(document.getElementById('price').value);
       const days = Number(document.getElementById('days').value);
 
-      // 電流（A）を計算
       const amp = power / volt;
       document.getElementById('amp').value = amp.toFixed(3);
 
-      // 消費電力量 kWh を計算
       const kwh = power * 24 * days / 1000;
       const cost = kwh * price;
 
       document.getElementById('result').style.display = 'block';
       document.getElementById('result').innerHTML = `
         <strong>💡 結果</strong><br>
-        消費電力：${power} W（ワット）<br>
-        電圧：${volt} V（ボルト）<br>
-        電流：約 ${amp.toFixed(3)} A（アンペア）<br>
-        消費電力量：${kwh.toFixed(2)} kWh（キロワットアワー）<br>
+        消費電力：${power} W<br>
+        電圧：${volt} V<br>
+        電流：約 ${amp.toFixed(3)} A<br>
+        消費電力量：${kwh.toFixed(2)} kWh<br>
         電気代：<strong>${cost.toFixed(0)} 円</strong>
-        <p class='tip'>※ この金額は目安です。実際の電気代は契約プランや季節によって変わります。</p>
       `;
 
       document.getElementById('formula').innerHTML = `
         <strong>📝 計算の中身</strong><br>
-        1. 電流 A = 消費電力 W ÷ 電圧 V = ${power} ÷ ${volt} ≈ ${amp.toFixed(3)} A<br>
-        2. 消費電力量 kWh = W × 24時間 × ${days}日 ÷ 1000 = ${kwh.toFixed(2)} kWh<br>
-        3. 電気代 = ${kwh.toFixed(2)} × ${price}円 = ${cost.toFixed(0)} 円<br>
-        <p class='tip'>💡 ワット(W) は消費電力の単位、ボルト(V)は電圧、アンペア(A)は流れる電流、kWh は使った電力の量です。</p>
+        電流 A = W ÷ V = ${power} ÷ ${volt} ≈ ${amp.toFixed(3)} A<br>
+        消費電力量 kWh = W × 24時間 × ${days}日 ÷ 1000 = ${kwh.toFixed(2)} kWh<br>
+        電気代 = ${kwh.toFixed(2)} × ${price}円 = ${cost.toFixed(0)} 円
       `;
+
+      document.getElementById('memo').style.display = 'block';
+      document.getElementById('memo').innerHTML = `
+        <strong>📝 メモ</strong><br>
+        この図は四角い直流回路を示しています。<br>
+        現実の家庭用電流は交流のため、電流の方向は揺れ動きます。<br>
+        ここでは直流イメージで流れを理解しやすくしています。
+      `;
+
+      // SVGアニメーション: 電流が四角回路を回る
+      const circle = document.querySelector('.current');
+      circle.style.transition = 'none';
+      circle.setAttribute('cx', 60);
+      circle.setAttribute('cy', 50);
+      let posX = 60, posY = 50;
+      let phase = 0;
+      function move() {
+        switch(phase) {
+          case 0: posX += 4; if(posX>=210){posX=210; phase=1;} break;
+          case 1: posY += 4; if(posY>=90){posY=90; phase=2;} break;
+          case 2: posX -= 4; if(posX<=60){posX=60; phase=3;} break;
+          case 3: posY -=4; if(posY<=50){posY=50; phase=0;} break;
+        }
+        circle.setAttribute('cx', posX);
+        circle.setAttribute('cy', posY);
+        requestAnimationFrame(move);
+      }
+      move();
     }
 
     function toggleFormula() {
