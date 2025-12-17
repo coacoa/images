@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Linux GUI レイヤ構造と選択肢マップ</title>
+  <style>
+    body { font-family: system-ui, sans-serif; line-height: 1.6; }
+    h1, h2, h3 { margin-top: 1.5em; }
+    .layer { border: 2px solid #444; border-radius: 8px; padding: 12px; margin: 16px 0; }
+    .layer-title { font-weight: bold; font-size: 1.2em; }
+    ul { margin-left: 1.2em; }
+    .note { color: #555; font-size: 0.95em; }
+    .good { color: #0a7; }
+    .bad { color: #c33; }
+    code { background: #eee; padding: 2px 4px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+<h1>Linux GUI スタック構造（上から下へ）</h1>
+<p>
+Linux の GUI は「どれを選ぶか」を<strong>レイヤごと</strong>に決められる。
+今回ハマったポイントも、この境界を越えて設定を書いたことが原因。
+</p>
+
+<div class="layer">
+  <div class="layer-title">Layer 0: Kernel</div>
+  <ul>
+    <li>Linux kernel</li>
+    <li>デバイスドライバ（GPU / 入力デバイス）</li>
+  </ul>
+  <p class="note">ここは基本いじらない（NixOS なら system 側）</p>
+</div>
+
+<div class="layer">
+  <div class="layer-title">Layer 1: Init / System</div>
+  <ul>
+    <li>systemd</li>
+    <li>udev</li>
+  </ul>
+  <p class="note">ログイン前の世界</p>
+</div>
+
+<div class="layer">
+  <div class="layer-title">Layer 2: Display Server</div>
+  <ul>
+    <li>Xorg <span class="good">(LXQt / XFCE / Openbox)</span></li>
+    <li>Wayland <span class="good">(GNOME / KDE)</span></li>
+  </ul>
+  <p class="note">ここで入力・描画モデルが決まる</p>
+</div>
+
+<div class="layer">
+  <div class="layer-title">Layer 3: Display Manager (DM)</div>
+  <ul>
+    <li>GDM <span class="good">GNOME向け・Wayland前提</span></li>
+    <li>LightDM <span class="good">軽量・中立</span></li>
+    <li>SDDM <span class="good">KDE向け</span></li>
+  </ul>
+  <p class="bad">⚠ DMは「見た目」ではなく「初期化思想」を持つ</p>
+</div>
+
+<div class="layer">
+  <div class="layer-title">Layer 4: Desktop Environment (DE)</div>
+  <ul>
+    <li>GNOME <span class="good">統合型・安全</span></li>
+    <li>KDE Plasma <span class="good">高機能・柔軟</span></li>
+    <li>LXQt <span class="bad">軽量だがWM依存</span></li>
+    <li>XFCE <span class="bad">WM依存・設定分散</span></li>
+  </ul>
+</div>
+
+<div class="layer">
+  <div class="layer-title">Layer 5: Window Manager (WM)</div>
+  <ul>
+    <li>Mutter (GNOME内蔵)</li>
+    <li>KWin (KDE内蔵)</li>
+    <li>Openbox <span class="bad">Alt+Mouse問題の震源地</span></li>
+    <li>i3 / dwm / sway</li>
+  </ul>
+  <p class="bad">⚠ Blender / Krita が壊れやすい層</p>
+</div>
+
+<div class="layer">
+  <div class="layer-title">Layer 6: Session / Config</div>
+  <ul>
+    <li>xprofile / xinitrc</li>
+    <li>dconf / gsettings</li>
+    <li>xfconf</li>
+    <li>openbox rc.xml</li>
+  </ul>
+  <p class="bad">今回の地獄ゾーン</p>
+</div>
+
+<div class="layer">
+  <div class="layer-title">Layer 7: Applications</div>
+  <ul>
+    <li>Blender</li>
+    <li>Krita</li>
+    <li>VSCode</li>
+    <li>Terminal</li>
+  </ul>
+  <p class="note">Alt / Mouse を直接使うアプリが最も影響を受ける</p>
+</div>
+
+<h2>今回の教訓</h2>
+<ul>
+  <li>軽量 = 自由 = <strong>責任が増える</strong></li>
+  <li>GNOME / KDE は「安全柵付き」</li>
+  <li>Home Manager で触るなら <code>Layer 6 まで</code>を意識</li>
+  <li>WM レイヤを跨ぐ設定は事故る</li>
+</ul>
+
+<h2>おすすめ構成（結論）</h2>
+<ul>
+  <li><strong>本命：</strong> GDM + GNOME</li>
+  <li><strong>遊び：</strong> GDM + LXQt</li>
+  <li><strong>修羅：</strong> LightDM + Openbox</li>
+</ul>
+
+</body>
+</html>
+
