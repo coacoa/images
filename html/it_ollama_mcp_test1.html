@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Ollama + MCP 動作検証メモ</title>
+</head>
+<body>
+  <h1>Ollama + MCP 動作検証メモ</h1>
+
+  <h2>環境</h2>
+  <ul>
+    <li>OS: NixOS</li>
+    <li>CPU: Ryzen 5 3500U</li>
+    <li>Memory: 約14GB</li>
+    <li>Ollama: 0.11.4</li>
+    <li>Model: qwen2.5:7b</li>
+  </ul>
+
+  <h2>試したこと</h2>
+  <ol>
+    <li>ollama run qwen2.5:7b &lt;&lt;EOF で要約・翻訳を試行</li>
+    <li>{{file:memo.txt}} によるファイル読み込みを試行</li>
+    <li>$(cat memo.txt) による直接埋め込みを試行</li>
+  </ol>
+
+  <h2>結果</h2>
+  <ul>
+    <li>ollama CLI 単体ではファイルを直接読むことはできない</li>
+    <li>{{file:}} 構文は MCP クライアント専用で、ollama CLI では無効</li>
+    <li>そのため AI は「仮想的な内容」を使って回答する</li>
+  </ul>
+
+  <h2>分かったこと</h2>
+  <ul>
+    <li>現在の ollama の使い方は「最下層レベル（stdinのみ）」</li>
+    <li>翻訳・要約・文章生成自体は問題なく可能</li>
+    <li>実ファイル連携には MCP 対応クライアントが必要</li>
+  </ul>
+
+  <h2>補足</h2>
+  <p>
+    PC性能（Ryzen 5 / 14GB）はこの用途では十分。<br>
+    より速いPCにすると「応答速度」は上がるが、<br>
+    「できる／できない」の差はほぼ無い。
+  </p>
+
+  <h2>今後の選択肢</h2>
+  <ul>
+    <li>MCP対応クライアント（Claude Desktop等）を使う</li>
+    <li>割り切って「コピペ運用（txt）」にする</li>
+    <li>自作スクリプトで cat → ollama を自動化</li>
+  </ul>
+
+  <p>記録日: 2025-12-17</p>
+</body>
+</html>
+
