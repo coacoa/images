@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>VPN / WireGuard 可視化メモ</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      padding: 24px;
+      line-height: 1.7;
+    }
+    h1, h2 {
+      color: #38bdf8;
+    }
+    .card {
+      background: #020617;
+      border-radius: 16px;
+      padding: 16px;
+      margin: 16px 0;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+    button {
+      background: #0284c7;
+      border: none;
+      border-radius: 12px;
+      padding: 8px 16px;
+      color: white;
+      cursor: pointer;
+      margin: 8px 0;
+    }
+    button.off {
+      background: #475569;
+    }
+    .box {
+      border: 1px dashed #38bdf8;
+      border-radius: 12px;
+      padding: 12px;
+      margin: 12px 0;
+    }
+    .hidden {
+      display: none;
+    }
+    .net {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .node {
+      background: #020617;
+      border: 2px solid #38bdf8;
+      border-radius: 12px;
+      padding: 12px;
+      min-width: 140px;
+      text-align: center;
+    }
+    .arrow {
+      font-size: 24px;
+      align-self: center;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🔐 VPN / WireGuard を「感覚」で理解する</h1>
+<p>このHTMLは <strong>GitHubに置いて読み返す用メモ</strong>。
+ボタンで ON / OFF しながら理解する。</p>
+
+<div class="card">
+  <h2>① VPNって何をしてる？</h2>
+  <p>
+    一言でいうと：<br>
+    <strong>「インターネット上に、見えない専用ケーブルを作る」</strong>
+  </p>
+
+  <button onclick="toggle('vpn1')">🔘 図を表示 / 非表示</button>
+  <div id="vpn1" class="box hidden">
+    <div class="net">
+      <div class="node">💻 あなた</div>
+      <div class="arrow">➡️🔒➡️</div>
+      <div class="node">🌍 Internet</div>
+      <div class="arrow">➡️🔒➡️</div>
+      <div class="node">🖥 VPN先</div>
+    </div>
+    <p>
+      🔒 の部分が <strong>暗号化トンネル</strong><br>
+      中身は外から見えない
+    </p>
+  </div>
+</div>
+
+<div class="card">
+  <h2>② VPNが無いとき（普通の通信）</h2>
+  <button onclick="toggle('vpn2')">🔘 比較する</button>
+  <div id="vpn2" class="box hidden">
+    <div class="net">
+      <div class="node">💻 あなた</div>
+      <div class="arrow">➡️👀➡️</div>
+      <div class="node">🌍 Internet</div>
+      <div class="arrow">➡️👀➡️</div>
+      <div class="node">🖥 サーバー</div>
+    </div>
+    <p>
+      👀 = 経路は公開道路<br>
+      HTTPSでも <strong>行き先や構造は見える</strong>
+    </p>
+  </div>
+</div>
+
+<div class="card">
+  <h2>③ WireGuard は何が違う？</h2>
+  <p>
+    VPNの一種だけど、考え方がシンプル。
+  </p>
+
+  <ul>
+    <li>🔑 ID/PW なし</li>
+    <li>🧾 「公開鍵を持ってるか」だけ</li>
+    <li>📦 OSレベルで超軽量</li>
+  </ul>
+
+  <button onclick="toggle('wg1')">🔘 WireGuard構造を見る</button>
+  <div id="wg1" class="box hidden">
+    <div class="net">
+      <div class="node">💻 Client<br>鍵A</div>
+      <div class="arrow">🔐</div>
+      <div class="node">🖥 Server<br>鍵B</div>
+    </div>
+    <p>
+      ✔ 鍵が合えば即通信<br>
+      ❌ 合わなければ存在すら見えない
+    </p>
+  </div>
+</div>
+
+<div class="card">
+  <h2>④ WireGuard = 仮想LAN</h2>
+  <button onclick="toggle('wg2')">🔘 LANとして見る</button>
+  <div id="wg2" class="box hidden">
+    <div class="net">
+      <div class="node">PC<br>10.0.0.2</div>
+      <div class="arrow">──</div>
+      <div class="node">WG</div>
+      <div class="arrow">──</div>
+      <div class="node">Server<br>10.0.0.1</div>
+    </div>
+    <p>
+      インターネット越しなのに<br>
+      <strong>同じLANにいる扱い</strong>
+    </p>
+  </div>
+</div>
+
+<div class="card">
+  <h2>⑤ なぜ「AllowedIPs」が重要？</h2>
+  <button onclick="toggle('wg3')">🔘 危険パターンを見る</button>
+  <div id="wg3" class="box hidden">
+    <p>❌ 危険：</p>
+    <pre>AllowedIPs = 0.0.0.0/0</pre>
+    <p>
+      → 全通信がVPNに吸われる<br>
+      → LANも全部丸見え
+    </p>
+
+    <p>⭕ 安全：</p>
+    <pre>AllowedIPs = 10.0.0.1/32</pre>
+    <p>
+      → 必要な相手だけ
+    </p>
+  </div>
+</div>
+
+<div class="card">
+  <h2>⑥ Tailscale との違い（感覚）</h2>
+  <button onclick="toggle('ts1')">🔘 比較</button>
+  <div id="ts1" class="box hidden">
+    <ul>
+      <li>Tailscale = <strong>鍵管理と道案内を代行</strong></li>
+      <li>WireGuard生 = <strong>鍵も道も自分管理</strong></li>
+    </ul>
+  </div>
+</div>
+
+<script>
+  function toggle(id) {
+    const el = document.getElementById(id);
+    el.classList.toggle('hidden');
+  }
+</script>
+
+</body>
+</html>

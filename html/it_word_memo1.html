@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>通信・VPN・セキュリティ用語 学習メモ</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #020617;
+      color: #e5e7eb;
+      padding: 24px;
+      line-height: 1.8;
+    }
+    h1, h2 {
+      color: #38bdf8;
+    }
+    .card {
+      background: #020617;
+      border: 1px solid #1e293b;
+      border-radius: 16px;
+      padding: 16px;
+      margin: 16px 0;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    }
+    button {
+      background: #0284c7;
+      border: none;
+      border-radius: 12px;
+      padding: 6px 14px;
+      color: white;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+    .hidden { display: none; }
+    .term {
+      font-size: 1.1em;
+      font-weight: bold;
+      color: #7dd3fc;
+    }
+    .desc {
+      margin-top: 8px;
+      padding: 10px;
+      background: #020617;
+      border-left: 3px solid #38bdf8;
+      border-radius: 8px;
+    }
+    .example {
+      color: #cbd5f5;
+      font-size: 0.95em;
+      margin-top: 6px;
+    }
+    .danger {
+      color: #fca5a5;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🔐 通信・VPN・セキュリティ用語 学習メモ</h1>
+<p>最近の事件で不安になったとき用の「落ち着いて理解するためのメモ」。<br>
+<strong>ボタンで開いて、少しずつ理解する。</strong></p>
+
+<div class="card">
+  <div class="term">VPN（Virtual Private Network）</div>
+  <button onclick="toggle('vpn')">説明 ON / OFF</button>
+  <div id="vpn" class="desc hidden">
+    インターネット上に<strong>暗号化された専用トンネル</strong>を作る技術。
+    <div class="example">例：外から見ると普通の通信、中身は見えない。</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="term">WireGuard</div>
+  <button onclick="toggle('wg')">説明 ON / OFF</button>
+  <div id="wg" class="desc hidden">
+    VPNの方式の1つ。<strong>公開鍵を持っているか</strong>だけで接続を判断する。
+    <div class="example">ID/PWなし。鍵が合えば即OK。</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="term">暗号化（Encryption）</div>
+  <button onclick="toggle('enc')">説明 ON / OFF</button>
+  <div id="enc" class="desc hidden">
+    データを<strong>第三者が読めない形</strong>に変換すること。
+    <div class="example">封筒＋鍵付き金庫のイメージ。</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="term">復号（Decryption）</div>
+  <button onclick="toggle('dec')">説明 ON / OFF</button>
+  <div id="dec" class="desc hidden">
+    暗号化されたデータを<strong>元に戻す</strong>こと。
+    <div class="example danger">⚠ 復号できる場所＝中身が見える場所。</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="term">プロキシ（Proxy）</div>
+  <button onclick="toggle('proxy')">説明 ON / OFF</button>
+  <div id="proxy" class="desc hidden">
+    通信を<strong>代理で中継するサーバー</strong>。
+    <div class="example danger">⚠ 多くの拡張VPNはこれ。中身が見える。</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="term">エンドツーエンド暗号（E2EE）</div>
+  <button onclick="toggle('e2ee')">説明 ON / OFF</button>
+  <div id="e2ee" class="desc hidden">
+    通信の<strong>両端だけ</strong>が中身を読める仕組み。
+    <div class="example">Tailscale / WireGuardはこれ。</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="term">TLS / HTTPS</div>
+  <button onclick="toggle('tls')">説明 ON / OFF</button>
+  <div id="tls" class="desc hidden">
+    Web通信を暗号化する標準技術。
+    <div class="example">ただし<strong>プロキシが入ると復号される</strong>。</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="term">AllowedIPs</div>
+  <button onclick="toggle('allowed')">説明 ON / OFF</button>
+  <div id="allowed" class="desc hidden">
+    WireGuardの<strong>通信許可リスト</strong>。
+    <div class="example danger">0.0.0.0/0 は全許可＝危険。</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="term">SSO（Single Sign-On）</div>
+  <button onclick="toggle('sso')">説明 ON / OFF</button>
+  <div id="sso" class="desc hidden">
+    Googleなど1つのアカウントで複数サービスに入れる仕組み。
+    <div class="example danger">⚠ 乗っ取られると影響範囲が広い。</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="term">信頼境界（Trust Boundary）</div>
+  <button onclick="toggle('trust')">説明 ON / OFF</button>
+  <div id="trust" class="desc hidden">
+    「<strong>どこまで信用するか</strong>」の境界線。
+    <div class="example">ここを越えると攻撃面が増える。</div>
+  </div>
+</div>
+
+<script>
+  function toggle(id) {
+    document.getElementById(id).classList.toggle('hidden');
+  }
+</script>
+
+</body>
+</html>
+
