@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>bash / zsh / tmux 違いメモ</title>
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.6; margin: 24px; }
+    h1, h2, h3 { line-height: 1.25; }
+    code, pre { background: #f5f5f5; border-radius: 6px; }
+    pre { padding: 12px; overflow: auto; }
+    table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+    th { background: #fafafa; }
+    .box { border: 1px solid #ddd; border-radius: 8px; padding: 12px; margin: 12px 0; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  </style>
+</head>
+<body>
+  <h1>bash / zsh / tmux の違い（メモ）</h1>
+
+  <div class="box">
+    <strong>超要約</strong><br />
+    <ul>
+      <li><b>bash / zsh</b>：コマンドを解釈・実行する <b>シェル</b></li>
+      <li><b>tmux</b>：画面分割・セッション維持をする <b>器</b></li>
+    </ul>
+  </div>
+
+  <h2>構造イメージ</h2>
+  <pre class="mono">[ ターミナル ]
+   └─ tmux（画面管理・維持）
+        └─ bash / zsh（コマンド解釈）
+             └─ ls / vim / lf / git …</pre>
+
+  <h2>bash / zsh とは</h2>
+  <ul>
+    <li>シェル（コマンドを理解して実行）</li>
+    <li>補完・パイプ・リダイレクト・環境変数を担当</li>
+  </ul>
+  <pre class="mono">ls | grep nix > files.txt</pre>
+
+  <h2>tmux とは</h2>
+  <ul>
+    <li>ターミナルマルチプレクサ</li>
+    <li>画面分割、セッション保持、ssh切断後も作業継続</li>
+  </ul>
+  <pre class="mono">Ctrl-a |   # 横分割
+Ctrl-a d   # デタッチ</pre>
+
+  <h2>bash と zsh の違い</h2>
+  <table>
+    <thead>
+      <tr><th>項目</th><th>bash</th><th>zsh</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>標準</td><td>多くのLinux</td><td>macOS標準</td></tr>
+      <tr><td>補完</td><td>控えめ</td><td><b>強力</b></td></tr>
+      <tr><td>プラグイン</td><td>少なめ</td><td>多い</td></tr>
+      <tr><td>Vim派相性</td><td>普通</td><td><b>良い</b></td></tr>
+    </tbody>
+  </table>
+
+  <h2>よくある誤解</h2>
+  <ul>
+    <li>tmux はシェルではない（中で bash/zsh が動く）</li>
+    <li>画面分割は tmux の機能</li>
+  </ul>
+
+  <h2>おすすめ運用</h2>
+  <ul>
+    <li>ログインシェル：<b>zsh</b></li>
+    <li>スクリプト：<b>bash</b></li>
+    <li>画面管理：<b>tmux</b></li>
+  </ul>
+
+  <div class="box">
+    <strong>一言まとめ</strong><br />
+    tmux は「部屋」、bash / zsh は「中で話す言語」
+  </div>
+</body>
+</html>
+
