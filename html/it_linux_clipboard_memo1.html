@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<title>Linux Clipboard 理解メモ</title>
+<style>
+  body {
+    font-family: system-ui, sans-serif;
+    line-height: 1.7;
+    background: #f7f7f7;
+    margin: 0;
+    padding: 2rem;
+  }
+
+  h1 {
+    margin-top: 0;
+  }
+
+  .section {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+
+  .toggle-btn {
+    background: #333;
+    color: #fff;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .toggle-btn:hover {
+    background: #555;
+  }
+
+  .content {
+    display: none;
+    margin-top: 0.5rem;
+  }
+
+  .content.visible {
+    display: block;
+  }
+
+  code {
+    background: #eee;
+    padding: 0.1rem 0.3rem;
+    border-radius: 4px;
+  }
+
+  pre {
+    background: #eee;
+    padding: 0.8rem;
+    border-radius: 6px;
+    overflow-x: auto;
+  }
+</style>
+</head>
+<body>
+
+<h1>🧠 Linux Clipboard 学習メモ</h1>
+
+<div class="section">
+  <button class="toggle-btn">概要（全体像）</button>
+  <div class="content">
+    <pre>
+[1] 入力デバイス
+[2] ウィンドウシステム (X11 / Wayland)
+[3] Clipboard Provider (xclip / wl-clipboard)
+[4] アプリ (vim / nvim / browser)
+    </pre>
+    <p>
+      Linux のコピペは <strong>1つの仕組みではなく、レイヤー構造</strong>。
+    </p>
+  </div>
+</div>
+
+<div class="section">
+  <button class="toggle-btn">レイヤー1：入力デバイス</button>
+  <div class="content">
+    <ul>
+      <li>Ctrl+C / Ctrl+V を押すだけ</li>
+      <li>コピーの意味は理解していない</li>
+      <li>ただのキーイベント</li>
+    </ul>
+  </div>
+</div>
+
+<div class="section">
+  <button class="toggle-btn">レイヤー2：X11 / Wayland</button>
+  <div class="content">
+    <p><strong>X11 の clipboard は複数ある</strong></p>
+    <ul>
+      <li><code>PRIMARY</code>：選択しただけ</li>
+      <li><code>CLIPBOARD</code>：Ctrl+C / Ctrl+V</li>
+    </ul>
+    <p>
+      X11 / Wayland は <strong>箱を用意するだけ</strong>。
+      中身は知らない。
+    </p>
+  </div>
+</div>
+
+<div class="section">
+  <button class="toggle-btn">レイヤー3：Clipboard Provider</button>
+  <div class="content">
+    <ul>
+      <li>X11：<code>xclip</code>, <code>xsel</code></li>
+      <li>Wayland：<code>wl-clipboard</code></li>
+    </ul>
+    <p>
+      Provider は <strong>アプリと clipboard の橋</strong>。
+    </p>
+    <pre>
+vim → xclip → X11 clipboard → browser
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <button class="toggle-btn">レイヤー4：アプリ（vim が特殊）</button>
+  <div class="content">
+    <ul>
+      <li>GUI アプリ：最初から clipboard 対応</li>
+      <li>vim / nvim：provider が必須</li>
+    </ul>
+    <p>
+      vim では <code>unnamedplus</code> が重要。
+    </p>
+    <pre>
+set clipboard=unnamedplus
+vim.opt.clipboard = "unnamedplus"
+    </pre>
+  </div>
+</div>
+
+<div class="section">
+  <button class="toggle-btn">重要な理解モデル</button>
+  <div class="content">
+    <p>
+      Linux の clipboard は
+      <strong>共有メモリではなくストリーム</strong>。
+    </p>
+    <ul>
+      <li>アプリ終了で消えることがある</li>
+      <li>provider が無いと繋がらない</li>
+      <li>環境（X11 / Wayland）依存</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll(".toggle-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const content = btn.nextElementSibling;
+      content.classList.toggle("visible");
+    });
+  });
+</script>
+
+</body>
+</html>
+
