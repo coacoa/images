@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>NixOS / Linux chown 落とし穴メモ</title>
+<style>
+  body {
+    font-family: system-ui, sans-serif;
+    line-height: 1.7;
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 0 20px;
+    background: #f9fafb;
+  }
+  h1, h2 {
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 4px;
+  }
+  button {
+    margin: 10px 0;
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+  .box {
+    display: none;
+    background: #fff;
+    border-left: 4px solid #4f46e5;
+    padding: 12px 16px;
+    margin: 10px 0 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  }
+  code {
+    background: #eee;
+    padding: 2px 5px;
+    border-radius: 4px;
+  }
+  pre {
+    background: #111;
+    color: #0f0;
+    padding: 12px;
+    overflow-x: auto;
+  }
+</style>
+
+<script>
+function toggle(id) {
+  const e = document.getElementById(id);
+  e.style.display = (e.style.display === "none") ? "block" : "none";
+}
+</script>
+</head>
+
+<body>
+
+<h1>Linux / NixOS でよく落ちる罠：chown とグループ</h1>
+
+<p>
+現象：<br>
+<code>chown: invalid group: hoge:hoge</code>
+</p>
+
+<button onclick="toggle('why')">なぜ起きる？</button>
+<div class="box" id="why">
+  <p>
+    Linux の <code>chown</code> は
+  </p>
+  <pre>chown ユーザ:グループ ファイル</pre>
+  <p>
+    という形式。<br>
+    つまり <b>「ユーザ名」と「グループ名」は別物</b>。
+  </p>
+  <p>
+    NixOS では多くの場合：
+  </p>
+  <pre>
+ユーザ: hoge
+グループ: users
+  </pre>
+  <p>
+    👉 <code>hoge:hoge</code> というグループは存在しない。
+  </p>
+</div>
+
+<button onclick="toggle('check')">確認方法</button>
+<div class="box" id="check">
+  <p>ユーザとグループを確認：</p>
+  <pre>id hoge</pre>
+  <p>例：</p>
+  <pre>
+uid=1000(hoge) gid=100(users) groups=100(users)
+  </pre>
+</div>
+
+<button onclick="toggle('fix')">正しい対処</button>
+<div class="box" id="fix">
+  <pre>
+sudo chown hoge:users /etc/x11vnc.pass
+sudo chmod 600 /etc/x11vnc.pass
+  </pre>
+</div>
+
+<button onclick="toggle('context')">なぜ混乱しやすい？</button>
+<div class="box" id="context">
+  <ul>
+    <li>Ubuntu系は「ユーザ名＝同名グループ」が多い</li>
+    <li>NixOS は「users」グループ文化</li>
+    <li>systemd / サービス実行ユーザが絡む</li>
+  </ul>
+  <p>
+    👉 知識が線でつながってないと「理由不明エラー」に見える
+  </p>
+</div>
+
+<button onclick="toggle('lesson')">覚え方（短文）</button>
+<div class="box" id="lesson">
+  <p>
+    <b>Linux では：</b><br>
+    「ユーザ ≠ グループ」<br>
+    「NixOS の基本グループは users」
+  </p>
+</div>
+
+<hr>
+
+<p style="color:#555">
+✔ 再発したらこのページを見る<br>
+✔ 他の罠も同じ形式で追記していく
+</p>
+
+</body>
+</html>
+
