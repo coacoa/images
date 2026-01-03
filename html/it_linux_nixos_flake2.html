@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NixOS / home-manager / flake 関係メモ</title>
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.7; background: #0f1220; color: #e6e6eb; margin: 0; padding: 24px; }
+    h1, h2, h3 { line-height: 1.3; }
+    h1 { font-size: 1.6rem; }
+    h2 { font-size: 1.25rem; margin-top: 28px; }
+    h3 { font-size: 1.05rem; }
+    .container { max-width: 980px; margin: 0 auto; }
+    .card { background: #171a33; border-radius: 14px; padding: 18px 18px; box-shadow: 0 10px 30px rgba(0,0,0,.25); margin-bottom: 16px; }
+    .row { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    @media (min-width: 900px) { .row { grid-template-columns: 1fr 1fr; } }
+    .tag { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #262a55; font-size: .75rem; margin-right: 6px; }
+    .btns { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 6px; }
+    button { background: #2a2f6a; color: #fff; border: 0; border-radius: 10px; padding: 8px 12px; cursor: pointer; }
+    button.secondary { background: #1f2350; }
+    button.warn { background: #6a2a2a; }
+    button:hover { filter: brightness(1.08); }
+    .mask { filter: blur(6px); user-select: none; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #0c0f24; padding: 12px; border-radius: 10px; overflow-x: auto; white-space: pre; }
+    .flow { background: linear-gradient(180deg, #12153a, #0f1220); border-radius: 14px; padding: 14px; }
+    .flow .step { background: #1b1f48; border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+    .note { color: #b9b9d6; font-size: .9rem; }
+    .ok { color: #8ef0b7; }
+    .ng { color: #ff9a9a; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>NixOS / home-manager / flake 関係メモ（段階理解用）</h1>
+    <p class="note">目的：<strong>今の段階</strong>での関係性を視覚化し、重要点を <em>mask on/off</em> しながら学習する。</p>
+
+    <div class="card">
+      <span class="tag">全体像</span>
+      <h2>まず一枚で理解する</h2>
+      <div class="flow">
+        <div class="step">① <strong>flake</strong>（入口・カタログ）<br><span class="note">どの構成を使うかを<strong>名前付き</strong>で選ぶ</span></div>
+        <div class="step">② <strong>configuration.nix</strong>（system）<br><span class="note">OS全体の設定。import 時代と<strong>中身は同じ</strong></span></div>
+        <div class="step">③ <strong>home-manager</strong>（user）<br><span class="note">ユーザー環境。flake でも import でも可</span></div>
+        <div class="step">④ <strong>switch / rebuild</strong><br><span class="note">適用コマンド。flake でも本質は同じ</span></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="card">
+        <span class="tag">system</span>
+        <h2>configuration.nix の役割</h2>
+        <div class="btns">
+          <button onclick="toggleMask('conf')">mask on/off</button>
+        </div>
+        <div id="conf" class="mono">
+          <div class="mask">
+            ・カーネル / サービス / systemPackages<br>
+            ・ユーザー作成（users.users.*）<br>
+            ・Nix の設定（experimental-features など）<br>
+            <br>
+            <strong class="ok">OK:</strong> flake でも import でも同じ役割<br>
+            <strong class="ng">NG:</strong> unstable の理由をここに散らす
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <span class="tag">user</span>
+        <h2>home-manager の位置づけ</h2>
+        <div class="btns">
+          <button onclick="toggleMask('hm')">mask on/off</button>
+        </div>
+        <div id="hm" class="mono">
+          <div class="mask">
+            ・ユーザーの packages / dotfiles<br>
+            ・system とは<strong>独立</strong><br>
+            <br>
+            使い方：<br>
+            A) standalone（flake 不要）<br>
+            B) NixOS module（flake 不要）<br>
+            C) flake inputs（再現性◎）<br>
+            <br>
+            <strong class="ok">OK:</strong> 段階移行できる
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="tag">entry</span>
+      <h2>flake の正体（混乱ポイント）</h2>
+      <div class="btns">
+        <button onclick="toggleMask('flake')">mask on/off</button>
+        <button class="secondary" onclick="showAll()">全部表示</button>
+        <button class="warn" onclick="hideAll()">全部マスク</button>
+      </div>
+      <div id="flake" class="mono">
+        <div class="mask">
+          flake は OS でも設定でもない。<br>
+          <br>
+          ・inputs = 材料（nixpkgs stable / unstable 等）<br>
+          ・outputs = 構成の<strong>名前付き一覧</strong><br>
+          ・switch = 既存と同じ適用行為<br>
+          <br>
+          mental model：<br>
+          「cd して switch」 → 「名前を選んで switch」<br>
+          <br>
+          <strong class="ok">理解目標:</strong> 入口が1段増えただけ
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="tag">example</span>
+      <h2>最小 flake（中身は今のまま）</h2>
+      <div class="btns">
+        <button onclick="toggleMask('ex')">mask on/off</button>
+      </div>
+      <div id="ex" class="mono">
+        <div class="mask">
+{\n  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";\n  outputs = { self, nixpkgs }: {\n    nixosConfigurations.myhost =\n      nixpkgs.lib.nixosSystem {\n        system = "x86_64-linux";\n        modules = [ ./configuration.nix ];\n      };\n  };\n}
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="tag">tree</span>
+      <h2>tree で見る layer の違い（可視化）</h2>
+      <p class="note">同じマシンでも、layer を足すごとに「できる範囲」がどう変わるかを見る。</p>
+
+      <h3>① configuration.nix のみ</h3>
+      <div class="btns">
+        <button onclick="toggleMask('tree-conf')">mask on/off</button>
+      </div>
+      <div id="tree-conf" class="mono">
+        <div class="mask">
+/etc/nixos
+├─ configuration.nix
+├─ hardware-configuration.nix
+└─ app/
+   ├─ base.nix
+   └─ graphics.nix
+
+できること:
+- OS / service / systemPackages
+- 単一ユーザー前提
+
+弱点:
+- user ごとの差分がつらい
+- unstable 混入理由が散らばる
+        </div>
+      </div>
+
+      <h3>② + home-manager</h3>
+      <div class="btns">
+        <button onclick="toggleMask('tree-hm')">mask on/off</button>
+      </div>
+      <div id="tree-hm" class="mono">
+        <div class="mask">
+/etc/nixos
+├─ configuration.nix
+├─ hardware-configuration.nix
+├─ home/
+│  ├─ home.nix
+│  └─ app/
+│     ├─ cli.nix
+│     └─ graphics.nix
+└─ app/
+   └─ system.nix
+
+便利になる点:
+- user 環境を system から分離
+- 再ログイン不要で user 切替
+
+まだ残る問題:
+- nixpkgs の出どころが暗黙
+- 複数 host / user の再利用が弱い
+        </div>
+      </div>
+
+      <h3>③ + flake</h3>
+      <div class="btns">
+        <button onclick="toggleMask('tree-flake')">mask on/off</button>
+      </div>
+      <div id="tree-flake" class="mono">
+        <div class="mask">
+~/nix-config
+├─ flake.nix
+├─ flake.lock
+├─ hosts/
+│  └─ myhost.nix
+├─ system/
+│  ├─ configuration.nix
+│  └─ app/
+│     └─ graphics.nix
+├─ home/
+│  ├─ home.nix
+│  └─ app/
+│     └─ graphics.nix
+└─ overlays/
+   └─ blender-unstable.nix
+
+ここで初めてできること:
+- stable / unstable の明示
+- host / user 切替
+- "Blender だけ例外" を1箇所に隔離
+
+mental model:
+flake = 入口と材料
+中身 = 今までの nix
+        </div>
+      </div>
+    </div>
+
+    <p class="note">使い方：<br>・まず ① だけ見る → 限界を確認<br>・② を解除 → user 分離の価値を確認<br>・③ を解除 → flake の存在理由が腹落ちする</p>
+  </div>
+
+  <script>
+    function toggleMask(id) {
+      const mask = document.getElementById(id).querySelector('.mask');
+      if (mask.classList.contains('unmasked')) {
+        mask.classList.remove('unmasked');
+        mask.style.filter = 'blur(6px)';
+      } else {
+        mask.classList.add('unmasked');
+        mask.style.filter = 'none';
+      }
+    }
+    function showAll() {
+      document.querySelectorAll('.mask').forEach(el => {
+        el.classList.add('unmasked');
+        el.style.filter = 'none';
+      });
+    }
+    function hideAll() {
+      document.querySelectorAll('.mask').forEach(el => {
+        el.classList.remove('unmasked');
+        el.style.filter = 'blur(6px)';
+      });
+    }
+    function showAll() {
+      document.querySelectorAll('.mask').forEach(el => el.style.filter = '');
+    }
+    function hideAll() {
+      document.querySelectorAll('.mask').forEach(el => el.style.filter = 'blur(6px)');
+    }
+  </script>
+</body>
+</html>
+
