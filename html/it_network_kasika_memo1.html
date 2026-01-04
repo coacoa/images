@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>家庭内ネットワーク可視化メモ（構想）</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.7;
+      margin: 2em;
+      background: #fafafa;
+      color: #222;
+    }
+    h1, h2, h3 {
+      color: #333;
+    }
+    h1 {
+      border-bottom: 3px solid #444;
+      padding-bottom: 0.3em;
+    }
+    h2 {
+      margin-top: 2em;
+      border-left: 6px solid #666;
+      padding-left: 0.6em;
+    }
+    section {
+      margin-bottom: 2em;
+    }
+    ul {
+      margin-left: 1.5em;
+    }
+    .box {
+      background: #fff;
+      border: 1px solid #ddd;
+      padding: 1em 1.5em;
+      border-radius: 8px;
+      margin-top: 1em;
+    }
+    .state span {
+      display: inline-block;
+      margin-right: 1em;
+      font-weight: bold;
+    }
+    .green { color: #2e8b57; }
+    .yellow { color: #c9a000; }
+    .orange { color: #d2691e; }
+    .red { color: #b22222; }
+    footer {
+      margin-top: 4em;
+      font-size: 0.9em;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+
+<h1>家庭内ネットワーク可視化メモ（構想）</h1>
+
+<section>
+  <h2>目的</h2>
+  <div class="box">
+    <ul>
+      <li>家庭内LANの状態を <strong>日常世界の比喩</strong> で可視化する</li>
+      <li>子ども・高齢者でも <strong>自然に気づける</strong> セキュリティ体験を作る</li>
+      <li>数字や専門用語ではなく、<strong>風景・物語・アニメ日記</strong>として理解させる</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>世界観（比喩）</h2>
+  <div class="box">
+    <ul>
+      <li>家：家庭内LAN</li>
+      <li>門／門番：ルータ・FW・NAT</li>
+      <li>街／道路：インターネット</li>
+      <li>住人：PC / スマホ / タブレット（端末ごとの性格）</li>
+      <li>不審者：ポートスキャン／ブルートフォース等</li>
+      <li>VPN（Tailscale）：合鍵付きの専用通路（安全な裏道）</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>日常行動との対応</h2>
+  <div class="box">
+    <ul>
+      <li>Web閲覧：店のショーウィンドウを見る</li>
+      <li>Google News：街のニューススタンド</li>
+      <li>動画視聴：映画館</li>
+      <li>外出＋GPS ON：自分の居場所を街に表示</li>
+      <li>VPN ON：外出中でも家と安全に直結</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>可視化の基本ルール</h2>
+  <div class="box">
+    <p>グラフや数値は使わず、色・明るさ・人影・動きで表現する。</p>
+    <div class="state">
+      <span class="green">🟢 緑：平常（日常）</span>
+      <span class="yellow">🟡 黄：少し注意（賑わい／行動増）</span>
+      <span class="orange">🟠 橙：不審（違和感）</span>
+      <span class="red">🔴 赤：危険（侵入・公開リスク高）</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>1日の構成（アニメ日記）</h2>
+  <div class="box">
+    <ul>
+      <li>1日 = 1話</li>
+      <li>5〜10分単位でコマ化</li>
+      <li>家の明るさ・人影・内外・VPN状態を記録</li>
+      <li>後から再生して「その日」を振り返る</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>アドバイザー（優しい助言）</h2>
+  <div class="box">
+    <p>命令しない／怒らない。事実と可能性だけを伝える。</p>
+    <p><strong>例：</strong><br />
+      外出中に位置情報をONにしたまま公開投稿しました。<br />
+      自宅が不在だと分かる人がいます。続けますか？
+    </p>
+  </div>
+</section>
+
+<section>
+  <h2>収集する最小データ（初期）</h2>
+  <div class="box">
+    <ul>
+      <li>端末ごとの通信量（IN / OUT）</li>
+      <li>時間帯</li>
+      <li>内／外</li>
+      <li>VPN状態</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>実装方針（最初の一歩）</h2>
+  <div class="box">
+    <ol>
+      <li>ゲートウェイで通信量を時間帯別に集計</li>
+      <li>SVG 1枚で家・人影・線を表示</li>
+      <li>静止画で「昨日と今日」を比較</li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <h2>ゴール</h2>
+  <div class="box">
+    <ul>
+      <li>見れば「今日は静か／賑やか」が分かる</li>
+      <li>行動とリスクの関係に自分で気づける</li>
+      <li>セキュリティを生活の一部にする</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  家庭内LAN / 可視化 / 比喩 / 生活シミュレータ / アニメ日記 / プライバシー教育 / VPN / Tailscale
+</footer>
+
+</body>
+</html>
+
