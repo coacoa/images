@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>tmux 活用メモ (Vim-Style)</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; background: #f4f7f6; }
+        h1 { border-bottom: 3px solid #0078d4; color: #0078d4; padding-bottom: 10px; }
+        h2 { background: #0078d4; color: white; padding: 10px; border-radius: 5px; margin-top: 30px; }
+        .prefix { color: #d13438; font-weight: bold; font-size: 1.2em; }
+        code { background: #e1e1e1; padding: 2px 5px; border-radius: 3px; font-family: 'Courier New', Courier, monospace; }
+        .key-box { background: white; border-left: 5px solid #0078d4; padding: 15px; margin: 10px 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #f2f2f2; }
+        .note { font-size: 0.9em; color: #666; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <h1>tmux 基本概念 & 操作メモ</h1>
+
+    <div class="key-box">
+        <strong>現在のPrefixキー:</strong> <span class="prefix">Ctrl + a</span>
+        <p class="note">※全ての操作はこのキーを先に押してから行います（2回連続押しで奥のtmuxへ送信）。</p>
+    </div>
+
+    <h2>1. 階層構造（基本概念）</h2>
+    <p>tmuxは以下の3層構造で成り立っています。</p>
+    <ul>
+        <li><strong>Session（セッション）</strong>: プロジェクト全体の単位。SSHが切れても残る。</li>
+        <li><strong>Window（ウィンドウ）</strong>: ブラウザのタブのようなもの。</li>
+        <li><strong>Pane（ペイン）</strong>: 画面分割された1つ1つのエリア。</li>
+    </ul>
+
+    <h2>2. ペイン操作 (Vim風バインド)</h2>
+    <table>
+        <tr><th>操作</th><th>キーバインド</th></tr>
+        <tr><td><strong>縦に分割</strong></td><td><code>Prefix</code> + <code>|</code></td></tr>
+        <tr><td><strong>横に分割</strong></td><td><code>Prefix</code> + <code>-</code></td></tr>
+        <tr><td><strong>ペイン移動</strong></td><td><code>Prefix</code> + <code>h</code> <code>j</code> <code>k</code> <code>l</code></td></tr>
+        <tr><td><strong>サイズ調整</strong></td><td><code>Prefix</code> + <code>H</code> <code>J</code> <code>K</code> <code>L</code> (長押し/連続)</td></tr>
+        <tr><td><strong>ペインを閉じる</strong></td><td><code>exit</code> または <code>Ctrl + d</code></td></tr>
+    </table>
+
+    <h2>3. セッション管理 (SSH切断に強い)</h2>
+    <table>
+        <tr><th>操作</th><th>コマンド / キー</th></tr>
+        <tr><td><strong>デタッチ</strong> (作業維持して離脱)</td><td><code>Prefix</code> + <code>d</code></td></tr>
+        <tr><td><strong>アタッチ</strong> (作業に復帰)</td><td><code>tmux a</code></td></tr>
+        <tr><td><strong>セッション一覧</strong></td><td><code>tmux ls</code></td></tr>
+        <tr><td><strong>セッション名を付けて開始</strong></td><td><code>tmux new -s (名前)</code></td></tr>
+    </table>
+
+    <h2>4. コピーモード (OSC 52 連携)</h2>
+    <p>画面を遡ってコピーしたい場合に使用します。</p>
+    <div class="key-box">
+        <ol>
+            <li><code>Prefix</code> + <code>[</code> でコピーモード開始。</li>
+            <li>Vim同様 <code>h</code> <code>j</code> <code>k</code> <code>l</code> で移動。</li>
+            <li><code>v</code> で範囲選択。</li>
+            <li><code>y</code> でヤンク！（これで手元のPCのクリップボードに入ります）</li>
+            <li><code>q</code> で終了。</li>
+        </ol>
+    </div>
+
+    <h2>5. トラブルシューティング</h2>
+    <ul>
+        <li><strong>マウスが効かない？</strong>: <code>tmux.nix</code> で <code>mouse = true;</code> になっているか確認。</li>
+        <li><strong>色が変？</strong>: <code>terminal = "screen-256color";</code> の設定が効いているか確認。</li>
+        <li><strong>コピペできない？</strong>: ターミナルの「OSC 52許可」を再チェック。</li>
+    </ul>
+
+</body>
+</html>
