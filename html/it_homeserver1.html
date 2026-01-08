@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>UNO-247 セキュリティ可視化</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --normal-pc: #ef4444;
+            --uno-247: #3b82f6;
+            --safe: #22c55e;
+            --text: #f8fafc;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .comparison {
+            display: flex;
+            gap: 50px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .card {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 24px;
+            width: 400px;
+            border: 1px solid #334155;
+            position: relative;
+            overflow: hidden;
+        }
+
+        h2 { text-align: center; margin-bottom: 30px; }
+
+        /* ネットワークライン */
+        .line {
+            height: 4px;
+            background: #334155;
+            margin: 40px 0;
+            position: relative;
+        }
+
+        /* 泥棒（ウイルス）のアニメーション */
+        .hacker-dot {
+            width: 12px;
+            height: 12px;
+            background: var(--normal-pc);
+            border-radius: 50%;
+            position: absolute;
+            top: -4px;
+            left: 0;
+            box-shadow: 0 0 10px var(--normal-pc);
+            animation: move-hacker 3s infinite linear;
+        }
+
+        /* あなた（Tailscale）のアニメーション */
+        .user-dot {
+            width: 12px;
+            height: 12px;
+            background: var(--safe);
+            border-radius: 50%;
+            position: absolute;
+            top: -4px;
+            left: 0;
+            box-shadow: 0 0 10px var(--safe);
+            animation: move-user 3s infinite linear;
+        }
+
+        @keyframes move-hacker {
+            0% { left: 0; opacity: 1; }
+            100% { left: 100%; opacity: 1; }
+        }
+
+        @keyframes move-user {
+            0% { left: 0; opacity: 1; }
+            100% { left: 100%; opacity: 1; }
+        }
+
+        /* UNO-247の鉄壁 */
+        .gate {
+            width: 60px;
+            height: 60px;
+            background: var(--uno-247);
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            z-index: 10;
+            position: relative;
+            font-weight: bold;
+        }
+
+        .uno-shield .hacker-dot {
+            animation: move-and-stop 3s infinite linear;
+        }
+
+        @keyframes move-and-stop {
+            0% { left: 0; opacity: 1; }
+            50% { left: 50%; opacity: 1; }
+            51% { opacity: 0; } /* 門番で消える */
+            100% { left: 50%; opacity: 0; }
+        }
+
+        .label { font-size: 12px; text-align: center; color: #94a3b8; }
+        .success-text { color: var(--safe); font-weight: bold; text-align: center; }
+        .danger-text { color: var(--normal-pc); font-weight: bold; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <h1>なぜ UNO-247 + NixOS なのか？</h1>
+
+    <div class="comparison">
+        <div class="card">
+            <h2>普通のPC (1ポート)</h2>
+            <p class="label">インターネット ➡ 共有LAN</p>
+            <div class="line">
+                <div class="hacker-dot"></div>
+            </div>
+            <div class="gate" style="background: #475569;">PC</div>
+            <div class="line">
+                <div class="hacker-dot" style="animation-delay: 1.5s;"></div>
+            </div>
+            <p class="danger-text">⚠ 泥棒が家の中を走り回れる</p>
+            <p class="label">スマホ、NAS、TVすべてが危険</p>
+        </div>
+
+        <div class="card uno-shield">
+            <h2>UNO-247 (2ポート + NixOS)</h2>
+            <p class="label">Port 1 (外側) ➡ 門番 ➡ Port 2 (内側)</p>
+            <div class="line">
+                <div class="hacker-dot"></div>
+                <div class="user-dot" style="animation-delay: 0.5s;"></div>
+            </div>
+            <div class="gate">UNO-247</div>
+            <div class="line">
+                <div class="user-dot" style="animation-delay: 2s;"></div>
+            </div>
+            <p class="success-text">🛡️ 物理と設定の二重防壁</p>
+            <p class="label">許可した通信(緑)だけが Port 2へ進める</p>
+        </div>
+    </div>
+
+    <div style="margin-top: 40px; max-width: 800px; line-height: 1.6;">
+        <h3>解説：</h3>
+        <ul>
+            <li><b>左（普通のPC）:</b> 入り口が一つしかないので、ウイルスが入ると同じネットワークの全ての機器に届いてしまいます。</li>
+            <li><b>右（UNO-247）:</b> NixOSが「門番」として <b>Port 1</b> でウイルスを消滅させます。Tailscaleを通したあなたの通信（緑の点）だけが、安全な <b>Port 2</b> へ案内されます。</li>
+        </ul>
+    </div>
+
+</body>
+</html>
