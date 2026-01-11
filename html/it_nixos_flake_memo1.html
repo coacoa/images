@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>NixOS Flake 移行計画メモ</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.6;
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    h1, h2, h3 {
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 4px;
+    }
+    pre {
+      background: #f6f8fa;
+      padding: 12px;
+      overflow-x: auto;
+    }
+    code {
+      background: #f0f0f0;
+      padding: 2px 4px;
+    }
+    ul {
+      margin-left: 20px;
+    }
+    .rule {
+      background: #fff8e1;
+      border-left: 4px solid #f4b400;
+      padding: 10px;
+      margin: 16px 0;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>NixOS Flake 移行計画（最終方針）</h1>
+
+<h2>基本方針</h2>
+<ul>
+  <li><strong>/nixos/flake/ 配下のみ使用</strong></li>
+  <li>既存の /nixos 直下構成は使わない</li>
+  <li>home-manager は <strong>NixOS module として統合</strong></li>
+  <li>ディレクトリは増やさず <strong>1階層</strong></li>
+</ul>
+
+<div class="rule">
+  flake は「世界を選ぶ」<br>
+  module は「挙動を切り替える」
+</div>
+
+<h2>最終ディレクトリ構成</h2>
+
+<pre>
+dotfiles/
+└─ nixos/
+   └─ flake/
+      ├─ flake.nix
+      ├─ flake.lock
+      ├─ hardware.nix
+      ├─ system.base.nix
+      ├─ system.packages.nix
+      ├─ desktop.gnome.nix
+      ├─ input.devices.nix
+      ├─ service.remote.nix
+      ├─ desktop.gui.apps.nix
+      ├─ desktop.terminals.nix
+      └─ home.hoge.nix
+</pre>
+
+<h2>命名ルール（固定）</h2>
+
+<ul>
+  <li><strong>system.*</strong> : OS 基本設定</li>
+  <li><strong>hardware.*</strong> : HW 固有</li>
+  <li><strong>desktop.*</strong> : GUI / WM / DE</li>
+  <li><strong>input.*</strong> : 入力デバイス</li>
+  <li><strong>service.*</strong> : 常駐・remote</li>
+  <li><strong>home.*</strong> : 個人環境</li>
+</ul>
+
+<div class="rule">
+  同じ機能を system と home に二重に置かない
+</div>
+
+<h2>flake.nix（基本形）</h2>
+
+<pre>
+{
+  description = "log ke nixos flake";
+
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
+    home-manager.url = "github:nix-community/home-manager";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs";
+  };
+
+  outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, ... }:
+  {
+    nixosConfigurations.myhost =
+      nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+
+        specialArgs = {
+          pkgs-unstable =
+            import nixpkgs-unstable {
+              system = "x86_64-linux";
+              config.allowUnfree = true;
+            };
+        };
+
+        modules = [
+          ./hardware.nix
+          ./system.base.nix
+          ./system.packages.nix
+          ./desktop.gnome.nix
+          ./input.devices.nix
+          ./service.remote.nix
+          ./desktop.gui.apps.nix
+          ./desktop.terminals.nix
+
+          home-manager.nixosModules.home-manager
+          {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.users.hoge = import ./home.hoge.nix;
+          }
+        ];
+      };
+  };
+}
+</pre>
+
+<h2>切り替えの責務分担</h2>
+
+<table border="1" cellpadding="6">
+<tr><th>切り替え対象</th><th>置き場所</th></tr>
+<tr><td>tmux ⇄ zellij</td><td>home module</td></tr>
+<tr><td>xmodmap ⇄ kanata</td><td>system module</td></tr>
+<tr><td>X11 ⇄ Wayland</td><td>desktop module</td></tr>
+<tr><td>Blender stable ⇄ unstable</td><td>flake（pkgs 切り替え）</td></tr>
+</table>
+
+<h2>アプリ配置ルール（確定）</h2>
+
+<h3>system / desktop / service</h3>
+<ul>
+  <li>xmodmap → input.devices.nix</li>
+  <li>kanata → input.devices.nix</li>
+  <li>sxhkd → desktop.x11.nix（将来）</li>
+  <li>x11vnc / rdp / ssh → service.remote.nix</li>
+  <li>blender / krita / gimp / vlc / mpv → desktop.gui.apps.nix</li>
+  <li>alacritty / wezterm / qterminal → desktop.terminals.nix</li>
+</ul>
+
+<h3>home</h3>
+<ul>
+  <li>vim / emacs → home.editors.nix（統合してもOK）</li>
+  <li>tmux / zellij → home.multiplexer.nix</li>
+  <li>shell / ssh config → home.hoge.nix</li>
+</ul>
+
+<div class="rule">
+  GUI アプリは systemPackages に置く<br>
+  dotfiles は home に置く
+</div>
+
+<h2>最小スタート手順</h2>
+
+<ol>
+  <li>flake.nix + system.base.nix のみ作成</li>
+  <li><code>nixos-rebuild dry-build --flake .#myhost</code></li>
+  <li>1ファイルずつ module を追加</li>
+  <li>desktop / home は最後</li>
+</ol>
+
+<h2>禁止事項</h2>
+
+<ul>
+  <li>app.xxx.enable の自作スイッチ</li>
+  <li>flake に if 分岐を大量に書く</li>
+  <li>同一機能の system / home 二重定義</li>
+</ul>
+
+<h2>判断に迷ったら</h2>
+
+<div class="rule">
+  「ログイン前から必要か？」<br>
+  YES → system<br>
+  NO → home
+</div>
+
+</body>
+</html>
+
