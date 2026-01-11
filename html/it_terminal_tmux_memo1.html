@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ターミナル・マルチプレクサ比較メモ</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; color: #333; max-width: 1000px; margin: 20px auto; padding: 0 20px; }
+        h1 { border-bottom: 2px solid #333; }
+        h2 { color: #2c3e50; border-left: 5px solid #2c3e50; padding-left: 10px; margin-top: 30px; }
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        .highlight { background-color: #fff9c4; font-weight: bold; }
+        code { background: #eee; padding: 2px 5px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<h1>ターミナル環境の整理メモ</h1>
+
+<h2>1. ターミナルソフト（エミュレータ）の分類</h2>
+<p>NixOSで利用可能な、現在手元にある・検討したツールの特徴です。</p>
+<table>
+    <thead>
+        <tr>
+            <th>ソフト名</th>
+            <th>標準タブ機能</th>
+            <th>特徴・所感</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>QTerminal / GNOME Console</strong></td>
+            <td>あり</td>
+            <td>GUI標準。シンプルで使いやすいが、カスタマイズ性は中程度。</td>
+        </tr>
+        <tr>
+            <td><strong>Kitty / WezTerm</strong></td>
+            <td>あり</td>
+            <td>GPU加速。非常に高機能。WezTermはLuaで高度な設定が可能。</td>
+        </tr>
+        <tr>
+            <td><strong>Alacritty</strong></td>
+            <td><span style="color: red;">なし</span></td>
+            <td>「爆速」を追求した結果、タブ機能すら削ぎ落とした硬派なソフト。</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>2. マルチプレクサ（仮想タブ・画面分割）</h2>
+<p>Alacrittyなどの「タブがない」ターミナルを補完し、さらに便利にするツールです。</p>
+<table>
+    <thead>
+        <tr>
+            <th>ツール名</th>
+            <th>親切さ</th>
+            <th>特徴</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>tmux</strong></td>
+            <td>★☆☆（玄人向け）</td>
+            <td>超定番。設定を書き込まないと使いにくいが、どこでも動く。</td>
+        </tr>
+        <tr>
+            <td class="highlight">Zellij (ゼリッジ)</td>
+            <td>★★★（超親切）</td>
+            <td><strong>現在の本命。</strong>Rust製。画面下に操作ガイドが出るため、暗記不要でタブや画面分割が使える。</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>3. なぜ Zellij なのか？</h2>
+<ul>
+    <li><strong>操作ガイド:</strong> 常にキー操作（Ctrl+tでタブ、Ctrl+pでパネルなど）が画面に表示されている。</li>
+    <li><strong>モダンな設計:</strong> マウス操作も可能で、初期設定なしで見た目が綺麗。</li>
+    <li><strong>Alacrittyとの相性:</strong> 「表示は爆速のAlacritty、機能は親切なZellij」という組み合わせが最強。</li>
+</ul>
+
+<h2>4. NixOS 導入メモ</h2>
+<p><code>configuration.nix</code> または <code>home.nix</code> に追加：</p>
+<code>environment.systemPackages = [ pkgs.zellij ];</code>
+
+</body>
+</html>
