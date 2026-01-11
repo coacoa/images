@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NixOS AP System - Business Idea Memo</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; background: #f4f7f6; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #2c3e50; }
+        h2 { color: #e67e22; background: #fff; padding: 10px; border-left: 5px solid #e67e22; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .important { color: #c0392b; font-weight: bold; }
+        code { background: #eee; padding: 2px 5px; border-radius: 4px; }
+        .tech-tag { display: inline-block; background: #3498db; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8em; margin-right: 5px; }
+    </style>
+</head>
+<body>
+
+    <h1>🚀 NixOS 監視・呼び出しシステム 構想メモ</h1>
+
+    <div class="card">
+        <h2>1. 現在の到達点（最強の監視設定）</h2>
+        <ul>
+            <li><strong>映像伝送:</strong> 古いPCをAP化し、スマホ(IP Webcam)から10.42.0.49で受信。</li>
+            <li><strong>描画の極意:</strong> <code>fps</code>や<code>frames</code>をあえて指定しない「引き算」により、古いPCでもヌルヌル動く。</li>
+            <li><strong>録画:</strong> FFmpegによる24時間自動録画（12時間で自動削除）。</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>2. ビジネス・介護への転用案</h2>
+        <p>インターネット不要、電源のみで動く「情報の島」としての活用。</p>
+        <ul>
+            <li><strong>難聴者向けドアホン:</strong> スマホのボタン一押しで、PC画面を点滅させ、テキストをオーバーレイ表示。</li>
+            <li><strong>格安ナースコール:</strong> 映像を切り、音声とボタンに特化することで10台以上のスマホを同時収容。</li>
+            <li><strong>QRコード・インターホン:</strong> 玄関のQRをスキャンするだけで、Wi-Fi接続〜ブラウザ会話まで自動完結。</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>3. 今後の実装アイデア</h2>
+        <div>
+            <span class="tech-tag">mpv IPC</span>
+            <span class="tech-tag">WebRTC</span>
+            <span class="tech-tag">QR Connect</span>
+        </div>
+        <ul>
+            <li><strong>mpvオーバーレイ:</strong> 呼び出し時に <code>show-text "！！！呼んでいます！！！"</code> を表示。</li>
+            <li><strong>双方向音声:</strong> MumbleサーバーまたはブラウザWebRTCによるハンズフリー通話。</li>
+            <li><strong>ステータス管理:</strong> どの部屋（どのIP）から呼ばれたかをPC画面にリスト表示。</li>
+        </ul>
+    </div>
+
+    <div class="card" style="border: 2px dashed #2c3e50;">
+        <p><strong>💡 備忘録:</strong><br>
+        「古いPCでここまでできる」というのは、一般の人には魔法に見える。
+        安価な中古スマホとセットにすれば、数万円〜の既製品に勝る「自由度」と「プライバシー」が売りにできる。</p>
+    </div>
+
+</body>
+</html>
