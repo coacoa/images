@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kaden Project Memo</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.7;
+      margin: 2rem;
+      background: #fafafa;
+      color: #222;
+    }
+    h1, h2, h3 {
+      border-bottom: 2px solid #ddd;
+      padding-bottom: 0.3em;
+    }
+    code {
+      background: #eee;
+      padding: 0.2em 0.4em;
+      border-radius: 4px;
+    }
+    pre {
+      background: #eee;
+      padding: 1em;
+      overflow-x: auto;
+    }
+    ul {
+      margin-left: 1.5em;
+    }
+    .box {
+      background: #fff;
+      border: 1px solid #ddd;
+      padding: 1em;
+      margin: 1.5em 0;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>家電化APプロジェクト（Kaden Project）メモ</h1>
+
+<div class="box">
+<strong>コンセプト</strong><br />
+古いノートPCを再利用し、<strong>電源ON/OFFとLAN接続だけで動作するAP型コミュニケーション装置</strong>を作る。<br />
+PCとして使わせず、家電・業務機器のように扱えることを最優先とする。
+<ul>
+  <li>エコ／リサイクル</li>
+  <li>ローカル完結（通信内容は外部サーバに出ない）</li>
+  <li>高齢者・子供・ペット・キャンプ用途</li>
+</ul>
+</div>
+
+<h2>基本思想（最重要）</h2>
+<ul>
+  <li>操作は原則 <strong>電源ON / OFF のみ</strong></li>
+  <li>LAN接続は挿すだけ、設定不要</li>
+  <li>キーボード・マウスは<strong>デバッグ時のみ使用</strong></li>
+  <li>画面は操作用ではなく「状態表示専用」</li>
+</ul>
+
+<h2>OS / 起動方式</h2>
+<ul>
+  <li>NixOS 25（legacyOS想定）</li>
+  <li>USB 32GB に完全同一イメージを作成</li>
+  <li>USB = ファームウェア（コピーして何台でも使用）</li>
+  <li>read-only 運用を前提</li>
+</ul>
+
+<h2>ネットワーク設計</h2>
+<h3>Wi-Fi</h3>
+<ul>
+  <li>全ノードがAPとして動作</li>
+  <li><strong>同一SSID・同一パスワード</strong></li>
+  <li>利用者からは「1つのネットワーク」に見える</li>
+</ul>
+
+<h3>LAN</h3>
+<ul>
+  <li>有線LANはノード間連携専用</li>
+  <li>LAN接続で自動クラスタ検出</li>
+  <li>LANを抜いても単独APとして継続</li>
+</ul>
+
+<h2>ノード識別</h2>
+<ul>
+  <li>AP名（SSID）では識別しない</li>
+  <li>MAC + USB UUID からノードID生成</li>
+  <li>例：<code>ap-node-1f3a</code></li>
+</ul>
+
+<h2>起動フロー</h2>
+<pre>
+1. 電源ON
+2. USBからNixOS起動
+3. systemd services 起動
+4. ネットワーク自動判定
+5. Wi-Fi AP 起動
+6. LANがあればクラスタ探索
+7. 状態を画面に常時表示
+</pre>
+
+<h2>デバッグ・表示設計</h2>
+<ul>
+  <li>自動ログイン</li>
+  <li>tmux 常駐</li>
+  <li>ターミナルは状態表示専用</li>
+</ul>
+
+<h2>想定用途</h2>
+<ul>
+  <li>高齢者世帯の会話・見守り</li>
+  <li>子供・ペット見守り</li>
+  <li>キャンプ・災害時ローカル通信</li>
+  <li>ドアホン代替</li>
+</ul>
+
+<h2>プロジェクト方針</h2>
+<ul>
+  <li>機能を削ることを価値にする</li>
+  <li>設定不要・説明不要</li>
+  <li>まずは2台LAN接続で自動認識まで</li>
+</ul>
+
+<div class="box">
+<strong>キーワード</strong><br />
+家電化 / ローカル完結 / 自律分散AP / 電源ONだけ / NixOS / リサイクルPC
+</div>
+
+</body>
+</html>
+
