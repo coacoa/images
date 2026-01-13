@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>アニメでわかる git pull --rebase</title>
+<style>
+body {
+  background: #0b1020;
+  color: #e5e7eb;
+  font-family: "Hiragino Kaku Gothic ProN", system-ui, sans-serif;
+  padding: 24px;
+}
+h1 {
+  text-align: center;
+  color: #60a5fa;
+}
+.panel {
+  display: flex;
+  gap: 16px;
+  background: #020617;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 24px 0;
+  align-items: center;
+}
+.face {
+  font-size: 56px;
+  width: 80px;
+  text-align: center;
+}
+.ok { border-left: 8px solid #22c55e; }
+.warn { border-left: 8px solid #eab308; }
+.err { border-left: 8px solid #ef4444; }
+
+code {
+  background: #020617;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #facc15;
+}
+.flow {
+  background: #020617;
+  border-radius: 12px;
+  padding: 16px;
+  white-space: pre;
+  font-family: monospace;
+  color: #a5b4fc;
+}
+</style>
+</head>
+<body>
+
+<h1>🎬 アニメでわかる git pull --rebase</h1>
+
+<div class="panel ok">
+  <div class="face">🙂</div>
+  <div>
+    <h2>第1話：平和な日常</h2>
+    <p>
+      <code>main</code> にいる。<br>
+      「よし、<code>git pull --rebase</code> するか〜」
+    </p>
+  </div>
+</div>
+
+<div class="panel warn">
+  <div class="face">🤖</div>
+  <div>
+    <h2>第2話：Git の作業開始</h2>
+    <p>
+      Git「OK！<br>
+      じゃあ <strong>君の commit を1個ずつ</strong><br>
+      新しい main の上に乗せ直すね」
+    </p>
+  </div>
+</div>
+
+<div class="panel err">
+  <div class="face">💥</div>
+  <div>
+    <h2>第3話：衝突（conflict）発生！</h2>
+    <p>
+      Git「この commit <code>a</code>、<br>
+      ぶつかった！どうする？」
+    </p>
+    <p>
+      👉 状態：<strong>rebase 中（時間停止）</strong>
+    </p>
+  </div>
+</div>
+
+<div class="panel err">
+  <div class="face">😵</div>
+  <div>
+    <h2>第4話：やってはいけない行動</h2>
+    <p>
+      <code>git pull</code><br>
+      <code>git restore .</code>
+    </p>
+    <p>
+      Git「ちょっと待って！！<br>
+      まだ話の途中！！！」
+    </p>
+  </div>
+</div>
+
+<div class="panel ok">
+  <div class="face">🧠</div>
+  <div>
+    <h2>第5話：真実に気づく</h2>
+    <p>
+      「あ、この commit いらんやつだ」
+    </p>
+    <p>
+      👉 正解コマンド：
+      <code>git rebase --skip</code>
+    </p>
+  </div>
+</div>
+
+<div class="panel ok">
+  <div class="face">✨</div>
+  <div>
+    <h2>最終話：世界は救われた</h2>
+    <p>
+      <code>
+        Successfully rebased and updated refs/heads/main<br>
+        On branch main<br>
+        working tree clean
+      </code>
+    </p>
+    <p>
+      🎉 完全に正常
+    </p>
+  </div>
+</div>
+
+<h2>📺 1画面まとめ（超重要）</h2>
+
+<div class="flow">
+git pull --rebase
+        ↓
+conflict 発生
+        ↓
+【選択肢】
+  ・直す → add → rebase --continue
+  ・いらない → rebase --skip ← 今回
+  ・全部やめる → rebase --abort
+        ↓
+rebase 完了
+</div>
+
+<h2>🧭 覚えるセリフ（アニメ的）</h2>
+<ul>
+  <li>Git「今 rebase 中？」→ <code>git status</code></li>
+  <li>Git「話を進めて」→ <code>--continue</code></li>
+  <li>Git「この話いらん」→ <code>--skip</code></li>
+  <li>Git「最初からやり直す」→ <code>--abort</code></li>
+</ul>
+
+</body>
+</html>
+

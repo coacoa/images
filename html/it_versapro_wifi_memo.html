@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>VersaPro NixOS 基地局メモ</title>
+    <style>
+        body { font-family: 'Courier New', Courier, monospace; background: #1a1a1a; color: #00ff00; padding: 20px; line-height: 1.6; }
+        h1 { border-bottom: 2px solid #00ff00; padding-bottom: 10px; color: #fff; }
+        .code-box { background: #000; border: 1px dashed #00ff00; padding: 15px; margin: 10px 0; overflow-x: auto; }
+        .important { color: #ff3333; font-weight: bold; }
+        .memo-tag { background: #00ff00; color: #000; padding: 2px 8px; font-weight: bold; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>📟 VersaPro Wi-Fi 基地局 備忘録</h1>
+
+    <p><span class="memo-tag">重要</span> VersaProのWi-Fiチップ (wlp2s0) でAPを立てる際の正解コマンド：</p>
+    <div class="code-box">
+        sudo create_ap -n wlp2s0 KADEN_TRANSCEIVER password123
+    </div>
+    <ul>
+        <li><span class="important">-n</span> : インターネット共有を行わない（独立した基地局モード）</li>
+        <li><span class="important">wlp2s0</span> : インターフェース名（VersaProの標準）</li>
+    </ul>
+
+    <hr>
+
+    <h2>🛠 トラブルシューティング</h2>
+    <p>Wi-Fiが見つからない、またはエラーが出た時のリセット手順：</p>
+    <div class="code-box">
+        # 1. 既存プロセスを掃除<br>
+        sudo killall -9 create_ap hostapd dnsmasq<br><br>
+        # 2. NetworkManagerの干渉を防ぐ<br>
+        sudo nmcli device set wlp2s0 managed no<br><br>
+        # 3. Wi-Fiのロック解除<br>
+        sudo rfkill unblock wifi
+    </div>
+
+    <hr>
+
+    <h2>📱 トランシーバーUI (HTML/JS) の肝</h2>
+    <p>マイク録音をWebM形式でPCサーバーに飛ばすJavaScriptのコア部分：</p>
+    <div class="code-box">
+        // 録音停止時に自動でPOST送信するロジック<br>
+        mediaRecorder.onstop = async () => {<br>
+        &nbsp;&nbsp;const blob = new Blob(chunks, { type: 'audio/webm' });<br>
+        &nbsp;&nbsp;const fd = new FormData();<br>
+        &nbsp;&nbsp;fd.append('audio', blob);<br>
+        &nbsp;&nbsp;fetch('/talk', { method: 'POST', body: fd });<br>
+        &nbsp;&nbsp;chunks = [];<br>
+        };
+    </div>
+
+    <hr>
+
+    <footer>
+        <p>※ NixOS configuration: /etc/nixos/network.nix にて永続化済み</p>
+    </footer>
+</body>
+</html>
