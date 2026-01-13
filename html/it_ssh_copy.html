@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SSH越しに clipboard (+y) が突然使えなくなった時の即復旧メモ</title>
+  <meta name="description" content="NixOS/SSH/Vim/Neovim で X11 Forwarding が原因の clipboard 断絶を5分で復旧するチェックリスト" />
+  <style>
+    :root {
+      --bg: #0f1220;
+      --fg: #e8eaf6;
+      --muted: #b0b6d6;
+      --accent: #8ab4ff;
+      --ok: #7ee787;
+      --warn: #f2cc60;
+      --bad: #ff7b72;
+      --card: #151935;
+      --code: #0b0e1a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 24px;
+      background: var(--bg); color: var(--fg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Noto Sans JP", sans-serif;
+      line-height: 1.7;
+    }
+    main { max-width: 980px; margin: 0 auto; }
+    h1, h2, h3 { line-height: 1.3; }
+    h1 { font-size: 1.9rem; margin-bottom: .25rem; }
+    .subtitle { color: var(--muted); margin-bottom: 1.5rem; }
+    section { background: var(--card); border-radius: 12px; padding: 18px 20px; margin: 16px 0; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .75rem; margin-right: 6px; }
+    .ok { background: rgba(126,231,135,.15); color: var(--ok); }
+    .warn { background: rgba(242,204,96,.15); color: var(--warn); }
+    .bad { background: rgba(255,123,114,.15); color: var(--bad); }
+    ul { padding-left: 1.2rem; }
+    li { margin: .25rem 0; }
+    pre, code { background: var(--code); color: #e6edf3; }
+    pre { padding: 14px; border-radius: 10px; overflow-x: auto; }
+    code { padding: 2px 6px; border-radius: 6px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap: 12px; }
+    footer { color: var(--muted); margin-top: 24px; text-align: center; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>SSH越しに <code>+y</code>（clipboard）が突然使えなくなった時の即復旧メモ</h1>
+    <div class="subtitle">NixOS / OpenSSH / Vim・Neovim 向け・再発前提チェックリスト</div>
+
+    <section>
+      <h2>症状</h2>
+      <ul>
+        <li>SSH先の Vim / Neovim / Emacs で <code>"+y</code> してもローカルに貼れない</li>
+        <li>昨日まで出来ていたのに <strong>突然死</strong></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>原因（今回の結論）</h2>
+      <p><span class="badge bad">原因</span> 接続先 <strong>sshd が X11 Forwarding を禁止</strong>していた。</p>
+      <pre><code>X11 forwarding request failed on channel 0</code></pre>
+      <pre><code>X11Forwarding no</code></pre>
+      <p>👉 壊れたのではなく、<strong>設定どおり拒否</strong>されていた。</p>
+    </section>
+
+    <section>
+      <h2>即チェック手順（再発時はここから）</h2>
+      <ol>
+        <li>
+          <strong>DISPLAY を確認</strong>
+          <pre><code>echo $DISPLAY</code></pre>
+          <ul>
+            <li><span class="badge bad">NG</span> 空 → X11 未接続</li>
+            <li><span class="badge ok">OK</span> <code>localhost:10.0</code> → X11 OK</li>
+          </ul>
+        </li>
+        <li>
+          <strong><code>ssh -X</code> で入り直す</strong>
+          <pre><code>ssh -X user@host</code></pre>
+          <p>それでもダメなら <strong>sshd 側</strong>。</p>
+        </li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>NixOS（接続先）での正解設定</h2>
+      <pre><code>services.openssh = {
+  enable = true;
+  settings = {
+    X11Forwarding = true;
+  };
+};</code></pre>
+      <pre><code>sudo nixos-rebuild switch</code></pre>
+    </section>
+
+    <section>
+      <h2>xauth エラーが出た場合（初回あるある）</h2>
+      <pre><code>xauth: file ~/.Xauthority does not exist</code></pre>
+      <pre><code>touch ~/.Xauthority
+chmod 600 ~/.Xauthority</code></pre>
+      <p>→ 再接続</p>
+    </section>
+
+    <section>
+      <h2>最終確認</h2>
+      <div class="grid">
+        <pre><code>echo $DISPLAY</code></pre>
+        <pre><code>"+yy</code></pre>
+      </div>
+      <p>ローカルに貼れたら <span class="badge ok">復旧完了</span></p>
+    </section>
+
+    <section>
+      <h2>なぜ「いつの間にか」起きる？</h2>
+      <ul>
+        <li>NixOS / OpenSSH 更新</li>
+        <li>sshd hardening</li>
+        <li>Wayland 前提化</li>
+        <li>踏み台・別ホスト経由</li>
+      </ul>
+      <p>👉 <strong>X11 はデフォルトで切られやすい</strong></p>
+    </section>
+
+    <section>
+      <h2>重要メモ（将来また折れる）</h2>
+      <ul>
+        <li>不安定</li>
+        <li>sshd 設定依存</li>
+        <li>tmux / Wayland と相性悪い</li>
+      </ul>
+      <p><strong>安定解：</strong> <span class="badge ok">OSC52 clipboard</span>（X11 不要・sshd 不要）</p>
+    </section>
+
+    <section>
+      <h2>合言葉</h2>
+      <blockquote>
+        「壊れた」じゃない、<strong>「ssh の流儀が変わった」だけ</strong>
+      </blockquote>
+      <p>このメモ通りやれば <strong>5分で復旧</strong>。</p>
+    </section>
+
+    <footer>
+      <p>© Memo for future me. Keep calm and <code>echo $DISPLAY</code>.</p>
+    </footer>
+  </main>
+</body>
+</html>
+
