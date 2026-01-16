@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>SSH・クリップボード・X11 / Wayland メモ</title>
+  <style>
+    body { font-family: sans-serif; line-height: 1.6; max-width: 800px; margin: 2rem auto; }
+    h1, h2, h3 { margin-top: 1.4rem; }
+    code { background: #f4f4f4; padding: 0.1rem 0.3rem; border-radius: 3px; }
+    pre { background: #f4f4f4; padding: 0.8rem; border-radius: 4px; overflow-x: auto; }
+    .box { border-left: 4px solid #888; padding-left: 0.8rem; margin: 1rem 0; }
+  </style>
+</head>
+<body>
+
+<h1>SSH 経由クリップボードと X11 / Wayland の関係メモ</h1>
+
+<div class="box">
+  <p><strong>ゴール：</strong>SSH 先の <code>nvim</code> で <code>"+y</code> した内容を、手元の環境にコピペできるようにする。</p>
+  <p>このメモは「<strong>X11 の場合はどうするか / Wayland だと何が違うか</strong>」を整理したもの。</p>
+</div>
+
+<hr>
+
+<h2>1. 今回作った <code>openssh.nix</code> は「X11 前提」の設定</h2>
+
+<pre><code>{ config, pkgs, ... }:
+
+{
+  services.openssh = {
+    enable = true;
+
+    # NixOS 25.05 では settings.* に統一
+    settings = {
+      X11Forwarding = true;
+    };
+  };
+
+  # X11 forwarding に必要な最低限のパッケージ
+  environment.systemPackages = with pkgs; [
+    xorg.xauth
+    xclip
+  ];
+}
+</code></pre>
+
+<ul>
+  <li><strong>やっていること：</strong>SSH の <strong>X11 forwarding</strong> を有効化している。</li>
+  <li><strong>前提：</strong>手元の環境が <code>XDG_SESSION_TYPE=x11</code>（X11 セッション）で動いている。</li>
+  <li><strong>結果：</strong>
+    <ul>
+      <li><code>ssh -X hoge@host</code> でログインすると、<code>$DISPLAY</code> が <code>localhost:10.0</code> などになる。</li>
+      <li>サーバ側の <code>xclip</code> が、その <code>DISPLAY</code> を通じて「手元の X11 クリップボード」にアクセスできる。</li>
+      <li>つまり、SSH 先の <code>nvim</code> で <code>"+y</code> → 手元のクリップボードに入る。</li>
+    </ul>
+  </li>
+</ul>
+
+<p>この仕組みはあくまで「<strong>X11 のクリップボード</strong>」を前提にしている。</p>
+
+<hr>
+
+<h2>2. X11 の世界での流れ</h2>
+
+<ol>
+  <li>手元の PC は X11 セッション（<code>XDG_SESSION_TYPE=x11</code>）。</li>
+  <li><code>ssh -X hoge@host</code> でサーバに入る。</li>
+  <li>サーバ側で <code>$DISPLAY</code> が <code>localhost:10.0</code> などになる。</li>
+  <li>サーバ側の <code>xclip</code> は、その <code>DISPLAY</code> に接続してクリップボードを操作する。</li>
+  <li><code>nvim</code> の <code>"+y</code> → <code>xclip</code> → 手元の X11 クリップボード。</li>
+</ol>
+
+<p>だから、今回の <code>openssh.nix</code> は「<strong>X11 のこの経路をちゃんと通すための設定</strong>」になっている。</p>
+
+<hr>
+
+<h2>3. Wayland の場合は何が違うのか</h2>
+
+<p><strong>Wayland セッション</strong>（<code>XDG_SESSION_TYPE=wayland</code>）だと、話が変わる。</p>
+
+<ul>
+  <li>Wayland には「X11 のクリップボード」という概念がない。</li>
+  <li><code>xclip</code> や <code>xsel</code> は「X11 のクリップボード」を前提にしている。</li>
+  <li>SSH の <code>-X</code> は「X11 の画面とクリップボード」を forward する仕組み。</li>
+</ul>
+
+<p>つまり：</p>
+
+<div class="box">
+  <p><strong>Wayland セッション + SSH -X + xclip</strong> という組み合わせだと、</p>
+  <p><strong>「forward 先の X11 クリップボード」が存在しない or うまく繋がらない</strong> ので、</p>
+  <p><strong>SSH 先の <code>"+y</code> → 手元のクリップボード</strong> という経路が基本的に成立しない。</p>
+</div>
+
+<p>この場合は：</p>
+
+<ul>
+  <li><strong>現実的な解：</strong>ターミナルの選択コピーで済ませる。</li>
+  <li>もしくは、手元を X11 セッションでログインし直す。</li>
+</ul>
+
+<hr>
+
+<h2>4. まとめ：この openssh.nix がカバーしている範囲</h2>
+
+<ul>
+  <li><strong>カバーしている：</strong>
+    <ul>
+      <li>手元が X11 セッションのときの、SSH -X 経由のクリップボード連携。</li>
+      <li>NixOS 25.05 で壊れない、最小限の X11 forwarding 設定。</li>
+    </ul>
+  </li>
+  <li><strong>カバーしていない：</strong>
+    <ul>
+      <li>手元が Wayland セッションのときの、SSH 経由クリップボード問題。</li>
+      <li>Wayland ネイティブなクリップボード転送（これは別のレイヤーの話）。</li>
+    </ul>
+  </li>
+</ul>
+
+<div class="box">
+  <p><strong>実運用の指針：</strong></p>
+  <ul>
+    <li><strong>X11 セッションなら：</strong>今回の <code>openssh.nix</code> + <code>ssh -X</code> + <code>xclip</code> で <code>"+y</code> が素直に動く。</li>
+    <li><strong>Wayland セッションなら：</strong>SSH 先の <code>"+y</code> にこだわらず、ターミナルの選択コピーをメインにする方が壊れない。</li>
+  </ul>
+</div>
+
+</body>
+</html>
+
