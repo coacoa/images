@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>KADEN Project HTML Memo</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.6;
+      margin: 2em;
+      max-width: 960px;
+    }
+    h1, h2, h3 {
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 0.2em;
+    }
+    code, pre {
+      background: #f5f5f5;
+      padding: 0.3em 0.5em;
+    }
+    pre {
+      overflow-x: auto;
+    }
+    section {
+      margin-bottom: 2.5em;
+    }
+    .note {
+      background: #eef6ff;
+      padding: 1em;
+      border-left: 4px solid #4a90e2;
+    }
+  </style>
+</head>
+<body>
+
+<h1>KADEN Project – HTML Memo</h1>
+<p>
+  このドキュメントは <strong>業務仕様書ではなく</strong>、<br />
+  KADEN プロジェクトの<strong>開発方針・設計意図・判断理由</strong>を残すための HTML メモである。<br />
+  Git 管理を前提とし、「あとで読んで迷わない」ことを最優先にする。
+</p>
+
+<section>
+<h2>1. プロジェクト概要</h2>
+<ul>
+  <li>名称: KADEN（NixOS 家電化プロジェクト）</li>
+  <li>対象: 2010–2020 年代の古いノート PC</li>
+  <li>目的:
+    <ul>
+      <li>WiFi AP + ローカル通信装置として再利用</li>
+      <li>スマホ / タブレットから接続してテキスト・音声・画像・動画を共有</li>
+      <li>LAN 接続時のみニュース・天気など外部情報を表示</li>
+    </ul>
+  </li>
+</ul>
+</section>
+
+<section>
+<h2>2. 基本思想（最重要）</h2>
+
+<h3>2.1 network.nix は二度と触らない</h3>
+<p>
+  network.nix は <strong>一度完成させたら変更しない</strong>。
+  後続の機能はすべて network.nix の上に「ぶら下げる」。
+</p>
+
+<ul>
+  <li>物理インターフェース名の固定（wlan0 / eth0）</li>
+  <li>AP / DHCP / NAT / DNS の完成形</li>
+  <li>WiFi 能力検出（AP 対応有無）</li>
+  <li>LAN ONLINE / OFFLINE 判定</li>
+  <li>状態を <code>/run/kaden-network.env</code> に出力</li>
+</ul>
+
+<div class="note">
+<strong>network.nix ではやらないこと</strong><br />
+UI / Web / Kiosk / News / Weather / Transceiver
+</div>
+
+<h3>2.2 条件分岐は Nix ではなく systemd で行う</h3>
+<p>
+  Nix の評価時にはハードウェア状態は取得できないため、<br />
+  実行時（runtime）の systemd service によって判定を行う。
+</p>
+</section>
+
+<section>
+<h2>3. 全体アーキテクチャ</h2>
+<pre>
+[ Smartphone / Tablet ]
+        |
+      WiFi (AP)
+        |
+[ NixOS KADEN ]
+  ├─ network.nix (固定・完成)
+  ├─ local Web UI
+  ├─ Transceiver 機能
+  ├─ Kiosk 表示 (LXQt)
+  └─ LAN時のみ外部情報取得
+</pre>
+</section>
+
+<section>
+<h2>4. 段階的開発ステップ</h2>
+<ol>
+  <li>AP が安定して接続できる</li>
+  <li>ブラウザで <code>http://kaden.local</code> が開く</li>
+  <li>テキスト共有（接続者識別）</li>
+  <li>画像アップロード</li>
+  <li>音声（Push-to-talk）</li>
+  <li>動画共有</li>
+  <li>LXQt キオスク表示</li>
+  <li>LAN 時のニュース・天気表示</li>
+</ol>
+</section>
+
+<section>
+<h2>5. トランシーバ（識別）設計</h2>
+<ul>
+  <li>WiFi レイヤ（MAC / IP）では識別しない</li>
+  <li>Web レイヤで一時 ID を発行</li>
+  <li>Cookie / localStorage を使用</li>
+</ul>
+<p>
+理由: MAC / IP は不安定で UI に向かないため。
+</p>
+</section>
+
+<section>
+<h2>6. 設定と可変要素の考え方</h2>
+<ul>
+  <li><strong>Nix 管理（固定）</strong>: 構造、起動順、依存関係</li>
+  <li><strong>/etc/kaden 配下（可変）</strong>: SSID、パスフレーズ、表示設定</li>
+</ul>
+<p>
+GUI から変更でき、nixos-rebuild を必要としない設計とする。
+</p>
+</section>
+
+<section>
+<h2>7. 失敗しても壊れない設計</h2>
+<ul>
+  <li>LAN が無い → オフライン表示</li>
+  <li>外部取得失敗 → 前回データ表示</li>
+  <li>再ビルド不要で継続利用可能</li>
+</ul>
+</section>
+
+<section>
+<h2>8. この HTML メモの運用ルール</h2>
+<ul>
+  <li>業務仕様書にしない</li>
+  <li>正確さより「判断理由」を残す</li>
+  <li>迷った設計・やめた案も書く</li>
+  <li>Git の履歴を設計ログとして使う</li>
+</ul>
+</section>
+
+<section>
+<h2>9. 将来拡張メモ</h2>
+<ul>
+  <li>WiFi 中継（managed + AP）</li>
+  <li>VLAN / Guest WiFi</li>
+  <li>WPA3</li>
+  <li>flake 化</li>
+</ul>
+</section>
+
+</body>
+</html>
+
