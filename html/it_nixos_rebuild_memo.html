@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NixOS 25 + home-manager（NixOS module方式）運用メモ</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.7;
+      margin: 40px;
+      background: #fafafa;
+      color: #222;
+    }
+    h1, h2, h3 {
+      border-bottom: 2px solid #ddd;
+      padding-bottom: 4px;
+    }
+    pre {
+      background: #111;
+      color: #eee;
+      padding: 16px;
+      overflow-x: auto;
+    }
+    code {
+      color: #ffcc66;
+    }
+    table {
+      border-collapse: collapse;
+      margin: 16px 0;
+    }
+    th, td {
+      border: 1px solid #aaa;
+      padding: 8px 12px;
+    }
+    th {
+      background: #eee;
+    }
+    .box {
+      border: 1px solid #aaa;
+      padding: 16px;
+      background: #fff;
+      margin: 16px 0;
+    }
+    .important {
+      background: #fff3cd;
+      border-left: 6px solid #ffcc00;
+      padding: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>NixOS 25 + home-manager（NixOS module方式）運用メモ</h1>
+
+<div class="important">
+<b>最重要結論</b><br />
+<ul>
+  <li><b>home-manager switch は使わない</b></li>
+  <li><b>設定反映は nixos-rebuild switch が唯一の基本</b></li>
+  <li>home-manager は NixOS の一部として評価される</li>
+</ul>
+</div>
+
+<h2>1. 全体像（評価フロー）</h2>
+
+<pre>
+nixos-rebuild switch
+        ↓
+ NixOS modules 評価
+        ↓
+ home-manager module 評価
+        ↓
+ system + user を同時に世代管理
+</pre>
+
+<p>
+OS設定（system）とユーザー設定（home）が <b>1つの system generation</b> として管理される。
+</p>
+
+<h2>2. home-manager の2つの方式</h2>
+
+<table>
+  <tr>
+    <th>方式</th>
+    <th>使用コマンド</th>
+    <th>主な用途</th>
+  </tr>
+  <tr>
+    <td>standalone</td>
+    <td>home-manager switch</td>
+    <td>非NixOS / 単独管理</td>
+  </tr>
+  <tr>
+    <td><b>NixOS module</b></td>
+    <td><b>nixos-rebuild switch</b></td>
+    <td><b>NixOS統合管理</b></td>
+  </tr>
+</table>
+
+<p>
+※ NixOS module方式では <b>home-manager switch は概念的に存在しない</b>
+</p>
+
+<h2>3. nixos-rebuild の主要オプション</h2>
+
+<h3>3.1 基本（普段使い）</h3>
+<pre>
+sudo nixos-rebuild switch
+</pre>
+<ul>
+  <li>即反映</li>
+  <li>失敗時は自動ロールバック</li>
+</ul>
+
+<h3>3.2 flake 使用時（推奨）</h3>
+<pre>
+sudo nixos-rebuild switch --flake .#hostname
+</pre>
+
+<h3>3.3 安全確認（再起動で元に戻る）</h3>
+<pre>
+sudo nixos-rebuild test
+</pre>
+
+<h3>3.4 ビルドのみ</h3>
+<pre>
+sudo nixos-rebuild build
+</pre>
+
+<h2>4. home-manager 側の基本設定</h2>
+
+<pre>
+home-manager.users.hoge = {
+  home.stateVersion = "25.05";
+  programs.zsh.enable = true;
+};
+</pre>
+
+<ul>
+  <li><code>home.stateVersion</code> は home-manager 専用</li>
+  <li><code>system.stateVersion</code> とは別</li>
+  <li>一度決めたら基本変更しない</li>
+</ul>
+
+<h2>5. パッケージ管理の責務分離</h2>
+
+<h3>5.1 system（OS責務）</h3>
+<pre>
+environment.systemPackages = with pkgs; [
+  git
+  vim
+];
+</pre>
+
+<h3>5.2 home（ユーザー責務）</h3>
+<pre>
+home.packages = with pkgs; [
+  ripgrep
+  fd
+];
+</pre>
+
+<p>
+GUI・CLI・dotfile 系は home-manager に寄せると管理が破綻しにくい。
+</p>
+
+<h2>6. やってはいけない例</h2>
+
+<ul>
+  <li>home-manager switch を叩く</li>
+  <li>同じ program を system と home の両方で enable</li>
+  <li>standalone と module 方式の混在</li>
+</ul>
+
+<h2>7. 典型的なディレクトリ構成</h2>
+
+<pre>
+flake.nix
+├─ hosts/
+│  └─ myhost/
+│     └─ configuration.nix   (system)
+├─ home/
+│  └─ hoge/
+│     └─ home.nix             (user)
+└─ nixosConfigurations.myhost
+</pre>
+
+<p>
+操作コマンドは常に以下のみ：
+</p>
+
+<pre>
+sudo nixos-rebuild switch --flake .#myhost
+</pre>
+
+<h2>8. 判断基準（迷ったら）</h2>
+
+<div class="box">
+<ul>
+  <li>OSの責務 → <b>configuration.nix</b></li>
+  <li>ユーザー環境 → <b>home.nix</b></li>
+  <li>反映操作 → <b>nixos-rebuild switch</b></li>
+</ul>
+</div>
+
+<p><b>この構成を理解・運用できていれば NixOS 中級者ライン。</b></p>
+
+</body>
+</html>
+
