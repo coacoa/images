@@ -100,6 +100,12 @@ if executable('wl-copy')
           \ }
 endif</code></pre>
 
+# 1. ユーザーセッションとしてRDPを起動
+systemctl --user start gnome-remote-desktop
+
+# 2. 状態を確認（Active: running になれば成功）
+systemctl --user status gnome-remote-desktop
+
 <p class="success">※ 設定反映後は、一度再ログインまたはOS再起動を推奨します。</p>
 
 </body>
