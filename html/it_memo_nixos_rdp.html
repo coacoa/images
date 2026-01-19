@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NixOS GNOME RDP Setup Memo</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 20px; background-color: #f4f7f9; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #2980b9; margin-top: 30px; background: #e8f4fd; padding: 10px; border-left: 5px solid #3498db; }
+        code { background-color: #2d3436; color: #dfe6e9; padding: 2px 5px; border-radius: 4px; font-family: 'Consolas', monospace; }
+        pre { background-color: #2d3436; color: #dfe6e9; padding: 15px; border-radius: 8px; overflow-x: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .important { background-color: #ffeaa7; border: 1px solid #fab1a0; padding: 15px; border-radius: 8px; margin: 20px 0; }
+        .success { color: #27ae60; font-weight: bold; }
+        .error-msg { color: #d63031; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; background: white; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #3498db; color: white; }
+    </style>
+</head>
+<body>
+
+<h1>NixOS GNOME RDP (Wayland) 構築・完全版メモ</h1>
+
+<p>VS-4環境（USB故障回避のためWayland必須）において、GNOMEリモートデスクトップを有効化し、SSH経由でセットアップを完了させるための手順書。</p>
+
+<h2>1. システム設定 (configuration.nix)</h2>
+<p>サービスの有効化と、読み取り専用の <code>/etc</code> を回避するための設定。</p>
+<pre><code>services.gnome.gnome-remote-desktop.enable = true;
+networking.firewall.allowedTCPPorts = [ 3389 ];
+networking.firewall.allowedUDPPorts = [ 3389 ]; # 描画速度向上のためUDP推奨
+
+# 資格情報の保存に必須
+services.dbus.enable = true;
+security.tpm2.enable = true;</code></pre>
+
+<h2>2. ユーザー設定 (home-manager)</h2>
+<p>GNOMEの設定データベース(dconf)を自動化。これによりGUIでの操作を不要にする。</p>
+<pre><code>dconf.settings = {
+  "org/gnome/desktop/remote-desktop/rdp" = {
+    screen-share-mode = "mirror-screen"; # ヘッドレスなら "virtual-monitor"
+    view-only = false;
+  };
+  "org/gnome/desktop/remote-desktop" = {
+    enable = true;
+  };
+};
+
+home.packages = with pkgs; [
+  gnome-remote-desktop
+  wl-clipboard  # Vimの "+y 用
+  vim-full      # クリップボード対応版Vim
+];</code></pre>
+
+<h2>3. SSH経由での最終有効化コマンド</h2>
+<p>NixOSでは <code>grdctl enable</code> が <code>/etc</code> への書き込みエラー（EROFS）で失敗するため、以下の手順で「ユーザーセッション」に対して命令を送る。</p>
+<div class="important">
+    <strong>重要:</strong> <code>DBUS_SESSION_BUS_ADDRESS</code> が正しく設定されていないとコマンドが無視される。
+</div>
+<pre><code># 1. D-Busセッションへの接続を確保
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+
+# 2. パスワード設定 (OSのログインパスワードとは別でOK)
+grdctl rdp set-credentials [ユーザー名] [パスワード]
+
+# 3. 証明書の生成 (BIO_new failed 回避)
+grdctl rdp create-certificate --force
+
+# 4. サービスの有効化
+grdctl rdp enable</code></pre>
+
+<h2>4. 接続できない時の確認フロー</h2>
+<table>
+    <tr>
+        <th>確認項目</th>
+        <th>コマンド / 解決策</th>
+    </tr>
+    <tr>
+        <td>ポートの待機</td>
+        <td><code>ss -antl | grep 3389</code> (何も出ない場合はサービス未起動)</td>
+    </tr>
+    <tr>
+        <td>サービスログ</td>
+        <td><code>journalctl -f --user -u gnome-remote-desktop</code></td>
+    </tr>
+    <tr>
+        <td>ReadOnlyエラー</td>
+        <td><code>--system</code> ではなく ユーザー権限で <code>grdctl</code> を叩く</td>
+    </tr>
+</table>
+
+<h2>5. おまけ: Vimの "+y (クリップボード連携)</h2>
+<p>Wayland環境でSSH越しにコピペを効かせるための <code>.vimrc</code> 設定。</p>
+<pre><code>set clipboard=unnamedplus
+if executable('wl-copy')
+    let g:clipboard = {
+          \   'name': 'wl-utils',
+          \   'copy': { '+': 'wl-copy', '*': 'wl-copy' },
+          \   'paste': { '+': 'wl-paste', '*': 'wl-paste' },
+          \ }
+endif</code></pre>
+
+<p class="success">※ 設定反映後は、一度再ログインまたはOS再起動を推奨します。</p>
+
+</body>
+</html>
