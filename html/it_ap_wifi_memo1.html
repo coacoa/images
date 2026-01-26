@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>NixOS AP Network Topology</title>
+<style>
+body {
+  background: #0b0b10;
+  color: #eee;
+  font-family: monospace;
+  padding: 20px;
+}
+h1 {
+  text-align: center;
+  color: #7cf;
+}
+.map {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+.node {
+  border: 2px solid #555;
+  border-radius: 8px;
+  padding: 10px 15px;
+  min-width: 260px;
+  text-align: center;
+  background: #151520;
+  position: relative;
+}
+.node-title {
+  color: #7cf;
+  font-weight: bold;
+}
+.node-info {
+  font-size: 12px;
+  color: #ccc;
+  margin-top: 4px;
+}
+.arrow {
+  width: 2px;
+  height: 30px;
+  background: #555;
+  position: relative;
+}
+.arrow::after {
+  content: "";
+  position: absolute;
+  top: 30px;
+  left: -4px;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 8px solid #7cf;
+}
+.flow-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #0f0;
+  position: absolute;
+  left: -2px;
+  animation: flow 1.5s infinite;
+}
+@keyframes flow {
+  0% { top: 0px; opacity: 0.2; }
+  100% { top: 24px; opacity: 1; }
+}
+.highlight {
+  color: #0f0;
+}
+.small {
+  font-size: 11px;
+}
+</style>
+</head>
+<body>
+
+<h1>NixOS AP Network Topology</h1>
+
+<div class="map">
+
+  <div class="node">
+    <div class="node-title">インターネット</div>
+    <div class="node-info small">外の世界</div>
+  </div>
+
+  <div class="arrow"><div class="flow-dot"></div></div>
+
+  <div class="node">
+    <div class="node-title">家のルーター</div>
+    <div class="node-info">
+      例: <span class="highlight">192.168.1.1</span><br>
+      NixOS PC の外側の相手
+    </div>
+  </div>
+
+  <div class="arrow"><div class="flow-dot"></div></div>
+
+  <div class="node">
+    <div class="node-title">NixOS PC (有線)</div>
+    <div class="node-info">
+      インターフェース: <span class="highlight">enp2s0f1</span><br>
+      IP: <span class="highlight">192.168.1.12</span><br>
+      ここが「ルーターの内側の端」
+    </div>
+  </div>
+
+  <div class="arrow"><div class="flow-dot"></div></div>
+
+  <div class="node">
+    <div class="node-title">NAT (ルーター役)</div>
+    <div class="node-info small">
+      内側: 192.168.55.x (Wi‑Fi クライアント)<br>
+      外側: 192.168.1.12 (家ルーター側)<br>
+      → 内側の通信を外側に変換
+    </div>
+  </div>
+
+  <div class="arrow"><div class="flow-dot"></div></div>
+
+  <div class="node">
+    <div class="node-title">Wi‑Fi AP (hostapd)</div>
+    <div class="node-info">
+      インターフェース: <span class="highlight">wlp3s0</span><br>
+      IP: <span class="highlight">192.168.55.1</span><br>
+      SSID: <span class="highlight">NIXOS_AP_THISPC</span><br>
+      パスワード: *****
+    </div>
+  </div>
+
+  <div class="arrow"><div class="flow-dot"></div></div>
+
+  <div class="node">
+    <div class="node-title">DHCP / DNS (dnsmasq)</div>
+    <div class="node-info small">
+      DHCP: 192.168.55.50–150 を配布<br>
+      DNS: 192.168.55.1 を案内
+    </div>
+  </div>
+
+  <div class="arrow"><div class="flow-dot"></div></div>
+
+  <div class="node">
+    <div class="node-title">AdGuard Home</div>
+    <div class="node-info small">
+      クライアント → 192.168.55.1:53 に問い合わせ<br>
+      → フィルタリングして外の DNS へ
+    </div>
+  </div>
+
+  <div class="arrow"><div class="flow-dot"></div></div>
+
+  <div class="node">
+    <div class="node-title">Wi‑Fi クライアント</div>
+    <div class="node-info">
+      例: <span class="highlight">192.168.55.50</span><br>
+      ゲートウェイ: 192.168.55.1<br>
+      DNS: 192.168.55.1 (AdGuard)
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
+
