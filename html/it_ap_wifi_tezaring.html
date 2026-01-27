@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>テザリング + NixOS ルーター可視化</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      padding: 24px;
+    }
+    h1 {
+      font-size: 20px;
+      margin: 0;
+    }
+    h2 {
+      font-size: 16px;
+      margin: 16px 0 4px;
+    }
+    .row {
+      display: flex;
+      gap: 40px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .node {
+      border-radius: 12px;
+      padding: 16px 20px;
+      min-width: 200px;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 0 0 1px rgba(148,163,184,0.5);
+    }
+    .internet {
+      background: radial-gradient(circle at top, #38bdf8, #1e293b);
+    }
+    .phone {
+      background: radial-gradient(circle at top, #22c55e, #1e293b);
+    }
+    .router {
+      background: radial-gradient(circle at top, #f97316, #1e293b);
+    }
+    .client {
+      background: radial-gradient(circle at top, #a855f7, #1e293b);
+    }
+    .title {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .ip {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 13px;
+      opacity: 0.9;
+    }
+    .label {
+      font-size: 12px;
+      opacity: 0.8;
+      margin-bottom: 4px;
+    }
+    .arrow {
+      width: 80px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #38bdf8);
+      position: relative;
+      overflow: visible;
+    }
+    .arrow::after {
+      content: "";
+      position: absolute;
+      right: -6px;
+      top: -4px;
+      border-left: 8px solid #38bdf8;
+      border-top: 4px solid transparent;
+      border-bottom: 4px solid transparent;
+    }
+    .flow {
+      position: relative;
+    }
+    .dot {
+      position: absolute;
+      top: -4px;
+      left: 0;
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #facc15;
+      box-shadow: 0 0 8px #facc15;
+      animation: move 1.8s linear infinite;
+    }
+    @keyframes move {
+      0% { transform: translateX(0); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateX(70px); opacity: 0; }
+    }
+    .note {
+      font-size: 13px;
+      color: #9ca3af;
+      max-width: 760px;
+      line-height: 1.7;
+    }
+    code {
+      background: #020617;
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .box {
+      background: #020617;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-top: 4px;
+      border: 1px solid #1f2937;
+    }
+    ul {
+      margin: 6px 0 0;
+      padding-left: 18px;
+    }
+    li {
+      margin: 2px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>スマホテザリング + NixOS ルーター構成</h1>
+
+  <!-- トポロジ図 -->
+  <div class="row">
+    <div class="node internet">
+      <div class="label">インターネット</div>
+      <div class="title">Internet</div>
+      <div class="ip">グローバルIP（キャリア側）</div>
+    </div>
+
+    <div class="flow">
+      <div class="arrow"></div>
+      <div class="dot"></div>
+    </div>
+
+    <div class="node phone">
+      <div class="label">スマホ（テザリング）</div>
+      <div class="title">Rakuten 5G</div>
+      <div class="ip">WAN: グローバルIP</div>
+      <div class="ip">USB共有: <code>10.24.219.47</code></div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="flow">
+      <div class="arrow"></div>
+      <div class="dot"></div>
+    </div>
+
+    <div class="node router">
+      <div class="label">NixOS ノートPC</div>
+      <div class="title">ポータブルルーター</div>
+      <div class="ip">WAN (USB): <code>enp0s26f7u1 = 10.24.219.47</code></div>
+      <div class="ip">LAN (Wi‑Fi AP): <code>wlp0s29f7u1 = 192.168.20.1</code></div>
+      <div class="ip">NAT: <code>192.168.20.x → 10.24.219.47</code></div>
+    </div>
+
+    <div class="flow">
+      <div class="arrow"></div>
+      <div class="dot"></div>
+    </div>
+
+    <div class="row">
+      <div class="node client">
+        <div class="label">クライアント1</div>
+        <div class="title">PC / スマホ</div>
+        <div class="ip">IP: <code>192.168.20.50</code></div>
+        <div class="ip">GW/DNS: <code>192.168.20.1</code></div>
+      </div>
+      <div class="node client">
+        <div class="label">クライアント2</div>
+        <div class="title">PC / スマホ</div>
+        <div class="ip">IP: <code>192.168.20.51</code></div>
+        <div class="ip">GW/DNS: <code>192.168.20.1</code></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 今の流れの説明 -->
+  <div class="note">
+    <h2>いま何が起きているか</h2>
+    <div class="box">
+      <p>
+        端末（例: <code>192.168.20.50</code>）から出たパケットは、
+      </p>
+      <ul>
+        <li>NixOS ルーター（<code>192.168.20.1</code>）で <strong>NAT されて</strong> 送信元が <code>10.24.219.47</code> に書き換わる</li>
+        <li>スマホは <code>10.24.219.47</code> を自分の「内側のアドレス」として扱い、さらにキャリアのグローバルIPに変換してインターネットへ出す</li>
+      </ul>
+      <p>
+        つまり流れは：
+        <br>
+        <code>192.168.20.x → (NixOS NAT) → 10.24.219.47 → (スマホ NAT) → グローバルIP</code>
+        <br>
+        という「二重 NAT」になっている。
+      </p>
+    </div>
+  </div>
+
+  <!-- 192.168 と 10.x の違いの説明 -->
+  <div class="note">
+    <h2>なぜ家庭の LAN は 192.168.x.x で、テザリングは 10.x.x.x なのか</h2>
+    <div class="box">
+      <p>インターネットの仕様（RFC1918）で、ローカル専用の「プライベートIPアドレス」が3つの範囲として予約されている：</p>
+      <ul>
+        <li><code>10.0.0.0 ～ 10.255.255.255</code>（10.x.x.x）</li>
+        <li><code>172.16.0.0 ～ 172.31.255.255</code>（172.16.x.x）</li>
+        <li><code>192.168.0.0 ～ 192.168.255.255</code>（192.168.x.x）</li>
+      </ul>
+      <p>
+        これらはどれも「インターネットに直接出ない番号帯」で、<br>
+        ルーターやスマホがそれぞれ自分の「ローカルの島」を作るために使っている。
+      </p>
+      <ul>
+        <li>家庭用ルーターは扱いやすいので <code>192.168.x.x</code> をよく使う（例: <code>192.168.0.1</code>, <code>192.168.1.1</code>）</li>
+        <li>スマホのテザリングは広い範囲が欲しいので <code>10.x.x.x</code> をよく使う</li>
+      </ul>
+      <p>
+        だから、あなたの環境で：
+      </p>
+      <ul>
+        <li>NixOS の AP 側 LAN が <code>192.168.20.x</code></li>
+        <li>スマホの USB テザリング側が <code>10.24.219.47</code></li>
+      </ul>
+      <p>
+        という構成になっていてもまったく問題なくて、<br>
+        それぞれ別の「ローカルの島」として動き、その間を NAT が橋渡ししている。
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+
