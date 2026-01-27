@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Podman policy.json メモ</title>
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.6; padding: 24px; max-width: 920px; margin: auto; }
+    h1, h2, h3 { line-height: 1.25; }
+    .box { background: #f6f8fa; border: 1px solid #d0d7de; border-radius: 8px; padding: 16px; margin: 16px 0; }
+    pre { background: #0b1020; color: #e6edf3; padding: 16px; border-radius: 8px; overflow-x: auto; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    .note { background: #fff8c5; border-left: 4px solid #f1c40f; padding: 12px; }
+    .ok { background: #e6fffa; border-left: 4px solid #10b981; padding: 12px; }
+    ul li { margin: 6px 0; }
+  </style>
+</head>
+<body>
+  <h1>Podman の <code>policy.json</code> を heredoc（EOF）で作るメモ</h1>
+
+  <p>Podman（特に NixOS）では、<strong>イメージの信頼ポリシー</strong>を <code>policy.json</code> で明示しないと
+  <code>podman build</code> / <code>podman pull</code> が失敗することがある。</p>
+
+  <h2>目的</h2>
+  <div class="box">
+    <ul>
+      <li>Docker と同じ感覚でローカル開発を進めたい</li>
+      <li>毎回エラーにハマらないよう、設定を<strong>覚えやすく可視化</strong></li>
+    </ul>
+  </div>
+
+  <h2>やること（結論）</h2>
+  <div class="ok">
+    <p><code>~/.config/containers/policy.json</code> を作成し、<br />
+    <strong>すべてのイメージを許可</strong>する設定を入れる。</p>
+  </div>
+
+  <h2>コマンド（heredoc / EOF）</h2>
+  <pre><code>mkdir -p ~/.config/containers
+cat &lt;&lt;'EOF' &gt; ~/.config/containers/policy.json
+{
+  "default": [
+    {
+      "type": "insecureAcceptAnything"
+    }
+  ]
+}
+EOF
+</code></pre>
+
+  <h3>ポイント</h3>
+  <ul>
+    <li><code>&lt;&lt;'EOF'</code> → <strong>シングルクォート付き</strong>で変数展開を防止</li>
+    <li>ユーザー単位なので <code>sudo</code> 不要</li>
+  </ul>
+
+  <h2>この設定の意味</h2>
+  <div class="note">
+    <p><code>"type": "insecureAcceptAnything"</code> は：</p>
+    <ul>
+      <li>署名検証をしない</li>
+      <li>すべてのコンテナイメージを信用する</li>
+    </ul>
+    <p>＝ <strong>Docker と同じ挙動</strong>（ローカル用途向け）</p>
+  </div>
+
+  <h2>確認</h2>
+  <pre><code>podman build -t add_subtitles_comp .</code></pre>
+
+  <h2>補足（本番環境では）</h2>
+  <ul>
+    <li>本番や公開サーバでは署名付きイメージを使う</li>
+    <li><code>insecureAcceptAnything</code> は避ける</li>
+  </ul>
+
+  <hr />
+  <p>📝 Git 管理用メモ / 再発防止用</p>
+</body>
+</html>
