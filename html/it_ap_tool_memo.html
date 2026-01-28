@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NixOS AP Router Expansion Memo</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f4f7f6; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #2980b9; margin-top: 30px; }
+        .tool-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; border-left: 5px solid #3498db; }
+        .tool-name { font-weight: bold; font-size: 1.2em; color: #2c3e50; }
+        .nix-code { background: #272822; color: #f8f8f2; padding: 10px; border-radius: 5px; font-family: 'Courier New', Courier, monospace; font-size: 0.9em; margin-top: 10px; display: block; }
+        .tag { display: inline-block; background: #e1f5fe; color: #01579b; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+    <h1>NixOS APルーター拡張ロードマップ</h1>
+    <p>AdGuard Homeを導入したU350を、さらに強力なゲートウェイに進化させるためのツール群です。</p>
+
+    <h2>1. ネットワーク可視化 (地図・統計)</h2>
+    
+    <div class="tool-card">
+        <span class="tag">GUI / リアルタイム</span>
+        <div class="tool-name">Sniffnet</div>
+        <div>通信相手を世界地図上にプロットし、国旗とともに表示。パケットの動きを一目で確認できます。</div>
+        <code class="nix-code">environment.systemPackages = [ pkgs.sniffnet ];</code>
+    </div>
+
+    <div class="tool-card">
+        <span class="tag">Web UI / 詳細分析</span>
+        <div class="tool-name">ntopng</div>
+        <div>プロトコル、国、AS番号（プロバイダ）ごとの通信量を詳細にグラフ化。本格的なルーター監視に。</div>
+        <code class="nix-code">services.ntopng.enable = true;</code>
+    </div>
+
+    <h2>2. セキュリティ・管理</h2>
+
+    <div class="tool-card">
+        <span class="tag">VPN / 外出先からの利用</span>
+        <div class="tool-name">Tailscale</div>
+        <div>外出先から自宅のAP（AdGuard Home）を安全に経由させたり、管理画面にアクセスしたりするためのVPN。</div>
+        <code class="nix-code">services.tailscale.enable = true;</code>
+    </div>
+
+    <div class="tool-card">
+        <span class="tag">IPS / 攻撃元可視化</span>
+        <div class="tool-name">CrowdSec</div>
+        <div>不正アクセス試行を検知。攻撃元のIPを世界地図にマッピングしてハニーポット風の監視が可能です。</div>
+        <code class="nix-code">services.crowdsec.enable = true;</code>
+    </div>
+
+    <h2>3. システム監視</h2>
+
+    <div class="tool-card">
+        <span class="tag">リソース監視</span>
+        <div class="tool-name">Netdata</div>
+        <div>CPU、メモリ、ネットワーク負荷を非常に軽量かつ滑らかなグラフで表示。U350の健康診断に。</div>
+        <code class="nix-code">services.netdata.enable = true;</code>
+    </div>
+
+    <hr>
+    <p><em>Note: NixOSでは、設定ファイルに上記を数行追加して <code>nixos-rebuild switch</code> するだけで即座に導入可能です。</em></p>
+
+</body>
+</html>
