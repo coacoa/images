@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Jellyfin 復旧失敗と ComfyUI 競合の記録</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 2em auto; padding: 0 1em; background: #f4f4f9; }
+        h1 { color: #d32f2f; border-bottom: 2px solid #d32f2f; }
+        h2 { color: #1976d2; margin-top: 1.5em; }
+        .status-bad { background: #ffebee; border-left: 5px solid #ef5350; padding: 1em; margin: 1em 0; }
+        .command { background: #263238; color: #a1c7e0; padding: 1em; border-radius: 5px; overflow-x: auto; font-family: monospace; }
+        table { width: 100%; border-collapse: collapse; margin: 1em 0; background: white; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #cfd8dc; }
+        .highlight { color: #d32f2f; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<h1>Jellyfin 起動失敗：技術メモ (2026-02-02)</h1>
+
+<div class="status-bad">
+    <strong>現在の状況：</strong> <br>
+    Jellyfin が <code>Result: core-dump (ABRT)</code> でループ。設定初期化、ユーザー再作成、バイナリ検証(nix-store)を試みるも、メモリ使用量 <strong>12.8M</strong> で即死する。
+</div>
+
+<h2>1. 発生の経緯</h2>
+<ul>
+    <li>ComfyUI にて重い計算を実行。</li>
+    <li>直後から Jellyfin がクラッシュ。</li>
+    <li>NixOS のドライバ更新 (v570.195) とのタイミングも重なり、GPUドライバとFFmpegライブラリ間で不整合が発生。</li>
+</ul>
+
+<h2>2. 試行した対策と結果</h2>
+<table>
+    <tr>
+        <th>試行策</th>
+        <th>詳細</th>
+        <th>結果</th>
+    </tr>
+    <tr>
+        <td>ディレクトリ隔離</td>
+        <td><code>/var/lib/jellyfin</code> を mv し、新規作成</td>
+        <td>失敗 (CHDIRエラー解消後 ABRT)</td>
+    </tr>
+    <tr>
+        <td>Jellyfin再インストール</td>
+        <td>jellyfin.nix をコメントアウト後 switch</td>
+        <td>失敗 (UID 989 への変更のみ)</td>
+    </tr>
+    <tr>
+        <td>バイナリ整合性検証</td>
+        <td><code>nix-store --verify --repair</code></td>
+        <td>異常なし (バイナリ自体は無事)</td>
+    </tr>
+    <tr>
+        <td>GPU回避環境変数</td>
+        <td><code>JELLYFIN_FFMPEG_DISABLE_HW_ACCEL=1</code></td>
+        <td>失敗 (初期化プロセスで死ぬ)</td>
+    </tr>
+</table>
+
+<h2>3. 真犯人の推定</h2>
+<p>
+    Jellyfin が依存する <strong>jellyfin-ffmpeg</strong> が、ロード時に NVIDIA ドライバの特定のシンボルを参照しようとして ABRT (Abort) している。<br>
+    ComfyUI がドライバをビジーにするか、設定を上書きしたことで、Jellyfin 側のサンドボックスからドライバが見えなくなった可能性が高い。
+</p>
+
+<h2>4. 最終的な推奨復旧フロー</h2>
+<div class="command">
+    # 1. NixOS の世代をロールバック（最も確実）<br>
+    sudo nixos-rebuild switch --rollback<br><br>
+    # 2. ComfyUI を一度無効化して起動を確認<br>
+    # 3. 直らない場合は /tmp/jellyfin 等の共有メモリを完全消去
+</div>
+
+</body>
+</html>
