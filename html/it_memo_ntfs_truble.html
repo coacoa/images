@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>NixOS NTFS Mount Fix Memo</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; max-width: 800px; margin: 2em auto; padding: 0 1em; background: #f4f4f9; }
+        code { background: #2d2d2d; color: #f8f8f2; padding: 0.2em 0.4em; border-radius: 3px; font-family: monospace; }
+        pre { background: #2d2d2d; color: #f8f8f2; padding: 1em; border-radius: 5px; overflow-x: auto; position: relative; }
+        .cmd-box { margin-bottom: 2em; }
+        h2 { border-bottom: 2px solid #3e5a99; color: #3e5a99; }
+        .warning { background: #fff3cd; border-left: 5px solid #ffeeba; padding: 1em; margin: 1em 0; }
+    </style>
+</head>
+<body>
+    <h1>🛠️ NTFS Mount Fix for NixOS</h1>
+    
+    <div class="warning">
+        <strong>症状:</strong> 外付けHDDが見えない、マウントできない、Read-onlyになる。
+    </div>
+
+    <div class="cmd-box">
+        <h2>1. Dirtyフラグを強制解除する</h2>
+        <p>ツールがない場合はnix-shell経由で実行：</p>
+        <pre>nix-shell -p ntfs3g --run "sudo ntfsfix -d /dev/sdc1"</pre>
+    </div>
+
+    <div class="cmd-box">
+        <h2>2. 強制的にマウントする</h2>
+        <pre>sudo mkdir -p /mnt/external
+sudo mount -t ntfs-3g /dev/sdc1 /mnt/external</pre>
+    </div>
+
+    <div class="cmd-box">
+        <h2>3. 状態を確認する</h2>
+        <pre>sudo dmesg | tail -n 20
+lsblk</pre>
+    </div>
+
+    <div class="cmd-box">
+        <h2>💡 根本解決：ext4へのフォーマット</h2>
+        <p>（※中身が全部消えるので注意）</p>
+        <pre># パーティションをext4で初期化
+sudo mkfs.ext4 /dev/sdc1</pre>
+    </div>
+</body>
+</html>
