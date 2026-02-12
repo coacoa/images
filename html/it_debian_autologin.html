@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Debian 13 Cinnamon 自動ログイン設定メモ</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; max-width: 800px; margin: 2em auto; padding: 0 1em; background: #f4f4f9; }
+        code { background: #272822; color: #f8f8f2; padding: 0.2em 0.4em; border-radius: 3px; font-family: monospace; }
+        pre { background: #272822; color: #f8f8f2; padding: 1em; border-radius: 5px; overflow-x: auto; }
+        h1 { color: #d32f2f; border-bottom: 2px solid #d32f2f; }
+        h2 { color: #1976d2; margin-top: 1.5em; }
+        .user { color: #ae81ff; font-weight: bold; }
+        .important { color: #f92672; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Debian 13 (Cinnamon) セットアップメモ</h1>
+
+    <h2>1. ifconfig を使えるようにする</h2>
+    <p>Debian 13ではデフォルトで入っていないため、手動でインストールします。</p>
+    <pre>sudo apt update
+sudo apt install net-tools</pre>
+    <p>※パスが通っていない場合は <code>/usr/sbin/ifconfig</code> で実行。</p>
+
+    <h2>2. SSH サーバーの有効化</h2>
+    <pre>sudo apt install openssh-server
+sudo systemctl enable --now ssh</pre>
+
+    <h2>3. 自動ログインの設定 (LightDM)</h2>
+    <p>設定ファイル <code>/etc/lightdm/lightdm.conf</code> を直接いじるより、専用ディレクトリにファイルを作るのが確実です。</p>
+    
+    <h3>① 設定ファイルの作成</h3>
+    <pre>sudo mkdir -p /etc/lightdm/lightdm.conf.d
+sudo nano /etc/lightdm/lightdm.conf.d/autologin.conf</pre>
+    <p>以下の内容を記述（<span class="user">hoge</span> は実際のユーザー名に変更）：</p>
+    <pre>[Seat:*]
+autologin-user=<span class="user">hoge</span>
+autologin-user-timeout=0
+autologin-session=cinnamon</pre>
+
+    <h3>② 既存ファイルの掃除（重要）</h3>
+    <p><code>/etc/lightdm/lightdm.conf</code> の中に <code>[LightDM]</code> セクションで自動ログインが書いてあるとエラーになるため、 <code>#</code> でコメントアウトするか削除します。</p>
+
+    <h2>4. ユーザー権限の付与</h2>
+    <p>システムが自動でログインさせるための権限を追加します。</p>
+    <pre>sudo groupadd -r autologin
+sudo gpasswd -a <span class="user">hoge</span> autologin</pre>
+
+    <h2>5. 設定の確認と再起動</h2>
+    <p>設定が正しく読み込まれているか確認：</p>
+    <pre>sudo /usr/sbin/lightdm --show-config</pre>
+    <p>問題なければ再起動：</p>
+    <pre>sudo reboot</pre>
+
+    <hr>
+    <p style="font-size: 0.8em; color: #666;">作成日: 2026-02-12 | 対応OS: Debian 13 (Trixie)</p>
+</body>
+</html>
