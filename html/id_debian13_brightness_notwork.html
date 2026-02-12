@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Debian 13 バックライト設定の経緯と対策案</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; max-width: 850px; margin: 2em auto; padding: 0 1.5em; background: #fdfdfd; color: #2c3e50; }
+        code { background: #eee; padding: 0.2em 0.4em; border-radius: 3px; font-family: monospace; }
+        pre { background: #2d2d2d; color: #ccc; padding: 1.2em; border-radius: 8px; overflow-x: auto; }
+        h1 { color: #e74c3c; border-left: 8px solid #e74c3c; padding-left: 15px; }
+        h2 { color: #2980b9; border-bottom: 2px solid #2980b9; margin-top: 2em; }
+        .log { background: #f8f9fa; border: 1px solid #dee2e6; padding: 1em; border-radius: 4px; }
+        .danger { color: #c0392b; font-weight: bold; }
+        .solution { background: #e8f5e9; border: 1px solid #4caf50; padding: 1em; border-radius: 4px; margin: 1em 0; }
+    </style>
+</head>
+<body>
+    <h1>ASUS T103HAF 明るさ設定：格闘の記録</h1>
+
+    <div class="log">
+        <strong>現状の課題:</strong> スライダーを動かしても本体の明るさが変わらない。<br>
+        <strong>原因:</strong> カーネルが <code>acpi_video0~7</code> というダミーの制御ファイルを8個も作ってしまい、本物の制御 (intel_backlight) が無視されている。
+    </div>
+
+    <h2>1. これまでの試行結果</h2>
+    <ul>
+        <li><strong>acpi_backlight=none:</strong> ダミーは消えたが、本物も消えてスライダーが消失。</li>
+        <li><strong>acpi_backlight=native:</strong> <span class="danger">危険。</span> 画面が完全にブラックアウト（消灯）したため中止。</li>
+        <li><strong>現状:</strong> デフォルト設定に戻し、眩しさは「夜間モード（Night Light）」で軽減中。</li>
+    </ul>
+
+    <h2>2. 今後の解決案 A：ソフトウェア制御（推奨）</h2>
+    <p>ハードウェアのバックライト（物理的なLED）をいじるのが危険なため、画面に映る「ピクセルの色」を計算で暗くする方法です。これなら絶対にブラックアウトしません。</p>
+    <pre>sudo apt update
+sudo apt install brightness-controller</pre>
+    <p><strong>使い方:</strong> メニューから起動し、スライダーを下げるだけ。OSのスライダーが効かなくても、これで確実に暗くできます。</p>
+
+    <h2>3. 今後の解決案 B：コマンドによる強制叩き</h2>
+    <p>もし物理的にバックライトを操作したい場合、OSのスライダーを経由せずに直接数値を送り込みます。</p>
+    <pre># brightnessctl をインストール
+sudo apt install brightnessctl
+
+# 現在の明るさを確認
+brightnessctl info
+
+# 50% に設定（テスト済み。もし真っ暗になったら SSH から 100% に戻せる）
+sudo brightnessctl set 50%</pre>
+
+    <h2>4. 今後の解決案 C：カーネルパラメータの微調整</h2>
+    <p>次に試す価値がある（真っ暗になりにくい）パラメータ：</p>
+    <pre>GRUB_CMDLINE_LINUX_DEFAULT="quiet splash pcie_aspm=off"</pre>
+    <p>※電力管理周りの相性問題でバックライトが固定される場合があるため。</p>
+
+    <div class="solution">
+        <strong>結論:</strong> 
+        まずは <code>brightness-controller</code> を使って「ソフト的に暗くする」のが、ASUS T103HAF においては最も安全で確実な回避策です。
+    </div>
+
+    <hr>
+    <p style="font-size: 0.8em; color: #7f8c8d;">記録日: 2026-02-12 | 機種: ASUS T103HAF (Intel Atom x5-Z8350)</p>
+</body>
+</html>
