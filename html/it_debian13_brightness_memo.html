@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Debian 13 (T103HAF) 明るさ設定の最終解決メモ</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; max-width: 800px; margin: 2em auto; padding: 2em; background: #1a1a1a; color: #e0e0e0; }
+        h1 { color: #4fc3f7; border-bottom: 2px solid #4fc3f7; }
+        h2 { color: #81c784; margin-top: 1.5em; }
+        .box { background: #2d2d2d; border-left: 5px solid #ffb74d; padding: 15px; margin: 15px 0; border-radius: 4px; }
+        code { background: #000; color: #00ff00; padding: 2px 5px; font-family: 'Courier New', Courier, monospace; }
+        pre { background: #000; color: #00ff00; padding: 15px; border-radius: 5px; overflow-x: auto; border: 1px solid #444; }
+        .success { color: #4db6ac; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h1>ASUS T103HAF 輝度調整マニュアル</h1>
+
+    <div class="box">
+        <strong>【現状の診断結果】</strong><br>
+        このPCのBIOSとDebianの相性により、物理的なバックライト（電球）の制御配線が正常に認識されない（<code>acpi_video0~7</code>が乱立する）。<br>
+        物理的な制御（<code>brightnessctl</code>など）は画面が消灯するリスクがあるため、<strong>「ソフトウェアによる輝度調整」</strong>が最適解。
+    </div>
+
+    <h2>1. 解決策：xrandr を使った輝度変更</h2>
+    <p>画面に送る信号の「明るさレベル」を調整する方法です。SSH経由でも操作可能です。</p>
+
+    <h3>実行コマンド（50%にする場合）</h3>
+    <pre>DISPLAY=:0 xrandr --output DSI-1 --brightness 0.5</pre>
+
+    <h3>数値の目安</h3>
+    <ul>
+        <li><code>1.0</code>： 通常（100%）</li>
+        <li><code>0.7</code>： 少し暗め（目が疲れにくい）</li>
+        <li><code>0.5</code>： 半分の明るさ（夜間・リモート作業用）</li>
+        <li><code>0.2</code>： かなり暗い（省エネ）</li>
+    </ul>
+
+    <h2>2. トラブルシューティング</h2>
+    <p>SSHから実行して <code>Can't open display</code> と出た場合は、必ず頭に <code>DISPLAY=:0</code> を付けます。</p>
+    <p>モニター名を確認したい場合は、以下のコマンドを実行：</p>
+    <pre>DISPLAY=:0 xrandr --listmonitors</pre>
+    <p class="success">※ T103HAF の内蔵液晶は 「DSI-1」 であることが確認済みです。</p>
+
+    <h2>3. 補足：キーボード不調への対応</h2>
+    <p>大文字固定などの挙動は、マグネット端子の接触不良や「Shiftキー」の物理的な固着によるもの。タブレット運用に切り替えた場合は、上記コマンドでの輝度調整がメインとなる。</p>
+
+    <hr>
+    <p style="text-align: right; font-size: 0.8em; color: #888;">Updated: 2026-02-12 | OS: Debian 13 (Cinnamon)</p>
+
+</body>
+</html>
