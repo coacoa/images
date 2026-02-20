@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>DNS Flow Animation</title>
+<style>
+  body { font-family: monospace; background: #111; color: #0f0; padding: 2rem; }
+  #flow { white-space: pre; font-size: 18px; }
+</style>
+</head>
+<body>
+<pre id="flow"></pre>
+<script>
+const frames = [
+`[端末] --> [116 DNS] --> [F660T] --> Internet`,
+`[端末] --o [116 DNS] --o [F660T] --> Internet`,
+`[端末] ----> [116 DNS] ----> [F660T] --> Internet`
+];
+let i = 0;
+const el = document.getElementById("flow");
+setInterval(() => {
+  el.textContent = frames[i];
+  i = (i + 1) % frames.length;
+}, 500);
+</script>
+</body>
+</html>
+
