@@ -2,27 +2,65 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>DNS Flow Animation</title>
+<title>NAT vs Bridge Packet Flow</title>
 <style>
-  body { font-family: monospace; background: #111; color: #0f0; padding: 2rem; }
-  #flow { white-space: pre; font-size: 18px; }
+body { font-family: monospace; background: #111; color: #0f0; padding: 2rem; }
+button { margin: 0.3rem; padding: 0.5rem 1rem; background: #222; color: #0f0; border: 1px solid #0f0; cursor: pointer; }
+button:hover { background: #0f0; color: #111; }
+#diagram { white-space: pre; font-size: 16px; line-height: 1.2; }
+.packet { color: #ff0; } /* DNSパケット用 */
 </style>
 </head>
 <body>
-<pre id="flow"></pre>
+
+<h2>NAT vs Bridge Packet Flow Animation</h2>
+
+<div>
+  <button onclick="setMask('/24')">/24</button>
+  <button onclick="setMask('/16')">/16</button>
+  <button onclick="setMask('/8')">/8</button>
+</div>
+
+<div id="diagram"></div>
+
 <script>
-const frames = [
-`[端末] --> [116 DNS] --> [F660T] --> Internet`,
-`[端末] --o [116 DNS] --o [F660T] --> Internet`,
-`[端末] ----> [116 DNS] ----> [F660T] --> Internet`
+let mask = '/24';
+let frameIndex = 0;
+
+// フレームごとのパケット表示（黄色がDNS）
+const natFrames = [
+`[端末] --\x1b[33mDNS\x1b[0m--> [116 NAT] --\x1b[33mDNS\x1b[0m--> [F660T] --> Internet`,
+`[端末] ----> [116 NAT] ----> [F660T] --> Internet`,
+`[端末] --\x1b[33mDNS\x1b[0m--> [116 NAT] --\x1b[33mDNS\x1b[0m--> [F660T] --> Internet`
 ];
-let i = 0;
-const el = document.getElementById("flow");
-setInterval(() => {
-  el.textContent = frames[i];
-  i = (i + 1) % frames.length;
-}, 500);
+
+const bridgeFrames = [
+`[端末] --> [116 Bridge] --> [F660T] --> Internet`,
+`[端末] ===> [116 Bridge] ===> [F660T] --> Internet`,
+`[端末] --> [116 Bridge] --> [F660T] --> Internet`
+];
+
+function setMask(newMask) {
+  mask = newMask;
+}
+
+function render() {
+  const natFrame = natFrames[frameIndex % natFrames.length];
+  const bridgeFrame = bridgeFrames[frameIndex % bridgeFrames.length];
+
+  let diagram = `NAT Flow (上段)\n${natFrame}\n\nBridge Flow (下段)\n${bridgeFrame}\n\nSubnet Mask: ${mask}\n`;
+
+  if(mask === '/24') diagram += '[Network][Host: 8bit 0~255]';
+  if(mask === '/16') diagram += '[Network][Host: 16bit 0~65535]';
+  if(mask === '/8')  diagram += '[Network][Host: 24bit 0~16777215]';
+
+  document.getElementById('diagram').textContent = diagram;
+  frameIndex++;
+}
+
+setInterval(render, 500);
 </script>
+
 </body>
 </html>
 
