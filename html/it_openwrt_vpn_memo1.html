@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Home Network Memo</title>
+<style>
+body {
+  font-family: monospace;
+  background: #111;
+  color: #0f0;
+  padding: 20px;
+}
+.box {
+  border: 1px solid #0f0;
+  padding: 10px;
+  margin: 10px 0;
+}
+.arrow {
+  text-align: center;
+  margin: 5px 0;
+}
+</style>
+</head>
+<body>
+
+<h1>Home Network Structure Memo</h1>
+
+<div class="box">
+Internet
+</div>
+
+<div class="arrow">↓</div>
+
+<div class="box">
+F660T  
+LAN: 192.168.1.1/24  
+</div>
+
+<div class="arrow">↓ (WAN: 192.168.1.210)</div>
+
+<div class="box">
+OpenWrt (1166DHP2)  
+WAN: 192.168.1.210  
+LAN: 192.168.116.1/24  
+DHCP: 192.168.116.x  
+Firewall:  
+  - WAN input: REJECT  
+  - LAN forward: ACCEPT  
+  - Masquerade: ON  
+Adblock Lite: Enabled  
+</div>
+
+<div class="arrow">↓</div>
+
+<div class="box">
+LAN Clients (192.168.116.x)
+</div>
+
+<hr>
+
+<h2>Routing Table</h2>
+<pre>
+default via 192.168.1.1 dev eth0.2
+192.168.1.0/24 dev eth0.2
+192.168.116.0/24 dev br-lan
+</pre>
+
+<h2>Notes</h2>
+<ul>
+<li>WAN input is REJECT (secure)</li>
+<li>LAN → WAN forwarding enabled</li>
+<li>Future plan: Add WireGuard (UDP 51820)</li>
+</ul>
+
+</body>
+</html>
