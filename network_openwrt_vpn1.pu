@@ -1,0 +1,29 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+
+cloud "Internet" as net
+
+node "F660T\n192.168.1.1/24" as f660t
+
+node "OpenWrt 1166DHP2" as owrt {
+  component "WAN\n192.168.1.210" as wan
+  component "LAN\n192.168.116.1/24\nDHCP: 192.168.116.x" as lan
+}
+
+rectangle "LAN Clients\n192.168.116.x" as clients
+
+net --> f660t
+f660t --> wan
+wan --> lan
+lan --> clients
+
+note right of owrt
+Firewall:
+WAN input = REJECT
+LAN forward = ACCEPT
+Masquerade = ON
+Adblock Lite = ON
+end note
+
+@enduml
