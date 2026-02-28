@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>NATとポート開放の仕組み</title>
+<style>
+body { font-family: monospace; background:#111; color:#eee; }
+.box { border:1px solid #888; padding:15px; margin:20px; }
+.ok { color:#00ff88; }
+.ng { color:#ff5555; }
+.note { color:#66ccff; }
+</style>
+</head>
+<body>
+
+<h2>■ 例1：LAN内サーバーをインターネット公開</h2>
+
+<div class="box">
+インターネット<br>
+↓<br>
+[ひかりルーター（NAT）]<br>
+↓<br>
+192.168.1.100 (Webサーバー)
+</div>
+
+<div class="box">
+<span class="ng">✖ 外から直接 192.168.1.100 へは行けない</span><br>
+理由：プライベートIPは外から見えない
+</div>
+
+<div class="box">
+<span class="ok">✔ 解決方法：ポート開放（ポートフォワード）</span><br>
+例：<br>
+外部IP:80 → 192.168.1.100:80
+</div>
+
+<hr>
+
+<h2>■ 例2：あなたの構成（251ネット）</h2>
+
+<div class="box">
+192.168.1.0/24<br>
+↓<br>
+[OpenWrt（NAT）]<br>
+↓<br>
+192.168.251.163 (VNC)
+</div>
+
+<div class="box">
+<span class="ng">✖ 192.168.1側から直接 192.168.251.163 へは行けない</span><br>
+理由：上位ネットワークは 251 を知らない
+</div>
+
+<div class="box">
+<span class="ok">✔ 解決方法：ポートフォワード</span><br>
+例：<br>
+192.168.1.200:5900 → 192.168.251.163:5900
+</div>
+
+<hr>
+
+<h2>■ まとめ</h2>
+
+<div class="box note">
+NATとは：<br>
+内側 → 外側 はOK<br>
+外側 → 内側 はNG（設定しない限り）<br><br>
+
+だから必要になるもの：<br>
+・ポート開放<br>
+・ポートフォワード<br>
+・VPN<br>
+・静的ルート（NATしない場合）
+</div>
+
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>NAT構成メモ</title>
+<style>
+body { font-family: monospace; background:#111; color:#eee; }
+.box { border:1px solid #888; padding:15px; margin:20px; }
+.ok { color:#00ff88; }
+.ng { color:#ff5555; }
+.arrow { margin-left:40px; }
+</style>
+</head>
+<body>
+
+<h2>■ 現在のネットワーク構成（NATあり）</h2>
+
+<div class="box">
+192.168.1.0/24<br>
+[F660T]<br>
+<br>
+↓<br>
+<br>
+[OpenWrt WAN: 192.168.1.200]<br>
+★ ここでNAT（IP変換）<br>
+<br>
+[OpenWrt LAN: 192.168.251.1]<br>
+192.168.251.0/24
+</div>
+
+<h2>■ 通信方向の結果</h2>
+
+<div class="box">
+<span class="ok">✔ 192.168.251 → 192.168.1 はOK</span><br>
+<div class="arrow">
+理由：<br>
+251 → OpenWrtでIP変換 → 192.168.1.200として出る<br>
+戻りパケットも192.168.1.200へ返る → OpenWrtが元に戻す
+</div>
+</div>
+
+<div class="box">
+<span class="ng">✖ 192.168.1 → 192.168.251 はNG</span><br>
+<div class="arrow">
+理由：<br>
+192.168.1側は「251ネットワーク」を知らない<br>
+F660Tは 192.168.251.0/24 への経路を持っていない<br>
+→ パケット破棄
+</div>
+</div>
+
+<h2>■ 例：VNCの場合</h2>
+
+<div class="box">
+<span class="ok">✔ OKパターン</span><br>
+192.168.1.x → 192.168.1.200:5900 → (ポート転送) → 192.168.251.163
+</div>
+
+<div class="box">
+<span class="ng">✖ NGパターン</span><br>
+192.168.1.x → 192.168.251.163（直接）<br>
+→ 上位ルーターが知らないので到達しない
+</div>
+
+</body>
+</html>
