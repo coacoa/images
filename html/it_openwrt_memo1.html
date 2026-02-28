@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>OpenWrt + AdGuardHome メモ</title>
+<style>
+  body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; background: #f5f5f5; }
+  h1, h2, h3 { color: #2a2a2a; }
+  code { background: #eaeaea; padding: 2px 4px; border-radius: 3px; }
+  pre { background: #eaeaea; padding: 10px; border-radius: 5px; overflow-x: auto; }
+  ul { margin-bottom: 20px; }
+</style>
+</head>
+<body>
+<h1>OpenWrt + AdGuardHome 設定メモ</h1>
+
+<h2>1. 環境</h2>
+<ul>
+  <li>OpenWrt 23.05.6 (ramips/mt7621, ELECOM WRC-1167GST2)</li>
+  <li>LAN側ネットワーク: 192.168.251.0/24, DHCP + NAT</li>
+  <li>WAN側ネットワーク: DHCP 192.168.1.200/24</li>
+  <li>AdGuardHome (AGH) バージョン 0.107.46</li>
+</ul>
+
+<h2>2. AGH インストールと起動</h2>
+<pre>
+opkg update
+opkg install adguardhome
+/etc/init.d/adguardhome enable
+/etc/init.d/adguardhome start
+/etc/init.d/adguardhome status  ← running で確認
+</pre>
+
+<h2>3. ポート確認</h2>
+<pre>
+netstat -lnp | grep -E '3000|80|443|53'
+# 結果例:
+# tcp   0 0 :::8080   :::*   LISTEN   9438/AdGuardHome
+# tcp   0 0 0.0.0.0:53   0.0.0.0:* LISTEN 9245/dnsmasq
+</pre>
+
+<h2>4. ポートフォワード / Firewall 設定</h2>
+<ul>
+  <li>AGH の管理画面は LAN から 8080 ポートでアクセス可能</li>
+  <li>WAN からアクセスする場合は firewall で 8080 を許可する必要あり</li>
+  <li>Firewall 設定を保存しておけば、電源オン/オフしても保持される</li>
+</ul>
+
+<h2>5. 電源オン/オフの挙動</h2>
+<ul>
+  <li>ルーターの電源を切ると LAN/WAN の通信は停止 → AGH などのサービスは見えなくなる</li>
+  <li>電源を入れ直すと、設定は保持される（AGH, Firewall, ポートフォワード, DHCP 固定など）</li>
+  <li>LAN 側は静的 IP / ブリッジを使っていれば再設定不要</li>
+  <li>WAN 側は DHCP の IP が変わる可能性あり → 外部アクセス用には確認が必要</li>
+</ul>
+
+<h2>6. LAN/Wi-Fi からの確認</h2>
+<ul>
+  <li>LAN/Wi-Fi クライアント PC から AGH の IP + :8080 でアクセス可能</li>
+  <li>例: <code>http://192.168.251.1:8080</code></li>
+  <li>アクセスできない場合は firewall やポート重複、LAN 側 IP の確認</li>
+</ul>
+
+<h2>7. 注意点</h2>
+<ul>
+  <li>SSH での確認が便利: <code>netstat -lnp</code> や <code>ps</code> でプロセス状況を確認</li>
+  <li>AGH の port 変更時や設定変更時は restart が必要: <code>/etc/init.d/adguardhome restart</code></li>
+  <li>ルーター本体の再起動で設定が消えることは基本なし（/etc/config に保存されていれば永続）</li>
+</ul>
+
+</body>
+</html>
