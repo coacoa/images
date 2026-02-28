@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>OpenWrt 記憶領域と設定メモ</title>
+<style>
+body { font-family: sans-serif; line-height: 1.5; background: #f9f9f9; color: #111; padding: 20px; }
+h1, h2 { color: #004080; }
+table { border-collapse: collapse; width: 80%; margin-bottom: 20px; }
+th, td { border: 1px solid #999; padding: 6px 10px; text-align: left; }
+th { background: #e0e0e0; }
+code { background: #eee; padding: 2px 4px; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<h1>OpenWrt 記憶領域メモ</h1>
+
+<h2>1. 記憶領域の種類</h2>
+<table>
+<tr><th>種類</th><th>例 (df -h)</th><th>用途</th><th>電源OFFで残る？</th></tr>
+<tr><td>ROM (Read-Only Memory)</td><td>/dev/root 4MB</td><td>OS本体、読み取り専用</td><td>残る</td></tr>
+<tr><td>Flash / Overlay</td><td>/dev/mtdblock6 17MB</td><td>設定・インストールしたパッケージ保存</td><td>残る</td></tr>
+<tr><td>RAM (tmpfs)</td><td>/tmp 122MB</td><td>一時データ、動作中のプロセスやログ</td><td>消える</td></tr>
+</table>
+
+<p><strong>ポイント:</strong> 設定や AdGuard Home のデータは <code>/overlay</code> に書き込まれるので、電源オフしても消えません。OS 本体は ROM に書かれていて変更不可。RAM は作業用なので再起動で消えます。</p>
+
+<h2>2. 電源オン/オフと設定</h2>
+<ul>
+<li>SSH や GUI で操作しなくても、設定 (Static IP / Firewall / Port Forward / DHCP) は Flash に保存される。</li>
+<li>電源を切っても Overlay に保存されたデータは残る。</li>
+<li>RAM 上の一時データ (例: /tmp) は電源を切ると消える。</li>
+<li>AdGuard Home や他パッケージは /overlay に保存されるので通常の運用で問題なし。</li>
+</ul>
+
+<h2>3. ポートと Firewall のまとめ</h2>
+<ul>
+<li>LAN/Wi-Fi 内アクセス → 静的 IP または DHCP で割り当てられた IP にアクセス可能。</li>
+<li>WAN 経由でアクセスしたい場合 → Port Forward や Firewall 設定必須。</li>
+<li>8080 (AdGuard Home Dashboard) / 53 (DNS) は Overlay 内の設定に従って常時開いていれば LAN 内からアクセス可能。</li>
+</ul>
+
+<h2>4. RAM / ROM / Flash の覚え方</h2>
+<ul>
+<li><strong>ROM:</strong> 書き換え不可、本体OS。</li>
+<li><strong>Flash:</strong> 設定・追加パッケージ、電源オフでも残る。</li>
+<li><strong>RAM:</strong> 動作中の一時データ、電源オフで消える。</li>
+</ul>
+
+</body>
+</html>

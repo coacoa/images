@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>OpenWrt LAN/WAN/DHCP/SSH メモ</title>
+<style>
+  body { font-family: "Helvetica Neue", Arial, sans-serif; line-height: 1.6; padding: 20px; background-color: #f9f9f9; }
+  h1 { color: #333; }
+  table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+  th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+  th { background-color: #eee; }
+  code { background-color: #eee; padding: 2px 4px; border-radius: 3px; }
+  .note { font-size: 0.9em; color: #555; }
+</style>
+</head>
+<body>
+
+<h1>OpenWrt ネットワーク設定メモ</h1>
+
+<h2>1. LAN / WAN インターフェース</h2>
+<table>
+  <tr>
+    <th>項目</th>
+    <th>例</th>
+    <th>説明</th>
+  </tr>
+  <tr>
+    <td>LAN IP</td>
+    <td>192.168.251.1 / Static</td>
+    <td>ルーター自身の固定IP。LAN 内クライアントのゲートウェイになる。</td>
+  </tr>
+  <tr>
+    <td>LAN DHCP Server</td>
+    <td>有効（Ignore = OFF）</td>
+    <td>LAN 内のクライアントに IP を自動配布する。</td>
+  </tr>
+  <tr>
+    <td>WAN IP</td>
+    <td>192.168.1.200 / DHCP</td>
+    <td>上位ルーター（F660Tなど）から自動取得。インターネット側への接続用。</td>
+  </tr>
+</table>
+
+<h2>2. クライアント IP</h2>
+<table>
+  <tr>
+    <th>項目</th>
+    <th>例</th>
+    <th>説明</th>
+  </tr>
+  <tr>
+    <td>ノートPC / LAN Wi-Fi</td>
+    <td>192.168.251.172 / DHCP</td>
+    <td>DHCP による自動取得。MAC 固定で Static Lease 可能。</td>
+  </tr>
+</table>
+
+<h2>3. SSH アクセス</h2>
+<table>
+  <tr>
+    <th>場所</th>
+    <th>接続先 IP</th>
+    <th>説明</th>
+  </tr>
+  <tr>
+    <td>LAN 内</td>
+    <td>192.168.251.1（OpenWrt）</td>
+    <td>LAN 内なら NAT を気にせずアクセス可能。</td>
+  </tr>
+  <tr>
+    <td>WAN 側</td>
+    <td>192.168.1.x + ポートフォワード</td>
+    <td>上位ネットワークからアクセスする場合はポートフォワードが必要。</td>
+  </tr>
+</table>
+
+<h2>4. ポイントまとめ</h2>
+<ul>
+  <li>LAN インターフェースは Static IP にするのが普通。</li>
+  <li>DHCP Server は LAN 上のクライアントに IP 配布する。Ignore = ON なら停止。</li>
+  <li>クライアント IP は DHCP で自動取得。必要なら Static Lease で固定。</li>
+  <li>SSH は LAN 内なら LAN IP で直接接続可能、WAN 側ならポートフォワードが必須。</li>
+  <li>LAN 側ポート（例: 8080, 5900）は firewall や port forward 設定でアクセス制御可能。</li>
+</ul>
+
+<p class="note">
+  ※ このメモは後から見ても設定の関係がわかるように整理しています。
+</p>
+
+</body>
+</html>
