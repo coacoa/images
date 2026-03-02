@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>PC Scrap & Build Diagnosis</title>
+    <style>
+        body { font-family: sans-serif; background: #222; color: #eee; padding: 20px; }
+        textarea { width: 100%; height: 200px; background: #333; color: #0f0; border: 1px solid #555; }
+        button { background: #0078d4; color: white; border: none; padding: 10px 20px; cursor: pointer; margin-top: 10px; }
+        .result { margin-top: 20px; border-top: 2px solid #555; padding-top: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        td, th { border: 1px solid #555; padding: 8px; text-align: left; }
+        .high { color: #ffeb3b; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>💻 PC再利用・収益化 診断機</h1>
+    <p>Neofetchの結果を貼り付けてください:</p>
+    <textarea id="neofetchInput" placeholder="OS: NixOS..."></textarea>
+    <br>
+    <button onclick="diagnose()">診断実行</button>
+
+    <div id="resultArea" class="result" style="display:none;">
+        <h2>📋 診断結果</h2>
+        <table id="resultTable"></table>
+    </div>
+
+    <script>
+        function diagnose() {
+            const input = document.getElementById('neofetchInput').value;
+            const res = {
+                cpu: input.match(/CPU: (.*)/)?.[1] || "Unknown",
+                gpu: input.match(/GPU: (.*)/)?.[1] || "None",
+                ram: parseInt(input.match(/Memory: .* \/ (\d+)MiB/)?.[1]) || 0
+            };
+
+            let role = "";
+            let affiliate = "";
+            let cost = "月額 約1,200円〜2,500円 (稼働率次第)";
+
+            // 判定ロジック
+            if (res.ram > 16000) {
+                role = "【最強サブ機】複数OS・仮想環境・サーバー運用";
+                affiliate = "大量のSNSアカウント運用・仮想通貨Bot・複雑なデータ分析";
+            } else if (res.ram > 8000) {
+                role = "【現役ブログ機】リサーチ・記事執筆・画像編集";
+                affiliate = "WordPress運営・特化ブログ・競合分析";
+            } else {
+                role = "【軽量サーバー】Linux専用機・ファイルサーバー";
+                affiliate = "放置系アフィリエイト・スクレイピングBot";
+            }
+
+            if (res.gpu.includes("NVIDIA")) {
+                affiliate += " / AI画像生成（Stable Diffusion）による素材作成";
+            }
+
+            const table = document.getElementById('resultTable');
+            table.innerHTML = `
+                <tr><th>項目</th><th>評価</th></tr>
+                <tr><td>検出CPU</td><td>${res.cpu}</td></tr>
+                <tr><td>検出GPU</td><td>${res.gpu}</td></tr>
+                <tr><td>検出RAM</td><td>${(res.ram/1024).toFixed(1)} GB</td></tr>
+                <tr class="high"><td>推奨役割</td><td>${role}</td></tr>
+                <tr class="high"><td>収益化案</td><td>${affiliate}</td></tr>
+                <tr><td>推定電気代</td><td>${cost}</td></tr>
+                <tr><td>処分判断</td><td><b style="color:cyan">継続使用を強く推奨 (NixOSとの相性抜群)</b></td></tr>
+            `;
+            document.getElementById('resultArea').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
