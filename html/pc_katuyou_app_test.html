@@ -2,70 +2,70 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>PC Scrap & Build Diagnosis</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 Personal Compass - PC & Profit</title>
     <style>
-        body { font-family: sans-serif; background: #222; color: #eee; padding: 20px; }
-        textarea { width: 100%; height: 200px; background: #333; color: #0f0; border: 1px solid #555; }
-        button { background: #0078d4; color: white; border: none; padding: 10px 20px; cursor: pointer; margin-top: 10px; }
-        .result { margin-top: 20px; border-top: 2px solid #555; padding-top: 20px; }
-        table { width: 100%; border-collapse: collapse; }
-        td, th { border: 1px solid #555; padding: 8px; text-align: left; }
-        .high { color: #ffeb3b; font-weight: bold; }
+        :root { --main-bg: #1a1b26; --text: #a9b1d6; --accent: #7aa2f7; --warn: #f7768e; --success: #9ece6a; }
+        body { background: var(--main-bg); color: var(--text); font-family: 'Courier New', monospace; padding: 20px; line-height: 1.6; }
+        .container { max-width: 800px; margin: 0 auto; border: 1px solid var(--accent); padding: 20px; border-radius: 8px; box-shadow: 0 0 15px rgba(122, 162, 247, 0.2); }
+        h1 { color: var(--accent); border-bottom: 1px solid var(--accent); padding-bottom: 10px; font-size: 1.5rem; }
+        textarea { width: 100%; height: 150px; background: #24283b; color: var(--success); border: 1px solid #414868; padding: 10px; box-sizing: border-box; margin-bottom: 10px; }
+        button { background: var(--accent); color: var(--main-bg); border: none; padding: 12px 24px; font-weight: bold; cursor: pointer; width: 100%; border-radius: 4px; }
+        .card { background: #24283b; padding: 15px; margin-top: 20px; border-left: 4px solid var(--accent); }
+        .highlight { color: var(--success); font-weight: bold; }
+        .action-item { border-bottom: 1px dashed #414868; padding: 8px 0; display: flex; justify-content: space-between; }
+        .category { font-weight: bold; color: var(--accent); min-width: 100px; }
     </style>
 </head>
 <body>
-    <h1>💻 PC再利用・収益化 診断機</h1>
-    <p>Neofetchの結果を貼り付けてください:</p>
-    <textarea id="neofetchInput" placeholder="OS: NixOS..."></textarea>
-    <br>
-    <button onclick="diagnose()">診断実行</button>
+    <div class="container">
+        <h1>🚀 2026 PC Strategy & Action</h1>
+        <p>Neofetchの結果を入力して、今日の行動指針を生成：</p>
+        <textarea id="input" placeholder="NixOS $ neofetch ..."></textarea>
+        <button onclick="updateStrategy()">Update My Strategy</button>
 
-    <div id="resultArea" class="result" style="display:none;">
-        <h2>📋 診断結果</h2>
-        <table id="resultTable"></table>
+        <div id="dashboard" style="display:none;">
+            <div class="card">
+                <div class="action-item"><span class="category">💰 収益化:</span> <span id="affiliateTask" class="highlight"></span></div>
+                <div class="action-item"><span class="category">🧹 整理:</span> <span id="cleanupTask"></span></div>
+                <div class="action-item"><span class="category">🧘 習慣:</span> <span id="lifeTask"></span></div>
+            </div>
+            <div class="card" style="border-left-color: var(--warn);">
+                <div class="action-item"><span>推定月間電気代:</span> <span id="powerCost"></span></div>
+                <div class="action-item"><span>システム状態:</span> <span id="sysStatus"></span></div>
+            </div>
+        </div>
     </div>
 
     <script>
-        function diagnose() {
-            const input = document.getElementById('neofetchInput').value;
-            const res = {
-                cpu: input.match(/CPU: (.*)/)?.[1] || "Unknown",
-                gpu: input.match(/GPU: (.*)/)?.[1] || "None",
-                ram: parseInt(input.match(/Memory: .* \/ (\d+)MiB/)?.[1]) || 0
-            };
+        function updateStrategy() {
+            const raw = document.getElementById('input').value;
+            const ram = parseInt(raw.match(/Memory: .* \/ (\d+)MiB/)?.[1]) || 0;
+            const uptime = raw.match(/Uptime: (.*)/)?.[1] || "";
+            const gpu = raw.includes("NVIDIA") || raw.includes("Radeon");
 
-            let role = "";
-            let affiliate = "";
-            let cost = "月額 約1,200円〜2,500円 (稼働率次第)";
+            // 1. 収益化ロジック
+            let aff = "リサーチと記事構成作成";
+            if (ram > 16000) aff = "高負荷作業（画像生成・複数垢同時運用）";
+            if (gpu) aff += " ＋ AI素材の生成";
 
-            // 判定ロジック
-            if (res.ram > 16000) {
-                role = "【最強サブ機】複数OS・仮想環境・サーバー運用";
-                affiliate = "大量のSNSアカウント運用・仮想通貨Bot・複雑なデータ分析";
-            } else if (res.ram > 8000) {
-                role = "【現役ブログ機】リサーチ・記事執筆・画像編集";
-                affiliate = "WordPress運営・特化ブログ・競合分析";
-            } else {
-                role = "【軽量サーバー】Linux専用機・ファイルサーバー";
-                affiliate = "放置系アフィリエイト・スクレイピングBot";
-            }
+            // 2. 整理ロジック
+            let clean = "このPCは現役続行。周辺の書類を1枚捨てよう。";
+            if (ram < 4000) clean = "【断捨離対象】データを抜いて売却・譲渡を検討！";
 
-            if (res.gpu.includes("NVIDIA")) {
-                affiliate += " / AI画像生成（Stable Diffusion）による素材作成";
-            }
+            // 3. ライフスタイルロジック
+            let life = "良い姿勢で作業しましょう。";
+            if (uptime.includes("days")) life = "PCもあなたも働きすぎです。今すぐ再起動して休憩を。";
 
-            const table = document.getElementById('resultTable');
-            table.innerHTML = `
-                <tr><th>項目</th><th>評価</th></tr>
-                <tr><td>検出CPU</td><td>${res.cpu}</td></tr>
-                <tr><td>検出GPU</td><td>${res.gpu}</td></tr>
-                <tr><td>検出RAM</td><td>${(res.ram/1024).toFixed(1)} GB</td></tr>
-                <tr class="high"><td>推奨役割</td><td>${role}</td></tr>
-                <tr class="high"><td>収益化案</td><td>${affiliate}</td></tr>
-                <tr><td>推定電気代</td><td>${cost}</td></tr>
-                <tr><td>処分判断</td><td><b style="color:cyan">継続使用を強く推奨 (NixOSとの相性抜群)</b></td></tr>
-            `;
-            document.getElementById('resultArea').style.display = 'block';
+            // 4. 電気代（概算）
+            let cost = (ram > 16000) ? "約1,800円/月" : "約800円/月";
+
+            document.getElementById('affiliateTask').innerText = aff;
+            document.getElementById('cleanupTask').innerText = clean;
+            document.getElementById('lifeTask').innerText = life;
+            document.getElementById('powerCost').innerText = cost;
+            document.getElementById('sysStatus').innerText = "✅ Analysis Complete";
+            document.getElementById('dashboard').style.display = 'block';
         }
     </script>
 </body>
