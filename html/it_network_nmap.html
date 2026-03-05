@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>AP管理IP探索メモ（nmap版）</title>
+<style>
+body { font-family: sans-serif; line-height: 1.7; padding: 20px; }
+code { background: #eee; padding: 2px 4px; }
+pre { background: #f7f7f7; padding: 10px; border-radius: 4px; }
+h1 { border-bottom: 2px solid #ccc; padding-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<h1>AP 管理 IP 探索メモ（nmap で発見する方法）</h1>
+
+<p>
+AP（例：Buffalo WHX-1900DHP2）を AP モードで使うと、管理画面の IP が DHCP に出てこないことがある。  
+その場合、<strong>nmap のポートスキャンで 80 番が開いている IP を探す</strong>のが最も確実。
+</p>
+
+<h2>1. スキャン対象のネットワークを確認</h2>
+<p>
+AP が接続されている LAN のセグメントを確認する。  
+例：OpenWrt の LAN が <code>192.168.252.1/24</code> の場合、スキャン範囲は <code>192.168.252.0/24</code>。
+</p>
+
+<h2>2. nmap で 80 番ポートをスキャン</h2>
+<pre><code>nmap -p 80 192.168.252.0/24
+</code></pre>
+
+<p>結果の中で、<strong>80/tcp open</strong> と表示された IP が AP 本体。</p>
+
+<h2>3. ブラウザでアクセス</h2>
+<p>
+見つかった IP にブラウザでアクセスする：
+</p>
+<pre><code>http://192.168.252.xxx/
+</code></pre>
+
+<h2>4. 補足</h2>
+<ul>
+<li>AP モードの Buffalo 機は DHCP リースに名前を残さないことがある</li>
+<li>ARP にも出ないことがあるため、nmap が最も確実</li>
+<li>無線クライアントも DHCP に出るので、AP 本体と混ざる</li>
+<li>80 番が開いている IP が管理画面の IP</li>
+</ul>
+
+</body>
+</html>
+

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>OpenWrt 23.05 + AdGuard Home 復旧マニュアル</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 20px auto; padding: 0 20px; background: #f4f4f9; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #2c3e50; }
+        h2 { color: #e67e22; background: #fff3e0; padding: 10px; border-left: 5px solid #e67e22; }
+        code { background: #272822; color: #f8f8f2; padding: 15px; display: block; overflow-x: auto; border-radius: 5px; font-family: monospace; margin: 10px 0; white-space: pre; }
+        .note { background: #d1ecf1; border: 1px solid #bee5eb; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .danger { background: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 5px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+<h1>OpenWrt AdGuard Home 完全復旧マニュアル</h1>
+<p>WRC-1167GST2 (OpenWrt 23.05) で AdGuard Home を安定稼働させるための全手順です。</p>
+
+<div class="note">
+    <strong>基本情報:</strong><br>
+    ルーターIP: 192.168.253.1<br>
+    AGH管理画面: http://192.168.253.1:8080<br>
+    DNS構成: PC(53) → dnsmasq(53) → AGH(5353)
+</div>
+
+<h2>STEP 1: パッケージのインストール</h2>
+<code>opkg update
+opkg install adguardhome
+/etc/init.d/adguardhome enable
+/etc/init.d/adguardhome start</code>
+
+<h2>STEP 2: AdGuard Home の初期設定 (GUI)</h2>
+<p>ブラウザで <code>http://192.168.253.1:3000</code> を開き、ウィザードを進める。</p>
+<ul>
+    <li><strong>管理画面ポート:</strong> 8080</li>
+    <li><strong>DNSサーバーポート:</strong> 5353</li>
+</ul>
+
+<h2>STEP 3: ポート競合の解消とバケツリレー設定</h2>
+<p>SSHで以下のコマンドを順に実行。dnsmasqを53番の窓口にし、中身を5353番のAGHに丸投げする設定です。</p>
+<code># dnsmasqを53番に戻し、リレー先をAGH(5353)にする
+uci set dhcp.@dnsmasq[0].port='53'
+uci set dhcp.@dnsmasq[0].noresolv='1'
+uci del_list dhcp.@dnsmasq[0].server
+uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5353'
+
+# クライアントに自分をDNSとして教える
+uci del dhcp.lan.dns
+uci add_list dhcp.lan.dns='192.168.253.1'
+
+uci commit dhcp
+/etc/init.d/dnsmasq restart</code>
+
+<h2>STEP 4: ファイアウォールの開放</h2>
+<p>通信が止まらないよう、LAN側からの入力を確実に許可します。</p>
+<code>uci set firewall.@zone[0].input='ACCEPT'
+uci set firewall.@zone[0].forward='ACCEPT'
+uci set firewall.@zone[1].masq='1'
+uci commit firewall
+/etc/init.d/firewall restart</code>
+
+<h2>STEP 5: 設定の永久保存 (重要)</h2>
+<p>電源を切っても消えないように、キャッシュを物理メモリに書き込みます。</p>
+<code>uci commit
+sync
+# これで電源を抜いても安心！</code>
+
+<div class="danger">
+    <strong>困ったときは？</strong><br>
+    もしネットが死んだら、PCのターミナルで <code>ping 8.8.8.8</code> を打つ。<br>
+    通るならDNSの問題（AGH停止など）、通らないならWANの問題（ケーブルやF660Tとの接続）です。
+</div>
+
+</body>
+</html>
