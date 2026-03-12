@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>OpenWrt AdGuard Home 設定備忘録</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 2em auto; padding: 0 1em; background: #f4f7f6; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #2c3e50; }
+        h2 { color: #e67e22; border-left: 5px solid #e67e22; padding-left: 10px; margin-top: 1.5em; }
+        code { background: #eee; padding: 0.2em 0.4em; border-radius: 3px; font-family: monospace; }
+        pre { background: #2d3436; color: #dfe6e9; padding: 1em; border-radius: 5px; overflow-x: auto; }
+        .note { background: #fff3cd; border: 1px solid #ffeeba; padding: 1em; border-radius: 5px; margin: 1em 0; }
+    </style>
+</head>
+<body>
+
+<h1>OpenWrt AdGuard Home 設定メモ</h1>
+<p>機種: <strong>I-O DATA WN-AX2033GR</strong> (OpenWrt 23.05.6)</p>
+
+<div class="note">
+    <strong>重要:</strong> <code>/etc/adguardhome/</code> 配下に設定を置くことで、再起動しても設定が消えないように構築済み。
+</div>
+
+<h2>1. AdGuard Home のインストール</h2>
+<pre>opkg update
+opkg install adguardhome
+mkdir -p /etc/adguardhome
+/etc/init.d/adguardhome enable
+/etc/init.d/adguardhome start</pre>
+
+<h2>2. DNS 連携設定 (dnsmasq & AGH)</h2>
+<p>標準の 53番ポートを dnsmasq が受け、5353番の AGH へ投げる構成。</p>
+<pre># dnsmasq の問い合わせ先を AGH に固定
+uci del dhcp.@dnsmasq[0].server
+uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5353'
+uci set dhcp.@dnsmasq[0].noresolv='1'
+uci set dhcp.@dnsmasq[0].localuse='1'
+
+# クライアントに自分(192.168.250.1)を DNS として教える
+uci del dhcp.lan.dhcp_option
+uci add_list dhcp.lan.dhcp_option='6,192.168.250.1'
+
+uci commit dhcp
+/etc/init.d/dnsmasq restart</pre>
+
+<h2>3. ネットワーク疎通 (NAT/マスカレード)</h2>
+<p>二重ルーター環境で配下のデバイスがネットに繋がるための必須設定。</p>
+<pre>uci set firewall.@zone[1].masq='1'
+uci set firewall.@zone[1].mtu_fix='1'
+uci commit firewall
+/etc/init.d/firewall restart</pre>
+
+<h2>4. WAN 側からのアクセス許可</h2>
+<p>192.168.1.x (上流ネットワーク) から管理画面を開くための穴あけ。</p>
+<pre># LuCI (80ポート) と AGH (8080ポート) を許可
+uci add firewall rule
+uci set firewall.@rule[-1].name='Allow-WAN-Admin'
+uci set firewall.@rule[-1].src='wan'
+uci set firewall.@rule[-1].dest_port='80 8080'
+uci set firewall.@rule[-1].proto='tcp'
+uci set firewall.@rule[-1].target='ACCEPT'
+uci commit firewall
+/etc/init.d/firewall restart</pre>
+
+<h2>5. 動作確認コマンド</h2>
+<ul>
+    <li>AGH 直接テスト: <code>drill @127.0.0.1 -p 5353 google.com</code></li>
+    <li>dnsmasq 経由テスト: <code>drill @127.0.0.1 google.com</code></li>
+</ul>
+
+</body>
+</html>
