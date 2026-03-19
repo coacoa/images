@@ -32,19 +32,34 @@
     .calendar-grid {
       display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
     }
+
+    /* ▼ 月ごとの背景色（淡いテーマカラー） */
+    .month-1  .day-cell { background: #fff0f0; }
+    .month-2  .day-cell { background: #f0f8ff; }
+    .month-3  .day-cell { background: #f0fff4; }
+    .month-4  .day-cell { background: #fffaf0; }
+    .month-5  .day-cell { background: #f0fff8; }
+    .month-6  .day-cell { background: #f0f9ff; }
+    .month-7  .day-cell { background: #fff0ff; }
+    .month-8  .day-cell { background: #f7fff0; }
+    .month-9  .day-cell { background: #f0f0ff; }
+    .month-10 .day-cell { background: #fff5f0; }
+    .month-11 .day-cell { background: #f0fff5; }
+    .month-12 .day-cell { background: #f0f5ff; }
+
     .day-cell {
       height: 90px; border-radius: 6px; padding: 4px;
       font-size: 0.75rem; cursor: pointer; position: relative;
       border: 1px solid transparent; display: flex; flex-direction: column;
     }
     .day-cell.other-month { color: #bbb; }
+
     .day-cell .date-number {
       font-weight: 600; font-size: 0.8rem; margin-bottom: 2px;
     }
     .day-cell.today { border-color: #4dabf7; }
     .day-cell.selected { box-shadow: 0 0 0 2px #ff6b6b inset; }
-    .day-cell.has-undone { background: #fff5f5; border-color: #ff6b6b; }
-    .day-cell.all-done { background: #e6ffed; border-color: #38a169; }
+
     .todo-preview {
       overflow: hidden;
       display: flex;
@@ -101,7 +116,7 @@
   <section class="todo-panel">
     <h2 id="selectedDateTitle">日付を選択してください</h2>
 
-    <h3>共通 ToDo</h3>
+    <h3>共通 ToDo（テンプレート）</h3>
     <form id="commonForm">
       <input type="text" id="commonInput" placeholder="共通のやること" required>
       <button type="submit">追加</button>
@@ -159,6 +174,25 @@
     return `${y}-${m}-${d}`;
   }
 
+  /* ▼ 共通ToDoを日付ToDoにコピーする */
+  function ensureDailyHasCommon(dateKey) {
+    const data = loadData();
+    if (!data.common) return;
+
+    if (!data[dateKey]) data[dateKey] = [];
+
+    const daily = data[dateKey];
+    const common = data.common;
+
+    common.forEach(c => {
+      if (!daily.some(d => d.text === c.text)) {
+        daily.push({ text: c.text, done: false });
+      }
+    });
+
+    saveData(data);
+  }
+
   function renderCalendar() {
     calendarGrid.innerHTML = "";
 
@@ -166,6 +200,9 @@
     const month = currentDate.getMonth();
 
     currentMonthSpan.textContent = `${year}年 ${month + 1}月`;
+
+    /* ▼ 月テーマカラーを適用 */
+    calendarGrid.className = "calendar-grid month-" + (month + 1);
 
     const firstDay = new Date(year, month, 1);
     const startWeekday = firstDay.getDay();
@@ -196,21 +233,15 @@
       }
 
       const dateKey = formatDateKey(cellDate);
+
       const dateSpan = document.createElement("div");
       dateSpan.classList.add("date-number");
       dateSpan.textContent = dateNumber;
       cell.appendChild(dateSpan);
 
-      const dataDaily = data[dateKey] || [];
-      const dataCommon = data.common || [];
-      const combined = [...dataCommon, ...dataDaily];
-
-      const hasUndone = combined.some(t => !t.done);
-      const hasAny = combined.length > 0;
-      const allDone = hasAny && combined.every(t => t.done);
-
-      if (hasUndone) cell.classList.add("has-undone");
-      else if (allDone) cell.classList.add("all-done");
+      const daily = data[dateKey] || [];
+      const common = data.common || [];
+      const combined = [...common, ...daily];
 
       const preview = document.createElement("div");
       preview.classList.add("todo-preview");
@@ -218,7 +249,9 @@
       combined.slice(0, 3).forEach(todo => {
         const item = document.createElement("div");
         item.classList.add("todo-preview-item");
-        if (todo.done) item.classList.add("done");
+        if (daily.some(d => d.text === todo.text && d.done)) {
+          item.classList.add("done");
+        }
         item.textContent = todo.text;
         preview.appendChild(item);
       });
@@ -230,6 +263,7 @@
 
       cell.addEventListener("click", () => {
         selectedDate = dateKey;
+        ensureDailyHasCommon(dateKey);
         renderCalendar();
         renderTodoList();
       });
@@ -247,23 +281,9 @@
       const li = document.createElement("li");
       li.classList.add("todo-item");
 
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.checked = todo.done;
-
       const span = document.createElement("span");
       span.textContent = todo.text;
-      if (todo.done) span.classList.add("done");
 
-      checkbox.addEventListener("change", () => {
-        const newData = loadData();
-        newData.common[index].done = checkbox.checked;
-        saveData(newData);
-        renderCommonList();
-        renderCalendar();
-      });
-
-      li.appendChild(checkbox);
       li.appendChild(span);
       commonList.appendChild(li);
     });
@@ -316,7 +336,7 @@
 
     const data = loadData();
     if (!data.common) data.common = [];
-    data.common.push({ text, done: false });
+    data.common.push({ text });
     saveData(data);
 
     commonInput.value = "";
