@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>2033GR OpenWrt + AGH 構築ログ</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 2em auto; padding: 0 1em; background: #f4f7f6; }
+        h1 { border-bottom: 2px solid #2c3e50; color: #2c3e50; }
+        h2 { background: #2c3e50; color: #fff; padding: 0.5em; margin-top: 1.5em; border-radius: 4px; }
+        code { background: #e0e0e0; padding: 0.2em 0.4em; border-radius: 3px; font-family: monospace; }
+        pre { background: #2d2d2d; color: #ccc; padding: 1em; overflow-x: auto; border-radius: 8px; border-left: 5px solid #27ae60; }
+        .note { background: #fff3cd; border-left: 5px solid #ffecb5; padding: 1em; margin: 1em 0; }
+        table { width: 100%; border-collapse: collapse; margin: 1em 0; background: #fff; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #f2f2f2; }
+    </style>
+</head>
+<body>
+
+<h1>2033GR ブリッジ + AdGuard Home 設定備忘録</h1>
+
+<p>このメモは、親機(F660T)配下で2033GRをブリッジ（APモード）として動作させ、広告ブロック(AGH)を有効にした際の設定ログです。</p>
+
+<h2>1. ネットワーク基本情報</h2>
+<table>
+    <tr><th>項目</th><th>設定値</th></tr>
+    <tr><td>2033GR IPアドレス</td><td><code>192.168.1.250</code></td></tr>
+    <tr><td>デフォルトゲートウェイ</td><td><code>192.168.1.1</code> (F660T)</td></tr>
+    <tr><td>AGH 待ち受けポート</td><td><code>5353</code></td></tr>
+    <tr><td>AGH 管理画面</td><td><code>http://192.168.1.250:3000</code></td></tr>
+</table>
+
+<h2>2. OpenWrt 内部パスの設定 (SSH)</h2>
+<p>dnsmasq(53番)を窓口にし、処理をAGH(5353番)へ投げる設定です。</p>
+<pre>
+# dnsmasqの上流をAGHに固定
+uci del dhcp.@dnsmasq[0].server
+uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5353'
+uci set dhcp.@dnsmasq[0].noresolv='1'
+
+# IPv6のDNS広告を停止（広告回避防止）
+uci set dhcp.lan.ra_dns='0'
+uci set dhcp.@dnsmasq[0].filter_aaaa='1'
+
+uci commit dhcp
+/etc/init.d/dnsmasq restart
+/etc/init.d/network restart
+</pre>
+
+<h2>3. AdGuard Home 側の設定</h2>
+<ul>
+    <li><strong>DNS設定:</strong> 待ち受けポートを <code>5353</code> に変更。</li>
+    <li><strong>上流DNSサーバー:</strong> <code>8.8.8.8</code> や <code>1.1.1.1</code> を指定（自分自身に向けない）。</li>
+    <li><strong>ブロックモード:</strong> <code>Default (IPアドレス 0.0.0.0 を返す)</code> に設定。</li>
+</ul>
+
+<h2>4. Androidスマホ側の設定（最重要）</h2>
+<div class="note">
+    <p>Androidの「DNS 2」に Google DNS(8.8.8.8)等が入っていると広告が出てしまうため、必ず削除します。</p>
+    <ul>
+        <li><strong>IP設定:</strong> 静的 (Static)</li>
+        <li><strong>DNS 1:</strong> <code>192.168.1.250</code></li>
+        <li><strong>DNS 2:</strong> 空欄、または <code>0.0.0.0</code> / <code>127.0.0.1</code></li>
+        <li><strong>プライベートDNS:</strong> オフ</li>
+    </ul>
+</div>
+
+<h2>5. 動作確認コマンド</h2>
+<pre>
+# 内部で正しくAGHが呼ばれているかテスト
+nslookup google.com 127.0.0.1
+</pre>
+
+</body>
+</html>
