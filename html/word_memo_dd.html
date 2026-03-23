@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Word_Matrix_Custom</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; background-color: #f0f2f5; }
+        
+        /* 新規登録エリア */
+        .input_section { margin-bottom: 20px; display: flex; gap: 10px; }
+        .input_section input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 200px; }
+        .add_word_btn { padding: 8px 15px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+
+        /* 単語ストックエリア */
+        .word_bank { 
+            display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; 
+            min-height: 60px; width: 600px; padding: 15px; 
+            background: #fff; border: 2px dashed #999; border-radius: 8px; 
+        }
+        
+        .word_item { 
+            padding: 6px 12px; background: #333; color: white; 
+            border-radius: 4px; cursor: grab; user-select: none; font-size: 13px;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .del_x { cursor: pointer; color: #ff4d4d; font-weight: bold; margin-left: 5px; }
+
+        /* 3x3 マトリックスとセルごとの色設定 */
+        .matrix_table { border-collapse: collapse; background: white; margin-bottom: 20px; }
+        .matrix_table td { border: 2px solid #333; width: 150px; height: 120px; vertical-align: top; padding: 5px; }
+        
+        /* セル別の背景色（ドロップした時に分かりやすく） */
+        #c_0 { background-color: #fff0f0; } #c_1 { background-color: #f0fff0; } #c_2 { background-color: #f0f0ff; }
+        #c_3 { background-color: #fffff0; } #c_4 { background-color: #f0ffff; } #c_5 { background-color: #fff0ff; }
+        #c_6 { background-color: #f5f5f5; } #c_7 { background-color: #fff5e6; } #c_8 { background-color: #e6f7ff; }
+
+        .drop_zone { 
+            width: 100%; height: 100%; display: flex; flex-direction: column; 
+            gap: 4px; align-items: center; overflow-y: auto;
+        }
+        .drag_over { border: 2px solid #007bff !important; box-sizing: border-box; }
+
+        /* JSONエリア */
+        textarea#json_field { width: 600px; height: 120px; font-family: monospace; padding: 10px; }
+        .btns { margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <h2>Word_Matrix_Customizer</h2>
+
+    <!-- 単語登録 -->
+    <div class="input_section">
+        <input type="text" id="new_word_text" placeholder="新しい単語を入力...">
+        <button class="add_word_btn" onclick="addNewWord()">単語を追加</button>
+    </div>
+
+    <!-- 単語バンク -->
+    <div class="word_bank" id="bank" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <!-- 初期単語 -->
+        <div class="word_item" draggable="true" ondragstart="drag(event)" id="w_init_1">Sample<span class="del_x" onclick="removeElement(this)">×</span></div>
+    </div>
+
+    <!-- 3x3 マトリックス -->
+    <table class="matrix_table">
+        <tr>
+            <td id="c_0"><div class="drop_zone" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="leave(event)"></div></td>
+            <td id="c_1"><div class="drop_zone" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="leave(event)"></div></td>
+            <td id="c_2"><div class="drop_zone" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="leave(event)"></div></td>
+        </tr>
+        <tr>
+            <td id="c_3"><div class="drop_zone" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="leave(event)"></div></td>
+            <td id="c_4"><div class="drop_zone" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="leave(event)"></div></td>
+            <td id="c_5"><div class="drop_zone" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="leave(event)"></div></td>
+        </tr>
+        <tr>
+            <td id="c_6"><div class="drop_zone" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="leave(event)"></div></td>
+            <td id="c_7"><div class="drop_zone" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="leave(event)"></div></td>
+            <td id="c_8"><div class="drop_zone" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="leave(event)"></div></td>
+        </tr>
+    </table>
+
+    <textarea id="json_field" placeholder="JSONデータ"></textarea>
+    <div class="btns">
+        <button onclick="applyJSON()">JSONから復元</button>
+    </div>
+
+    <script>
+        let word_count = 0;
+
+        function drag(e) { e.dataTransfer.setData("text", e.target.id); }
+        function allowDrop(e) { 
+            e.preventDefault(); 
+            const target = e.target.closest('.drop_zone') || e.target.closest('.word_bank');
+            if(target) target.classList.add('drag_over');
+        }
+        function leave(e) { 
+            const target = e.target.closest('.drop_zone') || e.target.closest('.word_bank');
+            if(target) target.classList.remove('drag_over');
+        }
+
+        function drop(e) {
+            e.preventDefault();
+            const target = e.target.closest('.drop_zone') || e.target.closest('.word_bank');
+            if(target) target.classList.remove('drag_over');
+
+            const id = e.dataTransfer.getData("text");
+            const elm = document.getElementById(id);
+            if(target && elm) {
+                target.appendChild(elm);
+                syncJSON();
+            }
+        }
+
+        // 単語の新規追加
+        function addNewWord(text = null) {
+            const input = document.getElementById('new_word_text');
+            const val = text || input.value;
+            if(!val) return;
+
+            word_count++;
+            const new_id = "w_custom_" + word_count;
+            const new_div = document.createElement('div');
+            new_div.className = "word_item";
+            new_div.draggable = true;
+            new_div.id = new_id;
+            new_div.innerText = val;
+            new_div.ondragstart = drag;
+
+            // 削除ボタン(x)の追加
+            const x = document.createElement('span');
+            x.className = "del_x";
+            x.innerText = " ×";
+            x.onclick = () => { new_div.remove(); syncJSON(); };
+            new_div.appendChild(x);
+
+            document.getElementById('bank').appendChild(new_div);
+            if(!text) input.value = ""; // 手動入力の時だけ空にする
+            syncJSON();
+        }
+
+        // 単語の削除（初期単語用）
+        function removeElement(obj) {
+            obj.parentElement.remove();
+            syncJSON();
+        }
+
+        function syncJSON() {
+            const data = { bank: [], cells: {} };
+            // バンク内の単語
+            document.querySelectorAll('#bank .word_item').forEach(w => {
+                data.bank.push({ id: w.id, text: w.childNodes[0].textContent });
+            });
+            // セル内の単語
+            for(let i=0; i<9; i++) {
+                const zone = document.getElementById(`c_${i}`).querySelector('.drop_zone');
+                const words = Array.from(zone.children).map(w => ({ id: w.id, text: w.childNodes[0].textContent }));
+                if(words.length > 0) data.cells[`cell_${i}`] = words;
+            }
+            document.getElementById('json_field').value = JSON.stringify(data, null, 2);
+        }
+
+        function applyJSON() {
+            try {
+                const data = JSON.parse(document.getElementById('json_field').value);
+                const bank = document.getElementById('bank');
+                
+                // 一旦クリア
+                document.querySelectorAll('.word_item').forEach(w => w.remove());
+
+                // バンクの復元
+                data.bank.forEach(wInfo => addNewWordFromJSON(wInfo, bank));
+
+                // セルの復元
+                Object.keys(data.cells).forEach(cellKey => {
+                    const idx = cellKey.split('_')[1];
+                    const zone = document.getElementById(`c_${idx}`).querySelector('.drop_zone');
+                    data.cells[cellKey].forEach(wInfo => addNewWordFromJSON(wInfo, zone));
+                });
+            } catch(err) { alert("JSONエラー: " + err); }
+        }
+
+        function addNewWordFromJSON(info, target) {
+            word_count++;
+            const new_div = document.createElement('div');
+            new_div.className = "word_item";
+            new_div.draggable = true;
+            new_div.id = info.id; // 元のIDを保持
+            new_div.innerText = info.text;
+            new_div.ondragstart = drag;
+            const x = document.createElement('span');
+            x.className = "del_x"; x.innerText = " ×";
+            x.onclick = () => { new_div.remove(); syncJSON(); };
+            new_div.appendChild(x);
+            target.appendChild(new_div);
+        }
+    </script>
+</body>
+</html>
