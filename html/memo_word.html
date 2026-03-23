@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Word_Matrix_Manager</title>
+    <style>
+        body { 
+            font-family: sans-serif; 
+            display: flex; 
+            flex-direction: column;
+            align-items: center;
+            padding-top: 50px; 
+            background-color: #f8f9fa; 
+        }
+        .matrix_table { 
+            border-collapse: collapse; 
+            background: white; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .matrix_table td { 
+            border: 2px solid #333; 
+            width: 150px; 
+            height: 100px; 
+            padding: 0;
+        }
+        .word_textarea { 
+            width: 100%; 
+            height: 100%; 
+            border: none; 
+            padding: 10px;
+            box-sizing: border-box; 
+            text-align: center; 
+            font-size: 16px; 
+            resize: none; 
+            outline: none; 
+            background: transparent;
+            font-family: inherit;
+            display: block;
+        }
+        .word_textarea:focus { background-color: #e8f0fe; }
+        h2 { color: #333; }
+    </style>
+</head>
+<body>
+
+    <h2>Word_Matrix (3x3)</h2>
+
+    <table class="matrix_table">
+        <!-- 1段目 -->
+        <tr>
+            <!-- 左上 -->
+            <td><textarea class="word_textarea">左上の単語</textarea></td>
+            <!-- 上・中央 -->
+            <td><textarea class="word_textarea">
+                    miniflux
+                </textarea></td>
+            <!-- 右上 -->
+            <td><textarea class="word_textarea">右上の単語</textarea></td>
+        </tr>
+
+        <!-- 2段目 -->
+        <tr>
+            <!-- 左・中央 -->
+            <td><textarea class="word_textarea">左の中央</textarea></td>
+            <!-- 真ん中 -->
+            <td><textarea class="word_textarea">真ん中</textarea></td>
+            <!-- 右・中央 -->
+            <td><textarea class="word_textarea">右の中央</textarea></td>
+        </tr>
+
+        <!-- 3段目 -->
+        <tr>
+            <!-- 左下 -->
+            <td><textarea class="word_textarea">左下の単語</textarea></td>
+            <!-- 下・中央 -->
+            <td><textarea class="word_textarea">下の中央</textarea></td>
+            <!-- 右下 -->
+            <td><textarea class="word_textarea">右下の単語</textarea></td>
+        </tr>
+    </table>
+
+    <p style="font-size: 12px; color: #666; margin-top: 15px;">
+        ※エディタで上記のコメント箇所を編集して git commit してください。
+    </p>
+
+</body>
+</html>
