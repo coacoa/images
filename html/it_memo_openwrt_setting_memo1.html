@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>OpenWrt トラブル原因と再設定時の注意点</title>
+<style>
+body { font-family: sans-serif; line-height: 1.7; padding: 20px; }
+h1 { color: #333; }
+h2 { color: #444; margin-top: 30px; }
+code { background: #eee; padding: 2px 4px; }
+ul { margin-left: 20px; }
+</style>
+</head>
+<body>
+
+<h1>OpenWrt が突然ネットワークから消える原因と、再設定時の注意点（完全版）</h1>
+
+<p>
+OpenWrt（特に DSA モデル）では、設定変更やブリッジ構成の変更により、<br>
+突然ネットワークから消える現象が起きることがある。<br>
+ここでは、その原因と再設定時に気をつけるべきポイントをまとめる。
+</p>
+
+<hr>
+
+<h2>1. network restart による完全断線</h2>
+<p>
+<code>/etc/init.d/network restart</code> は、LAN/WAN/ブリッジをすべて DOWN → UP する。<br>
+その瞬間に以下が発生する：
+</p>
+<ul>
+<li>LAN ポートが一時的にすべて DOWN</li>
+<li>br-lan が再構築される</li>
+<li>DHCP リースが消える</li>
+<li>ARP テーブルが消える</li>
+<li>上流ルーターが OpenWrt を見失う</li>
+</ul>
+<p>結果：SSH も WebGUI も消える。</p>
+
+<hr>
+
+<h2>2. DSA モデル特有の MAC アドレス変化</h2>
+<p>
+DSA では LAN と WAN が別デバイスで、MAC も別。<br>
+WAN を br-lan に追加したり、ブリッジを再構築すると、<br>
+br-lan の MAC が変わることがある。
+</p>
+<p>
+上流ルーター（例：F660T）は古い MAC を保持したままになり、<br>
+通信不能になる。
+</p>
+
+<hr>
+
+<h2>3. DHCP リースの消失</h2>
+<p>
+restart により DHCP クライアントが再起動し、<br>
+以前の IP（例：192.168.1.250）が無効化される。<br>
+上流ルーターの DHCP リストから消える。
+</p>
+
+<hr>
+
+<h2>4. ARP テーブル破損</h2>
+<p>
+MAC が変わると、上流ルーターの ARP テーブルが壊れる。<br>
+結果として、OpenWrt に ping も通らず、SSH もできない。
+</p>
+
+<hr>
+
+<h2>5. WAN/LAN の誤接続による L2 ループ</h2>
+<p>
+WAN を LAN 化した状態で、上流ルーターへ複数本接続すると、<br>
+スイッチループが発生し、ネットワーク全体が停止する。
+</p>
+<p>
+STP が OFF の場合は特に危険。
+</p>
+
+<hr>
+
+<h2>6. DSA のブリッジ再構築の重さ</h2>
+<p>
+DSA モデルはブリッジ再構築が重く、<br>
+20〜40秒ほど完全に通信不能になることがある。<br>
+その間に上流ルーターが OpenWrt を「死んだ」と判断する。
+</p>
+
+<hr>
+
+<h1>再設定時に絶対に気をつけるポイント</h1>
+
+<h2>1. restart を使わず、reload を使う</h2>
+<p>
+SSH が切れない安全な反映方法：
+</p>
+<code>/etc/init.d/network reload</code>
+
+<h2>2. WAN を LAN 化する前に STP を ON にする</h2>
+<code>
+uci set network.lan.stp='1'<br>
+uci commit network<br>
+/etc/init.d/network reload
+</code>
+<p>ループ事故を防ぐために必須。</p>
+
+<h2>3. 上流ルーターへは必ず 1 本だけ接続</h2>
+<p>
+WAN と LAN の両方を上流に挿すと 100% ループ。
+</p>
+
+<h2>4. DHCP サーバーは必ず OFF</h2>
+<p>
+ブリッジ/AP モードでは OpenWrt 側の DHCP は不要。<br>
+二重 DHCP はネットワーク崩壊の原因。
+</p>
+
+<h2>5. DSA では swconfig は使えない</h2>
+<p>
+LAN と WAN は VLAN ではなく、<br>
+完全に別デバイスとして扱われる。
+</p>
+
+<h2>6. WAN を br-lan に追加する正しい方法</h2>
+<code>
+uci add_list network.lan.device='wan'<br>
+uci commit network<br>
+/etc/init.d/network reload
+</code>
+
+<h2>7. 上流ルーターの ARP/DHCP が壊れる前提で動く</h2>
+<p>
+何かおかしくなったら、上流ルーターを再起動すれば復旧することが多い。
+</p>
+
+<hr>
+
+<h1>まとめ</h1>
+<p>
+OpenWrt が突然消えるのは、設定ミスではなく、<br>
+DSA モデル特有の挙動・restart の仕様・MAC 変化・ARP 破損などが原因。<br>
+正しい手順で設定すれば安定して動作する。
+</p>
+
+</body>
+</html>
+
