@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>LOOX × WinME × DSL 起動チャレンジ記録</title>
+<style>
+body { font-family: sans-serif; line-height: 1.7; padding: 20px; }
+h1 { color: #333; }
+code { background: #eee; padding: 2px 4px; }
+pre { background: #f7f7f7; padding: 10px; border-left: 4px solid #ccc; }
+</style>
+</head>
+<body>
+
+<h1>LOOX × WinME × DSL 起動チャレンジ：戦いの全記録</h1>
+
+<p>このメモは、WinME が搭載された LOOX を DSL（Damn Small Linux）で起動しようとした際の、全ての試行錯誤をまとめたもの。</p>
+
+<hr>
+
+<h2>1. 最初の方針：WinME の DOS から grub4dos を起動する</h2>
+
+<p>当初の作戦は、以下の流れを実現することだった：</p>
+
+<pre>
+WinME → DOS → autoexec.bat → C:\grldr → grub4dos → DSL
+</pre>
+
+<p>しかし、WinME には「Real DOS Mode を封印する」仕様があり、これが最大の障害となった。</p>
+
+<hr>
+
+<h2>2. msdos.sys の編集と invalid エラー</h2>
+
+<p>msdos.sys を編集して以下を設定：</p>
+
+<pre>
+[Options]
+BootGUI=0
+BootMulti=1
+SuppressBootMenu=0
+</pre>
+
+<p>しかし起動時に一瞬だけ</p>
+
+<pre>invalid setting in msdos.sys file</pre>
+
+<p>と表示され、WinME がそのまま起動してしまう。</p>
+
+<p>これは WinME の DOS 封印が原因で、書式ミスではなかった。</p>
+
+<hr>
+
+<h2>3. Real DOS-Mode Patch を試すが、INF が動かない</h2>
+
+<p>WinME の DOS 封印を解除するため、GitHub の <code>DOSMODE.INF</code> を入手。</p>
+
+<p>しかし INF を右クリック → インストールすると：</p>
+
+<ul>
+<li><code>command.com が見つからない</code></li>
+<li><code>exit_dos.pif が見つからない</code></li>
+</ul>
+
+<p>などのエラーが発生し、インストールが完走しない。</p>
+
+<p>これは WinME が DOS 関連ファイルを「隠す・封印する・アクセス拒否する」ため。</p>
+
+<hr>
+
+<h2>4. loadlin に切り替えるが “not enough memory”</h2>
+
+<p>WinME を経由せず Linux を起動するため、loadlin を使用：</p>
+
+<pre>
+loadlin linux24 initrd=minirt24.gz root=/dev/ram0 rw
+</pre>
+
+<p>しかし WinME 通常モードでは：</p>
+
+<pre>not enough memory</pre>
+
+<p>Safe Mode でも同じエラー。</p>
+
+<p>理由は WinME が Safe Mode でもメモリを大量に消費し、loadlin が必要とする「連続した低メモリ領域」が確保できないため。</p>
+
+<hr>
+
+<h2>5. 結論：WinME 経由の Linux 起動は LOOX ではほぼ不可能</h2>
+
+<p>ここまでの結果から、以下が判明：</p>
+
+<ul>
+<li>WinME の DOS 封印は非常に強力で、msdos.sys では解除できない</li>
+<li>DOSMODE.INF も WinME 側の封印で動かない</li>
+<li>loadlin は WinME が RAM を使いすぎて動かない</li>
+<li>Safe Mode でもメモリ不足は解消されない</li>
+</ul>
+
+<p>つまり、WinME を経由して DSL を起動する方法は、LOOX の 128MB RAM では物理的に不可能。</p>
+
+<hr>
+
+<h2>6. 今後の現実的な選択肢</h2>
+
+<p>WinME を完全に無視して Linux を起動する方法が必要。</p>
+
+<h3>候補：</h3>
+
+<ul>
+<li>F8 → Command prompt only → loadlin（最軽量）</li>
+<li>WinME 起動ディスク（フロッピー）から DOS → loadlin</li>
+<li>Win98 の IO.SYS / COMMAND.COM を移植して DOS を復活させる</li>
+</ul>
+
+<p>いずれも WinME の DOS 封印を回避するための方法。</p>
+
+<hr>
+
+<h2>7. まとめ</h2>
+
+<p>今回の格闘でわかったこと：</p>
+
+<ul>
+<li>WinME の DOS 封印は msdos.sys では解除できない</li>
+<li>INF も封印のせいで動かない</li>
+<li>loadlin は WinME のメモリ管理と相性最悪</li>
+<li>128MB RAM の LOOX では WinME 経由の Linux 起動は困難</li>
+<li>WinME を経由しない DOS 起動が必要</li>
+</ul>
+
+<p>ここまでの試行錯誤はすべて正しい方向だったが、WinME の仕様が壁になった。</p>
+
+<hr>
+
+<p>次に進むなら、WinME を完全にバイパスする方法が最も現実的。</p>
+
+</body>
+</html>
+
