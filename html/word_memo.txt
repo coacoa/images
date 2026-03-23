@@ -1,0 +1,11 @@
+{
+  "bank": [],
+  "cells": {
+    "cell_1": [
+      {
+        "id": "w_custom_1",
+        "text": "miniflux"
+      }
+    ]
+  }
+}
