@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>OpenWrt 23 + AdGuard Home 最適構成メモ</title>
+<style>
+body { font-family: sans-serif; line-height: 1.7; padding: 20px; }
+h1 { color: #2c7; }
+code { background: #eee; padding: 2px 4px; }
+pre { background: #f7f7f7; padding: 10px; border-radius: 6px; }
+</style>
+</head>
+<body>
+
+<h1>OpenWrt 23 + AdGuard Home 最適構成メモ</h1>
+
+<h2>■ 構成の目的</h2>
+<p>
+OpenWrt 23 上で AdGuard Home を DNS サーバーとして動かし、<br>
+LAN 端末の広告ブロック・フィルタリングを高速かつ安定して行う構成。<br>
+dnsmasq は DHCP のみ担当し、DNS は完全に AdGuard Home に任せる。
+</p>
+
+<h2>■ 全体構成</h2>
+<ul>
+<li>DNS: AdGuard Home（ポート 53）</li>
+<li>DHCP: dnsmasq（OpenWrt 標準）</li>
+<li>NAT: OpenWrt（nftables）</li>
+<li>LAN: 192.168.240.0/24</li>
+<li>LAN Gateway: 192.168.240.1（OpenWrt）</li>
+</ul>
+
+<h2>■ dnsmasq の設定（DHCP のみ）</h2>
+<p>dnsmasq の DNS を無効化し、DHCP のみ動作させる。</p>
+
+<pre>
+config dnsmasq
+    option port '0'   ← DNS を無効化
+
+config dhcp 'lan'
+    list dhcp_option '6,192.168.240.1'  ← DNS = AGH
+</pre>
+
+<h2>■ AdGuard Home の設定</h2>
+<p>設定ファイル: <code>/etc/adguardhome.yaml</code></p>
+
+<h3>● DNS ポートを 53 に変更</h3>
+<pre>
+dns:
+  port: 53
+</pre>
+
+<h3>● sed で変更する場合</h3>
+<pre>
+sed -i 's/port: 5353/port: 53/' /etc/adguardhome.yaml
+killall AdGuardHome
+/usr/bin/AdGuardHome -c /etc/adguardhome.yaml -w /var/adguardhome &
+</pre>
+
+<h2>■ NAT（nftables）</h2>
+<p>OpenWrt 23 は nftables を使用。MASQUERADE が有効なら OK。</p>
+
+<pre>
+nft list ruleset | grep masquerade
+</pre>
+
+<h2>■ LAN 端末の動作</h2>
+<p>LAN 端末は DHCP により以下を受け取る：</p>
+<ul>
+<li>IP: 192.168.240.x</li>
+<li>Gateway: 192.168.240.1</li>
+<li>DNS: 192.168.240.1（AGH）</li>
+</ul>
+
+<h2>■ なぜ AGH は 53 番ポートで動かす必要があるのか？</h2>
+<p>
+LAN 端末は DNS を <strong>必ず 53 番ポートで問い合わせる</strong>。<br>
+DHCP は DNS の「ポート番号」を配布できないため、<br>
+AGH を 5353 のままにすると LAN 端末は DNS に接続できない。<br>
+そのため AGH を 53 にするのが最適構成。
+</p>
+
+<h2>■ この構成のメリット</h2>
+<ul>
+<li>LAN 端末は自動で AGH を DNS として利用</li>
+<li>dnsmasq は DHCP のみ → シンプルで安定</li>
+<li>AGH が DNS を完全に担当 → 高速・高機能</li>
+<li>OpenWrt の NAT はそのまま利用 → 高速</li>
+<li>再起動しても設定は永続保存</li>
+</ul>
+
+<h2>■ 推奨追加設定</h2>
+<ul>
+<li>AGH の DoH/DoT アップストリーム設定</li>
+<li>フィルタリストの最適化</li>
+<li>ログ保存先を外部ストレージに変更</li>
+<li>OpenWrt の DNSSEC 無効化（AGH が担当するため）</li>
+</ul>
+
+</body>
+</html>
+
