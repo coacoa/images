@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>OpenWrt C615 Security Cam Control</title>
+    <style>
+        body { font-family: sans-serif; background: #2c3e50; color: #ecf0f1; padding: 20px; }
+        code { background: #000; color: #00ff00; padding: 10px; display: block; border-radius: 5px; margin: 10px 0; overflow-x: auto; }
+        .cmd-group { background: #34495e; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid #3498db; }
+        h2 { border-bottom: 1px solid #7f8c8d; padding-bottom: 5px; }
+        .copy-hint { font-size: 0.8em; color: #bdc3c7; }
+    </style>
+</head>
+<body>
+    <h1>📹 WN-AC1600DGR3 + C615 監視システム</h1>
+
+    <div class="cmd-group">
+        <h2>1. 【映像】ブラウザで確認 (MJPEG)</h2>
+        <p>ルーター側で <code>mjpg_streamer</code> が動いている前提：</p>
+        <a href="http://192.168.1.2:8080/?action=stream" target="_blank" style="color: #3498db;">ブラウザで映像を開く (http://192.168.1.2:8080)</a>
+    </div>
+
+    <div class="cmd-group">
+        <h2>2. 【音声】リアルタイム試聴 (NixOS側で実行)</h2>
+        <p>FFmpeg 7.1.1 準拠の最終成功コマンド：</p>
+        <code>ssh root@192.168.1.2 "arecord -D hw:0,0 -f S16_LE -r 16000 -t raw" | ffplay -f s16le -ar 16000 -ac 1 -i -</code>
+        <span class="copy-hint">※パスワード入力後、Recording... と出れば音が鳴ります。</span>
+    </div>
+
+    <div class="cmd-group">
+        <h2>3. 【録音】5秒間のテスト録音 (ルーター側)</h2>
+        <p>マイクの調子が悪い時の切り分け用：</p>
+        <code>arecord -D hw:0,0 -f S16_LE -r 16000 -d 5 /tmp/test.wav && ls -lh /tmp/test.wav</code>
+    </div>
+
+    <div class="cmd-group" style="border-left-color: #e74c3c;">
+        <h2>4. 【保守】LuCI(管理画面)が壊れた時</h2>
+        <code>opkg update && opkg install luci-base ucode luci-lua-runtime</code>
+    </div>
+
+    <hr>
+    <p>✅ <strong>Next Step:</strong> WZR-900DHP (128MB Flash) を使った AdGuard Home 構築へ！</p>
+</body>
+</html>
