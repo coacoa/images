@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>OpenWrt 23.05 WebCam 復活メモ</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; max-width: 800px; margin: 20px auto; padding: 20px; background-color: #f4f4f9; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; }
+        h2 { color: #2980b9; margin-top: 30px; }
+        code { background: #e0e0e0; padding: 2px 5px; border-radius: 4px; font-family: monospace; }
+        pre { background: #2d3436; color: #dfe6e9; padding: 15px; border-radius: 8px; overflow-x: auto; position: relative; }
+        .copy-btn { color: #00cec9; font-size: 0.8em; margin-bottom: 5px; display: block; text-align: right; }
+        .note { background: #fff3cd; border-left: 5px solid #ffecb5; padding: 10px; margin: 10px 0; }
+        .success { color: #27ae60; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<h1>📷 OpenWrt 23.05 WebCam 起動メモ</h1>
+<p>Logicool C615 を WZR-1900DHP2 で動かすための最短手順です。</p>
+
+<div class="note">
+    <strong>前提:</strong> カメラが <code>/dev/video0</code> または <code>/dev/video1</code> として認識されていること。
+</div>
+
+<h2>Step 1: 門番（ファイアウォール）を開ける</h2>
+<p>OpenWrt 23.05は <b>fw4 (nftables)</b> なので、以下のコマンドで8080番ポートを開放します。</p>
+<pre>
+nft add rule inet fw4 input tcp dport 8080 accept
+/etc/init.d/firewall reload
+</pre>
+
+<h2>Step 2: 配信サーバーを起動する</h2>
+<p>C615に最適な「MJPEGモード」かつ「全開放(-b 0.0.0.0)」設定です。</p>
+<pre>
+# 念のため古いプロセスを掃除
+killall -9 mjpg_streamer
+
+# 起動コマンド（決定版）
+mjpg_streamer -i "input_uvc.so -r 640x480 -f 15" -o "output_http.so -p 8080 -b 0.0.0.0 -n" &
+</pre>
+
+<h2>Step 3: 映像を確認する</h2>
+<p>VLC または ブラウザで以下のURLを開きます。</p>
+<div class="note">
+    <a href="http://192.168.1.2:8080/?action=stream" target="_blank">http://192.168.1.2:8080/?action=stream</a>
+</div>
+
+<h2>🔍 映らない時のトラブルシューティング</h2>
+<ul>
+    <li><strong>pingは通るが501エラーが出る:</strong> サーバーは生きています！URLに <code>?action=stream</code> を付け忘れていないか確認。</li>
+    <li><strong>(null) エラーが出る:</strong> カメラを抜き差しして、<code>ls -l /dev/video*</code> でデバイス番号を再確認。</li>
+    <li><strong>カクカクする:</strong> コマンドの <code>-r 640x480</code> を <code>-r 320x240</code> に下げると軽くなります。</li>
+</ul>
+
+<p class="success">✨ これでいつでも C615 の映像を楽しめます！ ✨</p>
+
+</body>
+</html>
