@@ -55,5 +55,50 @@ mjpg_streamer -i "input_uvc.so -r 640x480 -f 15" -o "output_http.so -p 8080 -b 0
 
 <p class="success">✨ これでいつでも C615 の映像を楽しめます！ ✨</p>
 
+<meta charset="UTF-8">
+<title>OpenWrt MJPG Streamer メモ</title>
+</head>
+<body>
+
+<h1>📷 MJPG Streamer 起動コマンド</h1>
+<p>USB カメラを 640x480 / 15fps で配信し、HTTP を 8080 で公開する。</p>
+
+<pre>
+mjpg_streamer -i "input_uvc.so -d /dev/video0 -r 640x480 -f 15" \
+              -o "output_http.so -p 8080 -l 0.0.0.0 -n" &
+</pre>
+
+<hr>
+
+<h1>🌐 WAN 側から 8080 をアクセス可能にする Firewall ルール</h1>
+<p>WAN → 8080 を許可する永続ルール。</p>
+
+<pre>
+uci add firewall rule
+uci set firewall.@rule[-1].name='Allow-MJPG-WAN'
+uci set firewall.@rule[-1].src='wan'
+uci set firewall.@rule[-1].dest_port='8080'
+uci set firewall.@rule[-1].proto='tcp'
+uci set firewall.@rule[-1].target='ACCEPT'
+uci commit firewall
+/etc/init.d/firewall restart
+</pre>
+
+<hr>
+
+<h1>🔗 アクセス URL</h1>
+<p>WAN 側からブラウザでアクセス：</p>
+
+<pre>
+http://<OpenWrtのWAN IP>:8080/?action=stream
+</pre>
+
+<p>例：</p>
+
+<pre>
+http://192.168.1.215:8080/?action=stream
+</pre>
+
 </body>
 </html>
+
