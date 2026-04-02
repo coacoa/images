@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ASUS H103 / LXQt 再セットアップ用メモ</title>
+  <style>
+    body { font-family: sans-serif; line-height: 1.6; }
+    code, pre { background: #f4f4f4; padding: 4px 6px; }
+    pre { padding: 8px; }
+    h1, h2, h3 { margin-top: 1.4em; }
+  </style>
+</head>
+<body>
+
+<h1>ASUS H103 / LXQt 再セットアップ用メモ</h1>
+
+<p>環境前提：</p>
+<ul>
+  <li>ASUS H103（Atom x5）</li>
+  <li>Debian + LXQt + SDDM</li>
+  <li>キーボード物理故障 → 自動ログイン前提</li>
+  <li>画面は DSI-1、初期状態は縦（800x1280）</li>
+</ul>
+
+<hr>
+
+<h2>1. SDDM で自動ログイン + LXQt を有効化</h2>
+
+<p><code>/etc/sddm.conf</code> を作成または編集：</p>
+
+<pre>[Autologin]
+User=hoge
+Session=lxqt.desktop
+
+[General]
+HaltCommand=/usr/bin/systemctl poweroff
+RebootCommand=/usr/bin/systemctl reboot
+</pre>
+
+<p>保存後、再起動：</p>
+
+<pre>sudo reboot</pre>
+
+<hr>
+
+<h2>2. 画面回転の確認（SSH から）</h2>
+
+<p>SSH でログインして、現在のディスプレイ状態を確認：</p>
+
+<pre>DISPLAY=:0 xrandr</pre>
+
+<p>例：</p>
+
+<pre>Screen 0: minimum 320 x 200, current 800 x 1280, ...
+DSI-1 connected primary 800x1280+0+0 ...
+</pre>
+
+<p>横向きに回転：</p>
+
+<pre>DISPLAY=:0 xrandr -o right</pre>
+
+<p>再確認：</p>
+
+<pre>DISPLAY=:0 xrandr
+# current 1280 x 800 になっていれば OK
+</pre>
+
+<hr>
+
+<h2>3. タッチデバイスの確認</h2>
+
+<p>SSH から：</p>
+
+<pre>DISPLAY=:0 xinput list</pre>
+
+<p>重要なデバイス：</p>
+
+<pre>ELAN2562:00 04F3:2562
+</pre>
+
+<hr>
+
+<h2>4. タッチ座標の補正（right 回転時）</h2>
+
+<p>画面を <code>-o right</code> にした状態で：</p>
+
+<pre>DISPLAY=:0 xinput set-prop "ELAN2562:00 04F3:2562" --type=float "Coordinate Transformation Matrix" 0 1 0 -1 0 1 0 0 1
+</pre>
+
+<hr>
+
+<h2>5. LXQt 起動時に「遅延つき」で自動回転 + タッチ補正</h2>
+
+<p>autostart ディレクトリを作成：</p>
+
+<pre>mkdir -p ~/.config/autostart</pre>
+
+<p><code>~/.config/autostart/rotate.desktop</code> を作成：</p>
+
+<pre>[Desktop Entry]
+Type=Application
+Exec=sh -c "sleep 4 && xrandr -o right && xinput set-prop 'ELAN2562:00 04F3:2562' --type=float 'Coordinate Transformation Matrix' 0 1 0 -1 0 1 0 0 1"
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name=RotateFix
+</pre>
+
+<p>ポイント：</p>
+<ul>
+  <li><code>sleep 4</code> が重要（DSI-1 初期化完了後に回転させるため）</li>
+  <li><code>-o right</code> は、この個体で横向きになる向き</li>
+  <li>タッチ補正も同時に適用</li>
+</ul>
+
+<p>設定後、再起動：</p>
+
+<pre>sudo reboot</pre>
+
+<p>期待動作：</p>
+<ul>
+  <li>起動直後：縦（800x1280）</li>
+  <li>数秒後（約 4 秒）：自動で横（1280x800）に回転</li>
+  <li>タッチ座標も正しく一致</li>
+</ul>
+
+<hr>
+
+<h2>6. トラブル時の復旧メモ</h2>
+
+<h3>画面が真っ黒になった場合（ブラックアウト）</h3>
+
+<p>SSH でログインして autostart を無効化：</p>
+
+<pre>mv ~/.config/autostart/rotate.desktop ~/.config/autostart/rotate.desktop.disabled
+sudo reboot
+</pre>
+
+<p>これで「縦画面の LXQt 起動」に戻る。</p>
+
+</body>
+</html>
+
