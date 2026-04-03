@@ -1,0 +1,53 @@
+@startuml
+skinparam shadowing false
+skinparam monochrome true
+skinparam packageStyle rectangle
+
+title OpenWrt 23 による監視エコシステム (08DBKからの進化)
+
+node "External" {
+    [Internet] as Internet
+}
+
+node "F660P (Gateway)" as F660P {
+}
+
+package "OpenWrt Router (WRC-1167GHBK2-S etc.)" {
+    [WAN Port] as WAN
+    [Internal Switch / CPU] as CPU
+    
+    package "Visualization Tools" {
+        [LuCI / Netdata] as WebGUI <<Realtime Graph>>
+        [vnStat] as Stats <<History/Daily>>
+        [bmon / nload] as CLI <<Terminal/SSH>>
+    }
+    
+    WAN -down-> CPU : 全トラフィックが通過
+    CPU -right-> WebGUI : データを描画
+    CPU -right-> Stats : データを蓄積
+    CPU -right-> CLI : 統計を表示
+}
+
+node "NixOS PC" as PC {
+    [Browser / SSH] as Client
+}
+
+node "Other Devices" as IoT {
+    [Smartphone / NAS] as Devices
+}
+
+Internet <--> F660P
+F660P <--> WAN : 1Gbps (WAN通信)
+CPU <--> PC : 1Gbps (LAN通信)
+CPU <--> IoT : 1Gbps (LAN通信)
+
+Client ..> WebGUI : ブラウザで監視
+Client ..> CLI : SSHで監視
+
+note bottom of CPU
+  08DBK(ハブ)にはなかった「CPU」という
+  観測所があるため、全てのパケットを
+  カウント・可視化できる。
+end note
+
+@enduml
