@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>DD-WRT NAS Setup Memo</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 2em auto; padding: 0 1em; background: #f4f4f4; }
+        h1 { border-bottom: 3px solid #333; padding-bottom: 0.5em; }
+        h2 { background: #333; color: #fff; padding: 0.5em; margin-top: 1.5em; }
+        code { background: #eee; padding: 0.2em 0.4em; border-radius: 3px; font-weight: bold; }
+        pre { background: #222; color: #0f0; padding: 1em; overflow-x: auto; border-radius: 5px; }
+        .note { background: #fff3cd; border-left: 5px solid #ffecb5; padding: 1em; margin: 1em 0; }
+        .success { color: #28a745; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<h1>WXR-1900DHP2 / DD-WRT NAS 復活手順書</h1>
+
+<p>このメモは、WXR-1900DHP2にDD-WRTを導入し、USBストレージをNAS化するための最短ルートを記録したものです。</p>
+
+<h2>1. 物理接続の鉄則</h2>
+<ul>
+    <li><strong>電力問題:</strong> バスパワーHDDはスピンアップ時に電力を食うため、認識しない場合は<strong>セルフパワーUSBハブ</strong>を介すること。</li>
+    <li><strong>認識確認:</strong> <code>ls -l /dev/sd*</code> で <code>/dev/sda1</code> が見えれば物理層はクリア。</li>
+</ul>
+
+<h2>2. フォーマットとマウント (SSH操作)</h2>
+<p>DD-WRTのカーネル(4.4系)で最も安定するのは <strong>ext3</strong> です。</p>
+<pre>
+# 1. パーティションをext3で初期化 (データは消去される)
+mkfs.ext3 /dev/sda1
+
+# 2. マウントポイント作成
+mkdir -p /tmp/mnt/sda1
+
+# 3. 手動マウントテスト
+mount -t ext3 /dev/sda1 /tmp/mnt/sda1
+
+# 4. 書き込み権限の開放 (重要!)
+chmod 777 /tmp/mnt/sda1
+
+# 5. 確認
+df -h
+</pre>
+
+<h2>3. GUI設定 (Webインターフェース)</h2>
+<div class="note">
+    <strong>Services > USB:</strong><br>
+    - Core USB Support: <code>Enable</code><br>
+    - USB Storage Support: <code>Enable</code><br>
+    - Automatic Drive Mount: <code>Enable</code>
+</div>
+<div class="note">
+    <strong>Services > NAS (File Sharing):</strong><br>
+    - Samba: <code>Enable</code><br>
+    - Server Name: <code>DD-WRT-NAS</code><br>
+    - Shares Path: <code>/tmp/mnt/sda1</code><br>
+    - Name: <code>Public</code><br>
+    - Access: <code>Read/Write</code>
+</div>
+
+<h2>4. 再起動対策 (Startup Script)</h2>
+<p>再起動しても自動でマウントされるよう、<strong>Administration > Commands</strong> の <strong>Startup</strong> に以下を貼り付けて <code>Save Startup</code> します。</p>
+<pre>
+sleep 10
+mkdir -p /tmp/mnt/sda1
+mount -t ext3 /dev/sda1 /tmp/mnt/sda1
+chmod 777 /tmp/mnt/sda1
+</pre>
+
+<h2>5. Windowsからのアクセス</h2>
+<p>エクスプローラーのアドレスバーに <code>\\192.168.1.235</code> を入力。</p>
+
+<p class="success">Done. 渋いNASライフを！</p>
+
+</body>
+</html>
