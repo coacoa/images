@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenWrt USB Camera Recovery Memo</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 20px auto; padding: 0 10px; background-color: #f4f4f9; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #2c3e50; }
+        h2 { color: #e67e22; border-left: 5px solid #e67e22; padding-left: 10px; margin-top: 30px; }
+        code { background: #272822; color: #f8f8f2; padding: 2px 5px; border-radius: 3px; font-family: monospace; }
+        pre { background: #272822; color: #f8f8f2; padding: 15px; border-radius: 5px; overflow-x: auto; position: relative; }
+        .important { background-color: #ffeaa7; border: 1px solid #fab1a0; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .cmd-label { font-size: 0.8em; color: #999; margin-bottom: 5px; display: block; }
+    </style>
+</head>
+<body>
+
+<h1>OpenWrt カメラ配信 復旧メモ</h1>
+
+<div class="important">
+    <strong>停電後のトラブル解決策：</strong><br>
+    1. パスワードを求められる → <code>/etc/config/mjpg-streamer</code> の <code>username/password</code> を消す。<br>
+    2. カクカクする（重い） → <code>option yuv '0'</code> にしてCPU負荷を下げる。
+</div>
+
+<h2>1. 現在の状態を確認するコマンド</h2>
+<span class="cmd-label">CPU負荷を確認（%CPUが90%超えていたらNG）</span>
+<pre>top</pre>
+
+<span class="cmd-label">実行中のフルコマンドを確認</span>
+<pre>cat /proc/$(pgrep mjpg_streamer)/cmdline | tr '\0' ' '</pre>
+
+<h2>2. 修正すべき設定ファイル</h2>
+<p><code>vi /etc/config/mjpg-streamer</code> を編集し、以下の「理想的な設定」に合わせる。</p>
+<pre>
+config input 'uvc'
+    option device '/dev/video0'
+    option fps '15'
+    option resolution '640x480'
+    option yuv '0'             # 0にすることでCPU負荷激減
+    option quality '80'
+
+config output 'http'
+    option port '8080'
+    option www '/www/webcam'
+    # option username 'root'   # 認証不要ならコメントアウト
+    # option password 'pass'   # 認証不要ならコメントアウト
+</pre>
+
+<h2>3. 反映・自動起動コマンド</h2>
+<pre>
+# 設定反映
+/etc/init.d/mjpg-streamer restart
+
+# 自動起動を有効化
+/etc/init.d/mjpg-streamer enable
+</pre>
+
+<h2>4. 視聴用URL</h2>
+<p>VLCやブラウザで以下を入力：</p>
+<code>http://[OpenWrtのIPアドレス]:8080/?action=stream</code>
+
+<hr>
+<p style="text-align: right; font-size: 0.8em;">2026年 復旧対応ログ</p>
+
+</body>
+</html>
