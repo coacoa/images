@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>WXR-1900DHP2 OpenWrt AdGuard Home 備忘録</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; max-width: 800px; margin: 20px auto; padding: 0 20px; color: #333; }
+        h1 { border-bottom: 2px solid #0055aa; color: #0055aa; }
+        h2 { border-left: 5px solid #0055aa; padding-left: 10px; margin-top: 30px; }
+        code { background: #f4f4f4; padding: 2px 5px; border-radius: 3px; font-family: monospace; }
+        pre { background: #2d2d2d; color: #ccc; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .info { background: #e7f3fe; border-left: 6px solid #2196F3; padding: 10px; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #f2f2f2; }
+    </style>
+</head>
+<body>
+
+<h1>WXR-1900DHP2 構築メモ (OpenWrt 23.05)</h1>
+
+<div class="info">
+    <strong>基本ネットワーク情報:</strong><br>
+    ルーターIP: <code>192.168.235.1</code> / 24<br>
+    AGH管理画面: <a href="http://192.168.235.1:8080">http://192.168.235.1:8080</a><br>
+    DNS構成: PC(53) &rarr; dnsmasq(53) &rarr; AdGuard Home(5353)
+</div>
+
+<h2>1. AdGuard Home 基本設定</h2>
+<table>
+    <tr>
+        <th>項目</th>
+        <th>設定値</th>
+    </tr>
+    <tr>
+        <td>管理画面ポート</td>
+        <td><code>8080</code> (WAN開放済み: 3000/8080)</td>
+    </tr>
+    <tr>
+        <td>DNSサーバーポート</td>
+        <td><code>5353</code></td>
+    </tr>
+    <tr>
+        <td>クエリログ保持期間</td>
+        <td>24時間〜3日間 (本体Flash保護のため短め推奨)</td>
+    </tr>
+</table>
+
+<h2>2. ネットワーク・DNS設定 (SSH)</h2>
+<p>dnsmasqの問い合わせをAGHにリレーし、クライアントに自身のIPを通知する設定：</p>
+<pre>
+# DNSリレー設定
+uci set dhcp.@dnsmasq[0].port='53'
+uci set dhcp.@dnsmasq[0].noresolv='1'
+uci del_list dhcp.@dnsmasq[0].server
+uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5353'
+
+# LAN内クライアントへのDNS通知
+uci del_list dhcp.lan.dns
+uci add_list dhcp.lan.dns='192.168.235.1'
+
+# IPv6 DNSバイパス防止
+uci set dhcp.lan.ra_dns='0'
+uci set dhcp.lan.dns_service='0'
+
+uci commit dhcp
+/etc/init.d/dnsmasq reload
+/etc/init.d/odhcpd reload
+</pre>
+
+<h2>3. ファイアウォール設定 (WANアクセス許可)</h2>
+<pre>
+# ポート3000(Setup) / 8080(Admin) の開放
+uci add firewall rule
+uci set firewall.@rule[-1].name='Allow-AGH-WAN'
+uci set firewall.@rule[-1].src='wan'
+uci set firewall.@rule[-1].dest_port='3000 8080'
+uci set firewall.@rule[-1].proto='tcp'
+uci set firewall.@rule[-1].target='ACCEPT'
+
+uci commit firewall
+/etc/init.d/firewall reload
+</pre>
+
+<h2>4. メンテナンスコマンド</h2>
+<ul>
+    <li><strong>設定の完全保存:</strong> <code>uci commit && sync</code></li>
+    <li><strong>AGH再起動:</strong> <code>/etc/init.d/adguardhome restart</code></li>
+    <li><strong>DHCP配布確認:</strong> <code>cat /tmp/dhcp.leases</code></li>
+    <li><strong>物理リンク確認:</strong> <code>ip addr show br-lan</code></li>
+</ul>
+
+<div class="info" style="background-color: #fff9c4; border-left-color: #fbc02d;">
+    <strong>注意:</strong> USBメモリを認識していないため、データは全て内部Flash (/overlay) に保存されています。ログが肥大化して容量を圧迫しないよう、AGH側で定期的なログ削除設定を確認してください。
+</div>
+
+</body>
+</html>
