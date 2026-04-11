@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>OpenWrt 23.05 extroot 設定メモ (WG1600DGR3)</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 2em auto; padding: 0 1em; }
+        h1 { border-bottom: 2px solid #005b96; color: #005b96; }
+        h2 { border-left: 5px solid #005b96; padding-left: 10px; margin-top: 1.5em; }
+        code { background: #f4f4f4; padding: 2px 5px; border-radius: 3px; font-family: monospace; }
+        .success { color: #28a745; font-weight: bold; }
+        .warning { background: #fff3cd; border: 1px solid #ffeeba; padding: 1em; margin: 1em 0; }
+    </style>
+</head>
+<body>
+
+<h1>OpenWrt 23.05 extroot 設定手順</h1>
+
+<p>Aterm WG1600DGR3 などの内蔵ストレージが少ないルーターで、USBメモリ (32GB/ext4) を使用してシステム容量を拡張した際の記録です。</p>
+
+<h2>1. 必要パッケージの導入</h2>
+<pre><code>opkg update
+opkg install kmod-usb-storage kmod-usb-storage-uas kmod-fs-ext4 block-mount</code></pre>
+
+<h2>2. データの同期 (Overlayの移行)</h2>
+<p>内蔵フラッシュの <code>/overlay</code> データを USBメモリ (<code>/dev/sda1</code>) へコピーします。</p>
+<pre><code>mkdir -p /tmp/cproot
+mount /dev/sda1 /tmp/cproot
+tar -C /overlay -cvf - . | tar -C /tmp/cproot -xf -
+umount /tmp/cproot</code></pre>
+
+<h2>3. マウント設定 (fstab) の編集</h2>
+<p><code>block detect > /etc/config/fstab</code> を実行後、<code>vi /etc/config/fstab</code> で以下のように調整します。</p>
+
+<h3>修正後の /etc/config/fstab 例</h3>
+<pre><code>config 'global'
+    option anon_mount '0'
+    option anon_swap '0'
+    option auto_mount '1'
+    option auto_swap '1'
+    option check_fs '0'
+    option delay_root '5' # USB認識待ち時間を追加
+
+config 'mount'
+    option target '/overlay' # ここを /overlay に
+    option uuid '1324cad3-14cf-4eca-933c-111111e25b01'
+    option enabled '1' # ここを 1 に</code></pre>
+
+<h2>4. 確認方法</h2>
+<p>再起動後、<code>df -h</code> を実行し、<code>/</code> または <code>/overlay</code> のサイズが拡張されていれば成功です。</p>
+<pre><code># 成功例の表示
+Filesystem                Size      Used Available Use% Mounted on
+/dev/sda1                27.9G      5.0M     26.4G   0% /overlay
+overlayfs:/overlay       27.9G      5.0M     26.4G   0% /</code></pre>
+
+<div class="warning">
+    <strong>注意:</strong> 運用中にUSBメモリを抜かないでください。システムがハングします。
+</div>
+
+<hr>
+<footer>
+    <p>Nix (NixOS package manager) 2.27.0</p>
+</footer>
+
+</body>
+</html>
