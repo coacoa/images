@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>flake 環境の完全 cleanup 手順</title>
+</head>
+
+<body>
+
+    <pre>
+    rm -f flake.lock
+    rm -f result
+    rm -rf .nextflow
+    rm -rf .direnv
+    rm -rf work
+    rm -rf ~/.cache/nix
+    rm -rf ~/.nextflow
+
+    nix store gc
+    nix-collect-garbage -d
+    </pre>
+
+<h2>my_nextflow flake 環境の完全 cleanup 手順</h2>
+
+<h3>1. プロジェクトフォルダの cleanup</h3>
+<ul>
+  <li>flake.nix / flake.lock の削除</li>
+  <li>result symlink の削除</li>
+  <li>.direnv/ の削除（使っていた場合）</li>
+  <li>.nextflow/ の削除（Nextflow キャッシュ）</li>
+  <li>work/ の削除（Nextflow 作業ディレクトリ）</li>
+  <li>必要なら data/ を作り直す</li>
+</ul>
+
+<h3>2. Nix store の cleanup</h3>
+<pre>
+nix store gc
+nix-collect-garbage -d
+</pre>
+
+<h3>3. Nix キャッシュの削除</h3>
+<pre>
+rm -rf ~/.cache/nix
+</pre>
+
+<h3>4. Nextflow キャッシュの削除</h3>
+<pre>
+rm -rf ~/.nextflow
+</pre>
+
+<h3>5. overlayfs の残骸を消す（重要）</h3>
+<pre>
+nix store gc
+</pre>
+
+<p>これで flake devShell の影響は完全に消え、import 方式の nix-shell に安全に移行できる。</p>
+
+</body>
+</html>
+
