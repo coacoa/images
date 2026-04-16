@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Genome-Oriented Programming</title>
+    <style>
+        body { background: #0b0e14; color: #adbac7; font-family: monospace; overflow: hidden; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; height: 100vh; padding: 20px; }
+        .col { border: 1px solid #444c56; border-radius: 8px; padding: 15px; position: relative; background: #1c2128; }
+        .title { color: #539bf5; font-size: 1.2em; border-bottom: 1px solid #444c56; margin-bottom: 10px; }
+        
+        /* コード表示 */
+        pre { font-size: 12px; color: #768390; }
+        .highlight { color: #f69d50; font-weight: bold; }
+
+        /* アニメーション用オブジェクト */
+        .particle {
+            position: absolute;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .rna { background: #347d39; color: white; border: 1px solid #46954a; }
+        .protein { background: #96d0ff; color: #0d1117; border: 1px solid #539bf5; font-weight: bold; }
+
+        .btn-container { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); }
+        button { padding: 15px 40px; background: #373e47; color: white; border: 1px solid #444c56; border-radius: 6px; cursor: pointer; }
+        button:hover { background: #444c56; }
+    </style>
+</head>
+<body>
+
+<div class="grid">
+    <div class="col" id="dna-col">
+        <div class="title">DNA: Genome Library (Source)</div>
+        <pre id="dna-code">
+<span class="highlight">class</span> MYH7_Gene {
+  <span class="highlight">// ATGC Sequence</span>
+  String sequence = "ATGGTC...";
+  
+  <span class="highlight">void</span> contract() {
+    <span class="highlight">new</span> MyosinProtein().work();
+  }
+}</pre>
+    </div>
+
+    <div class="col" id="rna-col">
+        <div class="title">RNA: Transcription (new)</div>
+        <div id="rna-stage"></div>
+    </div>
+
+    <div class="col" id="protein-col">
+        <div class="title">Protein: Execution (Instance)</div>
+        <div id="protein-stage"></div>
+    </div>
+</div>
+
+<div class="btn-container">
+    <button onclick="triggerCentralDogma()">🧬 Execute Transcription & Translation</button>
+</div>
+
+<script>
+function triggerCentralDogma() {
+    // 1. Transcription (DNA -> RNA)
+    const rna = createParticle('rna-col', 'rna', 'RNA Messenger');
+    
+    // 2. RNAが核から出てくるイメージで移動
+    setTimeout(() => {
+        rna.style.left = '90%';
+        rna.style.opacity = '0.5';
+        
+        // 3. Translation (RNA -> Protein)
+        setTimeout(() => {
+            const protein = createParticle('protein-col', 'protein', 'Myosin.obj (Active)');
+            protein.style.top = '50%';
+            
+            // プロテインが仕事をしている動き
+            setTimeout(() => {
+                protein.style.transform = 'scale(1.2) translateX(20px)';
+                rna.remove(); // 役目を終えたRNAは消える (GC)
+            }, 1000);
+        }, 800);
+    }, 100);
+}
+
+function createParticle(colId, className, text) {
+    const stage = document.getElementById(colId);
+    const p = document.createElement('div');
+    p.className = `particle ${className}`;
+    p.innerText = text;
+    p.style.top = '20%';
+    p.style.left = '10%';
+    p.style.transition = 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1)';
+    stage.appendChild(p);
+    
+    // フェードイン
+    setTimeout(() => { p.style.opacity = '1'; }, 10);
+    return p;
+}
+</script>
+
+</body>
+</html>
