@@ -2,103 +2,296 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Genome-Oriented Programming</title>
+    <title>Genome OS Runtime Debugger</title>
     <style>
-        body { background: #0b0e14; color: #adbac7; font-family: monospace; overflow: hidden; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; height: 100vh; padding: 20px; }
-        .col { border: 1px solid #444c56; border-radius: 8px; padding: 15px; position: relative; background: #1c2128; }
-        .title { color: #539bf5; font-size: 1.2em; border-bottom: 1px solid #444c56; margin-bottom: 10px; }
-        
-        /* コード表示 */
-        pre { font-size: 12px; color: #768390; }
-        .highlight { color: #f69d50; font-weight: bold; }
+        :root {
+            --bg: #0d1117;
+            --panel: #161b22;
+            --border: #30363d;
+            --text: #c9d1d9;
+            --java-keyword: #ff7b72;
+            --java-class: #d2a8ff;
+            --java-string: #a5d6ff;
+            --bio-rna: #3fb950;
+            --bio-protein: #58a6ff;
+        }
 
-        /* アニメーション用オブジェクト */
-        .particle {
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Consolas', 'Monaco', monospace;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            background: var(--panel);
+        }
+
+        .main-stage {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 1fr;
+            height: 500px;
+            gap: 2px;
+            background-color: var(--border);
+        }
+
+        .column {
+            background-color: var(--panel);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        h2 { font-size: 1.1em; color: #8b949e; margin-top: 0; }
+
+        .code-window {
+            background: var(--bg);
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            line-height: 1.5;
+            font-size: 13px;
+            position: relative;
+        }
+
+        .cursor {
             position: absolute;
-            padding: 8px;
-            border-radius: 4px;
-            font-size: 11px;
+            left: 15px;
+            width: calc(100% - 30px);
+            height: 20px;
+            background: rgba(88, 166, 255, 0.15);
+            border-left: 2px solid var(--bio-protein);
+            display: none;
             pointer-events: none;
             z-index: 10;
         }
-        .rna { background: #347d39; color: white; border: 1px solid #46954a; }
-        .protein { background: #96d0ff; color: #0d1117; border: 1px solid #539bf5; font-weight: bold; }
 
-        .btn-container { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); }
-        button { padding: 15px 40px; background: #373e47; color: white; border: 1px solid #444c56; border-radius: 6px; cursor: pointer; }
-        button:hover { background: #444c56; }
+        .msg-bubble {
+            position: absolute;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 100;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .rna-msg { background: var(--bio-rna); color: white; box-shadow: 0 0 10px rgba(63, 185, 80, 0.5); }
+        .prot-obj { background: var(--bio-protein); color: white; box-shadow: 0 0 10px rgba(88, 166, 255, 0.5); }
+
+        .controls {
+            padding: 30px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+        }
+
+        button {
+            background-color: #238636;
+            color: white;
+            border: 1px solid rgba(240,246,252,0.1);
+            border-radius: 6px;
+            padding: 16px 32px;
+            font-size: 18px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover { background-color: #2ea043; }
+        button:disabled { background-color: #484f58; cursor: not-allowed; }
+
+        /* 説明文セクション */
+        .explanation {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px 60px 20px;
+            line-height: 1.8;
+        }
+
+        .explanation h3 {
+            color: var(--bio-protein);
+            border-left: 4px solid var(--bio-protein);
+            padding-left: 15px;
+            margin-top: 40px;
+        }
+
+        .explanation table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: var(--panel);
+        }
+
+        .explanation th, .explanation td {
+            border: 1px solid var(--border);
+            padding: 12px;
+            text-align: left;
+        }
+
+        .explanation th { background: #21262d; color: var(--bio-protein); }
+
+        .keyword { color: var(--java-keyword); }
+        .class-name { color: var(--java-class); }
+        .string { color: var(--java-string); }
+        .highlight-bio { color: var(--bio-rna); font-weight: bold; }
+        .highlight-it { color: var(--bio-protein); font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="grid">
-    <div class="col" id="dna-col">
-        <div class="title">DNA: Genome Library (Source)</div>
-        <pre id="dna-code">
-<span class="highlight">class</span> MYH7_Gene {
-  <span class="highlight">// ATGC Sequence</span>
-  String sequence = "ATGGTC...";
-  
-  <span class="highlight">void</span> contract() {
-    <span class="highlight">new</span> MyosinProtein().work();
-  }
-}</pre>
+<header>
+    <h1>Genome OS Runtime Debugger</h1>
+    <p>エンジニアのための「セントラルドグマ」可視化ツール</p>
+</header>
+
+<div class="main-stage">
+    <div class="column">
+        <h2>[DNA] Source Code</h2>
+        <div class="code-window" id="editor">
+            <div class="cursor" id="line-cursor"></div>
+            <span class="keyword">public final class</span> <span class="class-name">LifeProcess</span> {<br>
+            &nbsp;&nbsp;<span class="keyword">private final</span> String <span class="string">genome_id</span> = <span class="string">"ATGC_001"</span>;<br><br>
+            &nbsp;&nbsp;<span class="keyword">@Override</span><br>
+            &nbsp;&nbsp;<span class="keyword">public void</span> <span class="class-name">onTrigger</span>() {<br>
+            <span id="line-trigger">&nbsp;&nbsp;&nbsp;&nbsp;RNA messenger = <span class="keyword">new</span> RNA(<span class="string">"COPY_OF_DNA"</span>);</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;Cell.dispatch(messenger);<br>
+            &nbsp;&nbsp;}<br>
+            }
+        </div>
     </div>
 
-    <div class="col" id="rna-col">
-        <div class="title">RNA: Transcription (new)</div>
-        <div id="rna-stage"></div>
+    <div class="column" id="rna-column">
+        <h2>[RNA] Instantiation</h2>
+        <div id="rna-pool"></div>
     </div>
 
-    <div class="col" id="protein-col">
-        <div class="title">Protein: Execution (Instance)</div>
-        <div id="protein-stage"></div>
+    <div class="column" id="protein-column">
+        <h2>[Protein] Object.exec()</h2>
+        <div id="protein-pool"></div>
     </div>
 </div>
 
-<div class="btn-container">
-    <button onclick="triggerCentralDogma()">🧬 Execute Transcription & Translation</button>
+<div class="controls">
+    <button id="run-btn" onclick="executeStep()">Build & Run: trigger()</button>
+</div>
+
+<div class="explanation">
+    <h3>1. DNA は「不揮発性のマスターソースコード」</h3>
+    <p>
+        コンピュータのハードディスクに保存されている <span class="highlight-it">.class ファイル</span> やバイナリのように、
+        <span class="highlight-bio">DNA</span> は生命の全設計図を記録しています。これは 4つの塩基（A, T, G, C）による 4進数でエンコードされたデータです。
+        「不変（Immutable）」であり、実行中に書き換えられることはありません。
+    </p>
+
+    <h3>2. RNA は「実行時に展開されるメモリ上のメッセージ」</h3>
+    <p>
+        プログラムを実行するとき、必要なコードが RAM（メモリ）にロードされるように、
+        細胞も必要なときに必要な遺伝子だけを <span class="highlight-bio">RNA</span> としてコピー（転写）します。
+        Java で言えば、クラス定義から <span class="highlight-it">new</span> によって一時的なインスタンスを生成するプロセスに近いと言えます。
+        RNA-seq 解析で測っているのは、この「インスタンス化された数」です。
+    </p>
+
+    <h3>3. タンパク質（Protein）は「実際に動作するランタイム・オブジェクト」</h3>
+    <p>
+        設計図（DNA）やメッセージ（RNA）だけでは何も起きません。
+        最終的に <span class="highlight-bio">タンパク質</span> という形に変換（翻訳）されることで、初めて
+        <span class="highlight-it">object.execute()</span> のように実体としての機能（筋肉を動かす、消化するなど）が動き出します。
+    </p>
+
+    <h3>対応表：バイオロジー vs 情報工学</h3>
+    <table>
+        <tr>
+            <th>要素</th>
+            <th>バイオロジー (Bio)</th>
+            <th>情報工学 (IT)</th>
+            <th>データ形式</th>
+        </tr>
+        <tr>
+            <td>設計図</td>
+            <td>DNA</td>
+            <td>Source Code / Class File</td>
+            <td>不揮発性ストレージ</td>
+        </tr>
+        <tr>
+            <td>複製・伝達</td>
+            <td>RNA</td>
+            <td>Object Instantiation / Message</td>
+            <td>揮発性メモリ (RAM)</td>
+        </tr>
+        <tr>
+            <td>機能・実行</td>
+            <td>タンパク質</td>
+            <td>Runtime Object / Thread</td>
+            <td>アクティブ・プロセス</td>
+        </tr>
+        <tr>
+            <td>解析手法</td>
+            <td>RNA-seq</td>
+            <td>Performance Profiling / Logging</td>
+            <td>稼働ログの統計</td>
+        </tr>
+    </table>
+
+    <p style="text-align: center; color: #8b949e; margin-top: 40px;">
+        ※このシミュレータは、生命を「ソフトウェアの実行」として捉えるエンジニア向けの概念モデルです。
+    </p>
 </div>
 
 <script>
-function triggerCentralDogma() {
-    // 1. Transcription (DNA -> RNA)
-    const rna = createParticle('rna-col', 'rna', 'RNA Messenger');
-    
-    // 2. RNAが核から出てくるイメージで移動
-    setTimeout(() => {
-        rna.style.left = '90%';
-        rna.style.opacity = '0.5';
+    function executeStep() {
+        const btn = document.getElementById('run-btn');
+        const cursor = document.getElementById('line-cursor');
+        const lineTrigger = document.getElementById('line-trigger');
         
-        // 3. Translation (RNA -> Protein)
-        setTimeout(() => {
-            const protein = createParticle('protein-col', 'protein', 'Myosin.obj (Active)');
-            protein.style.top = '50%';
-            
-            // プロテインが仕事をしている動き
-            setTimeout(() => {
-                protein.style.transform = 'scale(1.2) translateX(20px)';
-                rna.remove(); // 役目を終えたRNAは消える (GC)
-            }, 1000);
-        }, 800);
-    }, 100);
-}
+        btn.disabled = true;
 
-function createParticle(colId, className, text) {
-    const stage = document.getElementById(colId);
-    const p = document.createElement('div');
-    p.className = `particle ${className}`;
-    p.innerText = text;
-    p.style.top = '20%';
-    p.style.left = '10%';
-    p.style.transition = 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1)';
-    stage.appendChild(p);
-    
-    // フェードイン
-    setTimeout(() => { p.style.opacity = '1'; }, 10);
-    return p;
-}
+        // 1. ソースコードのハイライト
+        cursor.style.display = 'block';
+        cursor.style.top = lineTrigger.offsetTop + 'px';
+
+        // 2. RNA の生成
+        setTimeout(() => {
+            const rna = spawn('rna-column', 'rna-msg', 'RNA messenger (Instance)');
+            
+            setTimeout(() => {
+                rna.style.transform = 'translateY(250px) scale(0.8)';
+                rna.style.opacity = '0.5';
+
+                // 3. Protein の生成
+                setTimeout(() => {
+                    const prot = spawn('protein-column', 'prot-obj', 'Active Protein (Object)');
+                    prot.style.top = '50%';
+                    
+                    setTimeout(() => {
+                        cursor.style.display = 'none';
+                        btn.disabled = false;
+                        rna.remove();
+                    }, 1000);
+                }, 800);
+            }, 800);
+        }, 500);
+    }
+
+    function spawn(colId, className, text) {
+        const col = document.getElementById(colId);
+        const el = document.createElement('div');
+        el.className = `msg-bubble ${className}`;
+        el.innerText = text;
+        el.style.top = '50px';
+        el.style.left = '20px';
+        el.style.transition = 'all 1s ease-in-out';
+        col.appendChild(el);
+        return el;
+    }
 </script>
 
 </body>
