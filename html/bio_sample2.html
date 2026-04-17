@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Central Dogma Flow: From ATGC to Protein</title>
+    <style>
+        :root {
+            --bg: #050505;
+            --dna: #2ecc71;
+            --rna: #f1c40f;
+            --protein: #9b59b6;
+            --text: #ecf0f1;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            flex: 1;
+        }
+
+        /* DNA Storage Area */
+        .dna-storage {
+            border-right: 1px solid #333;
+            padding: 20px;
+            background: #0a0a0a;
+            overflow-y: auto;
+        }
+
+        .dna-strand {
+            font-size: 18px;
+            letter-spacing: 4px;
+            color: #222;
+            line-height: 1.2;
+            word-break: break-all;
+        }
+
+        .gene-segment {
+            color: #444;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .gene-active {
+            color: var(--dna);
+            text-shadow: 0 0 10px var(--dna);
+            font-weight: bold;
+        }
+
+        /* Center Stage */
+        .stage {
+            position: relative;
+            background: radial-gradient(circle, #111 0%, #000 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Animated Molecules */
+        .molecule {
+            position: absolute;
+            font-weight: bold;
+            transition: all 1.5s ease-in-out;
+            z-index: 100;
+        }
+
+        .rna-letter {
+            color: var(--rna);
+            font-size: 24px;
+            text-shadow: 0 0 8px var(--rna);
+        }
+
+        .ribosome {
+            width: 250px;
+            height: 150px;
+            border: 3px solid #333;
+            border-radius: 40% 40% 50% 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            font-size: 12px;
+            position: relative;
+        }
+
+        .protein-chain {
+            display: flex;
+            gap: 5px;
+            margin-top: 50px;
+        }
+
+        .amino-acid {
+            width: 40px;
+            height: 40px;
+            background: var(--protein);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: white;
+            animation: fold 0.5s forwards;
+        }
+
+        @keyframes fold {
+            from { transform: scale(0); }
+            to { transform: scale(1); }
+        }
+
+        /* Controls */
+        .footer {
+            height: 120px;
+            background: #111;
+            border-top: 1px solid #333;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        button {
+            padding: 12px 40px;
+            background: var(--dna);
+            border: none;
+            border-radius: 4px;
+            color: black;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:disabled { opacity: 0.3; }
+
+        .status-log {
+            font-size: 14px;
+            color: var(--dna);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="dna-storage">
+        <div style="font-size: 12px; color: #666; margin-bottom: 10px;">// Chromosome 17 Source</div>
+        <div class="dna-strand" id="dna-view">
+            </div>
+    </div>
+
+    <div class="stage" id="stage">
+        <div class="status-log" id="status-log">SYSTEM IDLE</div>
+        <div class="ribosome" id="ribosome">RIBOSOME (Runtime Engine)</div>
+        <div id="protein-factory" class="protein-chain"></div>
+    </div>
+</div>
+
+<div class="footer">
+    <button id="exec-btn" onclick="startCentralDogma()">BUILD: Human.express()</button>
+    <div style="color: #444; font-size: 11px;">[ DNA ] → [ mRNA ] → [ PROTEIN ]</div>
+</div>
+
+<script>
+    const dnaView = document.getElementById('dna-view');
+    const bases = ['A', 'T', 'G', 'C'];
+    const geneSequence = "ATGCGTACGTTAGCTAGCTAGCTA"; // ターゲットとなる「遺伝子」
+    
+    // 背景のDNAを生成
+    for(let i=0; i<400; i++) {
+        const span = document.createElement('span');
+        span.innerText = bases[Math.floor(Math.random()*4)];
+        span.className = 'gene-segment';
+        if(i > 100 && i <= 100 + geneSequence.length) {
+            span.id = 'target-' + (i - 101);
+        }
+        dnaView.appendChild(span);
+    }
+
+    async function startCentralDogma() {
+        const btn = document.getElementById('exec-btn');
+        const log = document.getElementById('status-log');
+        const factory = document.getElementById('protein-factory');
+        btn.disabled = true;
+        factory.innerHTML = '';
+
+        // --- STEP 1: TRANSCRIPTION (DNA -> mRNA) ---
+        log.innerText = "PHASE 1: TRANSCRIPTION (Reading ATGC...)";
+        for(let i=0; i < geneSequence.length; i++) {
+            const dnaBase = document.getElementById('target-' + i);
+            dnaBase.classList.add('gene-active');
+            
+            // RNAレターの生成
+            const rna = document.createElement('div');
+            rna.className = 'molecule rna-letter';
+            rna.innerText = geneSequence[i].replace('T', 'U'); // RNAはTがUになる
+            
+            const rect = dnaBase.getBoundingClientRect();
+            rna.style.left = rect.left + 'px';
+            rna.style.top = rect.top + 'px';
+            document.body.appendChild(rna);
+
+            // リボソームへ輸送
+            setTimeout(() => {
+                const ribo = document.getElementById('ribosome').getBoundingClientRect();
+                rna.style.left = (ribo.left + 50 + (i * 10)) + 'px';
+                rna.style.top = (ribo.top + 60) + 'px';
+            }, 50);
+            
+            await sleep(150);
+        }
+
+        await sleep(1000);
+
+        // --- STEP 2: TRANSLATION (mRNA -> PROTEIN) ---
+        log.innerText = "PHASE 2: TRANSLATION (Coding Amino Acids...)";
+        const rnaLetters = document.querySelectorAll('.rna-letter');
+        
+        // 3文字（コドン）ずつ読み取ってアミノ酸にする
+        for(let i=0; i < rnaLetters.length; i += 3) {
+            // RNAが消えてアミノ酸が出る
+            for(let j=0; j<3; j++) {
+                if(rnaLetters[i+j]) rnaLetters[i+j].style.opacity = '0';
+            }
+
+            const amino = document.createElement('div');
+            amino.className = 'amino-acid';
+            amino.innerText = "AA" + (i/3 + 1);
+            factory.appendChild(amino);
+            
+            await sleep(600);
+        }
+
+        log.innerText = "PHASE 3: PROTEIN FOLDING COMPLETE.";
+        await sleep(1000);
+        log.innerText = "SYSTEM IDLE";
+        btn.disabled = false;
+        document.querySelectorAll('.rna-letter').forEach(el => el.remove());
+        document.querySelectorAll('.gene-active').forEach(el => el.classList.remove('gene-active'));
+    }
+
+    function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+</script>
+
+</body>
+</html>
