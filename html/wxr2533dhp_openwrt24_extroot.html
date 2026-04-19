@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WXR-2533DHP ExtRoot 設定メモ</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --green: #3fb950;
+    --green-dim: #1a3a22;
+    --amber: #d29922;
+    --amber-dim: #2d2007;
+    --red: #f85149;
+    --red-dim: #3a0f0f;
+    --blue: #58a6ff;
+    --blue-dim: #0d2044;
+    --code-bg: #010409;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'IBM Plex Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    padding: 2rem 1rem;
+    min-height: 100vh;
+  }
+  .container { max-width: 780px; margin: 0 auto; }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .tag {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    border: 1px solid var(--green);
+    color: var(--green);
+    margin-bottom: 0.75rem;
+    letter-spacing: 0.05em;
+  }
+  h1 {
+    font-size: 24px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.4rem;
+  }
+  .desc { font-size: 14px; color: var(--muted); }
+
+  .step {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.9rem 1.2rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .step-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+  .step-num.warn { border-color: var(--red); color: var(--red); }
+  .step-title { font-size: 14px; font-weight: 500; }
+  .step-body { padding: 1rem 1.2rem; }
+
+  pre {
+    font-family: 'IBM Plex Mono', monospace;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.8rem 1rem;
+    font-size: 12.5px;
+    line-height: 1.8;
+    overflow-x: auto;
+    color: var(--text);
+    margin-top: 8px;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  pre .comment { color: var(--muted); }
+  pre .cmd { color: var(--blue); }
+  pre .var { color: var(--amber); }
+  pre .ok { color: var(--green); }
+
+  .note {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 8px;
+    padding-left: 2px;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .note::before { content: "→"; color: var(--blue); flex-shrink: 0; margin-top: 1px; }
+
+  .callout {
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    font-size: 13px;
+    margin-top: 10px;
+    border-left: 3px solid;
+  }
+  .callout.success { background: var(--green-dim); border-color: var(--green); color: #7ee787; }
+  .callout.warning { background: var(--amber-dim); border-color: var(--amber); color: #e3b341; }
+  .callout.danger  { background: var(--red-dim);   border-color: var(--red);   color: #ffa198; }
+  .callout.info    { background: var(--blue-dim);  border-color: var(--blue);  color: #79c0ff; }
+  .callout-title { font-weight: 500; margin-bottom: 4px; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; }
+
+  .sub-block {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    margin-top: 10px;
+  }
+  .sub-title { font-size: 11px; color: var(--muted); margin-bottom: 6px; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.04em; }
+
+  footer {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="tag">OpenWrt 24.10 / WXR-2533DHP</div>
+    <h1>ExtRoot 設定メモ</h1>
+    <p class="desc">USB 32GB を /overlay にマウントしてストレージ拡張する手順。SSH接続済みの状態から実施。</p>
+  </header>
+
+  <!-- Step 1 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">1</div>
+      <div class="step-title">必要パッケージのインストール</div>
+    </div>
+    <div class="step-body">
+      <pre><span class="cmd">opkg update</span>
+<span class="cmd">opkg install</span> block-mount kmod-fs-ext4 e2fsprogs \
+             kmod-usb-storage kmod-usb-storage-uas \
+             parted usbutils</pre>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">2</div>
+      <div class="step-title">USB を挿してデバイス確認</div>
+    </div>
+    <div class="step-body">
+      <pre><span class="cmd">fdisk -l</span>
+<span class="comment"># または</span>
+<span class="cmd">ls /dev/sd*</span></pre>
+      <p class="note">通常 /dev/sda として認識される</p>
+    </div>
+  </div>
+
+  <!-- Step 3 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">3</div>
+      <div class="step-title">パーティション作成・ext4 フォーマット</div>
+    </div>
+    <div class="step-body">
+      <pre><span class="var">DISK</span>="/dev/sda"
+<span class="cmd">parted</span> -s ${DISK} -- mklabel gpt mkpart extroot 2048s -2048s
+<span class="var">DEVICE</span>="${DISK}1"
+<span class="cmd">mkfs.ext4</span> -L extroot ${DEVICE}</pre>
+    </div>
+  </div>
+
+  <!-- Step 4 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">4</div>
+      <div class="step-title">UUID 確認</div>
+    </div>
+    <div class="step-body">
+      <pre><span class="cmd">block info</span> ${DEVICE}</pre>
+      <p class="note">/dev/sda1 の UUID="xxxx-xxxx-..." をメモしておく</p>
+      <div class="callout info">
+        <div class="callout-title">正常な出力例</div>
+        /dev/sda1: UUID="e21f2b10-67b5-48d6-923c-..." VERSION="1.0" TYPE="ext4"
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 5 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">5</div>
+      <div class="step-title">fstab 生成・設定</div>
+    </div>
+    <div class="step-body">
+      <pre><span class="cmd">block detect</span> > /etc/config/fstab
+<span class="cmd">uci show</span> fstab</pre>
+      <p class="note">@mount[0] に sda1 の UUID があることを確認してから実行：</p>
+      <pre><span class="cmd">uci set</span> fstab.@mount[0].target='/overlay'
+<span class="cmd">uci set</span> fstab.@mount[0].enabled='1'
+<span class="cmd">uci set</span> fstab.@mount[0].enabled_fsck='1'
+<span class="cmd">uci commit</span> fstab</pre>
+      <div class="sub-block">
+        <div class="sub-title">cat /etc/config/fstab — 正しい状態</div>
+        <pre>config mount
+        option target <span class="ok">'/overlay'</span>
+        option uuid 'xxxx-xxxx-xxxx-xxxx'
+        option enabled <span class="ok">'1'</span>
+        option enabled_fsck <span class="ok">'1'</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 6 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">6</div>
+      <div class="step-title">overlay の内容を USB にコピー</div>
+    </div>
+    <div class="step-body">
+      <pre><span class="cmd">mount</span> /dev/sda1 /mnt
+<span class="cmd">tar</span> -C /overlay -cvf - . | tar -C /mnt -xf -
+<span class="cmd">umount</span> /mnt</pre>
+
+      <div class="sub-block">
+        <div class="sub-title">reboot 前の確認（必須！）</div>
+        <pre><span class="cmd">mount</span> /dev/sda1 /mnt
+<span class="cmd">ls /mnt</span>
+<span class="comment"># → upper  work  lost+found が表示されればOK</span>
+<span class="cmd">umount</span> /mnt</pre>
+      </div>
+
+      <div class="callout warning">
+        <div class="callout-title">注意</div>
+        ls /mnt で <strong>upper</strong> と <strong>work</strong> が見えない場合は reboot 禁止。tar コピーをやり直すこと。
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 7 -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">7</div>
+      <div class="step-title">再起動・確認</div>
+    </div>
+    <div class="step-body">
+      <pre><span class="cmd">reboot</span></pre>
+      <pre><span class="comment"># 再起動後</span>
+<span class="cmd">df -h</span></pre>
+      <div class="sub-block">
+        <div class="sub-title">成功時の df -h 出力イメージ</div>
+        <pre><span class="ok">/dev/sda1           29G   xx    xxG   x%   /overlay</span>
+<span class="ok">overlayfs:/overlay  29G   xx    xxG   x%   /</span></pre>
+      </div>
+      <div class="callout success">
+        <div class="callout-title">成功</div>
+        / のサイズが約 30GB になっていれば ExtRoot 化完了！
+      </div>
+    </div>
+  </div>
+
+  <!-- Emergency -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num warn">!</div>
+      <div class="step-title">起動しない場合の復旧手順</div>
+    </div>
+    <div class="step-body">
+      <div class="callout info">
+        <div class="callout-title">フォールバック仕様</div>
+        USB を抜いてリセット → 内部 flash の overlay で起動する。文鎮化はしない。
+      </div>
+      <pre><span class="comment"># USB なしで SSH 接続後、fstab を元に戻す：</span>
+<span class="cmd">uci set</span> fstab.@mount[0].target='/mnt/sda1'
+<span class="cmd">uci set</span> fstab.@mount[0].enabled='0'
+<span class="cmd">uci commit</span> fstab
+<span class="cmd">reboot</span></pre>
+    </div>
+  </div>
+
+  <footer>
+    WXR-2533DHP / OpenWrt 24.10.0 — ExtRoot via USB 32GB ext4
+  </footer>
+</div>
+</body>
+</html>
