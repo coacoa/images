@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>監視カメラ運用メモ</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --accent: #4a9eff;
+    --accent2: #00c896;
+    --warn: #f0a500;
+    --danger: #f05050;
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2128;
+    --border: #2d333b;
+    --text: #cdd9e5;
+    --muted: #636e7b;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Noto Sans JP', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem 1rem 4rem; }
+  .container { max-width: 720px; margin: 0 auto; }
+
+  header { margin-bottom: 2.5rem; }
+  .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; color: var(--accent); text-transform: uppercase; margin-bottom: 6px; }
+  h1 { font-family: var(--mono); font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.3; }
+  .subtitle { font-size: 13px; color: var(--muted); margin-top: 6px; line-height: 1.6; }
+
+  .section { margin-bottom: 2rem; }
+  .section-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+
+  /* flow diagram */
+  .flow { display: flex; flex-direction: column; gap: 0; margin-bottom: 1.5rem; }
+  .flow-item { display: flex; align-items: stretch; gap: 12px; }
+  .flow-left { display: flex; flex-direction: column; align-items: center; width: 32px; flex-shrink: 0; }
+  .flow-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); flex-shrink: 0; margin-top: 6px; }
+  .flow-dot.green { background: var(--accent2); }
+  .flow-dot.warn { background: var(--warn); }
+  .flow-line { width: 1px; flex: 1; background: var(--border); margin-top: 4px; margin-bottom: 0; }
+  .flow-item:last-child .flow-line { display: none; }
+  .flow-body { padding: 4px 0 16px; flex: 1; }
+  .flow-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+  .flow-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+  /* card */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 12px; }
+  .card-header { padding: 10px 16px; background: var(--surface2); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  .card-title { font-family: var(--mono); font-size: 12px; color: var(--text); }
+  .badge { font-family: var(--mono); font-size: 10px; padding: 2px 8px; border-radius: 20px; }
+  .badge.blue { background: rgba(74,158,255,0.15); color: var(--accent); }
+  .badge.green { background: rgba(0,200,150,0.15); color: var(--accent2); }
+  .badge.warn { background: rgba(240,165,0,0.15); color: var(--warn); }
+  .card-body { padding: 12px 16px; }
+
+  pre { font-family: var(--mono); background: #010409; border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; font-size: 12px; line-height: 1.8; overflow-x: auto; color: var(--text); white-space: pre-wrap; word-break: break-all; }
+  .cm { color: var(--muted); }
+  .ck { color: var(--accent); }
+  .cv { color: var(--warn); }
+  .co { color: var(--accent2); }
+
+  .url-box { background: #010409; border: 1px solid var(--accent); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }
+  .url-text { font-family: var(--mono); font-size: 13px; color: var(--accent); word-break: break-all; }
+  .copy-btn { font-family: var(--mono); font-size: 11px; padding: 4px 10px; border: 1px solid var(--accent); border-radius: 6px; color: var(--accent); background: transparent; cursor: pointer; white-space: nowrap; transition: background 0.15s; }
+  .copy-btn:hover { background: rgba(74,158,255,0.15); }
+
+  .info-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .info-row:last-child { border-bottom: none; }
+  .info-label { color: var(--muted); }
+  .info-val { font-family: var(--mono); color: var(--text); }
+  .info-val.green { color: var(--accent2); }
+
+  .callout { border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-top: 10px; border-left: 3px solid; line-height: 1.7; }
+  .callout.info { background: rgba(74,158,255,0.08); border-color: var(--accent); color: #79b8ff; }
+  .callout.warn { background: rgba(240,165,0,0.08); border-color: var(--warn); color: #f0c060; }
+  .callout.ok   { background: rgba(0,200,150,0.08); border-color: var(--accent2); color: #5ecdaa; }
+  .callout-title { font-weight: 500; margin-bottom: 3px; font-size: 11px; font-family: var(--mono); letter-spacing: 0.06em; text-transform: uppercase; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 500px) { .grid2 { grid-template-columns: 1fr; } }
+
+  footer { font-family: var(--mono); font-size: 11px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 1rem; line-height: 1.8; margin-top: 2rem; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <p class="eyebrow">Security Camera — Operation Guide</p>
+    <h1>監視カメラ運用メモ</h1>
+    <p class="subtitle">WXR-2533DHP (OpenWrt 24.10) + Logicool C615 + NixOS miniPC</p>
+  </header>
+
+  <!-- 起動フロー -->
+  <div class="section">
+    <p class="section-label">電源ON後の起動フロー</p>
+    <div class="flow">
+      <div class="flow-item">
+        <div class="flow-left"><div class="flow-dot"></div><div class="flow-line"></div></div>
+        <div class="flow-body">
+          <div class="flow-title">電源ON</div>
+          <div class="flow-desc">USBメモリ（extroot）が自動マウントされる</div>
+        </div>
+      </div>
+      <div class="flow-item">
+        <div class="flow-left"><div class="flow-dot"></div><div class="flow-line"></div></div>
+        <div class="flow-body">
+          <div class="flow-title">約30〜60秒 — OpenWrt 起動完了</div>
+          <div class="flow-desc">kmod-video-uvc が読み込まれ /dev/video0 が出現</div>
+        </div>
+      </div>
+      <div class="flow-item">
+        <div class="flow-left"><div class="flow-dot green"></div><div class="flow-line"></div></div>
+        <div class="flow-body">
+          <div class="flow-title">mjpg-streamer 自動起動 (START=99)</div>
+          <div class="flow-desc">640×480 / 15fps でストリーミング開始</div>
+        </div>
+      </div>
+      <div class="flow-item">
+        <div class="flow-left"><div class="flow-dot green"></div><div class="flow-line"></div></div>
+        <div class="flow-body">
+          <div class="flow-title">miniPC (NixOS) の motion が自動再接続</div>
+          <div class="flow-desc">ストリームURLを検知 → 動体検知・録画再開</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ストリームURL -->
+  <div class="section">
+    <p class="section-label">ストリームURL</p>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">mjpg-streamer</span>
+        <span class="badge green">稼働中</span>
+      </div>
+      <div class="card-body">
+        <div class="info-row"><span class="info-label">解像度</span><span class="info-val">640 × 480</span></div>
+        <div class="info-row"><span class="info-label">フレームレート</span><span class="info-val">15 fps</span></div>
+        <div class="info-row"><span class="info-label">ポート</span><span class="info-val">8080</span></div>
+        <p style="font-size:12px;color:var(--muted);margin-top:10px;margin-bottom:4px;">ライブ映像（ブラウザで直接開ける）</p>
+        <div class="url-box">
+          <span class="url-text" id="url1">http://192.168.1.1:8080/?action=stream</span>
+          <button class="copy-btn" onclick="copyUrl('url1')">コピー</button>
+        </div>
+        <p style="font-size:12px;color:var(--muted);margin-top:10px;margin-bottom:4px;">静止画スナップショット</p>
+        <div class="url-box">
+          <span class="url-text" id="url2">http://192.168.1.1:8080/?action=snapshot</span>
+          <button class="copy-btn" onclick="copyUrl('url2')">コピー</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 電源ON/OFF運用 -->
+  <div class="section">
+    <p class="section-label">電源ON/OFF 運用</p>
+    <div class="callout ok">
+      <div class="callout-title">安全</div>
+      電源を切っても extroot・設定・自動起動はすべて保持されます。必要なときだけONにする運用は完全に問題ありません。
+    </div>
+    <div class="callout warn" style="margin-top:8px;">
+      <div class="callout-title">注意</div>
+      電源を切る前に特別な操作は不要ですが、パッケージインストール中・設定保存中は避けてください。
+    </div>
+    <div class="grid2" style="margin-top:12px;">
+      <div class="card">
+        <div class="card-header"><span class="card-title">電源OFF</span></div>
+        <div class="card-body">
+          <div class="info-row"><span class="info-label">extroot</span><span class="info-val green">保持</span></div>
+          <div class="info-row"><span class="info-label">fstab設定</span><span class="info-val green">保持</span></div>
+          <div class="info-row"><span class="info-label">自動起動設定</span><span class="info-val green">保持</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">電源ON後</span></div>
+        <div class="card-body">
+          <div class="info-row"><span class="info-label">USB自動マウント</span><span class="info-val green">自動</span></div>
+          <div class="info-row"><span class="info-label">カメラ映像</span><span class="info-val green">自動</span></div>
+          <div class="info-row"><span class="info-label">motion再接続</span><span class="info-val green">自動</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- miniPC motion設定 -->
+  <div class="section">
+    <p class="section-label">miniPC (NixOS) — motion 設定</p>
+    <div class="card">
+      <div class="card-header"><span class="card-title">motion.conf — ストリーム受信設定</span><span class="badge blue">NixOS側</span></div>
+      <div class="card-body">
+        <pre><span class="cm"># ストリームソース</span>
+<span class="ck">netcam_url</span>      <span class="co">http://192.168.1.1:8080/?action=stream</span>
+<span class="ck">netcam_keepalive</span> on
+
+<span class="cm"># 動体検知設定</span>
+<span class="ck">threshold</span>       1500    <span class="cm"># 感度（小さいほど敏感）</span>
+<span class="ck">minimum_motion_frames</span> 2
+
+<span class="cm"># 録画保存先</span>
+<span class="ck">target_dir</span>      <span class="cv">/var/lib/motion</span>
+<span class="ck">ffmpeg_output_movies</span> on
+<span class="ck">movie_filename</span>  <span class="cv">%Y%m%d-%H%M%S</span>
+
+<span class="cm"># ストリーム切断時に自動再接続</span>
+<span class="ck">netcam_tolerant_check</span> on</pre>
+        <div class="callout info" style="margin-top:10px;">
+          <div class="callout-title">ポイント</div>
+          netcam_tolerant_check を on にするとルーターの電源OFF/ON時にmotionが自動で再接続を試みます。
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title">NixOS — configuration.nix</span><span class="badge blue">NixOS側</span></div>
+      <div class="card-body">
+        <pre><span class="ck">services.motion</span> = {
+  <span class="ck">enable</span> = <span class="co">true</span>;
+  <span class="ck">settings</span> = {
+    <span class="ck">netcam_url</span> = <span class="cv">"http://192.168.1.1:8080/?action=stream"</span>;
+    <span class="ck">netcam_keepalive</span> = <span class="cv">"on"</span>;
+    <span class="ck">netcam_tolerant_check</span> = <span class="cv">"on"</span>;
+    <span class="ck">target_dir</span> = <span class="cv">"/var/lib/motion"</span>;
+    <span class="ck">ffmpeg_output_movies</span> = <span class="cv">"on"</span>;
+    <span class="ck">threshold</span> = <span class="cv">"1500"</span>;
+  };
+};</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- トラブルシュート -->
+  <div class="section">
+    <p class="section-label">トラブルシュート</p>
+    <div class="card">
+      <div class="card-header"><span class="card-title">映像が出ない場合</span><span class="badge warn">確認手順</span></div>
+      <div class="card-body">
+        <pre><span class="cm"># mjpg-streamerの状態確認</span>
+<span class="ck">ps</span> | grep mjpg
+
+<span class="cm"># カメラデバイス確認</span>
+<span class="ck">ls</span> /dev/video*
+
+<span class="cm"># 手動で再起動</span>
+<span class="ck">/etc/init.d/mjpg-streamer</span> restart
+
+<span class="cm"># ログ確認</span>
+<span class="ck">logread</span> | grep mjpg</pre>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    WXR-2533DHP / OpenWrt 24.10 / USB 32GB extroot<br>
+    Logicool C615 / mjpg-streamer / NixOS motion<br>
+    電源ON後 約60秒でストリーミング開始
+  </footer>
+
+</div>
+<script>
+function copyUrl(id) {
+  var text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(function() {
+    var btn = document.querySelector('[onclick="copyUrl(\'' + id + '\')"]');
+    btn.textContent = 'コピー済み';
+    setTimeout(function() { btn.textContent = 'コピー'; }, 2000);
+  });
+}
+</script>
+</body>
+</html>
