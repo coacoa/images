@@ -1,0 +1,40 @@
+@startuml
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+
+actor "ユーザー" as User
+
+' --- 永続領域 ---
+node "OS環境 (Global)" {
+    [System Profile] as sys_profile
+    file "/run/current-system/sw/bin" as global_path
+}
+
+' --- 揮発領域 ---
+node "ターミナル・プロセス (Local)" {
+    [Shell Session] as shell
+    file "Environment Variable $PATH" as local_path
+}
+
+' --- 実体 ---
+database "/nix/store/" {
+    [Package_A (Linked)] as pkg_a
+    [Package_B (Linked)] as pkg_b
+    [Package_C (Unlinked/Dead)] as pkg_c
+}
+
+' --- リンク操作 ---
+User --> sys_profile : nixos-rebuild switch
+sys_profile ==> global_path : リンク生成 (永続)
+global_path --> pkg_a
+
+User --> shell : nix develop / shell -p
+shell -.-> local_path : リンク生成 (揮発)
+local_path --> pkg_b
+
+' --- GCの動き ---
+User --> pkg_c : nix-collect-garbage
+pkg_c -> User : 削除される
+note right of pkg_c : どこからも参照されていない\n不要なハッシュフォルダ
+
+@enduml

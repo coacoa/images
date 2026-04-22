@@ -1,0 +1,26 @@
+@startuml
+skinparam rectangle {
+    BackgroundColor White
+    BorderColor Black
+}
+
+rectangle "flake.nix" {
+    [変数: ttsTools] as tools
+    
+    package "outputs (定義域)" {
+        rectangle "nixosConfigurations (OS全体)" as os {
+            [environment.systemPackages] --> tools
+            note bottom of os: switch で恒久化\n(システムの一部)
+        }
+        
+        rectangle "devShells (開発用)" as dev {
+            [buildInputs] --> tools
+            note bottom of dev: nix develop で一時利用\n(作業用シェル)
+        }
+    }
+}
+
+tools -[hidden]-> os
+tools -[hidden]-> dev
+
+@enduml

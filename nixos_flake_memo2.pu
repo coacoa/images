@@ -1,0 +1,36 @@
+@startuml
+skinparam actorStyle awesome
+
+actor "ユーザー" as User
+
+' --- 地獄の階層構造 ---
+box "nix develop を連打 (階層化)" #F9F9F9
+    participant "Bash (Original)" as b1
+    participant "Subshell (nix-1)" as b2
+    participant "Subshell (nix-2)" as b3
+end box
+
+' --- direnvのスマートな管理 ---
+box "direnv (階層なし・自動切替)" #E6F3FF
+    participant "Shell (Top)" as d1
+end box
+
+== Nix Develop (手動連打) ==
+User -> b1 : nix develop
+b1 -> b2 : 入る
+User -> b2 : nix develop
+b2 -> b3 : 入る
+User -> b3 : (ここで作業)
+User -> b3 : exit (1回目)
+User -> b2 : exit (2回目)
+note right of b3 : 階層が深すぎて\nExitを繰り返す必要がある
+
+== Direnv (自動ロード) ==
+User -> d1 : cd ./project_A
+d1 -> d1 : direnv load (自動)
+User -> d1 : (作業)
+User -> d1 : cd ..
+d1 -> d1 : direnv unload (自動)
+note right of d1 : 階層を潜らないので\nExitの概念自体がない
+
+@enduml
