@@ -1,0 +1,33 @@
+@startuml
+title Nix develop と NixOS サービスの使い分け
+
+actor User as U
+
+rectangle "TTS ツール (一時実行)" as TTS {
+  U --> (nix develop)
+  (nix develop) --> (TTS コマンド実行)
+  note right of (TTS コマンド実行)
+    ・一回実行して終わる
+    ・常駐しない
+    ・特権ポート不要
+    → devShell が最適
+  end note
+}
+
+rectangle "syslog + GoAccess (常時可視化)" as LOG {
+  U --> (NixOS flake)
+  (NixOS flake) --> (systemd サービス定義)
+  (systemd サービス定義) --> (syslog 受信サービス)
+  (systemd サービス定義) --> (GoAccess HTML 出力)
+  (systemd サービス定義) --> (Web サーバで配信)
+
+  note right of LOG
+    ・常時動かしたい
+    ・特権ポート(UDP 514/1514)使用
+    ・再起動後も自動起動してほしい
+    ・複数プロセス連携 (受信 / 解析 / 配信)
+    → devShell ではなく NixOS サービス向き
+  end note
+}
+
+@enduml
