@@ -1,0 +1,96 @@
+@startuml
+title ジャンクPC復活の時系列（会話同期）
+
+skinparam monochrome true
+skinparam sequenceArrowThickness 1
+skinparam sequenceParticipant underline
+
+actor User
+participant "フリマ出品" as Seller
+participant "ジャンクPC" as PC
+participant "SSD(NixOS)" as SSD
+participant "タッチ入力" as Touch
+participant "AI支援" as AI
+participant "リモートPC" as Remote
+
+== 購入前の判断 ==
+User -> Seller : 画像確認（黒いエラー画面）
+note right
+本来はここで
+SSD未搭載を推測可能
+end note
+
+User -> User : 「Linux入れればいける」と判断
+
+== 開封・絶望 ==
+User -> PC : 電源投入
+PC -> User : ストレージエラー表示
+User -> PC : 内部確認
+PC -> User : SSDなし
+
+User -> PC : USB接続試行
+PC -> User : USBポート全滅
+
+note right
+インストール手段なし
+通常はここで詰み
+end note
+
+== 偶然の起動 ==
+User -> SSD : 余りSSDを用意
+User -> PC : SSD装着
+PC -> SSD : UEFIブート
+SSD -> PC : NixOS起動
+
+note right
+既存環境がそのまま起動
+奇跡的な互換性
+end note
+
+== 最後の入力手段 ==
+User -> PC : 操作試行
+PC -> User : 入力不可（USBなし）
+
+User -> Touch : 画面タッチ
+Touch -> PC : オンスクリーンキーボード起動
+
+note right
+唯一の入力経路
+ここが分岐点
+end note
+
+== 最小操作での突破 ==
+User -> PC : ネットワーク設定
+User -> PC : SSH有効化
+
+note right
+タッチのみで操作
+非常に困難
+end note
+
+== AI支援フェーズ ==
+User -> AI : 設定・エラー相談
+AI -> User : コマンド・構成提案
+
+User -> PC : 設定適用（試行錯誤）
+
+== リモート化 ==
+User -> PC : gnome-remote-desktop設定
+User -> PC : RDP有効化
+
+Remote -> PC : RDP接続
+PC -> Remote : デスクトップ表示
+
+note right
+Wayland環境でのRDP成功
+操作不能→完全制御へ
+end note
+
+== 結果 ==
+User -> PC : リモート操作
+note right
+ジャンクPC再生完了
+AIが復旧を加速
+end note
+
+@enduml

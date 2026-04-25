@@ -1,0 +1,66 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor "ユーザー" as User
+
+' ---------------------------
+' 従来（改造型ロボ）
+' ---------------------------
+node "従来のパッケージ管理\n(状態を書き換える)" {
+    [ロボットA\n(現在の状態)] as robotA
+
+    component "apt / dnf /\nwinget" as install
+    component "設定変更\n(bash / PowerShell)" as config
+
+    User --> install : 機能追加
+    install --> robotA : パーツ追加
+
+    User --> config : 設定変更
+    config --> robotA : 内部を書き換え
+
+    note bottom of robotA
+      ・1体を改造し続ける
+      ・状態が積み重なる
+      ・再現が難しい
+    end note
+}
+
+' ---------------------------
+' NixOS / Guix（完成品ロボ）
+' ---------------------------
+node "NixOS / Guix\n(状態を選択する)" {
+
+    database "共有パーツ倉庫\n(/nix/store /gnu/store)" as store
+
+    [ロボットA\n(構成v1)] as robot1
+    [ロボットB\n(構成v2)] as robot2
+
+    component "nixos-rebuild /\nnix build" as build
+
+    User --> build : 新しい構成を定義
+    build --> robot2 : 新ロボ生成
+
+    store --> robot1
+    store --> robot2
+
+    User --> robot1 : 使う（切替）
+    User --> robot2 : 使う（切替）
+
+    note bottom of store
+      ・パーツは共有
+      ・同じものは再利用
+    end note
+
+    note bottom of robot2
+      ・完成品として存在
+      ・直接改造しない
+    end note
+}
+
+' ---------------------------
+' まとめ
+' ---------------------------
+rectangle "まとめ\n\n改造する世界\n--\n完成品を選ぶ世界（部品は共有）"
+
+@enduml

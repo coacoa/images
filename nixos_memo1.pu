@@ -1,0 +1,106 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor "ユーザー" as User
+
+' ---------------------------
+' 従来（状態ベース）
+' ---------------------------
+node "従来OS\n(状態ベース)" {
+    [現在の状態] as state
+
+    component "apt / dnf /\nwinget" as pkgmgr
+    component "PowerShell / bash /\nレジストリ編集" as configtool
+
+    User --> pkgmgr : install / update
+    pkgmgr --> state : 上書き変更
+
+    User --> configtool : 設定変更
+    configtool --> state : 状態を書き換え
+
+    note bottom of state
+      状態が積み重なる
+      再現が難しい
+    end note
+}
+
+' ---------------------------
+' 構成管理
+' ---------------------------
+node "構成管理\n(擬似宣言)" {
+    [定義ファイル\n(Playbook)] as desired
+    [現在の状態] as managed
+
+    component "Ansible / Chef /\nPuppet" as cmtool
+
+    User --> desired
+    desired --> cmtool
+    cmtool --> managed : 差分適用
+
+    note bottom of managed
+      宣言的っぽいが
+      最終的には上書き
+    end note
+}
+
+' ---------------------------
+' コンテナ
+' ---------------------------
+node "コンテナ" {
+    [イメージ\n(Dockerfile)] as image
+    [実行環境\n(Container)] as runtime
+
+    component "Docker / Podman" as container
+
+    User --> image : build / pull
+    image --> container
+    container --> runtime
+
+    note bottom of image
+      再現性は高い
+      ただしOSではない
+    end note
+}
+
+' ---------------------------
+' NixOS / Guix
+' ---------------------------
+node "NixOS / Guix\n(完全宣言)" {
+    file "configuration.nix /\nflake.nix" as declarative
+    file "flake.lock" as lock
+
+    [評価\n(nix eval)] as eval
+    database "/nix/store /\n/gnu/store" as store
+    [プロファイル\n(/run/current-system)] as profile
+
+    component "nixos-rebuild /\nnix build / nix develop" as nixtool
+
+    User --> declarative
+    declarative --> lock
+    declarative --> eval
+    lock --> eval
+
+    eval --> nixtool
+    nixtool --> store : build / download
+
+    store --> profile : link
+    profile --> User
+
+    note bottom of store
+      ハッシュ管理
+      完全一致
+    end note
+
+    note bottom of profile
+      世代管理
+      ロールバック可能
+    end note
+}
+
+' ---------------------------
+' まとめ
+' ---------------------------
+rectangle "まとめ\n\n状態を書き換える世界\n--\n状態を選択する世界"
+
+@enduml

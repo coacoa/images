@@ -1,0 +1,128 @@
+@startuml
+actor User
+participant CB
+participant USB
+participant OS
+participant NIX
+
+== ハード準備 ==
+User -> CB : ASUS Chromebook C100PA (A100CP) 分解
+User -> CB : Security Screw (書き込み保護ネジ) を外す
+note right of CB
+ChromeOSのファーム書き換え用手順
+今回はUSBブートのみで動作したため
+結果的に不要だった可能性あり
+end note
+
+== 起動 ==
+User -> CB : Dev Mode で起動 (Ctrl+D画面)
+
+alt 正しい
+User -> CB : Ctrl+D → Ctrl+U
+CB -> USB : USBストレージからブート
+USB -> OS : PrawnOS (ARM Linux) 起動
+else 間違い
+User -> CB : Esc + Refresh + Power
+CB -> User : Recoveryモード起動
+note right
+ChromeOSリカバリ用モード
+USBブート不可でハマる
+end note
+end
+
+== 初期設定 ==
+User -> OS : rootログイン (LXQt環境)
+User -> OS : adduser hoge
+User -> OS : usermod -aG sudo hoge
+note right of OS
+通常ユーザー作成とsudo権限付与
+以降はroot常用を避ける
+end note
+
+User -> OS : aptでopenssh-server導入
+User -> OS : systemctl start ssh
+NIX -> OS : ssh [hoge@192.168.x.x](mailto:hoge@192.168.x.x)
+note over NIX, OS
+NixOSマシンからリモート操作開始
+以降はSSH中心で作業
+end note
+
+== ストレージ ==
+User -> OS : df -h → 約3GBしか使用不可
+note right of OS
+USB全体(約32GB)を使えていない状態
+end note
+
+User -> USB : USBを取り外し別PCへ
+NIX -> USB : GPartedでパーティション編集
+NIX -> USB : ext4パーティション拡張
+NIX -> USB : resize2fs実行
+note right of USB
+ルート領域を約30GBまで拡張
+end note
+
+USB -> OS : 再接続して起動
+
+== VNC ==
+User -> OS : x11vncインストール
+User -> OS : パスワード設定
+User -> OS : systemdサービス作成
+User -> OS : systemctl enable x11vnc
+NIX -> OS : RemminaでVNC接続 (port 5900)
+note over NIX, OS
+LXQtデスクトップをリモート操作可能
+SSH + GUIの両方確立
+end note
+
+== WiFi ==
+User -> OS : ip a → wlan無し
+User -> OS : iw dev → 空
+User -> OS : dmesg確認
+
+note right of OS
+mmc2 (SDIO) デバイスとして検出あり
+= 内蔵Wi-Fiチップは存在
+
+ただし
+brcmfmac 等のドライバがロードされず
+インターフェース未生成
+end note
+
+== APT修復 ==
+User -> OS : sources.list修正
+note right of OS
+・deb.prawnos.com → 削除 (404)
+・unstable(sid) → 削除 (GPGエラー原因)
+・bullseye main contrib non-free のみに整理
+end note
+
+User -> OS : apt update 成功
+
+== firmware試行 ==
+User -> OS : firmware-brcm80211 導入
+User -> OS : reboot
+
+alt Wi-Fi動作
+OS -> User : wlan0出現
+else 非対応
+OS -> User : Wi-Fi使用不可
+note right
+SDIO Broadcom系だが
+カーネル/ドライバ未対応の可能性高
+
+→ 有線LAN使用 or USB Wi-Fiで対応
+end note
+end
+
+== 最終状態 ==
+NIX -> OS : SSH接続
+NIX -> OS : VNC接続
+
+note over NIX, OS
+✔ SSH (リモート操作)
+✔ VNC (GUI操作)
+✔ ストレージ拡張済み
+✖ 内蔵Wi-Fi不可（ハード依存）
+end note
+
+@enduml
