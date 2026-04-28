@@ -1,0 +1,40 @@
+@startuml
+title NixOS Upgrade: configuration.nix vs flake
+
+actor User
+
+participant "configuration.nix\n(従来方式)" as Legacy
+participant "NixOS Channel\n(nixos-25.05 → 25.11)" as Channel
+participant "System Modules\n(services, options)" as Modules
+participant "Home Manager\n(互換性変化)" as HM
+
+== configuration.nix 時代 ==
+User -> Legacy: nixos-rebuild switch
+Legacy -> Channel: 最新チャネルを取得
+Channel --> Legacy: nixpkgs 25.11 を返す
+
+Legacy -> Modules: 古い設定を新しいモジュールに適用
+Modules --> Legacy: ❌ オプション名変更・非互換エラー
+
+Legacy -> HM: 古い HM 設定を新しい HM に適用
+HM --> Legacy: ❌ 互換性エラー
+
+Legacy --> User: ❌ エラーだらけで失敗
+
+
+== flake 時代 ==
+participant "flake.nix\n(inputs 固定)" as Flake
+participant "flake.lock\n(依存完全固定)" as Lock
+participant "nixpkgs 25.05\n→ 25.11" as FlakePkgs
+
+User -> Flake: nixos-rebuild switch --flake
+Flake -> Lock: 依存バージョンを参照
+Lock --> Flake: 完全固定された依存セット
+
+User -> Flake: inputs.nixpkgs を 25.11 に変更
+Flake -> FlakePkgs: 一括で依存を取得
+FlakePkgs --> Flake: 整合性の取れた OS 全体
+
+Flake --> User: ✔ 成功（エラーなし）
+
+@enduml

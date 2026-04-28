@@ -1,0 +1,31 @@
+@startuml
+title OpenWrt メッシュ① 802.11s（シンプル）
+
+actor Client as スマホ
+
+participant "OpenWrt A\n(親 + AGH)" as A
+participant "OpenWrt B\n(子)" as B
+participant "OpenWrt C\n(子)" as C
+participant F660T
+participant Internet
+
+== 接続 ==
+スマホ -> A : Wi-Fi接続（同一LAN）
+
+== DNS ==
+スマホ -> A : DNS問い合わせ
+A -> A : AdGuard Home処理
+A -> Internet : DNS問い合わせ
+Internet --> A
+A --> スマホ
+
+== 通信（メッシュ） ==
+スマホ -> B : 通信発生
+B -> A : 802.11sメッシュ転送
+A -> F660T : ルーティング（同一LAN）
+F660T -> Internet
+Internet --> F660T
+F660T --> A
+A --> スマホ
+
+@enduml

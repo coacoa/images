@@ -1,0 +1,25 @@
+@startuml
+title flake の基本構造（覚えるべき5要素）
+
+package "flake.nix" {
+  [inputs] --> [outputs]
+  [outputs] --> [nixosConfigurations]
+}
+
+package "inputs" {
+  [nixpkgs 25.05]
+  [home-manager 25.05]
+}
+
+package "flake.lock" {
+  [固定された nixpkgs]
+  [固定された HM]
+  [依存グラフ]
+}
+
+[nixpkgs 25.05] --> [固定された nixpkgs]
+[home-manager 25.05] --> [固定された HM]
+
+[nixosConfigurations] --> [NixOS OS]
+
+@enduml

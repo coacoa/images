@@ -1,0 +1,47 @@
+@startuml
+title Docker と Podman の使い分けイメージ
+
+skinparam rectangle {
+  BackgroundColor #f9f9f9
+  BorderColor #555555
+  RoundCorner 10
+}
+skinparam note {
+  BackgroundColor #fff8dc
+}
+
+actor "You\n(NixOS / rootless 志向)" as You
+
+rectangle "普段の運用" as Normal {
+  rectangle "Podman\n- rootless 標準\n- daemon-less\n- NixOS と相性◎" as Podman
+}
+
+rectangle "Docker が必要になりがちな場面" as DockerCases {
+  rectangle "Docker Compose 前提\n- GitHub プロジェクト\n- Web/DB スタック\n- テンプレート類" as CaseCompose
+  rectangle "GPU / AI / NVIDIA\n- CUDA\n- --gpus all\n- AI ワークロード" as CaseGPU
+  rectangle "CI/CD / 商用サポート\n- GitHub Actions\n- Docker Hub\n- 商用ミドルウェア" as CaseCI
+}
+
+rectangle "Docker" as Docker {
+  rectangle "dockerd\n(root デーモン)" as dockerd
+  rectangle "docker CLI\n+ docker compose" as docker_cli
+}
+
+You --> Podman : 通常は Podman で運用
+You --> DockerCases : 特定の要件が出たとき検討
+
+DockerCases --> Docker : これらのケースでは\nDocker を使うと楽 / 必須
+
+note right of Podman
+  - セキュリティ重視
+  - NixOS で壊れにくい
+  - 単体サービスや軽量構成向き
+end note
+
+note right of Docker
+  - Compose が強力
+  - エコシステムが広い
+  - GPU / CI / 商用サポートに強い
+end note
+
+@enduml
