@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>PrawnOS XFCE → LXQt 移行 & x11vnc read 104 解決メモ</title>
+<style>
+body { font-family: sans-serif; line-height: 1.7; padding: 20px; }
+code, pre { background: #f0f0f0; padding: 6px; display: block; }
+h1 { border-bottom: 2px solid #444; padding-bottom: 4px; }
+h2 { margin-top: 30px; }
+</style>
+</head>
+<body>
+
+<h1>PrawnOS XFCE → LXQt 移行 & x11vnc read 104 完全解決メモ</h1>
+
+<p>
+このメモは、PrawnOS（Debian Bullseye ベース）で  
+<b>デフォルト XFCE から LXQt へ完全移行</b>し、  
+さらに Remmina の <b>read 104</b> を確実に解決するための手順をまとめたもの。
+</p>
+
+<hr>
+
+<h2>■ 1. LXQt のインストール</h2>
+
+<pre>
+sudo apt update
+sudo apt install lxqt lxqt-core lxqt-session openbox sddm
+</pre>
+
+ポイント：
+<ul>
+<li>LXQt の標準 WM は <b>Openbox</b></li>
+<li>SDDM を使うと LXQt と相性が良い</li>
+</ul>
+
+<hr>
+
+<h2>■ 2. SDDM を有効化（XFCE の LightDM を無効化）</h2>
+
+<pre>
+sudo systemctl enable sddm
+sudo systemctl disable lightdm
+</pre>
+
+再起動後、ログイン画面で **LXQt Desktop** を選択。
+
+<hr>
+
+<h2>■ 3. XFCE の WM（xfwm4）が残る問題の解決</h2>
+
+LXQt を後付けすると、XFCE の WM が残って LXQt が「半起動」になる。
+
+確認：
+
+<pre>
+ps aux | grep xfwm
+</pre>
+
+動いていたら LXQt の設定を修正：
+
+<pre>
+nano ~/.config/lxqt/session.conf
+</pre>
+
+以下を：
+
+<pre>window_manager=xfwm4</pre>
+
+→ こう変更：
+
+<pre>window_manager=openbox</pre>
+
+Openbox が無い場合：
+
+<pre>sudo apt install openbox</pre>
+
+再起動。
+
+<hr>
+
+<h2>■ 4. XFCE パネルが残る問題の解決</h2>
+
+LXQt でも XFCE のパネルが残る場合がある。
+
+XFCE パネルが動いていないか確認：
+
+<pre>
+ps aux | grep xfce4-panel
+</pre>
+
+動いていれば停止：
+
+<pre>
+killall xfce4-panel
+</pre>
+
+自動起動を削除：
+
+<pre>
+rm ~/.config/autostart/xfce4-panel.desktop
+rm ~/.config/autostart/xfsettingsd.desktop
+rm ~/.config/autostart/xfce4-power-manager.desktop
+</pre>
+
+LXQt パネルを再起動：
+
+<pre>
+lxqt-panel --restart
+</pre>
+
+<hr>
+
+<h2>■ 5. x11vnc の read 104 完全解決</h2>
+
+read 104 の原因は **auth mismatch**。  
+SDDM は Xorg を <code>-displayfd</code> で起動するため、DISPLAY と auth が固定されない。
+
+現在の Xauthority を確認：
+
+<pre>
+ls -l /var/run/sddm/
+</pre>
+
+例：
+
+<pre>/var/run/sddm/{26a8aa67-3469-4c68-83ba-ad60f66ad68c}</pre>
+
+これを x11vnc に明示的に渡す。
+
+<h3>■ x11vnc.service を修正</h3>
+
+<pre>
+sudo nano /etc/systemd/system/x11vnc.service
+</pre>
+
+内容：
+
+<pre>
+[Unit]
+Description=Start x11vnc at startup.
+After=display-manager.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/x11vnc -auth /var/run/sddm/{26a8aa67-3469-4c68-83ba-ad60f66ad68c} \
+ -noxdamage -usepw -rfbauth /etc/x11vnc.pass \
+ -forever -loop -shared -repeat -display WAIT:0
+
+[Install]
+WantedBy=multi-user.target
+</pre>
+
+反映：
+
+<pre>
+sudo systemctl daemon-reload
+sudo systemctl restart x11vnc
+</pre>
+
+<hr>
+
+<h2>■ 6. Remmina 側の設定</h2>
+
+<ul>
+<li>Security → <b>VNC Password</b></li>
+<li>接続先は IPv4 を明示（例：<code>vnc://192.168.x.x:5900</code>）</li>
+</ul>
+
+<hr>
+
+<h2>■ 7. これで直る理由</h2>
+
+<ul>
+<li><code>-display WAIT:0</code> → SDDM の動的 DISPLAY を吸収</li>
+<li><code>-auth /var/run/sddm/UUID</code> → auth mismatch を完全排除</li>
+<li>x11vnc が接続直後に落ちなくなる → read 104 が消える</li>
+</ul>
+
+<hr>
+
+<h2>■ 最終まとめ</h2>
+
+<p>
+PrawnOS の XFCE → LXQt 移行は、  
+SDDM の displayfd と XFCE の残骸のせいで複雑になりやすい。  
+しかし以下の 3 点を押さえれば確実に成功する：
+</p>
+
+<ol>
+<li>LXQt の WM を Openbox に固定</li>
+<li>XFCE のパネル・autostart を削除</li>
+<li>x11vnc に正しい Xauthority を指定し、DISPLAY は WAIT:0 を使う</li>
+</ol>
+
+<p>これで LXQt + x11vnc + Remmina が完全に安定する。</p>
+
+</body>
+</html>
+
