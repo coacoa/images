@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>x11vnc 完全安定版（PrawnOS + SDDM + LXQt）</title>
+<style>
+body { font-family: sans-serif; line-height: 1.7; padding: 20px; }
+code, pre { background: #f0f0f0; padding: 6px; display: block; }
+h1 { border-bottom: 2px solid #444; padding-bottom: 4px; }
+h2 { margin-top: 30px; }
+</style>
+</head>
+<body>
+
+<h1>x11vnc 完全安定版（PrawnOS + SDDM + LXQt）</h1>
+
+<p>
+このメモは、PrawnOS（Debian Bullseye）で発生する  
+<b>Remmina の read 104 問題</b>を完全に解決するための  
+<b>最終安定構成</b>をまとめたもの。
+</p>
+
+<hr>
+
+<h2>■ 問題の正体</h2>
+
+<p>
+PrawnOS + SDDM + LXQt 環境では、Xorg が以下のように動作する：
+</p>
+
+<ul>
+<li>SDDM と LXQt が同じ Xorg プロセスを共有する</li>
+<li>auth は <code>/var/run/sddm/{UUID}</code> に生成される</li>
+<li>UUID は再起動ごとに変わる</li>
+<li>x11vnc が古い UUID を参照すると即終了 → read 104</li>
+</ul>
+
+<p>
+つまり、read 104 の原因は <b>auth mismatch</b> であり、  
+UUID を毎回自動検出すれば完全に解決する。
+</p>
+
+<hr>
+
+<h2>■ SDDM autologin（必須）</h2>
+
+<p>以下のファイルを作成：</p>
+
+<pre>
+sudo nano /etc/sddm.conf.d/autologin.conf
+</pre>
+
+内容：
+
+<pre>
+[Autologin]
+User=hoge
+Session=lxqt.desktop
+Relogin=true
+</pre>
+
+<hr>
+
+<h2>■ x11vnc を “UUID 自動検出 + DISPLAY=:0 固定” にする（最終形）</h2>
+
+<p>以下の systemd ユニットを作成：</p>
+
+<pre>
+sudo nano /etc/systemd/system/x11vnc.service
+</pre>
+
+内容：
+
+<pre>
+[Unit]
+Description=Start x11vnc after LXQt session
+After=graphical-session.target
+
+[Service]
+Type=simple
+
+# 起動時に /var/run/sddm の UUID を自動検出
+ExecStartPre=/bin/sh -c 'sleep 2; AUTH=$(ls /var/run/sddm/* | head -n 1); echo $AUTH > /tmp/x11vnc_auth'
+
+# LXQt の Xorg (:0) に接続
+ExecStart=/bin/sh -c '/usr/bin/x11vnc -auth $(cat /tmp/x11vnc_auth) \
+ -noxdamage -usepw -rfbauth /etc/x11vnc.pass \
+ -forever -loop -shared -repeat -display :0'
+
+[Install]
+WantedBy=graphical-session.target
+</pre>
+
+反映：
+
+<pre>
+sudo systemctl daemon-reload
+sudo systemctl enable x11vnc
+sudo systemctl restart x11vnc
+</pre>
+
+<hr>
+
+<h2>■ これで安定する理由</h2>
+
+<ul>
+<li><b>UUID 自動検出</b> → 再起動しても auth mismatch が起きない</li>
+<li><b>DISPLAY=:0 固定</b> → SDDM の Xorg を掴まない</li>
+<li><b>graphical-session.target</b> → LXQt 起動後に x11vnc を開始</li>
+<li><b>sleep 2</b> → autologin 完了まで待つ</li>
+</ul>
+
+<p>
+これにより、x11vnc は常に正しい Xorg と auth を掴み、  
+<b>read 104 は永久に発生しなくなる。</b>
+</p>
+
+<hr>
+
+<h2>■ 動作確認</h2>
+
+<pre>
+sudo systemctl status x11vnc
+journalctl -u x11vnc -n 50
+</pre>
+
+<p>Remmina から <code>vnc://IP:5900</code> で接続。</p>
+
+<hr>
+
+<h2>■ 最終まとめ</h2>
+
+<ol>
+<li>SDDM autologin を <code>/etc/sddm.conf.d/</code> に設定</li>
+<li>Xorg の auth は <code>/var/run/sddm/UUID</code></li>
+<li>UUID は毎回変わる → 自動検出が必須</li>
+<li>x11vnc を <b>UUID 自動検出 + DISPLAY=:0</b> にする</li>
+<li>これで read 104 は完全に消える</li>
+</ol>
+
+<p>
+この構成は PrawnOS + SDDM + LXQt 環境で最も安定する  
+<b>“最終解決版”</b>。
+</p>
+
+</body>
+</html>
+
