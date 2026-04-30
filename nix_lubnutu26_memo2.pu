@@ -1,55 +1,50 @@
 @startuml
-title Lubuntu 日本語→英語 UI 切り替えの問題と解決プロセス
+title Lubuntu 日本語→英語化の全経緯（Sequence + Sections）
 
-start
+actor User as U
+participant "Home Manager" as HM
+participant "LXQt" as LX
+participant "Openbox" as OB
+participant "Ubuntu OS" as OS
 
-:Home Manager で LANG=en_US を設定;
-note right
-UI は日本語のまま
-→ LXQt が LANG を無視
-end note
+== Phase 1: Home Manager で英語化を試す ==
+U -> HM: LANG=en_US.UTF-8 を設定\nLC_MESSAGES=en_US.UTF-8
+HM -> LX: 英語ロケールを渡す
+LX -> U: UI は日本語のまま
 
-:lxqt/session.conf を英語化;
-note right
-まだ日本語
-end note
+== Phase 2: LXQt 設定ファイルを英語化 ==
+U -> HM: session.conf を英語化
+HM -> LX: language=en_US
+LX -> U: まだ日本語
 
-:lxqt/lxqt.conf を英語化;
-note right
-まだ日本語
-end note
+U -> HM: lxqt.conf を英語化
+HM -> LX: language=en_US
+LX -> U: まだ日本語
 
-:lxqt/environment.conf を英語化;
-note right
-まだ日本語
-end note
+== Phase 3: LXQt 環境変数を英語化 ==
+U -> HM: environment.conf を英語化
+HM -> LX: LANG=en_US
+LX -> U: まだ日本語
 
-:Openbox の環境変数を英語化;
-note right
-まだ日本語
-end note
+== Phase 4: Openbox の環境変数を英語化 ==
+U -> HM: lubuntu-rc.xml に LANG=en_US を設定
+HM -> OB: LANG=en_US
+OB -> LX: 英語ロケールを渡す
+LX -> U: まだ日本語
 
-if (OS ロケールは?) then (ja_JP)
-  :/etc/default/locale が ja_JP のまま;
-  note right
-  Lubuntu は OS ロケールを最優先で読む  
-  → すべてのユーザー設定を上書きして日本語に戻す
-  end note
-else (en_US)
-  :OS ロケールが英語;
-endif
-
-:/etc/default/locale を en_US.UTF-8 に変更;
+== Phase 5: 原因の特定 ==
+LX -> OS: /etc/default/locale を参照
+OS -> LX: LANG=ja_JP.UTF-8\nLANGUAGE=ja_JP
+LX -> U: UI を日本語に強制
 
 note right
-ここで初めて  
-LXQt / Openbox / Home Manager の設定が  
-正しく反映される
+Lubuntu は OS ロケールを最優先で読むため  
+Home Manager の設定をすべて上書きしていた
 end note
 
-:再起動;
+== Phase 6: 解決 ==
+U -> OS: /etc/default/locale を en_US.UTF-8 に変更
+OS -> LX: LANG=en_US.UTF-8
+LX -> U: UI が完全に英語化
 
-:UI が完全に英語化;
-
-stop
 @enduml
