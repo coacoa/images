@@ -1,0 +1,35 @@
+@startuml
+skinparam componentStyle uml2
+title Nix Flakeによる構成管理と適用フロー
+
+node "Git Repository (Declarative Source)" {
+    component "flake.nix" as Flake
+    component "flake.lock" as Lock
+    
+    package "Home Manager Modules" {
+        component "Firefox Configuration" as FF <<Plugin/Policies>>
+        component "x11vnc Service" as VNC <<systemd>>
+    }
+}
+
+actor "User" as User
+
+User -> [Git Repository] : 編集 (git add)
+[Git Repository] --> [Nix Evaluator] : 構成読み込み
+[Nix Evaluator] --> FF : 拡張機能・user.jsの統合
+[Nix Evaluator] --> VNC : サービス定義の生成
+
+[Nix Evaluator] --> [Active System] : nix switch / run
+[Active System] --> [Firefox Process] : 設定適用
+[Active System] --> [systemd-user] : VNCサービスの起動
+
+note bottom of FF
+  - 宣言的なプラグイン管理
+  - プロファイル統合
+end note
+
+note bottom of VNC
+  - 認証・解像度の自動設定
+end note
+
+@enduml

@@ -1,0 +1,77 @@
+@startuml
+title LTS と 非LTS の比較（セキュリティ実例メモ付き）
+
+' 左側：LTS 側
+actor "User(LTS)" as U_L
+participant "Linux LTS" as LTS
+participant "App/Env(LTS)" as APP_L
+
+' 右側：非LTS 側
+actor "User(非LTS)" as U_N
+participant "Linux 非LTS" as NLTS
+participant "App/Env(非LTS)" as APP_N
+
+box "LTS 側" #DDFFDD
+  U_L -> LTS: LTS版をインストール
+  LTS -> U_L: サポート5年以上<br>大きな変更は少なめ
+end box
+
+box "非LTS 側" #FFDDDD
+  U_N -> NLTS: 非LTS版をインストール
+  NLTS -> U_N: サポート9ヶ月前後<br>新機能多め
+end box
+
+== 日常利用 ==
+
+U_L -> APP_L: 開発・作業
+APP_L -> LTS: 安定したライブラリ/カーネルを利用
+LTS -> APP_L: 互換性重視で提供
+
+U_N -> APP_N: 開発・作業
+APP_N -> NLTS: 新しめのライブラリ/カーネルを利用
+
+== アップデート ==
+
+U_L -> LTS: 通常アップデート
+LTS -> LTS: セキュリティ中心の更新
+LTS -> APP_L: 昨日と同じように動く
+APP_L -> U_L: 「環境そのまま」
+
+U_N -> NLTS: ディストリ全体をアップグレード
+NLTS -> APP_N: ライブラリ/カーネルが大きく更新
+APP_N -> U_N: 設定変更・再インストールが必要になることも
+
+== セキュリティ実例メモ ==
+
+note over LTS
+● Dirty COW (CVE-2016-5195)<br>
+● Sudo権限昇格 (CVE-2019-14287)<br>
+● Polkit PwnKit (CVE-2021-4034)<br>
+● Heartbleed (2014)<br><br>
+→ いずれも LTS は即修正<br>
+→ 非LTSの古い版は EOL でパッチなし
+end note
+
+note over NLTS
+非LTSはサポート期間が短く、<br>
+重大脆弱性でも修正が提供されないことがある
+end note
+
+== メリット / デメリットまとめ ==
+
+note over LTS, APP_L
+LTS 側の主なメリット：<br>
+- 長期サポートで環境が安定<br>
+- アップデート事故が起きにくい<br>
+- セキュリティ修正が長期間保証<br>
+- メインPC・サーバー向き
+end note
+
+note over NLTS, APP_N
+非LTS 側の主なメリット：<br>
+- 新機能・新カーネルをすぐ試せる<br>
+- 最新ハードウェア対応が早い<br>
+- サブ機・検証用・遊び用に向く
+end note
+
+@enduml
