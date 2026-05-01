@@ -1,0 +1,49 @@
+@startuml
+title ASUS A100P ARM Chromebookで広告地獄とサポート切れに絶望し、Linux化を決意するまで
+
+actor User
+participant "ASUS A100P\n(ARM / RAM 2GB)" as A100P
+participant "ChromeOS\n(サポート切れ)" as ChromeOS
+participant "YouTube\n(広告だらけ)" as YouTube
+participant "Linux Distros\n(PrawnOS / Cadmium)" as Linux
+
+== Chromebook の現状 ==
+User -> A100P : 古い ASUS A100P を起動
+A100P -> ChromeOS : サポート切れ状態で起動
+ChromeOS -> User : 「アップデート不可」「ブラウザ古い」
+
+== ブラウザ問題 ==
+User -> ChromeOS : Brave / Firefox を入れようと試す
+ChromeOS -> User : ARM版が入らない / 対応外
+User -> ChromeOS : ChatGPT ログインを試す
+ChromeOS -> User : アカウント切替で利用不可
+
+== YouTube は見れるが… ==
+User -> YouTube : 動画再生
+YouTube -> User : 広告を大量に表示
+User -> ChromeOS : 広告ブロックを試す
+ChromeOS -> User : 「拡張機能が入らない」「Braveも入らない」
+
+== 広告地獄で限界 ==
+User -> User : 「広告ひどすぎ… Google まじでひどい」
+User -> User : 「Chromebook への期待は完全にゼロ」
+
+== 自分を責めそうになる瞬間 ==
+User -> User : 「サポート切れにキレても意味ない？俺が悪いのか？」
+User -> User : 「いや違う。広告強制・拡張機能封鎖・サポート切り捨てが問題だ」
+
+== 正当な結論 ==
+User -> User : 「このハードはまだ使える。Linux なら復活できる」
+User -> User : 「こんな広告地獄を強制されるくらいなら Linux だ！」
+
+== Linux 導入チャレンジ ==
+User -> Linux : PrawnOS を試す
+Linux -> User : ARM対応だがセットアップに苦戦
+User -> Linux : Cadmium も試す
+Linux -> User : ブートや設定で苦戦
+
+== 1日格闘の末 ==
+User -> User : 「ChromeOS はもう無理」
+User -> User : Linux化を正式に決意
+
+@enduml

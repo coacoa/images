@@ -1,0 +1,56 @@
+@startuml
+title SSH先のファイル内容を X11 / Wayland どちらでもクリップボードへコピーする流れ
+
+actor User
+participant "Local PC\n(X11 or Wayland)" as Local
+participant "Remote PC\n(SSH先)" as Remote
+
+== ファイル内容取得 ==
+User -> Remote : cat hoge.txt 実行\n(内容を取得)
+
+== コピー先の選択 ==
+alt リモートPCのクリップボードに入れたい
+    alt Remote = X11
+        Remote -> Remote : xclip -selection clipboard\n(cat hoge.txt | xclip)
+        note right
+          リモートX11のクリップボードへ
+        end note
+    else Remote = Wayland
+        Remote -> Remote : wl-copy\n(cat hoge.txt | wl-copy)
+        note right
+          リモートWaylandのクリップボードへ
+        end note
+    end
+
+else ローカルPCのクリップボードに入れたい
+    alt Local = X11
+        User -> Local : ssh -Y user@remote\n(X11 Forwarding)
+        Remote -> Local : xclip -selection clipboard\n(cat hoge.txt | xclip)
+        note right
+          ローカルX11のクリップボードへ
+        end note
+
+    else Local = Wayland
+        Remote -> Local : ssh user@remote "cat hoge.txt" | wl-copy
+        note right
+          ローカルWaylandのクリップボードへ
+        end note
+
+    else Local = Windows
+        Remote -> Local : ssh user@remote "cat hoge.txt" | clip.exe
+        note right
+          Windowsのクリップボードへ
+        end note
+
+    else Local = macOS
+        Remote -> Local : ssh user@remote "cat hoge.txt" | pbcopy
+        note right
+          macOSのクリップボードへ
+        end note
+    end
+end
+
+== 完了 ==
+User <- Local : コピー完了
+
+@enduml
