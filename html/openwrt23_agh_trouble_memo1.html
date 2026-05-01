@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenWrt + AdGuard Home 復旧メモ</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 20px auto; padding: 0 10px; background-color: #f4f7f6; }
+        h1 { border-bottom: 2px solid #2c3e50; color: #2c3e50; }
+        h2 { color: #e67e22; border-left: 5px solid #e67e22; padding-left: 10px; margin-top: 30px; }
+        code { background-color: #eee; padding: 2px 5px; border-radius: 4px; font-family: monospace; font-weight: bold; }
+        pre { background-color: #2d3436; color: #dfe6e9; padding: 15px; border-radius: 8px; overflow-x: auto; position: relative; }
+        .success { color: #27ae60; font-weight: bold; }
+        .warning { background-color: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 5px; }
+        .status-check { background-color: #d1ecf1; border: 1px solid #bee5eb; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+    <h1>OpenWrt + AGH DNS復旧マニュアル</h1>
+
+    <section class="status-check">
+        <strong>トラブル状況：</strong> ネットが繋がらない、またはAndroidで「接続なし」になる。<br>
+        <strong>原因：</strong> Dnsmasq(53)とAGH(5353)の連携ミス、またはDNSループ。
+    </section>
+
+    <h2>1. 疎通確認（原因の切り分け）</h2>
+    <p>SSHで入り、以下のコマンドを実行する。</p>
+    <pre># 外の世界(IP)と繋がっているか
+ping -c 3 8.8.8.8
+
+# AGH(5353)が名前解決できているか
+nslookup google.com 127.0.0.1:5353</pre>
+    <p>※ AGH経由でIPが返ってこない場合は、AGH管理画面(<code>:8080</code>)の「アップストリームDNS」に <code>8.8.8.8</code> を設定する。</p>
+
+    <h2>2. DNS設定の完全修正（一本化）</h2>
+    <p>Dnsmasqの設定をAGH専用の転送役に固定する。</p>
+    <pre># 転送先をAGHのみにする
+uci del dhcp.@dnsmasq[0].server
+uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5353'
+
+# WAN側DNSを無視（ループ防止）
+uci set dhcp.@dnsmasq[0].noresolv='1'
+
+# 反映
+uci commit dhcp
+/etc/init.d/dnsmasq restart</pre>
+
+    <h2>3. Androidの「接続なし」対策</h2>
+    <div class="warning">
+        数日で不安定になる場合は、Android側の設定を確認：
+        <ul>
+            <li><strong>プライベートDNS:</strong> 「オフ」にする（自動だとポート853を使おうとして詰まる）。</li>
+            <li><strong>IPv6 DNS:</strong> 繋がらない場合は、OpenWrt側でIPv6を無効化するか、IPv6 DNSもAGHに向ける。</li>
+        </ul>
+    </div>
+
+    <h2>構成図（正常時）</h2>
+    <ul>
+        <li><strong>端末</strong> → [Port 53] → <strong>Dnsmasq</strong></li>
+        <li><strong>Dnsmasq</strong> → [Port 5353] → <strong>AdGuard Home</strong></li>
+        <li><strong>AdGuard Home</strong> → [外部] → <strong>Internet</strong></li>
+    </ul>
+
+    <p class="success">※ これで直らない場合は、一度ルーターの再起動を行い、<code>netstat -tulpn | grep 53</code> でポートの競合がないか再確認してください。</p>
+
+</body>
+</html>
