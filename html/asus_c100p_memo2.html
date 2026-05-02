@@ -2,59 +2,82 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>C100P再利用の戦記 - 沼にハマった男の記録</title>
+    <title>C100P再利用戦記 - 完結編：二層のOSと男の勝利</title>
     <style>
-        body { font-family: 'Courier New', Courier, monospace; background-color: #1a1a1a; color: #dcdccc; line-height: 1.6; padding: 20px; max-width: 800px; margin: auto; }
-        h1 { color: #f0dfaf; border-bottom: 2px solid #f0dfaf; padding-bottom: 10px; }
-        h2 { color: #8cd0d3; margin-top: 30px; }
-        .log-entry { background: #2b2b2b; border-left: 5px solid #5f7f5f; padding: 15px; margin-bottom: 20px; border-radius: 0 5px 5px 0; }
-        .status-failed { color: #cc9393; font-weight: bold; }
-        .status-success { color: #afd8af; font-weight: bold; }
-        code { background: #3f3f3f; padding: 2px 5px; border-radius: 3px; color: #efef8f; }
-        footer { margin-top: 50px; font-size: 0.8em; color: #7f9f7f; text-align: center; }
-        .wisdom { font-style: italic; color: #dfaf8f; border: 1px dashed #dfaf8f; padding: 10px; margin: 20px 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0f111a; color: #a6accd; line-height: 1.7; padding: 40px; max-width: 900px; margin: auto; }
+        h1 { color: #82aaff; border-bottom: 2px solid #3b3f51; padding-bottom: 10px; text-align: center; }
+        h2 { color: #c792ea; margin-top: 40px; border-left: 4px solid #c792ea; padding-left: 15px; }
+        .spec-table { width: 100%; border-collapse: collapse; margin: 20px 0; background: #1a1c25; }
+        .spec-table th, .spec-table td { border: 1px solid #3b3f51; padding: 12px; text-align: left; }
+        .spec-table th { background: #292d3e; color: #89ddff; }
+        .log-entry { background: #1e212e; border: 1px solid #3b3f51; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
+        .status-ok { color: #c3e88d; font-weight: bold; }
+        .status-warn { color: #ffcb6b; font-weight: bold; }
+        .status-ng { color: #f07178; font-weight: bold; }
+        .wisdom { font-style: italic; color: #89ddff; background: #292d3e; padding: 15px; border-radius: 5px; margin: 20px 0; border-right: 5px solid #89ddff; }
+        footer { text-align: center; margin-top: 60px; color: #464b5d; font-size: 0.9em; }
+        code { background: #000; color: #c3e88d; padding: 2px 6px; border-radius: 4px; }
     </style>
 </head>
 <body>
 
-    <h1>ASUS Chromebook Flip C100P 再利用戦記</h1>
-    <p>これは、2015年の名機を2026年に蘇らせようとして、ARMv7の深淵に触れた一人の男の記録である。</p>
+    <h1>ASUS Chromebook Flip C100P<br>再利用プロジェクト・全記録</h1>
 
-    <div class="log-entry">
-        <h2>第1章：物理プロテクトとの遭遇</h2>
-        <p>裏蓋を開け、ネジを外し、<code>flashrom</code> を叩く。しかし <code>crossystem wpsw_cur</code> は無情にも <code>2</code> を示す。
-        書き込めるようで書き込めない、生殺しの <strong>PMBR Magic String I/O Error</strong>。ハードウェアとソフトウェアの境界線で立ち往生した。</p>
-        <p class="status-failed">結果：物理ネジの呪いは想像以上に深かった。</p>
-    </div>
-
-    <div class="log-entry">
-        <h2>第2章：PrawnOS という名の「自由」な監獄</h2>
-        <p>なんとか <code>eMMC</code> にインストールできた PrawnOS。しかし、そこは Wi-Fi も鳴らない、スピーカーも黙り込む「完全なる自由（不便）」の世界。
-        <code>pwn-firmware-install</code> すら見当たらない孤独なターミナルで、SSH 接続だけが唯一の救いとなった。</p>
-        <p class="status-success">成功：SSH 経由で母艦から操作可能に。男は文明の利器を取り戻した。</p>
-    </div>
-
-    <div class="log-entry">
-        <h2>第2章：PrawnOS という名の「惜しい」楽園</h2>
-        <p>インストールに成功し、画面には GNOME の美しいデスクトップが広がる。「勝った」と思った。
-        しかし、メニューを開いても Wi-Fi は沈黙し、動画を再生してもスピーカーは微動だにしない。
-        GNOME が完璧に動いているからこそ、その「欠けたパーツ（ファームウェア）」の存在が致命的な欠陥として際立つ。
-        「見た目は完璧なのに、声も届かず外の世界も知らない」孤独な名機がそこにいた。</p>
-        <p class="status-failed">結果：GUI 完動。ただし Wi-Fi と音響の壁により実用性はゼロ。</p>
-    </div>
     <div class="wisdom">
-        「32bit ARMで現代的なパッケージマネージャを動かそうとするのは、軽自動車で宇宙へ行こうとするようなものだ。」
+        「メモリ2GB、ARMv7。2015年の遺産を2026年に動かす鍵は、執念とOSの使い分けにあった。」
     </div>
 
-    <h2>今後の展望</h2>
-    <ul>
-        <li><strong>SanDisk Ultra Fit 16GB</strong> を調達し、物理的な「でっぱり」を消去する。</li>
-        <li><strong>postmarketOS</strong> という「実利の楽園」へ移住し、Wi-Fi と音響を手に入れる。</li>
-        <li>内蔵 eMMC は「いざという時のバックアップ」として眠らせる。</li>
-    </ul>
+    <h2>1. 最終構成：ハイブリッド・システム</h2>
+    <table class="spec-table">
+        <tr>
+            <th>ストレージ</th>
+            <th>導入OS</th>
+            <th>役割・状態</th>
+        </tr>
+        <tr>
+            <td>内蔵 eMMC (16GB)</td>
+            <td><strong>PrawnOS</strong></td>
+            <td>安定のバックアップ。Wi-Fi/音は出ないが、カメラとGNOMEは動作。</td>
+        </tr>
+        <tr>
+            <td>外部 USB (SanDisk)</td>
+            <td><strong>postmarketOS</strong></td>
+            <td>メイン環境。<strong>Wi-Fi・スピーカー完全対応。</strong> 驚異の快適性。</td>
+        </tr>
+    </table>
+
+    <h2>2. 激闘のログ</h2>
+
+    <div class="log-entry">
+        <h3>フェーズ1：物理と権限の壁</h3>
+        <p>裏蓋のネジを外しても消えない書き込み制限。<code>crossystem</code> との不毛な争い。男は「物理的な破壊」ではなく「外部からの起動」という賢者の選択を選んだ。</p>
+        <p class="status-warn">教訓：ハードウェアの呪いには、無理に立ち向かわず横道を探せ。</p>
+    </div>
+
+    <div class="log-entry">
+        <h3>フェーズ2：PrawnOS の孤独なカメラ</h3>
+        <p>リポジトリは死に絶え、<code>apt</code> は悲鳴を上げた。しかし <code>mpv</code> だけは裏切らなかった。
+        <code>/dev/video2</code> をこじ開けたとき、画面には「2026年に生きる男」が 720p で確かに映っていた。</p>
+        <p class="status-ok">成功：内蔵カメラの生存確認。ハードウェアのポテンシャルを証明。</p>
+    </div>
+
+    <div class="log-entry">
+        <h3>フェーズ3：postmarketOS の衝撃</h3>
+        <p>「USBメモリからの起動、しかもメモリ2GB」。不安を余所に、GNOME は滑らかに動き出した。
+        当たり前のように繋がる Wi-Fi。当たり前のように鳴るスピーカー。
+        現代の軽量 Linux 技術が、11年前のハードウェアに「魂」を吹き込んだ瞬間だった。</p>
+        <p class="status-ok">成功：全機能完全復活。実用レベルのモバイルマシンへ。</p>
+    </div>
+
+    <h2>3. 結論</h2>
+    <p>
+        NixOS での環境構築には敗れたかもしれない。しかし、男は「eMMC には孤独な Prawn、USB には自由な pmOS」という、
+        いつでも帰れる実家と、どこへでも行ける翼を手に入れた。
+        メモリ2GBの GNOME がこれほどまでに美しいとは、実際にハマった者にしか分かるまい。
+    </p>
 
     <footer>
-        <p>2026年5月 - あるハッカーの休息日</p>
+        <p>&copy; 2026 The ARMv7 Survivor Project - Final Report</p>
     </footer>
 
 </body>
