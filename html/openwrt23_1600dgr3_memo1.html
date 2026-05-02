@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenWrt + AdGuard Home 最終安定化メモ</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 20px auto; padding: 20px; background-color: #f0f2f5; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h1 { color: #1a73e8; border-bottom: 3px solid #1a73e8; padding-bottom: 10px; }
+        h2 { color: #d93025; border-left: 5px solid #d93025; padding-left: 15px; margin-top: 30px; }
+        pre { background-color: #282c34; color: #abb2bf; padding: 15px; border-radius: 8px; overflow-x: auto; font-size: 0.9em; }
+        code { color: #e06c75; font-weight: bold; }
+        .point { background-color: #e8f0fe; border-right: 5px solid #1a73e8; padding: 15px; margin: 10px 0; }
+        .warning { background-color: #fef7e0; border-right: 5px solid #f9ab00; padding: 15px; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f8f9fa; }
+    </style>
+</head>
+<body>
+
+    <h1>OpenWrt DNS & 安定化マニュアル</h1>
+
+    <div class="card">
+        <h2>1. DNS連携設定 (Dnsmasq ⇄ AGH)</h2>
+        <p>ポート53のDnsmasqから、ポート5353のAGHへクエリを転送し、AGH停止時のバックアップ(8.8.8.8)も設定済み。</p>
+        <pre># AGHをメイン、Googleを予備に設定
+uci del dhcp.@dnsmasq[0].server
+uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5353'
+uci add_list dhcp.@dnsmasq[0].server='8.8.8.8'
+
+# 上位ルーターからの不安定なDNSを無視
+uci set dhcp.@dnsmasq[0].noresolv='0'
+
+uci commit dhcp
+/etc/init.d/dnsmasq restart</pre>
+    </div>
+
+    <div class="card">
+        <h2>2. メモリ不足・フリーズ対策 (Swap設定)</h2>
+        <p>128MB RAMの限界をExtroot上のSwapファイル(512MB)で補強。LED全点灯フリーズを防止。</p>
+        <pre># Swapファイルの作成と有効化
+dd if=/dev/zero of=/overlay/swap.file bs=1M count=512
+chmod 600 /overlay/swap.file
+mkswap /overlay/swap.file
+swapon /overlay/swap.file
+
+# 自動マウント設定
+uci add fstab swap
+uci set fstab.@swap[-1].device='/overlay/swap.file'
+uci set fstab.@swap[-1].enabled='1'
+uci commit fstab</pre>
+        <div class="point">
+            <strong>確認コマンド:</strong> <code>free -m</code> を叩き、Swapのtotalが512MB付近なら正常。
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>3. トラブルシューティング</h2>
+        <table>
+            <tr>
+                <th>症状</th>
+                <th>確認・対策</th>
+            </tr>
+            <tr>
+                <td>ネットが重い</td>
+                <td><code>free -m</code> でSwapの使用量を確認。多すぎるなら <code>reboot</code>。</td>
+            </tr>
+            <tr>
+                <td>特定の端末だけ「接続なし」</td>
+                <td>端末側の「プライベートDNS」がオフになっているか確認。</td>
+            </tr>
+            <tr>
+                <td>AGH管理画面が開かない</td>
+                <td><code>/etc/init.d/adguardhome restart</code> でAGHを叩き起こす。</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>4. 構成概要図</h2>
+        <div class="point">
+            <strong>端末</strong> → [Port 53] <strong>Dnsmasq</strong> → [Port 5353] <strong>AdGuard Home</strong> (フィルタ17万行)<br>
+            ※メモリが溢れたら <strong>/overlay/swap.file</strong> (512MB) へ一時退避
+        </div>
+    </div>
+
+    <p style="text-align: center; color: #888;">作成日: 2026年5月2日 / I-O DATA WN-AC1600DGR2/DGR3 専用構成</p>
+
+</body>
+</html>
