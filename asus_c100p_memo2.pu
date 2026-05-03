@@ -1,0 +1,44 @@
+@startuml
+title ASUS C100P Linux化計画：PrawnOS, Cadmiumを経て最強の「外付け」環境へ
+
+actor User
+participant "ASUS C100P\n(eMMC)" as C100P
+participant "PrawnOS" as Prawn
+participant "Cadmium" as Cadmium
+participant "AI / LLM" as AI
+participant "postmarketOS" as pmOS
+
+== 第1の試練：PrawnOS と Cadmium ==
+User -> Prawn : USBから起動試行
+Prawn -> User : USBブート成功！動作確認
+User -> Cadmium : eMMCへのインストールを試みる
+User -> AI : 「eMMCに焼く方法を教えて」
+AI -> User : ddコマンドやスクリプトを提案
+Cadmium -> C100P : 書き込み失敗 (Input/output error)
+User -> C100P : eMMCがReadOnlyで固定されていることを確信
+User -> User : 「Cadmiumは諦めるしかないか…」
+
+== 第2の試練：PrawnOSの限界 ==
+User -> Prawn : eMMCインストーラーを実行
+Prawn -> C100P : インストール成功！(奇跡)
+User -> Prawn : OS起動
+Prawn -> User : Wi-Fi沈黙、スピーカー音出ず
+User -> User : 「音もネットもないLinuxは、ただの箱だ…」
+
+== 最終局面：postmarketOSとの出会い ==
+User -> pmOS : USBブート用イメージを作成
+User -> pmOS : USBから起動
+pmOS -> User : Wi-Fi OK！ スピーカー音出し OK！
+User -> User : 「これだ！これが求めていた完全なドライバだ」
+
+== eMMCへの執念と妥協 ==
+User -> pmOS : eMMCへ 'dd' での書き込みを強行
+C100P -> User : Write-protected / Read-only で拒絶
+User -> User : 「eMMCの呪縛が解けない…」
+User -> User : 「いや、待てよ。USBでこれだけ動くなら…」
+
+== 正当な妥協 ==
+User -> User : 「内蔵に拘って文鎮化させるより、USB運用で十分」
+User -> User : 「広告地獄のChromeOSより100倍マシな環境完成！」
+
+@enduml
