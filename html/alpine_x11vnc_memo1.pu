@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alpine Linux x11vnc Setup Memo</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.7; color: #333; max-width: 900px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; }
+        header { background: #0078d4; color: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; text-align: center; }
+        h1 { margin: 0; font-size: 1.8em; }
+        h2 { border-left: 5px solid #0078d4; padding-left: 15px; margin-top: 40px; color: #005a9e; }
+        h3 { color: #444; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+        code { background: #eee; padding: 2px 5px; border-radius: 4px; font-family: 'Courier New', Courier, monospace; font-weight: bold; }
+        pre { background: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 8px; overflow-x: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; }
+        .comment { color: #75715e; }
+        .cmd { color: #a6e22e; }
+        .info-box { background: #e7f3ff; border: 1px solid #b3d7ff; padding: 15px; border-radius: 8px; margin: 20px 0; }
+        .warning-box { background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 8px; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; background: white; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Alpine Linux x11vnc リモート操作 構築メモ</h1>
+    <p>対象機: HP Pavilion (Win8世代) / OS: Alpine Linux / GUI: LXQt</p>
+</header>
+
+<div class="info-box">
+    <strong>教訓:</strong> Alpine Linuxにおいて「ポートが開かない」最大の原因は、Firewallではなく<strong>サーバーソフト（x11vnc）が権限エラーで即死していること</strong>にある。
+</div>
+
+<h2>STEP 1: ツール群のインストール</h2>
+<p>まずは、VNCサーバーと、X11の権限をねじ伏せるための関連パッケージをすべて導入します。</p>
+<pre>
+<span class="comment"># パッケージリストの更新</span>
+<span class="cmd">doas apk update</span>
+
+<span class="comment"># 必要なツールをまとめてインストール</span>
+<span class="cmd">doas apk add x11vnc xvfb xhost xauth</span>
+</pre>
+
+<h2>STEP 2: 接続パスワードの作成</h2>
+<p>リモート接続時に使用するパスワードを事前に生成します。</p>
+<pre>
+<span class="cmd">x11vnc -storepasswd</span>
+<span class="comment"># パスワード入力後、 y を押して ~/.vnc/passwd に保存</span>
+</pre>
+
+<h2>STEP 3: 物理画面 (:0) の操作用コマンド</h2>
+<p>本体の液晶に映っているLXQtデスクトップをそのまま操作するための実行コマンドです。<strong>SSH経由ではroot権限(doas)での実行が必須</strong>です。</p>
+<pre>
+<span class="cmd">doas x11vnc -display :0 -findauth -forever -bg -rfbauth ~/.vnc/passwd -shared -noxdamage</span>
+</pre>
+
+<h3>オプション解説</h3>
+<table>
+    <tr>
+        <th>オプション</th>
+        <th>役割</th>
+    </tr>
+    <tr>
+        <td><code>-display :0</code></td>
+        <td>物理モニターを指定。</td>
+    </tr>
+    <tr>
+        <td><code>-findauth</code></td>
+        <td><strong>最重要。</strong> LXQtが保持している認証Cookieを自動で探し出し、権限エラーを回避する。</td>
+    </tr>
+    <tr>
+        <td><code>-forever</code></td>
+        <td>接続を切ってもVNCサーバーを終了させない。</td>
+    </tr>
+    <tr>
+        <td><code>-bg</code></td>
+        <td>バックグラウンドで実行し、ターミナルを解放する。</td>
+    </tr>
+    <tr>
+        <td><code>-noxdamage</code></td>
+        <td>画面の更新通知を使わず、定期的に再描画する。古いPCでの「画面が真っ暗なまま」を防ぐ。</td>
+    </tr>
+</table>
+
+<h2>STEP 4: 疎通確認（トラブルシューティング）</h2>
+<p>「繋がらない」と思ったら、以下のコマンドで状況を切り分けます。</p>
+<pre>
+<span class="comment"># 1. 5900番ポートが待機(LISTEN)しているか？</span>
+<span class="cmd">netstat -tunl | grep 5900</span>
+
+<span class="comment"># 2. プロセスが生きているか？</span>
+<span class="cmd">ps | grep x11vnc</span>
+
+<span class="comment"># 3. (最終手段) 画面を無視してポートだけ開くテスト</span>
+<span class="cmd">nc -l -p 5900 &</span>
+</pre>
+
+<h2>STEP 5: 自動起動の設定 (OpenRC)</h2>
+<p>再起動のたびにコマンドを打つのを防ぐため、サービス化します。</p>
+<p><code>/etc/init.d/x11vnc</code> を作成し、以下を記述：</p>
+<pre>
+<span class="comment">#!/sbin/openrc-run</span>
+depend() {
+    need localmount
+    after xdm <span class="comment"># ディスプレイマネージャが起動した後に実行</span>
+}
+
+start() {
+    ebegin "Starting x11vnc"
+    start-stop-daemon --start --background --exec /usr/bin/x11vnc \
+        -- -display :0 -findauth -forever -rfbauth /home/hoge/.vnc/passwd -shared -noxdamage
+    eend $?
+}
+</pre>
+<p>作成後、サービスを有効化：</p>
+<pre>
+<span class="cmd">doas chmod +x /etc/init.d/x11vnc</span>
+<span class="cmd">doas rc-update add x11vnc default</span>
+</pre>
+
+<div class="warning-box">
+    <strong>NixOSとの違い:</strong> NixOSは「設計図」を書けば依存関係が自動解決されるが、Alpineは「今ある環境（DISPLAYやXauthority）」を人間が手動で指定し、<code>doas</code>で権限を強制的に合わせる必要がある。
+</div>
+
+</body>
+</html>
