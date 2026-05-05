@@ -1,0 +1,47 @@
+@startuml
+title PXE Boot Environment (OpenWrt + NixOS)
+
+skinparam backgroundColor white
+skinparam componentStyle rectangle
+skinparam defaultTextAlignment center
+skinparam shadowing false
+
+skinparam node {
+  BackgroundColor #F8F8F8
+  BorderColor black
+}
+
+skinparam component {
+  BackgroundColor #FFFFFF
+  BorderColor black
+}
+
+actor "Client\n(ThinkPad X1 Carbon)" as client
+
+node "OpenWrt Router\n(DHCP / DNS)" as openwrt {
+  component "dnsmasq\nDHCP Server" as dhcp
+  component "AdGuard Home\nDNS" as agh
+}
+
+node "NixOS Server\n(PXE / HTTP)" as nixos {
+  component "iPXE\nBootloader" as ipxe
+  component "HTTP Server\n(nginx / caddy)" as http
+  component "NixOS Netboot\n(kernel + initrd)" as netboot
+}
+
+cloud "LAN Network" as lan
+
+client --> lan
+openwrt --> lan
+nixos --> lan
+
+client --> dhcp : DHCP Request
+dhcp --> client : IP + Boot Info\n(next-server, filename)
+
+client --> ipxe : Load iPXE
+ipxe --> http : Fetch script
+
+http --> client : kernel + initrd
+netboot --> client : Boot NixOS
+
+@enduml

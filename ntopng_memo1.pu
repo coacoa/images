@@ -1,0 +1,61 @@
+@startuml
+title ネットワーク可視化ロードマップ（縦型）
+
+participant システム
+
+== 現状 ==
+note right of システム
+<b>ローカルPCでの可視化開始</b>
+
+・wlp3s0 を ntopng で監視  
+・Redis と連携  
+・パケット/フローの可視化が可能
+end note
+
+システム -> システム : ローカルインターフェースを監視
+
+== 次のステップ（LAN全体） ==
+note right of システム
+<b>OpenWrt からフローを送信</b>
+
+・NetFlow / sFlow を有効化  
+・NixOS ntopng が受信  
+・LAN 全体の通信を可視化
+end note
+
+システム -> システム : ルーターからのフローを収集
+
+== DNS 可視化 ==
+note right of システム
+<b>DNS ログの時系列化</b>
+
+・AdGuard Home のログ  
+・Loki + Grafana で可視化  
+・デバイスごとの DNS 挙動を把握
+end note
+
+システム -> システム : DNS ログを解析
+
+== セキュリティ可視化 ==
+note right of システム
+<b>異常検知の導入</b>
+
+・ntopng のアラート  
+・Suricata / Zeek の導入も可能  
+・スキャン/DoS/異常通信を検知
+end note
+
+システム -> システム : 異常イベントを検出
+
+== 最終的な可視化像 ==
+note right of システム
+<b>ネットワーク全体の可視化</b>
+
+・パケット  
+・フロー  
+・DNS  
+・異常検知  
+が統合された可視化環境
+end note
+
+@enduml

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenWrt RSS Portal 構築手順</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; padding: 20px; max-width: 800px; margin: auto; background: #f9f9f9; }
+        pre { background: #2d2d2d; color: #ccc; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        code { font-family: monospace; color: #e83e8c; }
+        h1 { border-bottom: 2px solid #1a73e8; color: #1a73e8; }
+        h2 { background: #1a73e8; color: white; padding: 10px; border-radius: 5px; margin-top: 30px; }
+        .note { background: #fff3cd; padding: 10px; border-left: 5px solid #ffeeba; margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+<h1>OpenWrt RSSポータル構築備忘録</h1>
+<p>WN-DX1167RなどのOpenWrt環境で、広告なしの爆速ニュースポータルを構築する手順です。</p>
+
+<h2>1. 必須パッケージのインストール</h2>
+<p>HTTPS通信（SSL）を安定させ、日本語の文字化けを防ぐために必要です。</p>
+<pre>opkg update
+opkg install ca-bundle ca-certificates
+# もしSSLエラーが出るなら
+opkg install libustream-mbedtls</pre>
+
+<h2>2. RSS取得スクリプトの作成</h2>
+<p><code>/usr/bin/get_news.sh</code> という名前で保存します。4スレッドCPUを活かして高速に処理します。</p>
+<pre>cat << 'EOF' > /usr/bin/get_news.sh
+#!/bin/sh
+FILE="/www/news.html"
+
+fetch_rss() {
+    TITLE=$1; URL=$2
+    echo "<h3>$TITLE</h3>" >> $FILE
+    wget --no-check-certificate -qO- "$URL" | tr -d '\n' | sed 's/&lt;item/&#10;&lt;item/g' | \
+    sed -n 's/.*&lt;title&gt;\([^&lt;]*\)&lt;\/title&gt;.*&lt;link&gt;\([^&lt;]*\)&lt;\/link&gt;.*/&lt;p&gt;&lt;a href="\2" target="_blank" style="font-size:1.1em; color:#0055ff; text-decoration:none;"&gt;・\1&lt;\/a&gt;&lt;\/p&gt;/p' | \
+    head -n 6 >> $FILE
+}
+
+echo "&lt;html&gt;&lt;head&gt;&lt;meta charset='utf-8'&gt;&lt;meta name='viewport' content='width=device-width,initial-scale=1'&gt;&lt;title&gt;Portal&lt;/title&gt;&lt;style&gt;body{font-family:sans-serif;padding:15px;background:#f0f2f5;color:#333;} .box{background:#fff;padding:15px;margin-bottom:15px;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,0.1);} h1{font-size:1.4em;color:#1a73e8;text-align:center;} h3{border-left:5px solid #1a73e8;padding-left:10px;margin:15px 0 10px 0;font-size:1.1em;}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;" > $FILE
+echo "&lt;h1&gt;WN-DX1167R Home Station&lt;/h1&gt;" >> $FILE
+
+# ☀️ 天気
+echo "&lt;div class='box'&gt;&lt;h3&gt;☀️ 関東の週間天気&lt;/h3&gt;" >> $FILE
+wget --no-check-certificate -qO- "https://www.drk7.jp/weather/xml/13.xml" | tr -d '\n' | sed 's/&lt;pref/&#10;&lt;pref/g' | grep "東京都" | sed 's/&lt;day/&#10;&lt;day/g' | sed -n 's/.*date="\([^"]*\)".*&lt;telop&gt;\([^&lt;]*\)&lt;\/telop&gt;.*&lt;low&gt;\([^&lt;]*\)&lt;\/low&gt;.*&lt;high&gt;\([^&lt;]*\)&lt;\/high&gt;.*/&lt;p style="margin:5px 0;"&gt;&lt;b&gt;\1&lt;\/b&gt;: \2 (\3℃\/\4℃)&lt;\/p&gt;/p' | head -n 7 >> $FILE
+echo "&lt;/div&gt;" >> $FILE
+
+# 🏎️ モータースポーツ
+echo "&lt;div class='box'&gt;" >> $FILE
+fetch_rss "🏎️ autosport web" "https://www.as-web.jp/feed"
+fetch_rss "🏁 Motorsport.com" "https://jp.motorsport.com/rss/f1/news/"
+echo "&lt;/div&gt;" >> $FILE
+
+# 💻 IT・ガジェット
+echo "&lt;div class='box'&gt;" >> $FILE
+fetch_rss "💻 ITmedia" "https://rss.itmedia.co.jp/rss/2.0/itmedia_all.xml"
+fetch_rss "🚀 Gizmodo" "https://www.gizmodo.jp/index.xml"
+echo "&lt;/div&gt;" >> $FILE
+
+# 🌍 総合
+echo "&lt;div class='box'&gt;" >> $FILE
+fetch_rss "🌍 Yahoo News" "https://news.yahoo.co.jp/rss/topics/top-picks.xml"
+echo "&lt;/div&gt;" >> $FILE
+
+echo "&lt;hr&gt;&lt;p style='text-align:center; font-size:0.8em; color:#666;'&gt;Update: $(date)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;" >> $FILE
+EOF
+chmod +x /usr/bin/get_news.sh</pre>
+
+<h2>3. 自動更新の設定（Cron）</h2>
+<p>30分ごとに最新ニュースに更新するように設定します。</p>
+<pre># LuCIの場合: System -> Scheduled Tasks に以下を貼り付け
+*/30 * * * * /usr/bin/get_news.sh</pre>
+
+<h2>4. 使い方</h2>
+<div class="note">
+    ブラウザから <code>http://192.168.1.1/news.html</code> を開く。
+</div>
+
+</body>
+</html>
