@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexus7 PostmarketOS 環境構築メモ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap');
+
+  :root {
+    --bg: #0d1117;
+    --bg2: #161b22;
+    --bg3: #21262d;
+    --border: #30363d;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --red: #f85149;
+    --blue: #58a6ff;
+    --purple: #bc8cff;
+    --text: #e6edf3;
+    --muted: #8b949e;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 14px;
+    line-height: 1.7;
+    padding: 2rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  header h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--blue);
+    letter-spacing: -0.5px;
+  }
+
+  header .meta {
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-top: 0.4rem;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .device-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+  }
+
+  .device-info .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+  }
+
+  .device-info .card .label {
+    color: var(--muted);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .device-info .card .value {
+    color: var(--green);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-top: 0.2rem;
+  }
+
+  section {
+    margin-bottom: 2.5rem;
+  }
+
+  h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--purple);
+    margin-bottom: 1rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  h2::before {
+    content: '';
+    display: inline-block;
+    width: 3px;
+    height: 1em;
+    background: var(--purple);
+    border-radius: 2px;
+  }
+
+  h3 {
+    font-size: 0.95rem;
+    color: var(--yellow);
+    margin: 1rem 0 0.5rem;
+  }
+
+  pre, code {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  pre {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem;
+    overflow-x: auto;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    margin: 0.5rem 0 1rem;
+    position: relative;
+  }
+
+  code {
+    background: var(--bg3);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-size: 0.85em;
+    color: var(--blue);
+  }
+
+  .step {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--green);
+    border-radius: 6px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1rem;
+  }
+
+  .step .step-title {
+    font-weight: 700;
+    color: var(--green);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .error-block {
+    background: #2d1516;
+    border: 1px solid #5c2627;
+    border-left: 3px solid var(--red);
+    border-radius: 6px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1rem;
+  }
+
+  .error-block .error-title {
+    font-weight: 700;
+    color: var(--red);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .fix-block {
+    background: #0d2016;
+    border: 1px solid #1e4d2b;
+    border-left: 3px solid var(--green);
+    border-radius: 6px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1rem;
+  }
+
+  .fix-block .fix-title {
+    font-weight: 700;
+    color: var(--green);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .warn-block {
+    background: #2d2008;
+    border: 1px solid #5c4208;
+    border-left: 3px solid var(--yellow);
+    border-radius: 6px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1rem;
+  }
+
+  .warn-block .warn-title {
+    font-weight: 700;
+    color: var(--yellow);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  p { margin-bottom: 0.75rem; color: var(--text); }
+
+  .status {
+    display: inline-block;
+    padding: 0.15em 0.6em;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .status.ok { background: #1e4d2b; color: var(--green); }
+  .status.fail { background: #5c2627; color: var(--red); }
+  .status.wip { background: #5c4208; color: var(--yellow); }
+
+  .todo {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem 1.2rem;
+  }
+
+  .todo ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .todo ul li {
+    padding: 0.3rem 0;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .todo ul li::before {
+    content: '☐';
+    color: var(--blue);
+  }
+
+  footer {
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-family: 'JetBrains Mono', monospace;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📱 Nexus7 (2012) PostmarketOS 環境構築メモ</h1>
+  <div class="meta">作業日: 2026-05-05 ／ PC: NixOS 25.05 ／ 状態: <span class="status wip">WIP</span></div>
+</header>
+
+<!-- デバイス情報 -->
+<div class="device-info">
+  <div class="card"><div class="label">デバイス</div><div class="value">Nexus 7 (2012)</div></div>
+  <div class="card"><div class="label">コードネーム</div><div class="value">grouper</div></div>
+  <div class="card"><div class="label">HWリビジョン</div><div class="value">PM269 (older)</div></div>
+  <div class="card"><div class="label">カーネル</div><div class="value">pm269</div></div>
+  <div class="card"><div class="label">UI</div><div class="value">console (暫定)</div></div>
+  <div class="card"><div class="label">pmaports commit</div><div class="value">23e6297d4a</div></div>
+</div>
+
+<!-- STEP 1 -->
+<section>
+  <h2>STEP 1: pmaports の準備</h2>
+
+  <p>grouperは最新pmaportsから削除されているため、削除直前のコミットを使う。</p>
+
+  <div class="step">
+    <div class="step-title">✅ pmaports clone &amp; 正しいコミットへ checkout</div>
+    <pre>git clone https://gitlab.postmarketos.org/postmarketOS/pmaports.git ~/pmaports
+cd ~/pmaports
+# grouperが削除されたコミット = f58f45db2d
+# その一つ前をチェックアウト
+git checkout f58f45db2d^
+# → 23e6297d4a (linux-postmarketos-grate: upgrade to 6.6.0 stable)</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">✅ grouper の場所</div>
+    <pre>device/testing/device-asus-grouper/
+device/testing/firmware-asus-grouper/</pre>
+  </div>
+
+  <div class="warn-block">
+    <div class="warn-title">⚠️ 注意: pmaportsはwork pathの外に置くこと</div>
+    <p>pmbootstrap の work path (<code>~/.local/var/pmbootstrap</code>) の中にpmaportsを置くとエラーになる。<code>~/pmaports</code> に置くこと。</p>
+  </div>
+</section>
+
+<!-- STEP 2 -->
+<section>
+  <h2>STEP 2: NixOS での pmbootstrap 環境</h2>
+
+  <div class="step">
+    <div class="step-title">✅ nix-shell で必要なツールを揃える</div>
+    <pre>nix-shell -p pmbootstrap android-tools multipath-tools openssl</pre>
+  </div>
+
+  <div class="warn-block">
+    <div class="warn-title">⚠️ NixOS の注意点</div>
+    <p><code>kpartx</code> は nixpkgs では <code>multipath-tools</code> に含まれている。</p>
+  </div>
+</section>
+
+<!-- STEP 3 -->
+<section>
+  <h2>STEP 3: pmbootstrap init の設定</h2>
+
+  <div class="step">
+    <div class="step-title">✅ init の回答内容</div>
+    <pre>Work path         : (Enter でデフォルト)
+pmaports path     : /home/hoge/pmaports   ← 必ず指定！
+Channel           : edge
+Vendor            : asus
+Device codename   : grouper
+Kernel            : pm269                 ← PM269 (Revision: 0000)
+UI                : console (暫定) / lxqt (目標)
+Extra packages    : (Enter)
+Locale            : ja_JP
+Hostname          : nexus7
+SSH keys          : y
+Build outdated    : y</pre>
+  </div>
+
+  <div class="warn-block">
+    <div class="warn-title">⚠️ HWリビジョンの確認方法</div>
+    <pre>adb shell getprop ro.bootloader   # → 4.23
+adb shell getprop | grep -i revision  # → [ro.revision]: [0]
+# Revision 0000 = PM269 (older)</pre>
+  </div>
+</section>
+
+<!-- STEP 4 -->
+<section>
+  <h2>STEP 4: gtk+3.0 ビルドエラーと対処</h2>
+
+  <p>grouperはpulseaudioに依存→pulseaudioはgtk+3.0に依存。UIをconsoleにしても必要。</p>
+
+  <div class="error-block">
+    <div class="error-title">❌ エラー内容</div>
+    <pre>../gtk/gtkprogresstracker.c:48:1: error: conflicting types for '_gtk_get_slowdown'
+  have 'gdouble(gdouble)' vs 'gdouble(void)'</pre>
+    <p>原因: 古いgtk+3.0のコードが新しいgcc (15.x) の厳しい型チェックに引っかかる。</p>
+  </div>
+
+  <div class="fix-block">
+    <div class="fix-title">🔧 修正方法: パッチを作成してAPKBUILDに追加</div>
+
+    <h3>① パッチファイル作成</h3>
+    <pre>cat > ~/pmaports/temp/gtk+3.0/fix-gtk-get-slowdown.patch &lt;&lt; 'EOF'
+--- a/gtk/gtkprivate.h
++++ b/gtk/gtkprivate.h
+@@ -96,7 +96,7 @@
+-gdouble _gtk_get_slowdown ();
++gdouble _gtk_get_slowdown (gdouble factor);
+EOF</pre>
+
+    <h3>② sha512sum 計算</h3>
+    <pre>sha512sum ~/pmaports/temp/gtk+3.0/fix-gtk-get-slowdown.patch</pre>
+
+    <h3>③ APKBUILD編集 (Pythonで確実に)</h3>
+    <pre>python3 &lt;&lt; 'PYEOF'
+with open('/home/hoge/pmaports/temp/gtk+3.0/APKBUILD', 'r') as f:
+    content = f.read()
+
+# sourceにパッチ追加 (タブ区切りに注意！)
+content = content.replace(
+    '\tgdk-wayland-Track-last-touch-serial-on-seat.patch\n\t"',
+    '\tgdk-wayland-Track-last-touch-serial-on-seat.patch\n\tfix-gtk-get-slowdown.patch\n\t"'
+)
+
+# sha512sumsにハッシュ追加
+content = content.replace(
+    '4b8ecb3f...  gdk-wayland-Track-last-touch-serial-on-seat.patch',
+    '4b8ecb3f...  gdk-wayland-Track-last-touch-serial-on-seat.patch\n&lt;NEW_HASH&gt;  fix-gtk-get-slowdown.patch'
+)
+
+with open('/home/hoge/pmaports/temp/gtk+3.0/APKBUILD', 'w') as f:
+    f.write(content)
+PYEOF</pre>
+
+    <h3>④ APKBUILDをリセットしたい場合</h3>
+    <pre>cd ~/pmaports
+git checkout temp/gtk+3.0/APKBUILD</pre>
+  </div>
+
+  <div class="warn-block">
+    <div class="warn-title">⚠️ ハマりポイント</div>
+    <ul style="margin-left:1rem; margin-top:0.5rem;">
+      <li>APKBUILDのインデントは<strong>スペースではなくタブ</strong>。sedで編集する際は要注意。</li>
+      <li>sourceとsha512sumsの両方にパッチを追加しないとエラーになる。</li>
+      <li>パッチを変更したらsha512sumを再計算してAPKBUILDを更新する。</li>
+      <li>sed で複数回実行すると重複追加されるので <code>git checkout</code> でリセット推奨。</li>
+    </ul>
+  </div>
+</section>
+
+<!-- STEP 5 -->
+<section>
+  <h2>STEP 5: インストール &amp; フラッシュ (未完了)</h2>
+
+  <div class="todo">
+    <ul>
+      <li>gtk+3.0 のビルドを成功させる</li>
+      <li><code>./pmbootstrap.py install</code> を完走させる</li>
+      <li>Nexus7 を bootloader モードにする (<code>adb reboot bootloader</code>)</li>
+      <li><code>./pmbootstrap.py flasher flash_rootfs</code></li>
+      <li><code>./pmbootstrap.py flasher flash_kernel</code></li>
+      <li>起動確認</li>
+      <li>UIをlxqtに変更して再インストール</li>
+    </ul>
+  </div>
+
+  <pre style="margin-top:1rem"># フラッシュコマンド (installが成功したら)
+adb reboot bootloader
+./pmbootstrap.py flasher flash_rootfs
+./pmbootstrap.py flasher flash_kernel</pre>
+</section>
+
+<!-- ADB メモ -->
+<section>
+  <h2>ADB 関連メモ</h2>
+
+  <div class="step">
+    <div class="step-title">bootloader unlock後はUSBデバッグを再設定</div>
+    <p>unlock時にデータ全消去されるので、初期設定後に以下を再設定：</p>
+    <pre>設定 → タブレット情報 → ビルド番号を7回タップ
+設定 → 開発者オプション → USBデバッグ ON</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-title">ADB 接続確認</div>
+    <pre>adb devices
+# → 015d4906054c1c0f    device</pre>
+  </div>
+</section>
+
+<footer>
+  nexus7-postmarketos-memo.html ／ NixOS 25.05 + pmbootstrap 3.10.1 + pmaports 23e6297d4a
+</footer>
+
+</body>
+</html>
