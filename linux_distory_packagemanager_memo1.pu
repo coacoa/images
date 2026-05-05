@@ -1,0 +1,118 @@
+@startuml
+title Linux Architecture (Layered Model)
+
+participant Linux
+
+== Hardware ==
+note right of Linux
+<b>物理レイヤ</b>
+
+・CPU / GPU  
+・Memory  
+・Storage  
+・NIC  
+end note
+
+Linux -> Linux : ハードウェアが動作
+
+== Kernel ==
+note right of Linux
+<b>Linux カーネル</b>
+
+・ほぼ全ディストロ共通  
+・デバイスドライバ  
+・プロセス/メモリ/ネットワーク管理  
+end note
+
+Linux -> Linux : システムコールを提供
+
+== Userland ==
+note right of Linux
+<b>ユーザー空間の基盤</b>
+
+・glibc  
+・GNU coreutils  
+・systemd / init  
+・各種ライブラリ  
+
+<b>※ディストロ差はここから上で現れる</b>
+end note
+
+Linux -> Linux : 基本コマンド・サービスを実行
+
+== Shell ==
+note right of Linux
+<b>CLI インターフェース</b>
+
+・bash / zsh / fish  
+・ユーザー操作の入口  
+end note
+
+Linux -> Linux : コマンドを解釈して実行
+
+== DE / WM ==
+note right of Linux
+<b>デスクトップ環境 / ウィンドウマネージャ</b>
+
+・GNOME / KDE / XFCE  
+・i3 / sway / openbox  
+
+<b>※どのディストロでも自由に選べる</b>
+end note
+
+Linux -> Linux : GUI セッションを提供
+
+== Package Manager ==
+note right of Linux
+<b>パッケージ管理の中核</b>
+
+・apt / pacman / dnf / zypper  
+・nix / guix  
+
+<b>※ディストロの本質はここで決まる</b>  
+・依存解決の思想  
+・更新モデル（固定/ローリング）  
+・リポジトリ文化  
+・再現性/宣言性の有無  
+
+<b>→「ディストロ選び＝パッケージマネージャ選び」</b>
+
+<hr/>
+
+<b>1 年 Linux (特に NixOS) を使っての実感</b>  
+ネットに溢れる「ディストロ選び」は  
+Linux の本質ではなく、  
+むしろ初心者を混乱させる原因になっている。  
+
+<b>本当に理解すべきはパッケージマネージャの思想。</b>  
+ディストロはその“入れ物”に過ぎない。
+end note
+
+Linux -> Linux : ソフトウェアを管理
+
+== Applications ==
+note right of Linux
+<b>アプリケーション層</b>
+
+・CLI apps  
+・GUI apps  
+
+<b><font color="#00AEEF">■ パッケージマネージャのアプリ</font></b>  
+・apt/pacman/dnf/nix で入る  
+・<font color="#00AEEF">OS に直接インストール</font>  
+・<font color="#00AEEF">ディストロ依存</font>（Ubuntu 用 DEB、Arch 用 PKG など）
+
+<b><font color="#FF8800">■ Flatpak / Snap / AppImage</font></b>  
+・<font color="#FF8800">ディストロ非依存</font>  
+・アプリが必要なランタイムを同梱  
+・<font color="#FF8800">OS から独立して動く“別レイヤー”</font>  
+・アプリ配布方式であって OS の一部ではない
+
+<b>→ 同じ“アプリを入れる”でも階層も役割も思想も全く違う</b>
+
+<b>※アプリはディストロ非依存化が進行</b>
+end note
+
+Linux -> Linux : アプリがユーザーに機能を提供
+
+@enduml

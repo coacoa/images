@@ -1,0 +1,42 @@
+@startuml
+title Package Manager vs Flatpak/Snap/AppImage (Horizontal Comparison)
+
+actor User
+
+participant System
+participant PM
+participant FS
+
+== User installs software ==
+User -> PM : install via package manager
+User -> FS : install via Flatpak/Snap/AppImage
+
+== How they integrate with the system ==
+PM -> System : OS に直接インストール\n依存関係を OS と共有\nディストロ依存
+FS -> System : OS の外側で動作\nサンドボックス or 独立実行\nディストロ非依存
+
+== Core Differences ==
+note over PM
+<b><font color="#00AEEF">■ Package Manager（apt / pacman / dnf / nix）</font></b>
+
+・<font color="#00AEEF">OS の一部</font>  
+・<font color="#00AEEF">ディストロ依存</font>  
+・OS 全体で依存関係を共有  
+・更新モデルを決める（固定/ローリング）  
+・壊れると OS に影響  
+・OS の性格そのもの
+end note
+
+note over FS
+<b><font color="#FF8800">■ Flatpak / Snap / AppImage</font></b>
+
+・<font color="#FF8800">ディストロ非依存</font>  
+・アプリが必要なランタイムを同梱  
+・OS を汚さない  
+・サンドボックス化（Flatpak/Snap）  
+・AppImage は 1 ファイルで実行  
+
+<b><font color="#FF8800">→ OS の外側にあるアプリ配布レイヤー</font></b>
+end note
+
+@enduml
