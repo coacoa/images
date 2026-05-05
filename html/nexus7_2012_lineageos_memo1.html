@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Nexus 7 (2012) 復活メモ</title>
+<style>
+body { font-family: sans-serif; line-height: 1.7; padding: 20px; }
+h1 { color: #333; }
+code { background: #eee; padding: 2px 4px; }
+pre { background: #eee; padding: 10px; }
+</style>
+</head>
+<body>
+
+<h1>Nexus 7 (2012, grouper) 復活メモ</h1>
+
+<p>このメモは、Nexus 7 を LineageOS 14.1 で復活させるまでの実際の手順と、特に重要だったポイントをまとめたもの。</p>
+
+<hr>
+
+<h2>1. Fastboot に入れない問題</h2>
+
+<p>最初にぶつかった最大の問題は、<strong>電源 + 音量下</strong> を何度やっても Android が起動してしまい、fastboot に入れなかったこと。</p>
+
+<p>原因は Nexus 7 特有の癖で、以下の方法でしか fastboot に入れなかった：</p>
+
+<h3>● 決め手になった方法（成功率100%）</h3>
+
+<ol>
+<li>Android が起動している状態で <code>adb reboot</code> を実行</li>
+<li>画面が真っ暗になった「瞬間」に <strong>音量下ボタンを押しっぱなし</strong></li>
+<li>Google ロゴが出ても離さない</li>
+</ol>
+
+<p>→ これで fastboot に入れた。</p>
+
+<h3>● なぜ電源 + 音量下ではダメだったのか</h3>
+
+<ul>
+<li>Nexus 7 は電源 + 音量下の長押しが非常にシビア</li>
+<li>バッテリー劣化個体では成功率が極端に低い</li>
+<li>adb reboot → 再起動割り込みの方が確実</li>
+</ul>
+
+<hr>
+
+<h2>2. fastboot で TWRP を焼く</h2>
+
+<p>fastboot に入れたら、PC から以下を実行：</p>
+
+<pre>
+fastboot flash recovery twrp-3.7.0_9-0-grouper.img
+</pre>
+
+<p>ログが以下なら成功：</p>
+
+<pre>
+Sending 'recovery' (10838 KB) OKAY
+Writing 'recovery'          OKAY
+</pre>
+
+<hr>
+
+<h2>3. fastboot で上下ボタンが効かない問題</h2>
+
+<p>fastboot 画面で音量上下が効かず、Recovery Mode が選べなかった。</p>
+
+<h3>● 原因</h3>
+<p><strong>USB ケーブルを挿したままだとボタンが効かなくなる個体がある。</strong></p>
+
+<h3>● 解決方法</h3>
+
+<ol>
+<li>USB ケーブルを抜く</li>
+<li>音量上下が復活する</li>
+<li>Recovery Mode を選ぶ</li>
+<li>TWRP 起動後に USB を挿し直す</li>
+</ol>
+
+<hr>
+
+<h2>4. LineageOS ZIP を push する</h2>
+
+<p>TWRP が起動したら PC で：</p>
+
+<pre>
+adb push lineage-14.1-20211120-UNOFFICIAL-grouper.zip /sdcard/
+</pre>
+
+<p>その後 TWRP で：</p>
+
+<ol>
+<li>Wipe → Advanced Wipe → System / Data / Cache</li>
+<li>Install → ZIP を選ぶ</li>
+<li>Swipe to flash</li>
+<li>Wipe Dalvik / Cache</li>
+<li>Reboot → System</li>
+</ol>
+
+<hr>
+
+<h2>5. 復活後の環境</h2>
+
+<p>LineageOS 14.1 が正常に起動し、ブラウザで YouTube も視聴可能。</p>
+
+<p>広告ブロックは以下の方法で可能：</p>
+
+<ul>
+<li>Firefox + uBlock Origin</li>
+<li>NewPipe（広告ゼロ）</li>
+<li>Brave ブラウザ</li>
+</ul>
+
+<hr>
+
+<h2>まとめ</h2>
+
+<p>今回の復活で最も重要だったポイント：</p>
+
+<ul>
+<li><strong>adb reboot → 再起動の瞬間に音量下</strong>（fastboot への唯一の道）</li>
+<li><strong>USB を抜かないと fastboot のボタンが効かない</strong></li>
+<li><strong>fastboot reboot recovery は使わない（Nexus 7 は無視する）</strong></li>
+<li><strong>TWRP は fastboot → Recovery Mode からしか起動しない</strong></li>
+</ul>
+
+<p>この4つを理解すれば、Nexus 7 はいつでも復活できる。</p>
+<hr>
+
+<h2>6. wget で TWRP / LineageOS が正しく落ちない問題</h2>
+
+<p>Nexus 7 復活中に最も危険だったのが、<strong>wget でダウンロードしたファイルが本物ではなく、HTML だった</strong>という問題。</p>
+
+<h3>● 実際に起きた症状</h3>
+
+<ul>
+<li>TWRP を wget したら <strong>6.7KB</strong> のファイルが落ちてきた（本物は 10.8MB）</li>
+<li>LineageOS ZIP を wget したら <strong>数MB の偽物</strong>が落ちてきた（本物は 299MB）</li>
+<li>fastboot flash すると当然エラーやフリーズが起きる</li>
+</ul>
+
+<h3>● 原因</h3>
+
+<ul>
+<li>公式ミラーが HTML を返している（ダウンロードページそのもの）</li>
+<li>wget がリダイレクト先の HTML を保存してしまう</li>
+<li>古い TLS/HTTPS の相性問題</li>
+<li>User-Agent がブラウザでないため、正しいファイルが返されない</li>
+</ul>
+
+<h3>● 偽ファイルの見分け方</h3>
+
+<pre>
+file twrp-3.2.3-0-grouper.img
+# → HTML document と出たら偽物
+</pre>
+
+<p>またはサイズが明らかに小さい：</p>
+
+<ul>
+<li>TWRP → 10MB 以上が正しい</li>
+<li>LineageOS → 200〜300MB が正しい</li>
+</ul>
+
+<h3>● 正しい対処法</h3>
+
+<ol>
+<li>ブラウザで直接ダウンロードする（最も確実）</li>
+<li>PC に保存してから <code>adb push</code> で端末へ送る</li>
+<li>どうしても wget を使う場合は、正しい直リンクを使う</li>
+</ol>
+
+<h3>● 実際に成功した wget の例</h3>
+
+<p>LineageOS 14.1（grouper）の正しい直リンク：</p>
+
+<pre>
+wget https://mirrorbits.lineageos.org/full/grouper/20211120/lineage-14.1-20211120-UNOFFICIAL-grouper.zip
+</pre>
+
+<p>TWRP（10.8MB）の正しい直リンク：</p>
+
+<pre>
+wget https://dl.twrp.me/grouper/twrp-3.7.0_9-0-grouper.img
+</pre>
+
+<p>※ ただしミラーが落ちていると HTML が返るため、<strong>ブラウザで落とすのが最も安全</strong>。</p>
+
+<h3>● まとめ</h3>
+
+<ul>
+<li>wget は HTML を誤って保存することがある</li>
+<li>サイズが小さいファイルは絶対に偽物</li>
+<li>本物は TWRP 10MB、LineageOS 299MB</li>
+<li>ブラウザで落として adb push が最も確実</li>
+</ul>
+
+
+</body>
+</html>
+
