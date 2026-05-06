@@ -1,0 +1,77 @@
+@startuml
+title Linux Layers × User Choices (Sequence + Sections)
+
+actor User
+
+== Kernel Layer ==
+User -> Kernel : Linux Kernel
+note right
+<b>■ Kernel（選択肢ほぼなし）</b>
+・Linux kernel  
+・LTS / mainline 程度の違い  
+→ ここはユーザーがほぼ選べない
+end note
+
+== System Base (Userland) ==
+User -> Userland : glibc / coreutils / systemd
+note right
+<b>■ Userland（選択肢少なめ）</b>
+・glibc / musl  
+・systemd / OpenRC / runit  
+→ 時代の流れで systemd が主流
+end note
+
+== Display System ==
+User -> Display : X11 / Wayland
+note right
+<b>■ Display System（時代の制約）</b>
+・X11（旧世代）  
+・Wayland（新世代）  
+→ ここは“選ぶ”より“時代で移行”
+end note
+
+== Shell ==
+User -> Shell : bash / zsh / fish
+note right
+<b>■ Shell（完全に嗜好）</b>
+・bash  
+・zsh  
+・fish  
+→ 好みで選べる
+end note
+
+== Desktop Environment / WM ==
+User -> DEWM : GNOME / KDE / XFCE / i3 / sway
+note right
+<b>■ DE/WM（完全に嗜好）</b>
+・GNOME（Wayland 主流）  
+・KDE Plasma  
+・XFCE  
+・i3 / sway  
+→ 好みで選べる
+end note
+
+== Package Manager ==
+User -> PM : apt / pacman / dnf / nix
+note right
+<b>■ Package Manager（Linux の本質）</b>
+・apt（Debian/Ubuntu）  
+・pacman（Arch）  
+・dnf（Fedora）  
+・nix（NixOS）  
+→ ディストロの思想そのもの  
+→ Linux を理解する上で最重要
+end note
+
+== App Distribution ==
+User -> AppDist : Flatpak / Snap / AppImage
+note right
+<b>■ App Distribution（OS 外部の選択肢）</b>
+・Flatpak（サンドボックス）  
+・Snap（強い隔離）  
+・AppImage（ポータブル）  
+→ アプリ配布レイヤー  
+→ PM とは別物
+end note
+
+@enduml
