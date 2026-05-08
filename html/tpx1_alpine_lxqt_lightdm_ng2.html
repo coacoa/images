@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alpine 3.20 + DWM セットアップメモ</title>
+<style>
+  body { font-family: monospace; background: #1e1e2e; color: #cdd6f4; max-width: 860px; margin: 0 auto; padding: 2rem; line-height: 1.7; }
+  h1 { color: #cba6f7; border-bottom: 2px solid #cba6f7; padding-bottom: .5rem; }
+  h2 { color: #89b4fa; margin-top: 2rem; }
+  h3 { color: #94e2d5; }
+  code { background: #313244; padding: .15rem .4rem; border-radius: 4px; color: #a6e3a1; }
+  pre { background: #313244; padding: 1rem; border-radius: 8px; overflow-x: auto; border-left: 3px solid #89b4fa; }
+  pre code { background: none; padding: 0; }
+  .warn { background: #45475a; border-left: 4px solid #f38ba8; padding: .8rem 1rem; border-radius: 4px; margin: 1rem 0; }
+  .tip { background: #45475a; border-left: 4px solid #a6e3a1; padding: .8rem 1rem; border-radius: 4px; margin: 1rem 0; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+  th { background: #313244; color: #cba6f7; padding: .5rem 1rem; text-align: left; }
+  td { padding: .5rem 1rem; border-bottom: 1px solid #45475a; }
+</style>
+</head>
+<body>
+
+<h1>🖥️ ThinkPad X1 Carbon 3rd Gen<br>Alpine 3.20 + DWM セットアップメモ</h1>
+
+<h2>📌 背景・前提</h2>
+<table>
+  <tr><th>項目</th><th>内容</th></tr>
+  <tr><td>機種</td><td>ThinkPad X1 Carbon 3rd Gen（Ivy Bridge / Intel HD 4000）</td></tr>
+  <tr><td>OS</td><td>Alpine Linux 3.20</td></tr>
+  <tr><td>WM</td><td>DWM 6.5（ソースビルド）</td></tr>
+  <tr><td>DM</td><td>LightDM（autologin）</td></tr>
+  <tr><td>リモート</td><td>x11vnc + Remmina</td></tr>
+</table>
+
+<div class="warn">
+⚠️ <strong>Alpine 3.23 は使えない！</strong><br>
+Mesa から <code>i965_dri.so</code> が削除されており、Ivy Bridge（HD 4000）は非対応。Xorg が起動不能になる。必ず <strong>Alpine 3.20</strong> を使うこと。
+</div>
+
+<h2>1. 基本パッケージインストール</h2>
+<pre><code>apk add xorg-server xf86-input-libinput xf86-input-evdev lightdm lightdm-openrc
+apk add dwm dmenu st
+apk add x11vnc
+apk add j4-dmenu-desktop
+apk add xdotool xinput</code></pre>
+
+<h2>2. DWM ソースビルド</h2>
+<p>apk の DWM は <code>config.h</code> が存在しないためカスタマイズ不可。ソースからビルドする。</p>
+<pre><code>apk add gcc make musl-dev libx11-dev libxft-dev libxinerama-dev
+
+cd ~
+wget https://dl.suckless.org/dwm/dwm-6.5.tar.gz
+tar xf dwm-6.5.tar.gz
+cd dwm-6.5
+cp config.def.h config.h</code></pre>
+
+<h3>config.h の変更点</h3>
+<pre><code>// MODKEYをWinキーに変更
+#define MODKEY Mod4Mask
+
+// dmenuをj4-dmenu-desktopに変更
+static const char *dmenucmd[] = { "j4-dmenu-desktop", NULL };</code></pre>
+
+<pre><code>make && sudo make install</code></pre>
+
+<div class="tip">
+✅ ビルド後は <code>/usr/local/bin/dwm</code> に配置される。apk のものを上書きするので <code>apk del dwm</code> 不要。
+</div>
+
+<h2>3. LightDM autologin 設定</h2>
+<pre><code># /etc/lightdm/lightdm.conf
+[Seat:*]
+autologin-user=youruser
+autologin-session=dwm</code></pre>
+
+<h3>DWM セッションファイル</h3>
+<pre><code># /usr/share/xsessions/dwm.desktop
+[Desktop Entry]
+Name=dwm
+Exec=/usr/local/bin/dwm
+Type=Application</code></pre>
+
+<div class="warn">
+⚠️ <code>Exec=dwm</code> だと古い <code>/usr/bin/dwm</code> が呼ばれる場合があるのでフルパス指定推奨。
+</div>
+
+<h2>4. x11vnc 設定</h2>
+<pre><code># 起動コマンド
+x11vnc -display :0 -forever -passwd yourpassword -rfbport 5900
+
+# .xinitrc に追記して自動起動
+x11vnc -display :0 -forever -nopw -bg
+exec dwm</code></pre>
+
+<h3>Remmina 接続設定</h3>
+<table>
+  <tr><th>項目</th><th>値</th></tr>
+  <tr><td>プロトコル</td><td>VNC</td></tr>
+  <tr><td>サーバー</td><td>ThinkPadのIP:5900</td></tr>
+  <tr><td>パスワード</td><td>設定した場合のみ</td></tr>
+</table>
+
+<h2>5. sudo 設定</h2>
+<pre><code># root で実行
+visudo
+# 以下を追加
+youruser ALL=(ALL) ALL
+
+# または wheel グループに追加
+adduser youruser wheel</code></pre>
+
+<h2>6. USBキーボードが認識されない場合</h2>
+<div class="tip">
+✅ <strong>USBハブのポートを変えると認識されることがある。</strong><br>
+xinput list で確認：<code>DISPLAY=:0 xinput list</code>
+</div>
+
+<pre><code># キーボードがXに認識されているか確認
+DISPLAY=:0 xinput list
+
+# Xorg ログ確認
+grep -i input /var/log/Xorg.0.log</code></pre>
+
+<h2>7. キーバインド一覧（DWM デフォルト + カスタム）</h2>
+<table>
+  <tr><th>キー</th><th>動作</th></tr>
+  <tr><td><code>Win + P</code></td><td>j4-dmenu-desktop 起動</td></tr>
+  <tr><td><code>Win + Enter</code></td><td>ターミナル（st）起動</td></tr>
+  <tr><td><code>Win + Shift + Q</code></td><td>DWM 終了（再起動）</td></tr>
+  <tr><td><code>Win + Shift + C</code></td><td>ウィンドウを閉じる</td></tr>
+  <tr><td><code>Win + 1〜9</code></td><td>タグ切り替え</td></tr>
+</table>
+
+<h2>8. トラブルシューティング</h2>
+<table>
+  <tr><th>症状</th><th>原因</th><th>対処</th></tr>
+  <tr><td>stdio.h not found</td><td>musl-dev 未インストール</td><td><code>apk add musl-dev</code></td></tr>
+  <tr><td>xmenu not found</td><td>Alpine に存在しない</td><td>j4-dmenu-desktop を使う</td></tr>
+  <tr><td>sudoers エラー</td><td>sudoers 未設定</td><td>root で visudo</td></tr>
+  <tr><td>キーボードがXに出ない</td><td>USBポートの問題</td><td>ハブのポートを変える</td></tr>
+  <tr><td>Xorg 起動不能（3.23）</td><td>i965_dri.so が存在しない</td><td>Alpine 3.20 に戻す</td></tr>
+</table>
+
+</body>
+</html>

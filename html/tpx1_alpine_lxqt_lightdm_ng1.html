@@ -1,0 +1,170 @@
+```html
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>Alpine 3.23 × X1 Carbon 3rd Gen GPU 悲劇メモ</title>
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.6; margin: 2rem; max-width: 900px; }
+    code, pre { font-family: Menlo, Consolas, monospace; font-size: 0.9em; }
+    pre { background: #f5f5f5; padding: 0.75rem 1rem; overflow-x: auto; }
+    h1, h2, h3 { margin-top: 1.8rem; }
+    hr { margin: 2rem 0; }
+  </style>
+</head>
+<body>
+<h1>Alpine 3.23 GPU 非対応による Xorg 崩壊の悲劇メモ</h1>
+
+<h2>概要</h2>
+<p>
+ThinkPad X1 Carbon 3rd Gen（Ivy Bridge / Intel HD 4000）で Alpine Linux 3.23 を使った結果、
+Mesa から <code>i965</code> ドライバが消えており、Xorg が起動不能になった。
+その巻き添えで LightDM の autologin も x11vnc も全部死んだ、という悲劇の記録。
+</p>
+
+<hr>
+
+<h2>症状</h2>
+<ul>
+  <li>LightDM が起動しない or すぐ TTY に落ちる</li>
+  <li>autologin が一切発動しない</li>
+  <li>x11vnc が接続できない（<code>DISPLAY=:0</code> が存在しない）</li>
+  <li>画面は常に <code>alpine login:</code> の TTY のまま</li>
+</ul>
+
+<p>Xorg のログには毎回これが出る：</p>
+<pre><code>(EE) AIGLX error: dlopen of /usr/lib/dri/i965_dri.so failed (Error loading shared library /usr/lib/dri/i965_dri.so: No such file or directory)
+(EE) AIGLX error: unable to load driver i965
+</code></pre>
+
+<hr>
+
+<h2>調査ログ</h2>
+
+<h3>Xorg のエラー</h3>
+<pre><code>cat /var/log/Xorg.0.log | grep EE
+
+(EE) Failed to load module "fbdev" (module does not exist, 0)
+(EE) Failed to load module "vesa" (module does not exist, 0)
+(EE) AIGLX error: dlopen of /usr/lib/dri/i965_dri.so failed
+(EE) AIGLX error: unable to load driver i965
+</code></pre>
+
+<h3>/usr/lib/dri の中身</h3>
+<pre><code>ls -l /usr/lib/dri/
+
+lrwxrwxrwx 1 root root    14 May  8 21:28 crocus_dri.so -&gt; libdril_dri.so
+lrwxrwxrwx 1 root root    14 May  8 21:28 i915_dri.so   -&gt; libdril_dri.so
+-rwxr-xr-x 1 root root 8011848 May 10  2025 i965_drv_video.so
+lrwxrwxrwx 1 root root    14 May  8 21:28 iris_dri.so   -&gt; libdril_dri.so
+...
+</code></pre>
+
+<p>
+決定的ポイント：
+<strong><code>i965_dri.so</code> が存在しない。</strong><br>
+あるのは <code>i915</code> / <code>crocus</code> / <code>iris</code> などだけ。
+Ivy Bridge (HD 4000) が本来使うべき <code>i965</code> が完全に消えている。
+</p>
+
+<hr>
+
+<h2>なぜ直らないのか</h2>
+
+<h3>1. 「mesa-dri」がそもそも存在しない</h3>
+<pre><code>apk add mesa-dri
+ERROR: unable to select packages:
+  mesa-dri (no such package)
+</code></pre>
+<p>
+Alpine 3.23 には <code>mesa-dri</code> パッケージ自体が存在しない。
+community リポジトリを有効化しても同じ。
+</p>
+
+<h3>2. Mesa の構成変更で i965 が削除されている</h3>
+<ul>
+  <li>古い Intel GPU 用の <code>i965_dri.so</code> がパッケージから削除</li>
+  <li>代わりに <code>crocus</code> / <code>iris</code> / Gallium 系に移行</li>
+  <li>しかし Ivy Bridge (HD 4000) はそれらの対象外</li>
+</ul>
+
+<p>
+結果として：
+</p>
+<ul>
+  <li>Xorg は i965 をロードしようとして失敗</li>
+  <li>GPU 初期化に失敗 → Xorg 自体が落ちる</li>
+  <li>LightDM は Xorg を起動できないので autologin も始まらない</li>
+  <li>x11vnc は <code>DISPLAY=:0</code> が無いので接続できない</li>
+</ul>
+
+<p><strong>これは設定ミスではなく「Alpine 3.23 の Mesa が Ivy Bridge を切り捨てた」という仕様の問題。</strong></p>
+
+<hr>
+
+<h2>やっても無駄だったこと一覧</h2>
+<ul>
+  <li><code>mesa</code>, <code>mesa-gl</code>, <code>mesa-egl</code>, <code>mesa-gbm</code> のインストール・再インストール</li>
+  <li><code>xf86-video-intel</code> の導入</li>
+  <li>LightDM の <code>greeter-session</code> / <code>autologin-user</code> / <code>autologin-session</code> 調整</li>
+  <li>SDDM の削除、LightDM 単独運用</li>
+  <li>community リポジトリ有効化 → <code>apk update</code></li>
+</ul>
+
+<p>
+どれだけ頑張っても、<strong>存在しない <code>i965_dri.so</code> は生えてこない</strong>ので根本解決にはならない。
+</p>
+
+<hr>
+
+<h2>最終結論</h2>
+<p>
+<strong>Alpine 3.23 は Ivy Bridge (Intel HD 4000) を Mesa レベルでサポートしていない。</strong><br>
+そのため X1 Carbon 3rd Gen では：
+</p>
+<ul>
+  <li>Xorg → 起動不能</li>
+  <li>LightDM → Xorg が死ぬので autologin 不可</li>
+  <li>x11vnc → 共有する画面が無いので接続不可</li>
+</ul>
+
+<p>
+つまり、どれだけ設定をいじっても「3.23 では GUI は動かない」という結論になる。
+</p>
+
+<hr>
+
+<h2>唯一の解決策</h2>
+
+<h3>Alpine のバージョンを下げる</h3>
+<p>
+<strong>Alpine 3.20（または 3.18 / 3.19）に戻す。</strong><br>
+これらのバージョンではまだ <code>i965_dri.so</code> が含まれており、以下が正常に動く：
+</p>
+<ul>
+  <li>Xorg</li>
+  <li>LightDM + autologin</li>
+  <li>LXQt</li>
+  <li>x11vnc（Remmina からのリモート GUI）</li>
+</ul>
+
+<h3>再構築のざっくり手順</h3>
+<ol>
+  <li>Alpine 3.20 の ISO をダウンロード</li>
+  <li>USB に書き込む（Ventoy でも dd でも可）</li>
+  <li>sys モードでインストールし直す</li>
+  <li>LXQt + LightDM + x11vnc を再セットアップ</li>
+  <li>autologin &amp; リモートデスクトップ環境が復活</li>
+</ol>
+
+<hr>
+
+<h2>一言メモ</h2>
+<p>
+設定が悪いんじゃなくて、<strong>時代の流れで i965 が切り捨てられた側</strong>だった、というオチ。<br>
+「直せないバグ」じゃなくて「そのバージョンではそもそも動かない仕様」だと分かっただけでも収穫。
+</p>
+
+</body>
+</html>
+```
