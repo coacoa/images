@@ -1,0 +1,27 @@
+@startuml
+!theme toy
+
+package "Grafana (Global Metrics/全体指標)" #FFF3E0 {
+    component "Throughput (スループット)\n- bps (bits per second)" as bps
+    component "Packet Count (パケット数)\n- pps (packets per second)" as pps
+    component "Historical Trends (過去の傾向)\n- Comparison (比較)" as trend
+}
+
+package "ntopng (Deep Dive Metrics/個別詳細)" #E3F2FD {
+    component "L7 Protocol (中身の正体)\n- YouTube, Netflix, SSL, etc." as l7
+    component "Active Flows (通信の足跡)\n- Source & Destination IPs" as flow
+    component "Traffic Score (行儀の良さ)\n- Alerts & Errors" as score
+}
+
+' 関係性の定義
+bps ..> l7 : "Abnormal traffic detected?\n(異常な通信量を発見)"
+pps ..> flow : "Too many packets?\n(パケット数が多すぎる)"
+trend ..> score : "Sudden change in behavior?\n(挙動が急変した)"
+
+note bottom
+  **使い分けのコツ:**
+  **Grafana** = "When & How much?" (いつ、どれくらい？)
+  **ntopng** = "Who & What & Where?" (誰が、何を、どこへ？)
+endnote
+
+@endum

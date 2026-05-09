@@ -1,0 +1,80 @@
+@startuml
+title Revival of Old Devices with Linux / Android Tools（古い端末のLinux/Android再活用）
+
+participant User as "User（ユーザー）"
+participant Device as "Old Devices（古い端末）"
+participant postmarketOS as "postmarketOS"
+participant LineageOS as "LineageOS"
+participant Tools as "Linux Tools（Linuxツール）"
+
+== First Experiment（最初の実験） ==
+note right of User
+Trying to revive
+old unused devices
+（古い端末の再活用を試す）
+end note
+
+User -> Device : Boot C100P from USB（C100PをUSB起動）
+Device -> postmarketOS : Launch system（システム起動）
+
+note right of Device
+C100P worked surprisingly well
+（C100Pは意外と実用的だった）
+end note
+
+== Second Experiment（次の実験） ==
+User -> Device : Try postmarketOS on Nexus 7（Nexus7でpostmarketOS挑戦）
+Device -> postmarketOS : Start build process（ビルド開始）
+
+note right of postmarketOS
+Build failed
+Device too old / unsupported
+（ビルド失敗・古すぎて未対応）
+end note
+
+== Alternative Route（別ルート） ==
+User -> Device : Install LineageOS instead（LineageOS導入）
+LineageOS -> Device : Boot successful（起動成功）
+
+note right of Device
+Nexus 7 becomes usable again
+（Nexus7が再び使えるようになった）
+end note
+
+== Function Checks（機能確認） ==
+User -> Device : Test Wi-Fi（Wi-Fi確認）
+User -> Device : Test YouTube audio（YouTube音声確認）
+User -> Tools : Test scrcpy remote control（scrcpy確認）
+User -> Tools : Install Termux + SSH（Termux + SSH導入）
+User -> Device : Test camera（カメラ確認）
+
+note right of Tools
+Remote control and SSH work
+（遠隔操作とSSH利用OK）
+end note
+
+note right of Device
+Wi-Fi / Audio / Camera all work
+（Wi-Fi・音声・カメラ動作OK）
+end note
+
+== Realization（気付き） ==
+note right of User
+"This can work as
+a security camera"
+（監視カメラ代わりに使える）
+end note
+
+== Conclusion（結論） ==
+note right of User
+Even when full Linux fails,
+lightweight Android systems
+combined with Linux tools
+can still revive old hardware.
+
+（フルLinuxが難しくても、
+軽量AndroidとLinuxツールの組み合わせで
+古い端末はまだ再利用できる）
+end note
+
+@enduml

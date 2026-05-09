@@ -1,0 +1,25 @@
+@startuml
+!theme toy
+autonumber
+
+actor "User (ユーザー)" as User
+participant "Grafana (Monitor/全体監視)" as Grafana
+participant "ntopng (Microscope/詳細分析)" as Ntop
+participant "Devices (Target/調査対象)" as Target
+
+== Phase 1: Detection (異常の検知) ==
+User -> Grafana: Check **Throughput** (通信量/bps)
+note right: 「全体的に通信量が増えていないか？」を確認
+User -> Grafana: Check **Top Talkers** (通信上位者)
+note right: 「誰が一番帯域を使っているか？」を特定
+
+== Phase 2: Diagnosis (原因の診断) ==
+User -> Ntop: Open ntopng for the specific Device
+User -> Ntop: Check **L7 Protocol** (アプリケーションプロトコル)
+note right: 「YouTube? BitTorrent? 何のソフトか？」を特定
+User -> Ntop: Check **Active Flows** (通信の対話)
+note right: 「世界のどこ(IP)と通信しているか？」を特定
+
+== Phase 3: Action (対処) ==
+User -> Target: Troubleshoot the Device (デバイスの調査・対処)
+@endum

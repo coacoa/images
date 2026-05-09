@@ -1,0 +1,40 @@
+@startuml
+skinparam componentStyle uml2
+skinparam NoteBackgroundColor #LightYellow
+
+header Linux選択における「本質」と「外装」の乖離
+
+package "User_Intent (ユーザーの真の目的)" {
+    [パッケージ管理ロジック] as logic
+    note top of logic
+        ・更新頻度は？ (Rolling vs Fixed)
+        ・管理手法は？ (Declarative vs Imperative)
+        ・依存解決は？ (Shared vs Isolated)
+    end note
+}
+
+package "Market_Reality (現実の選択肢)" #GhostWhite {
+    frame "Distribution (パッケージ商品)" as dist {
+        [デスクトップ環境 / UI] as UI
+        [独自設定ツール / ドライバ] as tools
+        database "Package Manager" as PM
+        
+        UI -[#red]- tools : 強固な結合
+        tools -[#red]- PM : 強固な結合
+    }
+}
+
+' 矛盾の表現
+[User] -down-> UI : (1) 見た目や評判で選ばされる
+UI .down.> PM : (2) その結果、管理機構が自動的に決まる
+
+logic .[#blue,bold]right.> PM : "本来はここを\n直結させたい"
+
+note right of dist
+  **ディストリビューションの正体：**
+  特定のパッケージマネージャの上に、
+  「壁紙」「メニュー」「設定」を
+  プリセットした**完成品パッケージ**
+end note
+
+@enduml

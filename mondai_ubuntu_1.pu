@@ -1,0 +1,75 @@
+@startuml
+title Ubuntu → Other Distros → Feeling of "Enclosure" (Snap) Awareness
+
+actor User
+
+== 初期段階：Ubuntu を使っていた頃 ==
+User -> Ubuntu : Ubuntu を使い始める
+note right
+<b>■ 当時は特に不満なし</b>
+・インストール簡単  
+・日本語環境が整っている  
+・アプリも揃っている  
+→ Ubuntu = Linux の代表という認識
+end note
+
+== 他ディストロとの出会い ==
+User -> OtherDistros : Arch / Fedora / NixOS を触る
+note right
+<b>■ 他ディストロの“自由さ”を体験</b>
+・パッケージ選択が自由  
+・余計なものが入っていない  
+・思想が明確  
+→ Linux の本来の自由を感じ始める
+end note
+
+== Ubuntu への違和感が芽生える ==
+User -> Ubuntu : Ubuntu に戻る
+note right
+<b>■ 違和感を感じ始める</b>
+・Snap が勝手に入る  
+・apt install → Snap に置き換え  
+・Canonical 主導の囲い込み  
+→ 他ディストロでは感じなかった“不自由さ”
+end note
+
+== 違和感の正体に気づく ==
+User -> Awareness : 「Ubuntu だけが囲い込み文化？」
+note right
+<b>■ ネット上で実際に批判されている具体例</b>
+
+<b>● Snap の強制化</b>
+・apt install が Snap に置き換わる  
+・Snap Store が中央集権  
+・起動が遅い / キャッシュ巨大  
+・Flatpak を推さない
+
+<b>● Canonical の企業文化への不信</b>
+・Amazon レンズ問題  
+・Unity の突然の終了  
+・Mir の開発→放棄  
+・コミュニティ軽視と言われる
+
+<b>● Ubuntu フレーバー文化の混乱</b>
+・Ubuntu / Kubuntu / Xubuntu / Lubuntu  
+→ DE が違うだけなのに別 OS に見える  
+・DE を後から変えられることを初心者は知らない
+
+<b>● 他ディストロとの対比</b>
+・Arch → 透明でシンプル  
+・Fedora → upstream-first  
+・NixOS → 再現性  
+→ Ubuntu だけが“独自囲い込み”
+end note
+
+== 結論：Ubuntu を積極的に使いたくなくなる ==
+User -> Decision : Ubuntu を避ける判断
+note right
+<b>■ 最終的な気づき</b>
+・Ubuntu は普及に貢献した  
+・でも自由な Linux の中で Ubuntu だけが“不自由”  
+・他ディストロの方が気持ちよく使える  
+→ Ubuntu を選ばなくなるのは自然な流れ
+end note
+
+@enduml

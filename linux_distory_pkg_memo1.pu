@@ -74,4 +74,50 @@ note right
 → PM とは別物
 end note
 
+' ★★★ Mint = Cinnamon 誤解メモ + Ubuntu フレーバー文化の混乱メモ ★★★
+note bottom
+<b><font color="#FF8800">■ 初心者が必ずハマる誤解：ディストロと DE を同じレベルで考えてしまう</font></b>
+
+昔は「Linux Mint = Cinnamon」だと思っていた。  
+つまり、Mint と Cinnamon を“別の OS”として扱っていた。
+
+しかし実際には階層が全く違う：
+
+<b>● Linux Mint = ディストロ（OS の入れ物）</b>  
+<b>● Cinnamon = デスクトップ環境（見た目・操作感）</b>
+
+<b>→ ディストロと DE は別ジャンル。</b>
+
+---
+
+<b><font color="#FF8800">■ さらに混乱を生む原因：Ubuntu の DE フレーバー文化</font></b>
+
+Ubuntu は以下のように DE を変えただけの派生を  
+“別ディストロのように”公式で並べてしまっている：
+
+・Ubuntu（GNOME）  
+・Kubuntu（KDE）  
+・Xubuntu（XFCE）  
+・Lubuntu（LXQt）  
+・Ubuntu MATE（MATE）  
+・Ubuntu Budgie（Budgie）
+
+これが初心者に以下の誤解を生む：
+
+「Lubuntu = LXQt の OS」  
+「Kubuntu = KDE の OS」  
+「Ubuntu = GNOME の OS」
+
+しかし実際には：
+
+<b>→ Lubuntu でも後から GNOME を入れられる</b>  
+<b>→ Kubuntu でも XFCE に変えられる</b>  
+<b>→ Ubuntu の“フレーバー”は DE の違いでしかない</b>
+
+<b>DE は“着せ替え”であり、OS そのものではない。</b>
+
+この誤解が Linux を難しく感じさせる最大の原因のひとつ。  
+Linux を理解する鍵は、階層を正しく分けて考えること。
+end note
+
 @enduml
