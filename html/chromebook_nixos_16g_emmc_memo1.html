@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>NixOS on Chromebook - 16GB eMMC 突破の記録</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; background: #f4f7f6; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #2980b9; margin-top: 30px; }
+        code { background: #e8ecef; padding: 2px 5px; border-radius: 4px; font-family: 'Courier New', Courier, monospace; }
+        pre { background: #2d3436; color: #dfe6e9; padding: 15px; border-radius: 8px; overflow-x: auto; }
+        .success { background: #dff9fb; border-left: 5px solid #22a6b3; padding: 15px; margin: 20px 0; }
+        .danger { background: #fab1a0; border-left: 5px solid #d63031; padding: 10px; }
+        .step { font-weight: bold; color: #d35400; }
+    </style>
+</head>
+<body>
+
+    <h1>NixOS 容量不足（16GB eMMC）対策メモ</h1>
+    <p>Chromebook等の小容量ストレージ環境で、SDカードを <code>/nix</code> ストレージとして活用し、ビルドエラーを回避した全記録。</p>
+
+    <div class="success">
+        <strong>最終結果：</strong> 本体(eMMC) 16GB のうち 7.5GB 使用で余裕を確保。実体は SDカード 30GB 側で運用。
+    </div>
+
+    <h2>1. 限界突破のための掃除（延命処置）</h2>
+    <p>まずはビルドとコピーができるだけの隙間を作る。</p>
+    <pre>
+sudo nix-collect-garbage -d
+sudo journalctl --vacuum-time=1s
+sudo nix-store --optimize</pre>
+
+    <h2>2. SDカードの準備</h2>
+    <p>パーティションを分けず、<code>sda</code> まるごとを <code>ext4</code> でフォーマットし、容量を最大化する。</p>
+    <pre>
+sudo mkfs.ext4 -F -L nix_storage /dev/sda
+sudo mount /dev/sda /mnt</pre>
+
+    <h2>3. データの引っ越し（心臓部のコピー）</h2>
+    <p>本体の <code>/nix</code> を SDカードへ。属性を保持したまま同期する。</p>
+    <pre>
+sudo rsync -aAXv /nix/ /mnt/</pre>
+
+    <h2>4. 設定の恒久化 (configuration.nix)</h2>
+    <p>ここが最大のポイント。SDカードをシステムの <code>/nix</code> として定義する。</p>
+    <pre>
+fileSystems."/nix" = {
+  device = "/dev/disk/by-label/nix_storage";
+  fsType = "ext4";
+  options = [ "noatime" "nodiratime" "discard" ];
+  neededForBoot = true;
+};</pre>
+
+    <h2>5. トラブルシューティング：ビルド不整合の解消</h2>
+    <p>マウント切り替え後の <code>Connection refused</code> や <code>No such file</code> エラーへの対処。</p>
+    <ol>
+        <li>手動で SDカードを <code>/nix</code> に被せる：<code>sudo mount /dev/sda /nix</code></li>
+        <li>デーモン再起動：<code>sudo systemctl restart nix-daemon</code></li>
+        <li>強制ビルド：<code>sudo nixos-rebuild switch --repair</code></li>
+    </ol>
+
+    <h2>6. 勝利の確認</h2>
+    <p>再起動後、以下のコマンドで 30GB 認識されていれば完了！</p>
+    <pre>df -h /nix</pre>
+
+    <div class="danger">
+        <strong>注意：</strong> 今後、SDカードを抜いた状態で起動するとシステムが壊れるため、常に挿入しておくこと。
+    </div>
+
+</body>
+</html>
