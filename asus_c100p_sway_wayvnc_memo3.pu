@@ -1,0 +1,37 @@
+@startuml
+title ASUS C100P 復活までの試行シーケンス（改訂版）
+
+actor User as "user"
+participant "ASUS C100P\n(ARM / 2GB RAM)" as C100P
+participant "postmarketOS\n+ GNOME/Wayland" as PMOS
+participant "NixOS(main)\n+ Remmina" as NixOS
+participant "x11vnc\n(X11 前提)" as X11VNC
+participant "sway" as Sway
+participant "wayvnc" as WayVNC
+
+user -> C100P: postmarketOS をインストール
+activate C100P
+
+C100P -> PMOS: GNOME/Wayland 起動
+PMOS --> user: 「動くけど重い…」
+
+user -> NixOS: Remmina で接続を試す
+NixOS -> X11VNC: x11vnc で接続
+X11VNC --> user: 画面真っ黒＋カーソルだけ\n(= Wayland の限界)
+
+user --> user: 「これは無理だ…」
+
+user -> C100P: WM を sway に変更
+C100P -> Sway: 軽量 Wayland compositor 起動
+
+user -> C100P: wayvnc を導入
+C100P -> WayVNC: Wayland VNC サーバ起動
+
+NixOS -> WayVNC: Remmina から接続
+WayVNC --> NixOS: 画面転送（軽い・安定）
+
+NixOS --> user: 快適なリモートデスクトップ
+user --> user: 「2GB ARM がサブPCとして復活！」
+
+deactivate C100P
+@enduml
