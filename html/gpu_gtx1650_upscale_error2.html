@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: sans-serif; background: #1a1a1a; color: #e0e0e0; padding: 20px; }
+        .method-card { background: #282a36; border-radius: 10px; padding: 20px; margin-bottom: 20px; border-left: 5px solid #bd93f9; }
+        h2 { color: #50fa7b; margin-top: 0; }
+        .logic { background: #44475a; padding: 10px; border-radius: 5px; font-size: 0.9em; }
+        .highlight { color: #ff79c6; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>ピンボケを「クリア」にするための戦略</h1>
+
+    <div class="method-card">
+        <h2>① 「超解像 → 凝縮」法</h2>
+        <p>AIに一度大きく描かせたあと、元のサイズに縮小します。これが最も<span class="highlight">「ピントが合った」</span>ように見えます。</p>
+        <div class="logic">
+            <strong>工程：</strong> [画像] → [AIで4倍化(ディテール生成)] → [元のサイズへ縮小(情報の密度向上)]
+        </div>
+    </div>
+
+    <div class="method-card">
+        <h2>② SRMD (Super-Resolution Based on Iterative Mix)</h2>
+        <p>「ボケの度合い」をパラメータとして入力できるAIです。ボケたレンズを逆算するような処理が得意です。</p>
+        <ul>
+            <li>Real-ESRGANよりも実写の質感（フィルムの粒状感など）を守ります。</li>
+        </ul>
+    </div>
+
+    <div class="method-card">
+        <h2>③ Blind Deconvolution (ブラインド・デコンボリューション)</h2>
+        <p>数学的に「ボケ」の関数を推定して取り除く手法。AI以前の伝統的な手法ですが、今の高性能CPUなら非常に精密に計算できます。</p>
+    </div>
+
+    <p style="text-align: center; color: #6272a4;">「画面を大きくしたい」のではなく、「画素の密度を上げたい」という意図に合わせて、次回はこの方向で設定を組みましょう。</p>
+</body>
+</html>

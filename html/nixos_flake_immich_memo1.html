@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>NixOS 開発環境構築・トラブルシューティング指針</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 2em; background-color: #f4f7f6; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #2c3e50; }
+        h2 { color: #16a085; margin-top: 1.5em; border-left: 5px solid #16a085; padding-left: 10px; }
+        code { background: #eee; padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+        pre { background: #2d3436; color: #dfe6e9; padding: 15px; border-radius: 8px; overflow-x: auto; }
+        .success { background: #dff9fb; border: 1px solid #c7ecee; padding: 10px; border-radius: 8px; font-weight: bold; }
+        .danger { background: #fab1a0; border: 1px solid #ff7675; padding: 10px; border-radius: 8px; }
+        .note { background: #fff9db; border: 1px solid #fab005; padding: 10px; border-radius: 8px; margin-top: 10px; }
+        ul { padding-left: 20px; }
+    </style>
+</head>
+<body>
+
+<h1>NixOS 開発環境構築メモ & 汎用トラブルシューティング指針</h1>
+
+<div class="success">
+    対象: Immich (Nix + process-compose)<br>
+    完了日: 2026年5月14日
+</div>
+
+<h2>1. 今回のトラブルと解決策のまとめ</h2>
+<table>
+    <thead>
+        <tr>
+            <th>現象</th>
+            <th>原因</th>
+            <th>解決策</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>file already closed</code></td>
+            <td>/tmp内の一時的なログ書き込み失敗</td>
+            <td><code>-L ./pc.log</code>でログ出力先を明示的に固定する</td>
+        </tr>
+        <tr>
+            <td><code>File exists</code> (mkdir)</td>
+            <td>ディレクトリ名の「ファイル」が既に存在</td>
+            <td><code>rm -rf</code>で実体を確認し、<code>mkdir -p</code>で作り直す</td>
+        </tr>
+        <tr>
+            <td><code>invalid token</code> (nix develop)</td>
+            <td>コメント内のマルチバイト文字(日本語)</td>
+            <td>Nixコード内の日本語コメントを排除しASCIIのみにする</td>
+        </tr>
+        <tr>
+            <td><code>errno: -3008 (ENOTFOUND)</code></td>
+            <td>Redisの名前解決失敗</td>
+            <td><code>127.0.0.1</code>を直接指定し、DNS解決をスキップさせる</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>2. 汎用的な構築指針 (Best Practices)</h2>
+
+<h3>① ネットワーク接続は「IP指定」が最強</h3>
+<p>
+    <code>localhost</code> や <code>redis</code> といったホスト名は、実行環境（Docker, Nix, Node.jsのバージョン等）によって名前解決に失敗することが多いです。
+    <strong><code>127.0.0.1</code></strong> を直接指定するのが、最もエラーが起きにくい「安牌」の設定です。
+</p>
+
+<h3>② Nixの多行文字列内のエスケープ</h3>
+<p>
+    Nixの <code>'' ... ''</code> 内で <code>''</code>（空のクォート）を使いたい場合、直接書くとNixの終端と誤認されます。
+    <code>'${"''"}'</code> のように、Nixの変数展開を利用して「空の文字列」を注入するテクニックを使うと安全です。
+</p>
+
+<h3>③ process-compose の依存関係設定</h3>
+<ul>
+    <li>初期構築時は <code>condition: process_started</code> で「とりあえず全部動かす」方がエラーログが見えやすい。</li>
+    <li>安定してきたら <code>process_healthy</code> に切り替えて、起動順序を制御する。</li>
+</ul>
+
+<h3>④ ディレクトリ・パーミッションの事前確認</h3>
+<p>
+    <code>process-compose</code> 自体にログを書かせるのではなく、サービス専用のデータディレクトリ（例: <code>~/immich/logs</code>）を用意し、そこを起点に構築するとデバッグが容易になります。
+</p>
+
+<div class="danger">
+    <strong>重要:</strong> 構築が詰まったら <code>--tui=false</code> で生のログを見ること。管理画面(TUI)で隠れてしまうエラーメッセージに答えがあります。
+</div>
+
+<h2>3. メンテナンス・コマンド集</h2>
+<pre>
+# プロセスの残党を一掃する
+pkill -9 postgres
+pkill -9 redis-server
+
+# 設定を反映させて再起動
+exit
+nix develop
+start-immich
+</pre>
+
+</body>
+</html>

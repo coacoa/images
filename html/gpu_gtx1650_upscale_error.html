@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Upscale Project Review</title>
+    <style>
+        body { font-family: sans-serif; background: #1a1a1a; color: #e0e0e0; padding: 20px; line-height: 1.6; }
+        .container { max-width: 900px; margin: auto; }
+        h1 { color: #50fa7b; border-bottom: 2px solid #50fa7b; }
+        .status-box { background: #282a36; padding: 15px; border-left: 5px solid #ffb86c; margin: 20px 0; }
+        .tool-card { background: #44475a; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        h2 { color: #8be9fd; }
+        h3 { color: #ff79c6; }
+        ul { padding-left: 20px; }
+        code { background: #000; color: #f1fa8c; padding: 2px 5px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Upscale Project: 振り返りと次戦への備え</h1>
+        
+        <div class="status-box">
+            <strong>【教訓】</strong> ncnn-vulkan版はNixOS環境下でのドライバ/VRAM制御が極めて不安定。
+            メモリリソースを過信せず、より軽量または安定したバックエンドへの切り替えを推奨。
+        </div>
+
+        <h2>🚀 次回試すべき「別の武器」</h2>
+
+        <div class="tool-card">
+            <h3>1. Waifu2x-deadconv (Caffe/OpenCL版)</h3>
+            <p>Real-ESRGANより軽量で、古いGPUやOpenCL環境でも安定して動くことが多いです。実写動画でも「デノイズ」目的で非常に優秀です。</p>
+            <ul>
+                <li><strong>利点:</strong> メモリ消費が少なく、壊れた画像を吐きにくい。</li>
+                <li><strong>NixOS:</strong> <code>waifu2x-converter-cpp</code> などのパッケージを確認。</li>
+            </ul>
+        </div>
+
+        <div class="tool-card">
+            <h3>2. FFmpeg 内蔵フィルター (Super Resolution)</h3>
+            <p>外部ツールを使わず、FFmpegの中でAIモデル（.pbファイルなど）を読み込んで直接アップスケールします。</p>
+            <ul>
+                <li><strong>利点:</strong> フレーム分解・再結合の手間がなく、今回のような引数エラーが起きない。</li>
+                <li><strong>方法:</strong> <code>-vf sr=model=path/to/model.pb</code> を使用。</li>
+            </ul>
+        </div>
+
+        <div class="tool-card">
+            <h3>3. Python + PyTorch (onnxruntime)</h3>
+            <p>ncnn（C++）のバイナリではなく、Python環境でONNXモデルを動かします。</p>
+            <ul>
+                <li><strong>利点:</strong> CPU/GPUの切り替えが柔軟で、エラーメッセージが詳細。</li>
+                <li><strong>NixOS:</strong> <code>mach-nix</code> や <code>poetry2nix</code> で環境を固定して実行。</li>
+            </ul>
+        </div>
+
+        <h2>🛠 根本的な解決へのチェックリスト</h2>
+        <ul>
+            <li><strong>VRAM管理:</strong> タイルサイズを <code>128</code> 以下にするか、スケーリング倍率を <code>-s 2</code> に固定する。</li>
+            <li><strong>ドライバの確認:</strong> <code>nvidia-smi</code> でGPUが認識されているか、<code>vulkaninfo</code> でVulkan層が生きているか確認。</li>
+            <li><strong>一時ファイルの排除:</strong> 実行前に必ず <code>rm -rf /tmp/upscale_*</code> 等で残骸を消す。</li>
+        </ul>
+
+        <p style="margin-top: 50px; text-align: center; color: #6272a4;">
+            ※ 今回の `upscale.sh` のロジック（FFmpegの結合など）は、他のツールに切り替えてもそのまま応用可能です。
+        </p>
+    </div>
+</body>
+</html>
