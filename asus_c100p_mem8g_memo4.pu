@@ -1,0 +1,28 @@
+@startuml
+title USB Verification: Speed vs Stability (速度 vs 安定性)
+
+actor "User" as user
+participant "C100P (Host)" as host
+participant "zram (Compressed RAM)" as zram
+participant "SanDisk 2.0 (Stable)" as usb_stable
+participant "Cheap 3.0 (Unstable)" as usb_unstable
+
+== Case A: Random Access Bottleneck (ランダムアクセスのボトルネック) ==
+user -> host: Execute task (タスク実行)
+host -> usb_unstable: Write small logs (小さなログを書き込み)
+note over usb_unstable: High Latency (大きな遅延発生)
+usb_unstable --/ host: I/O Wait (応答待ち)
+host -> host: **System Stuttering / Petit-freeze** (プチフリ発生)
+
+== Case B: Optimization with zram (zramによる最適化) ==
+user -> host: Execute task (タスク実行)
+host -> zram: Write temporary data (一時データの書き込み)
+note over zram: Fast Compression / zstd (高速圧縮)
+zram -> host: Instant Response (即座に応答)
+
+host -> usb_stable: Stable background write (安定したバックグラウンド書き込み)
+note over usb_stable: Low Throughput but Reliable (速度は低いが信頼できる)
+usb_stable -> host: Task Completed (タスク完了)
+note right: **Smooth Performance!** (快適な動作！)
+
+@enduml
