@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+    <pre>
+情報が揃いました。構成が明確になりました：
+
+- `sda1` = pmOS_kernel（ファイルシステムなし、生のカーネルバイナリ）
+- `sda2` = pmOS_boot（ext2）
+- `sda3` = pmOS_root（ext4）
+- sda2（/boot）は**マウントされていない**ので先にマウントが必要
+
+## 手順
+
+### 1. sda2 をマウント
+
+```bash
+sudo mkdir -p /media/hoge/pmOS_boot
+sudo mount /dev/sda2 /media/hoge/pmOS_boot
+```
+
+### 2. eMMC のパーティションを作り直す
+
+```bash
+sudo parted /dev/mmcblk0 --script \
+  mklabel gpt \
+  mkpart pmOS_kernel 1MiB 17MiB \
+  mkpart pmOS_boot 17MiB 529MiB \
+  mkpart pmOS_root 529MiB 100%
+```
+
+### 3. sda1（生カーネル）を mmcblk0p1 へ dd でコピー
+
+```bash
+sudo dd if=/dev/sda1 of=/dev/mmcblk0p1 bs=4M status=progress
+```
+
+### 4. boot パーティションをフォーマット＆コピー
+
+```bash
+sudo mkfs.ext2 -L pmOS_boot /dev/mmcblk0p2
+sudo mkdir -p /mnt/emmc_boot
+sudo mount /dev/mmcblk0p2 /mnt/emmc_boot
+sudo rsync -aAX /media/hoge/pmOS_boot/ /mnt/emmc_boot/
+```
+
+### 5. root パーティションをフォーマット＆コピー
+
+```bash
+sudo mkfs.ext4 -L pmOS_root /dev/mmcblk0p3
+sudo mkdir -p /mnt/emmc_root
+sudo mount /dev/mmcblk0p3 /mnt/emmc_root
+sudo rsync -aAX /media/hoge/pmOS_root/ /mnt/emmc_root/
+```
+
+### 6. fstab を eMMC の UUID に書き換える
+
+```bash
+# 新UUIDを確認
+sudo blkid /dev/mmcblk0p2 /dev/mmcblk0p3
+```
+
+出てきた UUID を使って：
+
+```bash
+sudo nano /mnt/emmc_root/etc/fstab
+```
+
+書き換え内容（UUID は blkid の結果に置き換え）：
+```
+UUID=<mmcblk0p3のUUID> / ext4 defaults 0 0
+UUID=<mmcblk0p2のUUID> /boot ext2 nodev,nosuid,noexec 0 0
+```
+
+### 7. アンマウントして再起動
+
+```bash
+sudo umount /mnt/emmc_boot /mnt/emmc_root
+sudo reboot
+```
+
+USB を抜いて eMMC から起動するか試してみてください。
+
+---
+
+⚠️ **注意**：`parted` で eMMC を初期化すると PrawnOS は完全に消えます。問題なければ進めてください。
+    </pre>
+</body>
+</html>
+
