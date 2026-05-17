@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Alpine Linux x11vnc セットアップメモ</title>
+<style>
+body { font-family: sans-serif; line-height: 1.7; padding: 20px; }
+code { background: #eee; padding: 3px 6px; border-radius: 4px; }
+pre { background: #eee; padding: 10px; border-radius: 6px; white-space: pre-wrap; }
+h1 { border-bottom: 2px solid #444; padding-bottom: 5px; }
+</style>
+</head>
+<body>
+
+<h1>Alpine Linux 3.23 x11vnc セットアップメモ（LightDM 用）</h1>
+
+<h2>■ システム情報</h2>
+<pre>
+OS: Alpine Linux v3.23 x86_64
+Host: HP Pavilion 10 TS Notebook PC (0978100100405E00010320180)
+Kernel: Linux 6.18.25-0-lts
+Uptime: 22 mins
+Packages: 549 (apk)
+Shell: sh
+Display: 1366x768 in 10", 60 Hz [Built-in]
+Terminal: /dev/pts/2
+CPU: AMD A4-1200 with Radeon HD Graphics (2) @ 1.00 GHz
+GPU: AMD Radeon HD 8180
+Memory: 489.38 MiB / 1.65 GiB (29%)
+Swap: 0 B / 5.29 GiB (0%)
+Disk (/): 3.35 GiB / 288.62 GiB (1%) - ext4
+Local IP (eth0): 192.168.1.6/24
+Locale: C.UTF-8
+</pre>
+
+<h2>■ 1. sudo を使えるようにする（必要な場合）</h2>
+<pre>
+su -
+apk add sudo
+adduser hoge wheel
+visudo   # %wheel ALL=(ALL) ALL を有効化
+</pre>
+
+<h2>■ 2. x11vnc をインストール</h2>
+<pre>
+sudo apk add x11vnc
+</pre>
+
+<h2>■ 3. VNC パスワードを作成</h2>
+<pre>
+su -
+x11vnc -storepasswd /etc/x11vnc.pass
+</pre>
+
+<h2>■ 4. LightDM の Xauthority を確認</h2>
+<pre>
+ps aux | grep X
+# → /var/run/lightdm/root/:0 が auth ファイル
+</pre>
+
+<h2>■ 5. x11vnc の OpenRC サービスファイルを作成</h2>
+<p>/etc/init.d/x11vnc を作成：</p>
+
+<pre>
+#!/sbin/openrc-run
+
+command="/usr/bin/x11vnc"
+command_args="-display :0 -auth /var/run/lightdm/root/:0 -rfbauth /etc/x11vnc.pass -forever -shared -noxdamage -repeat -rfbport 5900"
+pidfile="/run/x11vnc.pid"
+name="x11vnc"
+description="x11vnc server"
+</pre>
+
+権限付与：
+<pre>
+chmod +x /etc/init.d/x11vnc
+</pre>
+
+<h2>■ 6. サービス起動 & 自動起動登録</h2>
+<pre>
+rc-service x11vnc start
+rc-update add x11vnc
+</pre>
+
+<h2>■ 7. Remmina から接続</h2>
+<ul>
+<li>Protocol: VNC</li>
+<li>Host: 192.168.1.6:5900</li>
+<li>Password: /etc/x11vnc.pass で設定したもの</li>
+</ul>
+
+<h2>■ 補足</h2>
+<p>
+LightDM 環境では <code>-auth guess</code> は失敗するため、<br>
+<code>/var/run/lightdm/root/:0</code> を明示指定する必要がある。
+</p>
+
+</body>
+</html>
+
