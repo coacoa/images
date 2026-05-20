@@ -1,0 +1,33 @@
+@startuml
+skinparam handwritten false
+skinparam shadowing false
+skinparam monochrome true
+left to right direction
+
+frame "Fedora CoreOS (コンテナ型)" {
+    node "ホストOS (不変・Read-Only)" {
+        [Podman / Docker] as Engine
+        database "コンテナA\n(Debian等)" as C1
+        database "コンテナB\n(Alpine等)" as C2
+        
+        Engine --> C1 : 隔離された壁を作る
+        Engine --> C2 : 隔離された壁を作る
+    }
+}
+
+frame "NixOS (Flake/宣言型)" {
+    node "単一のOS空間" {
+        folder "/nix/store (全パッケージがハッシュ値で独立)" {
+            [pkg-A (hash1)] as P1
+            [pkg-B (hash2)] as P2
+            [pkg-A (hash3)] as P3
+        }
+        frame "環境の切り替え (シンボリックリンク)" {
+            [現在の世代 (Generation)] as Gen
+            Gen --> P1
+            Gen --> P2
+            note right of P3 : リンクされていない\n古い世代の遺物
+        }
+    }
+}
+@endum

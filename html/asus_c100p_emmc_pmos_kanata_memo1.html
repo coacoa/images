@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=index.html">
+    <title>Chromebook C100P (pmos) - Kanata 導入と苦闘の記録</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        h1 {
+            color: #1a73e8;
+            border-bottom: 2px solid #1a73e8;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #2c3e50;
+            margin-top: 30px;
+        }
+        .status-badge {
+            display: inline-block;
+            background-color: #28a745;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .milestone {
+            background: white;
+            padding: 15px 20px;
+            border-left: 4px solid #1a73e8;
+            margin-bottom: 15px;
+            border-radius: 0 4px 4px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .milestone-title {
+            font-weight: bold;
+            color: #1a73e8;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        pre {
+            background: #2d3748;
+            color: #f7fafc;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+        }
+        code {
+            background: #e2e8f0;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Kanata マウスリマップ設定 苦闘の記録</h1>
+    <div class="status-badge">ステータス: 完全勝利（2 1 で爆速快適化）</div>
+
+    <p>Chromebook C100P (Veyron) 上の postmarketOS において、スペース右隣の「かなキー（内部信号: <code>henkan</code>）」をホールドしながら <code>hjkl</code> で滑らかにマウスを動かすための、涙と執念のデバッグログ。</p>
+
+    <h2>1. 激闘のタイムライン（これまでの苦闘）</h2>
+
+    <div class="milestone">
+        <div class="milestone-title">第1の壁：Kanata v1.11.0 のパーサーエラー</div>
+        <p>新しすぎる記述（<code>linux-dev-names</code> や高度な入れ子）を持ち込むたびに、Kanataのパーサーに「そんなオプション知らん！」と怒られ、何度も起動失敗（FAILURE）を繰り返す。結局、<b>最もプレーンな <code>defcfg</code></b> が正解だった。</p>
+    </div>
+
+    <div class="milestone">
+        <div class="milestone-title">第2の壁：裏ボス「keyd」との競合とログイン締め出し</div>
+        <p>裏で古いリマッパー <code>keyd</code> が起動していたため、仮想キーボードの奪い合いが発生（<code>Resource busy</code>）。物理キーボード <code>"cros_ec"</code> がブラックホールに吸い込まれ、一瞬pmosのログイン画面で文字入力が一切できなくなる絶望を味わう。<code>keyd</code> の常駐を完全に葬ることで解決。</p>
+    </div>
+
+    <div class="milestone">
+        <div class="milestone-title">第3の壁：キーコードの正体は「henkan」</div>
+        <p>キートップは「かな」でも、OSが認識していたのは <code>henkan</code> だった。物理デバイス <code>cros_ec</code> をダイレクトに掴んだ状態で <code>henkan</code> に設定した瞬間、ついにイベントループが回りマウスが動き出す。</p>
+    </div>
+
+    <div class="milestone">
+        <div class="milestone-title">第4の壁：加速ロケットからの「2 1」の黄金比</div>
+        <p>インターバルを増やすと逆に倍速になってしまうKanataの罠に翻弄されるも、最終的に <code>(movemouse-left 2 1)</code> （移動量2ピクセル、インターバル1）にたどり着く。これがC100Pの画面に完璧にマッチし、めちゃくちゃ良い感じの速度を確立！</p>
+    </div>
+
+    <h2>2. 最終生存コンフィグ（完全版）</h2>
+    <p>現在の確定設定ファイル。<code>~/.config/kanata/config.kbd</code> の中身：</p>
+    <pre><code>(defcfg
+  process-unmapped-keys yes
+)
+
+(defsrc
+  grv  1    2    3    4    5    6    7    8    9    0    -    =
+  q    w    e    r    t    y    u    i    o    p    [    ]
+  a    s    d    f    g    h    j    k    l    ;    '    \
+  z    x    c    v    b    n    m    ,    .    /
+  henkan lsft
+)
+
+(deflayer default
+  grv  1    2    3    4    5    6    7    8    9    0    -    =
+  q    w    e    r    t    y    u    i    o    p    [    ]
+  a    s    d    f    g    h    j    k    l    ;    '    \
+  z    x    c    v    b    n    m    ,    .    /
+  @nav   lsft
+)
+
+(deflayer navigation
+  _    _    _    _    _    _    _    _    _    _    _    _    _
+  _    _    _    _    _    home left down up   right end  esc
+  mlft _    bspc _    _    @m-l @m-d @m-u @m-r _    _    _
+  _    del  _    _    _    mlft _    _    _    _
+  _    _
+)
+
+(defalias
+  nav (layer-while-held navigation)
+
+  ;; 移動量を2にし、インターバルを1にすることで最高の操作感を実現
+  m-l (movemouse-left 2 1)
+  m-d (movemouse-down 2 1)
+  m-u (movemouse-up 2 1)
+  m-r (movemouse-right 2 1)
+)</code></pre>
+
+    <h2>3. 備忘録：保守コマンド</h2>
+    <p>もし挙動がおかしくなった時用の、生存確認コマンド三銃士：</p>
+    <pre><code># Kanataの再起動
+sudo systemctl restart kanata.service
+
+# ログのリアルタイム確認（cros_ecを掴めているかチェック）
+sudo journalctl -u kanata.service -n 20 --no-pager
+
+# 万が一キーボードが狂った時の緊急停止ショートカット（物理キー）
+Left Ctrl + Space + Esc</code></pre>
+
+    <div class="warning">
+        <strong>学んだ教訓:</strong> リマッパーを2つ同時に動かすな。デバイス名とバージョン確認は命の恩人。そして、最高の速度は「2 1」。
+    </div>
+
+</body>
+</html>
