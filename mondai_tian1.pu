@@ -1,0 +1,140 @@
+@startuml
+title 地域治安・共同体崩壊・可視化 の構造
+
+skinparam backgroundColor #FFFFFF
+skinparam handwritten false
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+
+box "SECTION 1 : 現代の不安" #EEEEEE
+
+participant 市民
+participant 子供
+participant 地域社会
+participant SNS
+participant 犯罪不安
+
+市民 -> 犯罪不安 : ニュース・SNSで事件を見る
+SNS -> 犯罪不安 : 全国の事件を即時拡散
+犯罪不安 -> 市民 : 「知らない人は危険」
+
+市民 -> 子供 : 声をかけない
+市民 -> 地域社会 : 関わり回避
+地域社会 -> 子供 : 見守り減少
+
+note right of 地域社会
+「誤解されたくない」
+「通報されたくない」
+という心理が拡大
+end note
+
+end box
+
+
+== 相互不信の連鎖 ==
+
+box "SECTION 2 : 地域共同体の弱体化" #DDFFDD
+
+participant 孤立
+participant 無関心
+participant 犯罪者
+
+地域社会 -> 孤立 : 接点減少
+孤立 -> 無関心 : 他者を避ける
+無関心 -> 地域社会 : さらに交流低下
+
+犯罪者 -> 地域社会 : 「誰にも認識されない空間」を好む
+
+note right of 犯罪者
+人の目が少ない環境は
+犯罪抑止力が弱い
+end note
+
+end box
+
+
+== 治安の定義 ==
+
+box "SECTION 3 : 治安とは何か" #FFF0CC
+
+participant 客観治安
+participant 体感治安
+participant 社会信頼
+
+客観治安 -> 市民 : 犯罪統計
+体感治安 -> 市民 : 不安・恐怖感
+社会信頼 -> 市民 : 安心して暮らせる感覚
+
+note right of 客観治安
+殺人率
+窃盗率
+再犯率
+など
+end note
+
+note right of 体感治安
+SNS
+報道
+体験
+end note
+
+note right of 社会信頼
+地域交流
+将来希望
+共同体
+end note
+
+end box
+
+
+== 可視化の必要性 ==
+
+box "SECTION 4 : 地域治安の可視化" #CCE5FF
+
+participant 可視化システム
+participant 住民
+participant 学校
+participant 行政
+
+住民 -> 可視化システム : 危険箇所共有
+学校 -> 可視化システム : 通学路情報
+行政 -> 可視化システム : 犯罪統計
+
+可視化システム -> 住民 : 安全度マップ
+可視化システム -> 地域社会 : 「安心の根拠」を提供
+
+note right of 可視化システム
+単なる犯罪件数ではなく
+
+・人通り
+・街灯
+・見守り密度
+・空き家率
+・交流イベント
+なども含む
+end note
+
+end box
+
+
+== 目指す方向 ==
+
+box "SECTION 5 : 新しい共同体" #FFDDDD
+
+participant ゆるいつながり
+participant 見守り
+participant 安心感
+
+地域社会 -> ゆるいつながり : 過干渉ではない接点
+ゆるいつながり -> 見守り : 自然な認識
+見守り -> 安心感 : 子供と大人が共存
+
+note right of 安心感
+「監視社会」ではなく
+「自然な相互認識」
+を再構築する
+end note
+
+end box
+
+@enduml

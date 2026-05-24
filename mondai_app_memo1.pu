@@ -1,0 +1,37 @@
+@startuml
+title ポイントアプリ経済：試験図 × section（メリット／デメリット）
+
+actor User
+
+participant "ユーザー" as U
+participant "店舗・企業" as S
+participant "プラットフォーム\n(Google/広告)" as P
+participant "社会全体" as Soc
+
+== メリット ==
+User -> U : 割引・ポイントを得る
+note right of U : ・お得感\n・利便性\n・アプリで完結
+
+U -> S : 消費行動・データ提供
+note right of S : ・売上向上\n・リピーター獲得\n・販促最適化
+
+S -> P : データ連携・広告出稿
+note right of P : ・大量データ収集\n・広告精度向上\n・収益最大化
+
+P -> User : パーソナライズ通知
+note right of Soc : ・経済効率化\n・マーケ高度化\n・マッチング向上
+
+== デメリット ==
+User -> U : 無自覚なデータ提供
+note right of U : ・位置/行動データ\n・購買履歴\n・依存構造
+
+U -> Soc : 大衆の無自覚な提供
+note right of Soc : ・監視社会化\n・リテラシー格差\n・行動誘導
+
+S -> Soc : 企業依存構造
+note right of S : ・情報漏洩リスク\n・プラットフォーム依存
+
+P -> Soc : 監視社会化の強化
+note right of P : ・規制リスク\n・透明性要求\n・社会的批判
+
+@enduml
