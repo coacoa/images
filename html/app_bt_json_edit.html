@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BlockTube JSON Editor</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0c;--s1:#111114;--s2:#18181c;--s3:#222228;--s4:#2c2c34;
+  --bd:rgba(255,255,255,0.07);--bd2:rgba(255,255,255,0.12);--bd3:rgba(255,255,255,0.2);
+  --t1:#f0f0f4;--t2:#9898a8;--t3:#55555f;
+  --violet:#8b7cf8;--violet2:#a99bff;--violet-bg:rgba(139,124,248,0.12);
+  --cyan:#2dd4bf;--cyan-bg:rgba(45,212,191,0.1);
+  --green:#4ade80;--green-bg:rgba(74,222,128,0.1);
+  --amber:#fbbf24;--amber-bg:rgba(251,191,36,0.1);
+  --red:#f87171;--red-bg:rgba(248,113,113,0.1);
+  --blue:#60a5fa;--blue-bg:rgba(96,165,250,0.1);
+  --r:8px;--r2:12px;--r3:16px;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;display:flex;flex-direction:column;font-size:14px}
+
+/* ===== HEADER ===== */
+header{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:var(--s1);border-bottom:1px solid var(--bd);flex-shrink:0;gap:12px}
+.logo{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600;letter-spacing:-.3px;white-space:nowrap}
+.logo-mark{width:28px;height:28px;background:var(--violet);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.logo-sub{color:var(--t3);font-weight:400;font-size:12px;padding:2px 8px;background:var(--s3);border-radius:5px;border:1px solid var(--bd)}
+.hactions{display:flex;gap:8px;flex-shrink:0}
+
+/* ===== BUTTONS ===== */
+.btn{font-family:'Inter',sans-serif;font-size:12px;font-weight:500;padding:6px 12px;border-radius:var(--r);border:1px solid var(--bd2);background:var(--s2);color:var(--t1);cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .12s;white-space:nowrap;line-height:1}
+.btn:hover{background:var(--s3);border-color:var(--bd3)}
+.btn:active{transform:scale(.97)}
+.btn.pri{background:var(--violet);border-color:var(--violet);color:#fff}
+.btn.pri:hover{background:var(--violet2);border-color:var(--violet2)}
+.btn.suc{background:var(--green-bg);border-color:rgba(74,222,128,.25);color:var(--green)}
+.btn.suc:hover{background:rgba(74,222,128,.18)}
+.btn.dan{background:var(--red-bg);border-color:rgba(248,113,113,.25);color:var(--red)}
+.btn.dan:hover{background:rgba(248,113,113,.18)}
+.btn svg{width:13px;height:13px;flex-shrink:0}
+.btn:disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
+
+/* ===== LAYOUT ===== */
+.app{display:flex;flex:1;overflow:hidden;height:calc(100vh - 52px)}
+
+/* ===== SIDEBAR ===== */
+.sidebar{width:220px;flex-shrink:0;background:var(--s1);border-right:1px solid var(--bd);display:flex;flex-direction:column;overflow:hidden}
+.sb-head{padding:12px 14px 8px;font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--t3);text-transform:uppercase;flex-shrink:0}
+.file-list{flex:1;overflow-y:auto;padding:4px 8px}
+.fitem{padding:8px 10px;border-radius:var(--r);cursor:pointer;margin-bottom:2px;transition:background .1s;border:1px solid transparent}
+.fitem:hover{background:var(--s2)}
+.fitem.act{background:var(--violet-bg);border-color:rgba(139,124,248,.2)}
+.fitem.act .fn{color:var(--violet2)}
+.fn{font-size:12px;font-weight:500;display:flex;align-items:center;gap:6px;margin-bottom:3px;color:var(--t1)}
+.fm{font-size:11px;color:var(--t3);font-family:'JetBrains Mono',monospace}
+.no-files{padding:24px 12px;text-align:center;color:var(--t3);font-size:12px;line-height:1.7}
+.sb-foot{padding:8px;border-top:1px solid var(--bd);display:flex;flex-direction:column;gap:6px;flex-shrink:0}
+
+/* ===== MAIN ===== */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+/* empty */
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:32px}
+.empty-ico{width:64px;height:64px;background:var(--s2);border-radius:14px;border:1px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:28px}
+.empty h2{font-size:20px;font-weight:600}
+.empty p{color:var(--t2);font-size:13px;text-align:center;line-height:1.6;max-width:300px}
+.eact{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+
+/* editor */
+.editor{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* toolbar */
+.tbar{padding:8px 16px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:8px;background:var(--s1);flex-wrap:wrap;flex-shrink:0}
+.tbar-name{font-size:13px;font-weight:500;color:var(--t1);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tsep{width:1px;height:16px;background:var(--bd2);flex-shrink:0}
+.tsp{flex:1}
+
+/* stats */
+.sbar{padding:6px 16px;background:var(--s2);border-bottom:1px solid var(--bd);display:flex;gap:16px;flex-wrap:wrap;flex-shrink:0}
+.sc{display:flex;align-items:center;gap:5px;font-size:11px}
+.sdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.slb{color:var(--t2)}
+.sv{font-weight:500;font-family:'JetBrains Mono',monospace;font-size:11px}
+
+/* tabs */
+.tabs{display:flex;overflow-x:auto;border-bottom:1px solid var(--bd);background:var(--s1);flex-shrink:0}
+.tab{font-size:12px;font-weight:500;padding:9px 14px;border:none;background:none;color:var(--t2);cursor:pointer;border-bottom:2px solid transparent;transition:all .12s;white-space:nowrap;display:flex;align-items:center;gap:5px;font-family:'Inter',sans-serif}
+.tab:hover{color:var(--t1)}
+.tab.act{color:var(--violet2);border-bottom-color:var(--violet)}
+.tc{font-size:10px;padding:1px 5px;border-radius:4px;background:var(--s3);color:var(--t3);font-weight:600}
+.tab.act .tc{background:var(--violet-bg);color:var(--violet2)}
+
+/* panel */
+.panel{flex:1;overflow-y:auto;padding:16px;display:none}
+.panel.act{display:block}
+
+/* section */
+.sech{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px}
+.seca{display:flex;align-items:center;gap:6px}
+.cnt-badge{font-size:11px;padding:2px 8px;border-radius:5px;background:var(--s3);color:var(--t2);font-weight:500}
+
+/* search */
+.sbox{flex:1;max-width:280px;display:flex;align-items:center;background:var(--s2);border:1px solid var(--bd2);border-radius:var(--r);padding:0 8px;gap:6px}
+.sbox svg{width:12px;height:12px;color:var(--t3);flex-shrink:0}
+.sbox input{flex:1;background:none;border:none;outline:none;color:var(--t1);font-size:12px;padding:6px 0;font-family:'Inter',sans-serif}
+.sbox input::placeholder{color:var(--t3)}
+
+/* ===== ENTRY CARDS ===== */
+.elist{display:flex;flex-direction:column;gap:2px}
+
+/* channel card — rich display */
+.ecard{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);transition:all .12s;position:relative}
+.ecard:hover{border-color:var(--bd2);background:var(--s2)}
+.ecard.cmt{opacity:.5}
+.ecard.cmt:hover{opacity:.75}
+
+/* avatar */
+.ava{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;font-family:'JetBrains Mono',monospace;overflow:hidden;position:relative}
+.ava.has-img img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.ava.no-img{background:var(--s3);border:1px solid var(--bd2)}
+
+/* card body */
+.ecbody{flex:1;min-width:0}
+.ecname{font-size:13px;font-weight:500;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.3}
+.ecid{font-size:10px;color:var(--t3);font-family:'JetBrains Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px;line-height:1.4}
+.ecid a{color:var(--blue);text-decoration:none}
+.ecid a:hover{text-decoration:underline}
+.ecmeta{display:flex;align-items:center;gap:6px;margin-top:3px}
+
+/* type badge */
+.tbadge{font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;flex-shrink:0}
+.tb-channelId{background:var(--violet-bg);color:var(--violet2)}
+.tb-channelName{background:var(--cyan-bg);color:var(--cyan)}
+.tb-videoId{background:var(--green-bg);color:var(--green)}
+.tb-videoTitle{background:var(--amber-bg);color:var(--amber)}
+.tb-commentUser,.tb-commentContent{background:var(--red-bg);color:var(--red)}
+.tb-comment{background:var(--s3);color:var(--t3)}
+.tb-regex{background:rgba(139,124,248,.15);color:var(--violet2);font-size:9px}
+
+/* card actions */
+.cactions{display:flex;gap:4px;opacity:0;transition:opacity .1s;flex-shrink:0}
+.ecard:hover .cactions{opacity:1}
+.ico-btn{width:26px;height:26px;border:none;background:none;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--t3);transition:all .12s}
+.ico-btn:hover.del{background:var(--red-bg);color:var(--red)}
+.ico-btn:hover.edit{background:var(--violet-bg);color:var(--violet2)}
+.ico-btn:hover.link{background:var(--blue-bg);color:var(--blue)}
+.ico-btn svg{width:13px;height:13px}
+
+/* inline edit */
+.ecard.editing .ecname{display:none}
+.einput{display:none;flex:1;background:var(--s3);border:1px solid var(--violet);border-radius:5px;padding:3px 7px;color:var(--t1);font-family:'JetBrains Mono',monospace;font-size:12px;outline:none}
+.ecard.editing .einput{display:block}
+.ecard.editing .cactions{opacity:1}
+
+/* add row */
+.addrow{display:flex;gap:8px;margin-top:10px}
+.addinput{flex:1;background:var(--s1);border:1px dashed var(--bd2);border-radius:var(--r);padding:7px 10px;color:var(--t1);font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;transition:border .12s}
+.addinput:focus{border-color:var(--violet);border-style:solid}
+.addinput::placeholder{color:var(--t3)}
+
+/* ===== JS PANEL ===== */
+.jspanel{flex:1;overflow:hidden;display:none;flex-direction:column;padding:16px}
+.jspanel.act{display:flex}
+.jswrap{flex:1;background:var(--s1);border:1px solid var(--bd);border-radius:var(--r2);overflow:hidden;display:flex;flex-direction:column}
+.jshead{padding:8px 12px;border-bottom:1px solid var(--bd);font-size:11px;color:var(--t3);font-family:'JetBrains Mono',monospace;display:flex;justify-content:space-between;align-items:center}
+.jsta{flex:1;background:none;border:none;outline:none;color:var(--green);font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7;padding:12px;resize:none;tab-size:2}
+
+/* ===== MERGE PANEL ===== */
+.mpanel{flex:1;overflow-y:auto;padding:16px;display:none;flex-direction:column;gap:16px}
+.mpanel.act{display:flex}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mcard{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r2);overflow:hidden}
+.mcard.cur{border-color:var(--violet)}
+.mch{padding:10px 12px;border-bottom:1px solid var(--bd);font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:space-between}
+.mcard.cur .mch{background:var(--violet-bg);color:var(--violet2)}
+.mstats{padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.msr{display:flex;justify-content:space-between;font-size:11px}
+.msr .lb{color:var(--t2)}
+.msr .v{font-family:'JetBrains Mono',monospace;font-weight:500}
+.mopts{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r2);padding:14px}
+.mopts h3{font-size:13px;font-weight:500;margin-bottom:10px}
+.rgrp{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.ritem{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border:1px solid var(--bd);border-radius:var(--r);cursor:pointer;transition:all .12s}
+.ritem:hover{border-color:var(--bd2);background:var(--s2)}
+.ritem input{margin-top:2px;accent-color:var(--violet);flex-shrink:0}
+.rtext{font-size:12px}
+.rdesc{font-size:11px;color:var(--t2);margin-top:2px}
+.ritem.sel{border-color:rgba(139,124,248,.3);background:var(--violet-bg)}
+
+/* ===== JSON PANEL ===== */
+.jpanel{flex:1;overflow:hidden;display:none;flex-direction:column}
+.jpanel.act{display:flex}
+.jpre{flex:1;background:var(--s1);border:1px solid var(--bd);border-radius:var(--r2);margin:16px;overflow:auto;padding:14px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;color:var(--t2);white-space:pre}
+.jptbar{padding:8px 16px;border-bottom:1px solid var(--bd);display:flex;gap:8px;background:var(--s1);flex-shrink:0}
+
+/* ===== TOAST ===== */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--s3);border:1px solid var(--bd2);border-radius:var(--r);padding:9px 14px;font-size:12px;font-weight:500;color:var(--t1);z-index:9999;transform:translateY(80px);opacity:0;transition:all .2s cubic-bezier(.34,1.56,.64,1);display:flex;align-items:center;gap:7px;max-width:280px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.g{border-left:3px solid var(--green)}
+.toast.r{border-left:3px solid var(--red)}
+.toast.b{border-left:3px solid var(--violet)}
+
+/* ===== LOADING SKELETON ===== */
+.skel{animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:.8}}
+.skel-line{height:10px;background:var(--s3);border-radius:4px}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--s4);border-radius:3px}
+.hidden{display:none!important}
+
+/* color hash for avatars */
+.avc0{background:#7c3aed22;color:#a78bfa}
+.avc1{background:#0e7490;color:#67e8f9} /* actually border-radius issue */
+.avc2{background:#065f4622;color:#34d399}
+.avc3{background:#92400e22;color:#fbbf24}
+.avc4{background:#7f1d1d22;color:#fca5a5}
+.avc5{background:#1e3a5f22;color:#93c5fd}
+.avc6{background:#4a044e22;color:#e879f9}
+.avc7{background:#14532d22;color:#86efac}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">🚫</div>
+    BlockTube Editor
+    <span class="logo-sub">JSON ビジュアルエディター</span>
+  </div>
+  <div class="hactions">
+    <button class="btn" id="importBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      JSONを読み込む
+    </button>
+    <button class="btn" id="dedupAllBtn" disabled onclick="dedupAll()" title="全カテゴリの重複エントリをまとめて削除">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3"/><path d="M21 8V5a2 2 0 00-2-2h-3"/><path d="M3 16v3a2 2 0 002 2h3"/><path d="M16 21h3a2 2 0 002-2v-3"/></svg>
+      重複削除
+    </button>
+    <button class="btn suc" id="exportBtn" disabled>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 14 12 9 7 14"/><line x1="12" y1="9" x2="12" y2="21"/></svg>
+      エクスポート
+    </button>
+  </div>
+  <input type="file" id="fileInput" accept=".json" multiple style="display:none">
+</header>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="sb-head">ファイル</div>
+    <div class="file-list" id="fileList">
+      <div class="no-files">JSONを読み込むか<br>ドロップしてください</div>
+    </div>
+    <div class="sb-foot">
+      <button class="btn" id="mergeBtn" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        マージ
+      </button>
+      <button class="btn dan" id="clearAllBtn">全て削除</button>
+    </div>
+  </aside>
+
+  <main class="main" id="mainArea">
+    <div class="empty" id="emptyState">
+      <div class="empty-ico">📂</div>
+      <h2>ファイルを読み込む</h2>
+      <p>BlockTubeのJSONをドラッグ＆ドロップ、または選択して読み込んでください。複数ファイルのマージも可能です。</p>
+      <div class="eact">
+        <button class="btn pri" onclick="document.getElementById('fileInput').click()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          JSONを選択
+        </button>
+        <button class="btn" onclick="loadSample()">サンプルを試す</button>
+      </div>
+    </div>
+
+    <div class="editor hidden" id="editorArea">
+      <div class="tbar">
+        <span class="tbar-name" id="edFname">—</span>
+        <div class="tsep"></div>
+        <button class="btn" id="addBtn" onclick="focusAddInput()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          追加
+        </button>
+        <div class="tsp"></div>
+        <button class="btn dan" id="delFileBtn">このファイルを削除</button>
+      </div>
+      <div class="sbar" id="statsBar"></div>
+      <div class="tabs" id="tabNav"></div>
+      <div id="panelWrap" style="flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0"></div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const FILTERS=[
+  {key:'channelId',    label:'チャンネルID',    ph:'UCxxxxxxxxxxxxxxxxxx',  color:'#8b7cf8'},
+  {key:'channelName',  label:'チャンネル名',    ph:'チャンネル名キーワード',  color:'#2dd4bf'},
+  {key:'videoId',      label:'動画ID',          ph:'xxxxxxxxxxx',           color:'#4ade80'},
+  {key:'videoTitle',   label:'動画タイトル',    ph:'タイトルキーワード',       color:'#fbbf24'},
+  {key:'commentUser',  label:'コメントユーザー', ph:'ユーザー名',              color:'#f87171'},
+  {key:'commentContent',label:'コメント内容',   ph:'ブロックするキーワード',   color:'#f87171'},
+];
+
+let files=[], activeIdx=-1, activeTab='channelId';
+// channel info cache: {channelId: {name, avatar, loaded}}
+let chCache={};
+
+const $ = id => document.getElementById(id);
+
+/* ======= COLOR HASH ======= */
+function colorHash(str){
+  let h=0;for(let c of str)h=(h*31+c.charCodeAt(0))>>>0;
+  return h%8;
+}
+function initials(str){
+  if(!str)return '?';
+  const clean=str.replace(/^UC/,'');
+  return clean.slice(0,2).toUpperCase();
+}
+
+/* ======= AVATAR ======= */
+function makeAvatar(key, val, size=34){
+  if(val.trim().startsWith('//')||val.trim()==='') return `<div class="ava no-img" style="width:${size}px;height:${size}px">💬</div>`;
+  const isRegex = val.startsWith('/') && val.endsWith('/');
+  const isChId = /^UC[\w-]{22}$/.test(val.trim());
+  const isChName = key==='channelName';
+  const isVid = key==='videoId'||key==='videoTitle';
+
+  if(isChId||isChName){
+    const ci=colorHash(val);
+    // try cached
+    if(isChId && chCache[val] && chCache[val].avatar){
+      return `<div class="ava has-img" style="width:${size}px;height:${size}px"><img src="${chCache[val].avatar}" onerror="this.parentElement.className='ava no-img avc${ci}';this.remove();this.parentElement.innerHTML='${initials(val)}'"></div>`;
+    }
+    const ini=isChId?initials(val):(val.slice(0,2).toUpperCase());
+    return `<div class="ava no-img avc${ci}" style="width:${size}px;height:${size}px">${ini}</div>`;
+  }
+  if(isVid){
+    const ci=colorHash(val);
+    if(/^[\w-]{11}$/.test(val.trim())){
+      return `<div class="ava has-img" style="width:${size}px;height:${size}px"><img src="https://i.ytimg.com/vi/${val.trim()}/default.jpg" style="object-fit:cover;width:100%;height:100%;border-radius:50%" onerror="this.parentElement.className='ava no-img avc${ci}';this.remove();this.parentElement.innerHTML='🎬'"></div>`;
+    }
+    return `<div class="ava no-img avc${ci}" style="width:${size}px;height:${size}px">🎬</div>`;
+  }
+  const ci=colorHash(val);
+  const icons={commentUser:'👤',commentContent:'💬'};
+  return `<div class="ava no-img avc${ci}" style="width:${size}px;height:${size}px">${icons[key]||'🔤'}</div>`;
+}
+
+/* ======= DISPLAY NAME & LINK ======= */
+function entryDisplay(key, val){
+  if(val.trim().startsWith('//')||val.trim()==='') return {name: val||'（空行）', sub:null, link:null};
+  const isChId=/^UC[\w-]{22}$/.test(val.trim());
+  let name=val, sub=null, link=null;
+  const isRegex=val.startsWith('/')&&val.endsWith('/');
+
+  if(isChId){
+    // use cached name if available
+    if(chCache[val]&&chCache[val].name) name=chCache[val].name;
+    else name=val;
+    sub=val;
+    link=`https://www.youtube.com/channel/${val}`;
+  } else if(key==='videoId'&&/^[\w-]{11}$/.test(val.trim())){
+    link=`https://www.youtube.com/watch?v=${val}`;
+    sub=val;
+    name='動画ID: '+val;
+  } else if(key==='channelId'||key==='channelName'){
+    link=null;
+  }
+  return {name, sub, link, isRegex};
+}
+
+/* ======= FETCH CHANNEL NAME via oEmbed ======= */
+async function fetchChannelInfo(channelId){
+  if(chCache[channelId]) return chCache[channelId];
+  chCache[channelId]={name:channelId, avatar:null, loading:true};
+  try{
+    // Use a video search via noembed to get channel name — use oEmbed trick: actually we just show ID nicely
+    // Real approach: YouTube oEmbed doesn't work for channels. So we use a proxy-free trick:
+    // Load https://www.youtube.com/channel/UC... page and extract og:title via a CORS proxy.
+    // Without CORS proxy we cannot. We'll use a public one: allorigins.win
+    const url=`https://api.allorigins.win/raw?url=${encodeURIComponent('https://www.youtube.com/channel/'+channelId+'?hl=ja')}`;
+    const r=await fetch(url,{signal:AbortSignal.timeout(5000)});
+    if(!r.ok)throw new Error();
+    const html=await r.text();
+    // extract title
+    const tm=html.match(/<meta property="og:title" content="([^"]+)"/);
+    const im=html.match(/<meta property="og:image" content="([^"]+)"/);
+    const name=tm?tm[1].replace(' - YouTube',''):channelId;
+    const avatar=im?im[1]:null;
+    chCache[channelId]={name, avatar, loading:false};
+    return chCache[channelId];
+  }catch(e){
+    chCache[channelId]={name:channelId, avatar:null, loading:false};
+    return chCache[channelId];
+  }
+}
+
+/* ======= LOAD CHANNEL INFO BATCH ======= */
+async function loadChannelInfoForFile(f){
+  const ids=(f.data.channelId||[]).filter(v=>v.trim()&&!v.trim().startsWith('/')&&/^UC[\w-]{22}$/.test(v.trim()));
+  const unloaded=ids.filter(id=>!chCache[id]);
+  if(!unloaded.length)return;
+  // Load in batches of 5 concurrently
+  const batch=5;
+  for(let i=0;i<unloaded.length;i+=batch){
+    const group=unloaded.slice(i,i+batch);
+    await Promise.all(group.map(async id=>{
+      const info=await fetchChannelInfo(id);
+      // re-render if still on this file
+      if(activeIdx>=0&&files[activeIdx]===f&&activeTab==='channelId'){
+        const el=document.querySelector(`[data-id="${CSS.escape(id)}"]`);
+        if(el){
+          const ni=el.querySelector('.ecname');
+          const si=el.querySelector('.ecid span.idtext');
+          const av=el.querySelector('.ava');
+          if(ni&&info.name)ni.textContent=info.name;
+          if(av&&info.avatar){
+            av.outerHTML=`<div class="ava has-img" style="width:34px;height:34px"><img src="${info.avatar}" onerror="this.parentElement.className='ava no-img';this.remove()"></div>`;
+          }
+        }
+      }
+    }));
+  }
+}
+
+/* ======= NORMALIZE ======= */
+function norm(data){
+  const o={};
+  FILTERS.forEach(({key})=>{ o[key]=Array.isArray(data[key])?[...data[key]]:[] });
+  o.javascript=data.javascript||'(video, objectType) => {\n  // Add custom conditions below\n\n  // Custom conditions did not match, do not block\n  return false;\n}';
+  return o;
+}
+function countReal(arr){ return (arr||[]).filter(v=>v.trim()&&!v.trim().startsWith('//')).length; }
+
+/* ======= FILE LOAD ======= */
+$('importBtn').onclick=()=>$('fileInput').click();
+$('fileInput').onchange=e=>{ [...e.target.files].forEach(loadFile); e.target.value=''; };
+
+function loadFile(file){
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const raw=JSON.parse(e.target.result);
+      const data=raw.filterData||raw;
+      const f={name:file.name,data:norm(data),raw};
+      files.push(f);
+      renderSidebar();
+      selectFile(files.length-1);
+      $('mergeBtn').disabled=files.length<2;
+      $('exportBtn').disabled=false;
+      $('dedupAllBtn').disabled=false;
+      toast('📂 '+file.name,'g');
+      loadChannelInfoForFile(f);
+    }catch(e){ toast('❌ JSON解析失敗','r'); }
+  };
+  r.readAsText(file);
+}
+
+function loadSample(){
+  const s={filterData:{
+    channelId:['// Blocked by context menu (PewDiePie)','UC-lHJZR3Gqxm24_Vd_AJ5Yw','','// Blocked by context menu (MrBeast)','UCX6OQ3DkcsbYNE6H8uQQuVA'],
+    channelName:['clickbait channel','drama channel'],
+    videoId:['dQw4w9WgXcQ'],
+    videoTitle:['※衝撃※','【閲覧注意】','炎上','完全解説'],
+    commentUser:['spammer123'],
+    commentContent:['www.spam-site.com'],
+    javascript:'(video, objectType) => {\n  // Add custom conditions below\n\n  // Custom conditions did not match, do not block\n  return false;\n}'
+  }};
+  const blob=new Blob([JSON.stringify(s)],{type:'application/json'});
+  blob.name='sample_blocktube.json';
+  loadFile(blob);
+}
+
+/* ======= SIDEBAR ======= */
+function renderSidebar(){
+  const el=$('fileList');
+  if(!files.length){ el.innerHTML='<div class="no-files">JSONを読み込むか<br>ドロップしてください</div>'; return; }
+  el.innerHTML=files.map((f,i)=>`
+    <div class="fitem ${i===activeIdx?'act':''}" onclick="selectFile(${i})">
+      <div class="fn">📄 ${esc(f.name.replace(/\.json$/i,''))}</div>
+      <div class="fm">${countReal(Object.values(f.data).flat())} エントリ</div>
+    </div>`).join('');
+}
+
+/* ======= SELECT FILE ======= */
+function selectFile(idx){
+  activeIdx=idx;
+  const f=files[idx];
+  if(!f)return;
+  renderSidebar();
+  $('emptyState').classList.add('hidden');
+  $('editorArea').classList.remove('hidden');
+  $('edFname').textContent=f.name;
+  renderStats();
+  renderTabs();
+  renderActivePanel();
+  loadChannelInfoForFile(f);
+}
+
+/* ======= STATS ======= */
+function renderStats(){
+  const f=files[activeIdx];
+  if(!f)return;
+  $('statsBar').innerHTML=FILTERS.map(({key,label,color})=>{
+    const c=countReal(f.data[key]);
+    return `<div class="sc"><div class="sdot" style="background:${color}"></div><span class="slb">${label}</span><span class="sv">${c}</span></div>`;
+  }).join('');
+}
+
+/* ======= TABS ======= */
+function renderTabs(){
+  const f=files[activeIdx];
+  if(!f)return;
+  const extra=[
+    {id:'javascript',label:'カスタムJS',count:null},
+    {id:'json',label:'JSONプレビュー',count:null},
+    {id:'merge',label:'マージ',count:null},
+  ];
+  const all=[...FILTERS.map(({key,label})=>({id:key,label,count:countReal(f.data[key])})),...extra];
+  $('tabNav').innerHTML=all.map(t=>`
+    <button class="tab ${activeTab===t.id?'act':''}" onclick="switchTab('${t.id}')">
+      ${t.label}${t.count!==null?`<span class="tc">${t.count}</span>`:''}
+    </button>`).join('');
+}
+
+function switchTab(id){ activeTab=id; renderTabs(); renderActivePanel(); }
+
+/* ======= PANELS ======= */
+function renderActivePanel(){
+  const wrap=$('panelWrap');
+  wrap.innerHTML='';
+  if(activeTab==='javascript') buildJsPanel(wrap);
+  else if(activeTab==='json') buildJsonPanel(wrap);
+  else if(activeTab==='merge') buildMergePanel(wrap);
+  else buildFilterPanel(wrap, activeTab);
+}
+
+/* ---- FILTER PANEL ---- */
+function buildFilterPanel(wrap, key){
+  const f=files[activeIdx];
+  const meta=FILTERS.find(m=>m.key===key);
+  const entries=f.data[key]||[];
+
+  const div=document.createElement('div');
+  div.className='panel act';
+  div.innerHTML=`
+    <div class="sech">
+      <div class="sbox" style="max-width:100%;flex:1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="フィルター検索..." id="si_${key}" oninput="renderEntries('${key}',this.value)">
+      </div>
+      <div class="seca">
+        <span class="cnt-badge" id="cntbadge_${key}">${entries.filter(v=>v.trim()&&!v.startsWith('//') ).length} 件</span>
+        <button class="btn" style="font-size:11px;padding:4px 8px" onclick="dedupKey('${key}')" title="値が完全一致する重複エントリを削除">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px"><path d="M8 3H5a2 2 0 00-2 2v3"/><path d="M21 8V5a2 2 0 00-2-2h-3"/><path d="M3 16v3a2 2 0 002 2h3"/><path d="M16 21h3a2 2 0 002-2v-3"/></svg>
+          重複削除
+        </button>
+        <button class="btn dan" style="font-size:11px;padding:4px 8px" onclick="clearAll_${key}()">全削除</button>
+      </div>
+    </div>
+    <div class="elist" id="elist_${key}"></div>
+    <div class="addrow">
+      <input class="addinput" id="ai_${key}" placeholder="${meta.ph}" 
+        onkeydown="if(event.key==='Enter')addEntry('${key}')">
+      <button class="btn pri" onclick="addEntry('${key}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        追加
+      </button>
+    </div>
+  `;
+  wrap.appendChild(div);
+  window['clearAll_'+key]=()=>{
+    if(!confirm(meta.label+'の全エントリを削除しますか？'))return;
+    files[activeIdx].data[key]=[];
+    refresh();
+  };
+  renderEntries(key,'');
+}
+
+function renderEntries(key, filter){
+  const f=files[activeIdx];
+  const entries=f.data[key]||[];
+  const list=$('elist_'+key);
+  if(!list)return;
+  const filt=filter?entries.filter(v=>v.toLowerCase().includes(filter.toLowerCase())):entries;
+
+  list.innerHTML=filt.map((val,fi)=>{
+    const realIdx=filter?entries.indexOf(val):fi;
+    const isCmt=val.trim().startsWith('//')||val.trim()==='';
+    const {name,sub,link,isRegex}=entryDisplay(key,val);
+    const isLoading=key==='channelId'&&/^UC[\w-]{22}$/.test(val.trim())&&chCache[val]&&chCache[val].loading;
+    const nameHtml=isLoading
+      ?`<div class="skel"><div class="skel-line" style="width:120px"></div></div>`
+      :`<div class="ecname">${esc(name)}</div>`;
+    const subHtml=sub?`<div class="ecid"><span class="idtext">${link?`<a href="${esc(link)}" target="_blank">${esc(sub)}</a>`:esc(sub)}</span></div>`:'';
+    const regexBadge=isRegex?`<span class="tbadge tb-regex">regex</span>`:'';
+    const linkBtn=link?`<button class="ico-btn link" onclick="window.open('${esc(link)}','_blank')" title="YouTubeで開く">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+    </button>`:'';
+    return `<div class="ecard ${isCmt?'cmt':''}" data-id="${esc(val)}" data-real-idx="${realIdx}">
+      ${makeAvatar(key,val)}
+      <div class="ecbody">
+        ${nameHtml}
+        <input class="einput" value="${esc(val)}" onkeydown="if(event.key==='Enter'){saveEdit('${key}',${realIdx},this.value);this.closest('.ecard').classList.remove('editing')}">
+        <div class="ecmeta">
+          <span class="tbadge tb-${isCmt?'comment':key}">${isCmt?'//':key}</span>
+          ${regexBadge}
+          ${subHtml}
+        </div>
+      </div>
+      <div class="cactions">
+        ${!isCmt?`<button class="ico-btn edit" onclick="startEdit(this)" title="編集">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>`:''}
+        ${linkBtn}
+        <button class="ico-btn del" onclick="deleteEntry('${key}',${realIdx})" title="削除">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+  const badge=$('cntbadge_'+key);
+  if(badge) badge.textContent=entries.filter(v=>v.trim()&&!v.startsWith('//') ).length+' 件';
+}
+
+window.startEdit=btn=>{
+  const card=btn.closest('.ecard');
+  card.classList.add('editing');
+  const inp=card.querySelector('.einput');
+  inp.focus(); inp.select();
+};
+
+window.saveEdit=(key,idx,val)=>{
+  files[activeIdx].data[key][idx]=val;
+  refresh();
+};
+
+window.addEntry=key=>{
+  const inp=$('ai_'+key);
+  const v=inp.value.trim();
+  if(!v)return;
+  files[activeIdx].data[key].push(v);
+  inp.value='';
+  refresh();
+  toast('✅ 追加しました','g');
+  if(key==='channelId'&&/^UC[\w-]{22}$/.test(v)){
+    fetchChannelInfo(v).then(()=>renderEntries(key,$('si_'+key)?.value||''));
+  }
+};
+
+/* ---- DEDUP ---- */
+window.dedupKey=key=>{
+  const f=files[activeIdx];
+  const arr=f.data[key]||[];
+  const seen=new Set();
+  const dupes=[];
+  const next=arr.filter((v,i)=>{
+    const trimmed=v.trim();
+    // コメント行・空行はそのまま保持（重複チェック対象外）
+    if(!trimmed||trimmed.startsWith('//')) return true;
+    if(seen.has(trimmed)){dupes.push(trimmed);return false;}
+    seen.add(trimmed);
+    return true;
+  });
+  if(!dupes.length){toast('✨ 重複なし','b');return;}
+  f.data[key]=next;
+  refresh();
+  toast(`🧹 ${dupes.length}件の重複を削除しました`,'g');
+};
+
+window.dedupAll=()=>{
+  const f=files[activeIdx];
+  if(!f)return;
+  let total=0;
+  FILTERS.forEach(({key})=>{
+    const arr=f.data[key]||[];
+    const seen=new Set();
+    const next=arr.filter(v=>{
+      const t=v.trim();
+      if(!t||t.startsWith('//'))return true;
+      if(seen.has(t)){total++;return false;}
+      seen.add(t);return true;
+    });
+    f.data[key]=next;
+  });
+  refresh();
+  if(total===0) toast('✨ 重複なし','b');
+  else toast(`🧹 全体で ${total}件の重複を削除しました`,'g');
+};
+
+window.deleteEntry=(key,idx)=>{
+  files[activeIdx].data[key].splice(idx,1);
+  refresh();
+  toast('🗑️ 削除しました','b');
+};
+
+window.focusAddInput=()=>{
+  const inp=$('ai_'+activeTab);
+  if(inp){inp.focus();inp.scrollIntoView({behavior:'smooth'})}
+};
+
+/* ---- JS PANEL ---- */
+function buildJsPanel(wrap){
+  const f=files[activeIdx];
+  const d=document.createElement('div');
+  d.className='jspanel act';
+  d.innerHTML=`<div class="jswrap">
+    <div class="jshead">
+      <span>advanced_blocking.js</span>
+      <span style="color:#fbbf24;font-size:11px">⚠️ 信頼できるコードのみ貼り付けてください</span>
+    </div>
+    <textarea class="jsta" spellcheck="false" onchange="files[activeIdx].data.javascript=this.value">${esc(f.data.javascript||'')}</textarea>
+  </div>`;
+  wrap.appendChild(d);
+}
+
+/* ---- JSON PANEL ---- */
+function buildJsonPanel(wrap){
+  const f=files[activeIdx];
+  const d=document.createElement('div');
+  d.className='jpanel act';
+  d.innerHTML=`
+    <div class="jptbar">
+      <button class="btn" onclick="copyJson()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        コピー
+      </button>
+    </div>
+    <pre class="jpre" id="jpre">${esc(buildJson(f))}</pre>
+  `;
+  wrap.appendChild(d);
+}
+window.copyJson=()=>{
+  const t=$('jpre');
+  if(t) navigator.clipboard.writeText(t.textContent).then(()=>toast('📋 コピーしました','b'));
+};
+
+/* ---- MERGE PANEL ---- */
+function buildMergePanel(wrap){
+  const d=document.createElement('div');
+  d.className='mpanel act';
+  if(files.length<2){
+    d.innerHTML='<div style="text-align:center;padding:32px;color:var(--t2)">複数ファイルを読み込んでください</div>';
+    wrap.appendChild(d);return;
+  }
+  const cards=files.map((f,i)=>`
+    <div class="mcard ${i===activeIdx?'cur':''}">
+      <div class="mch">📄 ${esc(f.name)}<span style="font-size:11px;color:var(--violet2)">${i===activeIdx?'現在のファイル':''}</span></div>
+      <div class="mstats">
+        ${FILTERS.map(({key,label})=>`<div class="msr"><span class="lb">${label}</span><span class="v">${countReal(f.data[key])}</span></div>`).join('')}
+      </div>
+    </div>`).join('');
+  d.innerHTML=`
+    <div class="mgrid">${cards}</div>
+    <div class="mopts">
+      <h3>マージ設定</h3>
+      <div class="rgrp">
+        <label class="ritem sel">
+          <input type="radio" name="mo" value="union" checked>
+          <div><div class="rtext">重複を排除して統合</div><div class="rdesc">全ファイルを結合し重複エントリを除去する</div></div>
+        </label>
+        <label class="ritem">
+          <input type="radio" name="mo" value="append">
+          <div><div class="rtext">追記（重複を許可）</div><div class="rdesc">重複チェックなしで全エントリを追加する</div></div>
+        </label>
+      </div>
+      <button class="btn pri" onclick="doMerge()" style="width:100%">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        ${files.length}ファイルをマージして新規作成
+      </button>
+    </div>
+  `;
+  wrap.appendChild(d);
+  d.querySelectorAll('.ritem').forEach(ri=>{
+    ri.onclick=()=>{d.querySelectorAll('.ritem').forEach(x=>x.classList.remove('sel'));ri.classList.add('sel')};
+  });
+}
+window.doMerge=()=>{
+  const opt=document.querySelector('input[name="mo"]:checked')?.value||'union';
+  const merged=norm({});
+  files.forEach(f=>{
+    FILTERS.forEach(({key})=>{
+      (f.data[key]||[]).forEach(v=>{
+        if(opt==='union'){if(!merged[key].includes(v))merged[key].push(v);}
+        else merged[key].push(v);
+      });
+    });
+  });
+  files.push({name:'merged_blocktube.json',data:merged,raw:{}});
+  renderSidebar();
+  selectFile(files.length-1);
+  toast('✅ マージ完了','g');
+};
+
+/* ======= EXPORT ======= */
+$('exportBtn').onclick=()=>{
+  const f=files[activeIdx];if(!f)return;
+  const blob=new Blob([buildJson(f)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=f.name.replace(/\.json$/i,'')+'_edited.json';
+  a.click();
+  toast('💾 エクスポートしました','g');
+};
+function buildJson(f){
+  const o={filterData:{}};
+  FILTERS.forEach(({key})=>{o.filterData[key]=f.data[key]||[]});
+  o.filterData.javascript=f.data.javascript||'';
+  return JSON.stringify(o,null,2);
+}
+
+/* ======= DELETE FILE ======= */
+$('delFileBtn').onclick=()=>{
+  if(!confirm('削除しますか？'))return;
+  files.splice(activeIdx,1);
+  activeIdx=files.length>0?Math.min(activeIdx,files.length-1):-1;
+  renderSidebar();
+  $('mergeBtn').disabled=files.length<2;
+  $('exportBtn').disabled=files.length===0;
+  $('dedupAllBtn').disabled=files.length===0;
+  if(activeIdx>=0)selectFile(activeIdx);
+  else{$('editorArea').classList.add('hidden');$('emptyState').classList.remove('hidden');}
+  toast('🗑️ ファイルを削除','b');
+};
+
+$('clearAllBtn').onclick=()=>{
+  if(!confirm('全ファイルを削除しますか？'))return;
+  files=[];activeIdx=-1;
+  renderSidebar();
+  $('mergeBtn').disabled=true;$('exportBtn').disabled=true;$('dedupAllBtn').disabled=true;
+  $('editorArea').classList.add('hidden');$('emptyState').classList.remove('hidden');
+};
+
+$('mergeBtn').onclick=()=>{
+  if(activeIdx<0)selectFile(0);
+  switchTab('merge');
+};
+
+/* ======= DRAG & DROP ======= */
+document.body.addEventListener('dragover',e=>{e.preventDefault();document.body.style.outline='2px dashed var(--violet)'});
+document.body.addEventListener('dragleave',()=>{document.body.style.outline=''});
+document.body.addEventListener('drop',e=>{
+  e.preventDefault();document.body.style.outline='';
+  [...e.dataTransfer.files].filter(f=>f.name.endsWith('.json')).forEach(loadFile);
+});
+
+/* ======= HELPERS ======= */
+function refresh(){renderStats();renderTabs();renderActivePanel();}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function toast(msg,type='b'){
+  const el=$('toast');
+  el.textContent=msg;el.className=`toast ${type} show`;
+  clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),2600);
+}
+</script>
+</body>
+</html>
+
