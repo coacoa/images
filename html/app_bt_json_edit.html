@@ -298,12 +298,11 @@ header{height:52px;display:flex;align-items:center;justify-content:space-between
 
 <script>
 const FILTERS=[
-  {key:'channelId',    label:'チャンネルID',    ph:'UCxxxxxxxxxxxxxxxxxx',  color:'#8b7cf8'},
-  {key:'channelName',  label:'チャンネル名',    ph:'チャンネル名キーワード',  color:'#2dd4bf'},
-  {key:'videoId',      label:'動画ID',          ph:'xxxxxxxxxxx',           color:'#4ade80'},
-  {key:'videoTitle',   label:'動画タイトル',    ph:'タイトルキーワード',       color:'#fbbf24'},
-  {key:'commentUser',  label:'コメントユーザー', ph:'ユーザー名',              color:'#f87171'},
-  {key:'commentContent',label:'コメント内容',   ph:'ブロックするキーワード',   color:'#f87171'},
+  {key:'channelId',   label:'チャンネルID',    ph:'UCxxxxxxxxxxxxxxxxxx',    color:'#8b7cf8'},
+  {key:'channelName', label:'チャンネル名',    ph:'チャンネル名キーワード',    color:'#2dd4bf'},
+  {key:'videoId',     label:'動画ID',          ph:'xxxxxxxxxxx',             color:'#4ade80'},
+  {key:'title',       label:'動画タイトル',    ph:'タイトルキーワード',         color:'#fbbf24'},
+  {key:'comment',     label:'コメント',        ph:'ユーザー名またはキーワード', color:'#f87171'},
 ];
 
 let files=[], activeIdx=-1, activeTab='channelId';
@@ -329,7 +328,7 @@ function makeAvatar(key, val, size=34){
   const isRegex = val.startsWith('/') && val.endsWith('/');
   const isChId = /^UC[\w-]{22}$/.test(val.trim());
   const isChName = key==='channelName';
-  const isVid = key==='videoId'||key==='videoTitle';
+  const isVid = key==='videoId'||key==='title';
 
   if(isChId||isChName){
     const ci=colorHash(val);
@@ -348,7 +347,7 @@ function makeAvatar(key, val, size=34){
     return `<div class="ava no-img avc${ci}" style="width:${size}px;height:${size}px">🎬</div>`;
   }
   const ci=colorHash(val);
-  const icons={commentUser:'👤',commentContent:'💬'};
+  const icons={comment:'💬'};
   return `<div class="ava no-img avc${ci}" style="width:${size}px;height:${size}px">${icons[key]||'🔤'}</div>`;
 }
 
@@ -433,10 +432,13 @@ async function loadChannelInfoForFile(f){
 function norm(data){
   const o={};
   FILTERS.forEach(({key})=>{ o[key]=Array.isArray(data[key])?[...data[key]]:[] });
-  o.javascript=data.javascript||'(video, objectType) => {\n  // Add custom conditions below\n\n  // Custom conditions did not match, do not block\n  return false;\n}';
+  o.javascript=data.javascript||'';
+  // BlockTube固有フィールドをそのまま保持
+  o.vidLength=data.vidLength||[null,null];
+  o.percentWatchedHide=data.percentWatchedHide??null;
   return o;
 }
-function countReal(arr){ return (arr||[]).filter(v=>v.trim()&&!v.trim().startsWith('//')).length; }
+function countReal(arr){ return (arr||[]).filter(v=>v!=null&&typeof v==='string'&&v.trim()&&!v.trim().startsWith('//')).length; }
 
 /* ======= FILE LOAD ======= */
 $('importBtn').onclick=()=>$('fileInput').click();
@@ -448,7 +450,7 @@ function loadFile(file){
     try{
       const raw=JSON.parse(e.target.result);
       const data=raw.filterData||raw;
-      const f={name:file.name,data:norm(data),raw};
+      const f={name:file.name, data:norm(data), options:raw.options||{}, uiPass:raw.uiPass||'', uiTheme:raw.uiTheme||'dark', raw};
       files.push(f);
       renderSidebar();
       selectFile(files.length-1);
@@ -457,21 +459,26 @@ function loadFile(file){
       $('dedupAllBtn').disabled=false;
       toast('📂 '+file.name,'g');
       loadChannelInfoForFile(f);
-    }catch(e){ toast('❌ JSON解析失敗','r'); }
+    }catch(e){ console.error('loadFile error:', e); toast('❌ JSON解析失敗: '+e.message,'r'); }
   };
   r.readAsText(file);
 }
 
 function loadSample(){
-  const s={filterData:{
-    channelId:['// Blocked by context menu (PewDiePie)','UC-lHJZR3Gqxm24_Vd_AJ5Yw','','// Blocked by context menu (MrBeast)','UCX6OQ3DkcsbYNE6H8uQQuVA'],
-    channelName:['clickbait channel','drama channel'],
-    videoId:['dQw4w9WgXcQ'],
-    videoTitle:['※衝撃※','【閲覧注意】','炎上','完全解説'],
-    commentUser:['spammer123'],
-    commentContent:['www.spam-site.com'],
-    javascript:'(video, objectType) => {\n  // Add custom conditions below\n\n  // Custom conditions did not match, do not block\n  return false;\n}'
-  }};
+  const s={
+    filterData:{
+      channelId:['// Blocked by context menu (TBS NEWS DIG)','UC6AG81pAkf6Lbi_1VC5NmPA',''],
+      channelName:['clickbait'],
+      videoId:[''],
+      title:['※衝撃※','【閲覧注意】','炎上'],
+      comment:['spammer123'],
+      javascript:'',
+      vidLength:[null,null],
+      percentWatchedHide:null,
+    },
+    options:{autoplay:false,block_feedback:false,block_message:'',disable_db_normalize:false,disable_on_history:false,disable_you_there:false,enable_javascript:false,mixes:false,movies:false,shorts:false,suggestions_only:false,trending:false,vidLength_type:'allow',percent_watched_hide:null},
+    uiPass:'',uiTheme:'dark'
+  };
   const blob=new Blob([JSON.stringify(s)],{type:'application/json'});
   blob.name='sample_blocktube.json';
   loadFile(blob);
@@ -484,7 +491,7 @@ function renderSidebar(){
   el.innerHTML=files.map((f,i)=>`
     <div class="fitem ${i===activeIdx?'act':''}" onclick="selectFile(${i})">
       <div class="fn">📄 ${esc(f.name.replace(/\.json$/i,''))}</div>
-      <div class="fm">${countReal(Object.values(f.data).flat())} エントリ</div>
+      <div class="fm">${FILTERS.reduce((n,{key})=>n+countReal(f.data[key]),0)} エントリ</div>
     </div>`).join('');
 }
 
@@ -799,6 +806,7 @@ function buildMergePanel(wrap){
 window.doMerge=()=>{
   const opt=document.querySelector('input[name="mo"]:checked')?.value||'union';
   const merged=norm({});
+  const baseFile=files[activeIdx]||files[0];
   files.forEach(f=>{
     FILTERS.forEach(({key})=>{
       (f.data[key]||[]).forEach(v=>{
@@ -807,7 +815,14 @@ window.doMerge=()=>{
       });
     });
   });
-  files.push({name:'merged_blocktube.json',data:merged,raw:{}});
+  files.push({
+    name:'merged_blocktube.json',
+    data:merged,
+    options:baseFile.options||{},
+    uiPass:baseFile.uiPass||'',
+    uiTheme:baseFile.uiTheme||'dark',
+    raw:{}
+  });
   renderSidebar();
   selectFile(files.length-1);
   toast('✅ マージ完了','g');
@@ -825,16 +840,22 @@ $('exportBtn').onclick=()=>{
   toast('💾 エクスポートしました','g');
 };
 function buildJson(f){
-  const o={filterData:{}};
+  const fd={};
   FILTERS.forEach(({key})=>{
-    // コメント行(//始まり)と空行を必ず除去してからエクスポート
-    o.filterData[key]=(f.data[key]||[]).filter(v=>{
+    fd[key]=(f.data[key]||[]).filter(v=>{
       const t=v.trim();
-      return t!=='' && !t.startsWith('//');
+      return t!==''&&!t.startsWith('//');
     });
   });
-  o.filterData.javascript=f.data.javascript||'';
-  return JSON.stringify(o,null,2);
+  fd.javascript=f.data.javascript||'';
+  fd.vidLength=f.data.vidLength||[null,null];
+  fd.percentWatchedHide=f.data.percentWatchedHide??null;
+  return JSON.stringify({
+    filterData: fd,
+    options: f.options||{},
+    uiPass: f.uiPass||'',
+    uiTheme: f.uiTheme||'dark'
+  }, null, 2);
 }
 
 /* ======= DELETE FILE ======= */
