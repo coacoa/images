@@ -497,6 +497,7 @@ function selectFile(idx){
   $('emptyState').classList.add('hidden');
   $('editorArea').classList.remove('hidden');
   $('edFname').textContent=f.name;
+  $('dedupAllBtn').disabled=false;
   renderStats();
   renderTabs();
   renderActivePanel();
@@ -560,6 +561,10 @@ function buildFilterPanel(wrap, key){
         <button class="btn" style="font-size:11px;padding:4px 8px" onclick="dedupKey('${key}')" title="値が完全一致する重複エントリを削除">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px"><path d="M8 3H5a2 2 0 00-2 2v3"/><path d="M21 8V5a2 2 0 00-2-2h-3"/><path d="M3 16v3a2 2 0 002 2h3"/><path d="M16 21h3a2 2 0 002-2v-3"/></svg>
           重複削除
+        </button>
+        <button class="btn" style="font-size:11px;padding:4px 8px;color:var(--t2)" onclick="clearComments('${key}')" title="//コメント行と空行を削除">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/><line x1="19" y1="19" x2="5" y2="5"/></svg>
+          コメント削除
         </button>
         <button class="btn dan" style="font-size:11px;padding:4px 8px" onclick="clearAll_${key}()">全削除</button>
       </div>
@@ -654,44 +659,54 @@ window.addEntry=key=>{
   }
 };
 
-/* ---- DEDUP ---- */
+/* ---- DEDUP / CLEAN ---- */
+window.clearComments=key=>{
+  const f=files[activeIdx];
+  const arr=f.data[key]||[];
+  const before=arr.length;
+  f.data[key]=arr.filter(v=>v.trim()&&!v.trim().startsWith('//'));
+  const removed=before-f.data[key].length;
+  refresh();
+  if(!removed) toast('✨ コメント・空行なし','b');
+  else toast(`🧹 ${removed}件のコメント・空行を削除しました`,'g');
+};
+
 window.dedupKey=key=>{
   const f=files[activeIdx];
   const arr=f.data[key]||[];
   const seen=new Set();
-  const dupes=[];
-  const next=arr.filter((v,i)=>{
-    const trimmed=v.trim();
-    // コメント行・空行はそのまま保持（重複チェック対象外）
-    if(!trimmed||trimmed.startsWith('//')) return true;
-    if(seen.has(trimmed)){dupes.push(trimmed);return false;}
-    seen.add(trimmed);
-    return true;
+  let removed=0;
+  f.data[key]=arr.filter(v=>{
+    const t=v.trim().toLowerCase();
+    if(!v.trim()||v.trim().startsWith('//')) return true;
+    if(seen.has(t)){removed++;return false;}
+    seen.add(t);return true;
   });
-  if(!dupes.length){toast('✨ 重複なし','b');return;}
-  f.data[key]=next;
   refresh();
-  toast(`🧹 ${dupes.length}件の重複を削除しました`,'g');
+  if(!removed) toast('✨ 重複なし','b');
+  else toast(`🧹 ${removed}件の重複を削除しました`,'g');
 };
 
 window.dedupAll=()=>{
   const f=files[activeIdx];
   if(!f)return;
   let total=0;
-  FILTERS.forEach(({key})=>{
+  const detail=[];
+  FILTERS.forEach(({key,label})=>{
     const arr=f.data[key]||[];
     const seen=new Set();
-    const next=arr.filter(v=>{
-      const t=v.trim();
-      if(!t||t.startsWith('//'))return true;
-      if(seen.has(t)){total++;return false;}
+    let removed=0;
+    f.data[key]=arr.filter(v=>{
+      const t=v.trim().toLowerCase();
+      if(!v.trim()||v.trim().startsWith('//'))return true;
+      if(seen.has(t)){removed++;return false;}
       seen.add(t);return true;
     });
-    f.data[key]=next;
+    if(removed>0){total+=removed;detail.push(`${label}:${removed}件`);}
   });
   refresh();
-  if(total===0) toast('✨ 重複なし','b');
-  else toast(`🧹 全体で ${total}件の重複を削除しました`,'g');
+  if(total===0) toast('✨ 重複なし — リストはクリーンです','b');
+  else toast(`🧹 計${total}件削除 (${detail.join(' / ')})`,'g');
 };
 
 window.deleteEntry=(key,idx)=>{
@@ -801,16 +816,23 @@ window.doMerge=()=>{
 /* ======= EXPORT ======= */
 $('exportBtn').onclick=()=>{
   const f=files[activeIdx];if(!f)return;
-  const blob=new Blob([buildJson(f)],{type:'application/json'});
+  const json=buildJson(f);
+  const blob=new Blob([json],{type:'application/json'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
-  a.download=f.name.replace(/\.json$/i,'')+'_edited.json';
+  a.download=f.name;
   a.click();
   toast('💾 エクスポートしました','g');
 };
 function buildJson(f){
   const o={filterData:{}};
-  FILTERS.forEach(({key})=>{o.filterData[key]=f.data[key]||[]});
+  FILTERS.forEach(({key})=>{
+    // コメント行(//始まり)と空行を必ず除去してからエクスポート
+    o.filterData[key]=(f.data[key]||[]).filter(v=>{
+      const t=v.trim();
+      return t!=='' && !t.startsWith('//');
+    });
+  });
   o.filterData.javascript=f.data.javascript||'';
   return JSON.stringify(o,null,2);
 }

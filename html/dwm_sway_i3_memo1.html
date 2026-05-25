@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dwm / sway / i3 ショートカットキー統合リファレンス</title>
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --text-color: #333;
+            --primary-color: #007acc;
+            --table-border: #e0e0e0;
+            --code-bg: #2d3748;
+            --code-text: #f7fafc;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+        }
+        h2 {
+            margin-top: 40px;
+            color: #4a5568;
+        }
+        .notice {
+            background-color: #e3f2fd;
+            border-left: 5px solid var(--primary-color);
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--table-border);
+        }
+        th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: bold;
+        }
+        tr:hover {
+            background-color: #f1f5f9;
+        }
+        kbd {
+            background-color: #eee;
+            border: 1px solid #b4b4b4;
+            border-radius: 3px;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+            color: #333;
+            display: inline-block;
+            font-size: 0.85em;
+            font-weight: 700;
+            line-height: 1;
+            padding: 2px 4px;
+            white-space: nowrap;
+        }
+        pre {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.9em;
+        }
+        code {
+            font-family: "Courier New", Courier, monospace;
+            background: #edf2f7;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #2d3748;
+        }
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>dwm / sway / i3 キーバインド統合リファレンス</h1>
+    
+    <div class="notice">
+        <strong>【重要】</strong> このリストは <strong>dwm標準の操作感（Mod1 = <kbd>Alt</kbd> キー基準）</strong> に統一するための設定表です。<br>
+        ※もしdwm側で <code>Mod4</code> (<kbd>Super</kbd> / <kbd>Windows</kbd> キー) を使用している場合は、以下の <code>Alt</code> を <code>Super</code> に読み替えてください。
+    </div>
+
+    <h2>1. 統合ショートカットキー対応表</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>操作機能</th>
+                <th>dwm (標準)</th>
+                <th>sway / i3 (設定後)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>端末（ターミナル）起動</strong></td>
+                <td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>Enter</kbd></td>
+                <td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>Enter</kbd></td>
+            </tr>
+            <tr>
+                <td><strong>ウィンドウを閉じる</strong></td>
+                <td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>c</kbd></td>
+                <td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>c</kbd></td>
+            </tr>
+            <tr>
+                <td><strong>dmenu (アプリランチャー)</strong></td>
+                <td><kbd>Alt</kbd> + <kbd>p</kbd></td>
+                <td><kbd>Alt</kbd> + <kbd>p</kbd></td>
+            </tr>
+            <tr>
+                <td><strong>フォーカス移動 (次 / 前)</strong></td>
+                <td><kbd>Alt</kbd> + <kbd>j</kbd> / <kbd>k</kbd></td>
+                <td><kbd>Alt</kbd> + <kbd>j</kbd> / <kbd>k</kbd></td>
+            </tr>
+            <tr>
+                <td><strong>メインエリアの横幅調整 (狭 / 広)</strong></td>
+                <td><kbd>Alt</kbd> + <kbd>h</kbd> / <kbd>l</kbd></td>
+                <td><kbd>Alt</kbd> + <kbd>h</kbd> / <kbd>l</kbd></td>
+            </tr>
+            <tr>
+                <td><strong>ウィンドウの入れ替え</strong></td>
+                <td><kbd>Alt</kbd> + <kbd>Return</kbd> (メインへ)</td>
+                <td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>j</kbd> / <kbd>k</kbd> (移動)</td>
+            </tr>
+            <tr>
+                <td><strong>レイアウト：タイル型</strong></td>
+                <td><kbd>Alt</kbd> + <kbd>t</kbd></td>
+                <td><kbd>Alt</kbd> + <kbd>t</kbd> (トグル表示)</td>
+            </tr>
+            <tr>
+                <td><strong>レイアウト：フローティング</strong></td>
+                <td><kbd>Alt</kbd> + <kbd>f</kbd></td>
+                <td><kbd>Alt</kbd> + <kbd>f</kbd> (フローティング切替)</td>
+            </tr>
+            <tr>
+                <td><strong>レイアウト：モノクロ / スタック</strong></td>
+                <td><kbd>Alt</kbd> + <kbd>m</kbd></td>
+                <td><kbd>Alt</kbd> + <kbd>m</kbd> (Stacking表示)</td>
+            </tr>
+            <tr>
+                <td><strong>フォーカス画面移動 (2画面時)</strong></td>
+                <td><kbd>Alt</kbd> + <kbd>,</kbd> / <kbd>.</kbd></td>
+                <td><kbd>Alt</kbd> + <kbd>,</kbd> / <kbd>.</kbd></td>
+            </tr>
+            <tr>
+                <td><strong>ウィンドウを隣の画面へ送る</strong></td>
+                <td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>,</kbd> / <kbd>.</kbd></td>
+                <td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>,</kbd> / <kbd>.</kbd></td>
+            </tr>
+            <tr>
+                <td><strong>ワークスペース(タグ)切り替え</strong></td>
+                <td><kbd>Alt</kbd> + <kbd>1</kbd> 〜 <kbd>9</kbd></td>
+                <td><kbd>Alt</kbd> + <kbd>1</kbd> 〜 <kbd>9</kbd></td>
+            </tr>
+            <tr>
+                <td><strong>ウィンドウを別タグに送る</strong></td>
+                <td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>1</kbd> 〜 <kbd>9</kbd></td>
+                <td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>1</kbd> 〜 <kbd>9</kbd></td>
+            </tr>
+            <tr>
+                <td><strong>WMの終了（ログアウト）</strong></td>
+                <td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>q</kbd></td>
+                <td><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>q</kbd></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>2. sway / i3 用 設定記述例 (config)</h2>
+    <p><code>~/.config/sway/config</code> または <code>~/.config/i3/config</code> に以下を貼り付けるか、既存の部分を書き換えてください。</p>
+    
+    <pre><code># --------------------------------------------------
+#dwmスタイルへの寄せ設定
+# --------------------------------------------------
+set $mod Mod1
+
+# 基本操作
+bindsym $mod+Shift+Return exec alacritty  # 使用端末に書き換えてください
+bindsym $mod+Shift+c kill
+bindsym $mod+p exec dmenu_run
+
+# フォーカス移動・ウィンドウ移動 (j, k)
+bindsym $mod+j focus next
+bindsym $mod+k focus prev
+bindsym $mod+Shift+j move down
+bindsym $mod+Shift+k move up
+
+# 横幅の調整 (dwmの Alt + h / l を再現)
+bindsym $mod+h resize shrink width 5 px or 5 ppt
+bindsym $mod+l resize grow width 5 px or 5 ppt
+
+# レイアウト切り替え
+bindsym $mod+t layout toggle splitv splith
+bindsym $mod+f floating toggle
+bindsym $mod+m layout stacking
+
+# マルチモニター（画面間移動：カンマとピリオド）
+bindsym $mod+comma focus output left
+bindsym $mod+period focus output right
+bindsym $mod+Shift+comma move workspace to output left
+bindsym $mod+Shift+period move workspace to output right
+
+# 終了
+bindsym $mod+Shift+q exit
+</code></pre>
+
+</body>
+</html>
