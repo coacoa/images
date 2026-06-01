@@ -1,0 +1,62 @@
+@startuml
+title 1台で「自由なLinux」と「安全なChromeOS」を切り替える構想（縦型）
+
+participant システム
+
+== ユーザーの理想 ==
+note right of システム
+<b>1台のPCで2つのモードを使い分けたい</b>
+
+・家 → 自由な Linux  
+・職場 → セキュアな ChromeOS  
+・用途に応じて切り替えたい
+end note
+
+システム -> システム : 理想の利用形態を認識
+
+== PathKey による物理的切り替え ==
+note right of システム
+<b>物理キー（PathKey）を使う発想</b>
+
+・PathKey がある時だけ Linux モード解放  
+・PathKey が無い時は ChromeOS のまま  
+・企業セキュリティとも両立
+end note
+
+システム -> システム : 物理キーの仕組みを評価
+
+== ChromeOS モード ==
+note right of システム
+<b>職場向けの安全モード</b>
+
+・Verified Boot 有効  
+・root 不可  
+・管理者ポリシー適用  
+・教育/企業向けのロックダウン環境
+end note
+
+システム -> システム : セキュアモードを確認
+
+== Linux モード ==
+note right of システム
+<b>PathKey 所持者だけが使える自由モード</b>
+
+・root 取得可能  
+・OS 入れ替え自由  
+・開発・研究・個人用途に最適  
+・ChromeOS の制限を受けない
+end note
+
+システム -> システム : 自由モードを確認
+
+== 結果：自由と安全の両立 ==
+note right of システム
+<b>この構想の価値</b>
+
+・ユーザーの自由を守れる  
+・企業のセキュリティも維持できる  
+・1台で2つの世界を切り替え可能  
+・Google が本来作るべき理想形
+end note
+
+@enduml
