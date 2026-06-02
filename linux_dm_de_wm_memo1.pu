@@ -1,0 +1,93 @@
+@startuml
+title Linux の表示系レイヤー構造（カーネルを最下層にした最新版）
+
+participant システム
+
+== Display Manager (DM) ==
+note right of システム
+<b>ログイン画面を担当</b>
+
+・GDM（GNOME）  
+・SDDM（KDE）  
+・LightDM（軽量）  
+・LXDM（LXDE）  
+
+役割：  
+・ユーザー選択  
+・パスワード入力  
+・セッション選択  
+・X11/Wayland の起動
+end note
+
+システム -> システム : DM がログイン画面を提供
+
+== Desktop Environment (DE) ==
+note right of システム
+<b>デスクトップ全体の統合環境</b>
+
+・GNOME  
+・KDE Plasma  
+・XFCE  
+・LXQt  
+・Cinnamon  
+
+役割：  
+・パネル  
+・設定ツール  
+・ファイルマネージャ  
+・テーマ/通知/統合UI
+end note
+
+システム -> システム : DE がデスクトップを構成
+
+== Window Manager (WM) ==
+note right of システム
+<b>ウィンドウの管理</b>
+
+<b>タイル型:</b>  
+・i3  
+・sway（Wayland）  
+・bspwm  
+
+<b>フローティング型:</b>  
+・Openbox  
+・Fluxbox  
+・IceWM  
+
+<b>DE内蔵WM:</b>  
+・GNOME → Mutter  
+・KDE → KWin  
+・XFCE → xfwm4
+end note
+
+システム -> システム : WM がウィンドウ操作を担当
+
+== Display Server ==
+note right of システム
+<b>描画の基盤</b>
+
+・X11（Xorg）  
+・Wayland  
+
+役割：  
+・アプリの描画要求を受け取る  
+・画面にレンダリングする  
+・入力デバイスのイベントを処理
+end note
+
+システム -> システム : Display Server が描画を処理
+
+== Kernel ==
+note right of システム
+<b>最下層：Linux カーネル</b>
+
+・デバイスドライバ  
+・GPU/入力デバイス管理  
+・メモリ/プロセス管理  
+・Wayland/X11 の基盤  
+・全ての上位レイヤーを支える
+end note
+
+システム -> システム : Kernel が全レイヤーを支える
+
+@enduml

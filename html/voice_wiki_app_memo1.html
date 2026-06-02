@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>NixOS Voice Wiki Project Memo</title>
+<style>
+body{font-family:sans-serif;max-width:900px;margin:40px auto;line-height:1.7}
+code,pre{background:#f4f4f4;padding:2px 4px}
+pre{padding:12px;overflow:auto}
+h1,h2{border-bottom:1px solid #ccc}
+</style>
+</head>
+<body>
+<h1>NixOS Voice Wiki Project Memo</h1>
+
+<h2>目的</h2>
+<p>寝る前にWikipediaを音声で調べたり読み上げたりできる軽量システムを作る。</p>
+
+<h2>基本方針</h2>
+<ul>
+<li>NixOS上で動作</li>
+<li>普段は何もインストールしない</li>
+<li><code>nix develop</code> 実行時だけ利用可能</li>
+<li>GPU不要</li>
+<li>古いPCでも動作可能</li>
+</ul>
+
+<h2>最初の構成</h2>
+<pre>
+Spaceキー押下
+↓
+録音開始
+↓
+Spaceキー解放
+↓
+音声認識(Vosk)
+↓
+Wikipedia検索
+↓
+記事取得
+↓
+Piperで読み上げ
+</pre>
+
+<h2>採用候補</h2>
+<ul>
+<li>Vosk（音声認識）</li>
+<li>Piper TTS（音声合成）</li>
+<li>Wikipedia API</li>
+<li>Textual（TUI）</li>
+</ul>
+
+<h2>TUIイメージ</h2>
+<pre>
+┌─────────────────────────────┐
+│ WIKI VOICE TERMINAL         │
+├─────────────────────────────┤
+│ 状態: READY                 │
+│                             │
+│ Space: 押しながら話す       │
+│ Esc: 終了                   │
+└─────────────────────────────┘
+</pre>
+
+<h2>音声コマンド案</h2>
+<ul>
+<li>長く</li>
+<li>短く</li>
+<li>関連</li>
+<li>停止</li>
+<li>続き</li>
+</ul>
+
+<h2>ログ保存構想</h2>
+<pre>
+logs/
+├── 2026-06-01.md
+├── 2026-06-02.md
+└── ...
+</pre>
+
+<p>記録内容例:</p>
+
+<pre>
+質問: 徳川家康
+検索: 徳川家康
+要約: 江戸幕府を開いた武将...
+</pre>
+
+<h2>将来構想</h2>
+<ul>
+<li>Markdown日記化</li>
+<li>HTMLサイト自動生成</li>
+<li>RSS生成</li>
+<li>後から軽量LLMによる要約追加</li>
+</ul>
+
+<h2>目標</h2>
+<p>
+「Wikipedia読み上げ機」ではなく、
+音声で調べた内容が蓄積される個人ナレッジログシステムにする。
+</p>
+
+</body>
+</html>

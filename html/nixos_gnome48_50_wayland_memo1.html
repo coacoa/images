@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>NixOS 26.05 GNOME50 Cursor Fix Memo</title>
+</head>
+<body>
+
+<h1>NixOS 25.05 → 26.05 アップグレード後の GNOME 50 カーソル不具合修復メモ</h1>
+
+<h2>環境</h2>
+
+<ul>
+<li>NixOS 25.05 → 26.05 にアップグレード</li>
+<li>GNOME 50</li>
+<li>Wayland</li>
+<li>NVIDIA GTX 1050</li>
+<li>NVIDIA Driver 580.142</li>
+</ul>
+
+<h2>症状</h2>
+
+<ul>
+<li>GNOMEログイン後、マウスカーソルが真っ白な四角になる</li>
+<li>通常の矢印カーソルが表示されない</li>
+</ul>
+
+<h2>確認</h2>
+
+<pre>
+echo $XDG_SESSION_TYPE
+</pre>
+
+<p>結果:</p>
+
+<pre>
+wayland
+</pre>
+
+<h2>修復手順</h2>
+
+<ol>
+<li>GNOME Terminal を開く</li>
+<li>カーソルテーマを Adwaita に変更する</li>
+</ol>
+
+<pre>
+gsettings set org.gnome.desktop.interface cursor-theme 'Adwaita'
+</pre>
+
+<p>または Bibata を使用する場合:</p>
+
+<pre>
+gsettings set org.gnome.desktop.interface cursor-theme 'Bibata-Modern-Ice'
+</pre>
+
+<ol start="3">
+<li>ログアウト</li>
+<li>再ログイン</li>
+</ol>
+
+<h2>確認コマンド</h2>
+
+<p>現在のカーソルテーマ:</p>
+
+<pre>
+gsettings get org.gnome.desktop.interface cursor-theme
+</pre>
+
+<p>利用可能なカーソルテーマ:</p>
+
+<pre>
+find /usr/share/icons -name cursor.theme
+</pre>
+
+<h2>結果</h2>
+
+<ul>
+<li>白い四角カーソルが正常なカーソルへ戻った</li>
+<li>Waylandセッションのまま利用可能になった</li>
+</ul>
+
+<h2>備考</h2>
+
+<ul>
+<li>GNOME 50ではX11セッションは基本的に利用不可</li>
+<li>GSK_RENDERER=ngl は今回の症状には不要だった</li>
+<li>原因はカーソルテーマ関連の不整合の可能性が高い</li>
+</ul>
+
+</body>
+</html>
