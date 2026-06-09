@@ -1,0 +1,28 @@
+@startuml Linux のレイヤー構成と選択肢
+
+title Linux のレイヤー構成（カーネルより上）と各レイヤーの選択肢
+
+rectangle "<<title>>【レイヤー 1】ユーザー空間基盤" as L1
+rectangle "C ライブラリ・基本ユーティリティ\n(glibc, musl, uclibc)\ndistro 基底（Debian/Arch/RHEL/NixOS）" as L1_content
+
+rectangle "<<title>>【レイヤー 2】ディスプレイサーバー" as L2
+rectangle "画面描画基盤\n• Wayland（現代的、GNOME/KDE/Wayfire 採用）\n• X11（互換性が高い、古いが頑丈）\n• Xwayland（X11 アプリを Wayland 上で動かすプロキシ）" as L2_content
+
+rectangle "<<title>>【レイヤー 3】コンポジター" as L3
+rectangle "ウィンドウ重ね描き・透過・アニメーション\n• Wayland 側：KWin（KDE）、Mutter（GNOME）、Sway、Hyprland、Wayfire\n• X11 側：Picom、KWin（コンポジティングモード）、XFWM" as L3_content
+
+rectangle "<<title>>【レイヤー 4】ウィンドウマネージャー（WM）" as L4
+rectangle "ウィンドウ配置・移動・サイズ・タイトルバー管理\n• タイル系：i3、bspwm、dwm、Awesome\n• スタッキング系：Openbox、Fluxbox、herbstluftwm\n• 統合系：Mutter（GNOME）、KWin（KDE）、XFWM（XFCE）" as L4_content
+
+rectangle "<<title>>【レイヤー 5】シェル" as L5
+rectangle "コマンドラインインターフェース\n• bash\n• zsh\n• fish\n• elvish" as L5_content
+
+rectangle "<<title>>【レイヤー 6】デスクトップ環境（DE）" as L6
+rectangle "WM+ コンポジター +パネル + ファイルマネージャ + 設定ツール\n• GNOME（Mutter ベース、Wayland 推奨）\n• KDE Plasma（KWin ベース、Wayland/X11 両対応）\n• XFCE（XFWM、X11 寄り）\n• LXQt/LXDE（軽量）\n• Pantheon/Budgie/Deepin（マイナー）" as L6_content
+
+rectangle "<<title>>【レイヤー 7】アプリ層" as L7
+rectangle "アプリ配布・インストール方式\n• distro 標準（apt/pacman/dnf）\n• Flatpak（ユニバーサル、サンドボックス強め）\n• Snap（Ubuntu 系と相性良い、自動更新強み）\n• AppImage（1 ファイル、ポータブル、インストール不要）\n• Nix（再現性重視、環境管理も可能）" as L7_content
+
+L1 -down-> L2 -down-> L3 -down-> L4 -down-> L5 -down-> L6 -down-> L7
+
+@enduml

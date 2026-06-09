@@ -1,0 +1,50 @@
+@startuml
+title DE / WM / Compositor の役割比較（X11 vs Wayland）
+
+actor User
+
+== X11: DE + WM の分離 ==
+box "X11 Desktop Environment (例: LXQt)" #LightBlue
+  participant "DE\n(LXQt)" as DE_X
+end box
+
+box "X11 Window Manager" #LightGreen
+  participant "WM\n(Openbox / DWM / i3)" as WM_X
+end box
+
+participant "X11 Server\n(Xorg)" as X11
+
+User -> DE_X: セッション開始
+DE_X -> WM_X: WM を起動
+WM_X -> X11: SubstructureRedirect を取得\n(= WM が1つだけ動作)
+DE_X -> X11: パネル・設定ツールを利用
+User -> WM_X: ウィンドウ操作（タイル/移動/フォーカス）
+
+== Wayland: WM = Compositor ==
+box "Wayland Compositor (例: sway)" #LightGreen
+  participant "sway\n(WM + Compositor)" as SWAY
+end box
+
+participant "Wayland Protocol" as WAY
+
+User -> SWAY: セッション開始\n(= WM + DE の中核)
+SWAY -> WAY: 入力/描画/ウィンドウ管理を一括処理
+User -> SWAY: タイル/移動/フォーカス
+SWAY -> SWAY: DE 的機能を内包\n(セッション管理・レイアウト)
+
+== Wayland: DE の補完コンポーネント ==
+box "DE 的コンポーネント" #LightYellow
+  participant "Waybar\n(パネル)" as WAYBAR
+  participant "mako\n(通知)" as MAKO
+  participant "swaybg\n(壁紙)" as BG
+  participant "swayidle\n(アイドル)" as IDLE
+  participant "swaylock\n(ロック)" as LOCK
+end box
+
+SWAY -> WAYBAR: 状態情報を提供
+SWAY -> MAKO: 通知を表示
+SWAY -> BG: 壁紙描画
+SWAY -> IDLE: 画面オフ/サスペンド
+IDLE -> LOCK: ロック画面起動
+
+@enduml
