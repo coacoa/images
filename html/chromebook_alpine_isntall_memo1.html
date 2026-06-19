@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alpine Linux GUI環境構築メモ</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #00d2c4;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+            border-left: 5px solid #00d2c4;
+            padding-left: 10px;
+        }
+        h3 {
+            color: #16a085;
+        }
+        code {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #efefef;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #c7254e;
+            font-size: 0.9em;
+        }
+        pre {
+            background-color: #2d3748;
+            color: #f7fafc;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+        pre code {
+            background-color: transparent;
+            color: #f7fafc;
+            padding: 0;
+        }
+        .note {
+            background-color: #eef9f9;
+            border-left: 5px solid #00a896;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        .danger {
+            background-color: #fff5f5;
+            border-left: 5px solid #e53e3e;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        .step-number {
+            background-color: #00d2c4;
+            color: white;
+            border-radius: 50%;
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            text-align: center;
+            line-height: 24px;
+            margin-right: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Alpine Linux: LXQt + i3 構築メモ</h1>
+    <p>SSH接続した状態から、一般ユーザー <code>hoge</code> に <code>sudo</code> 権限を付与し、フリーズ対策を施した上で LXQt + i3 環境を構築する手順のまとめです。</p>
+
+    <div class="note">
+        <strong>💡 コマンドのルール:</strong><br>
+        Alpine Linux のサービス管理コマンドは、アンダースコア（_）ではなく<strong>ハイフン（-）</strong>を使用します（例: <code>rc-update</code>, <code>rc-service</code>）。
+    </div>
+
+    <h2>1. rootでの初期設定 (sudoの導入)</h2>
+    <p>まずは <code>su</code> コマンドで root ユーザーに切り替えて実行します。</p>
+    
+    <h3><span class="step-number">1</span> コミュニティリポジトリの有効化</h3>
+    <pre><code>vi /etc/apk/repositories</code></pre>
+    <p>※ URLの末尾が <code>/community</code> で終わっている行の先頭にある <code>#</code> を削除して保存（<code>:wq</code>）します。</p>
+
+    <h3><span class="step-number">2</span> パッケージ更新と sudo のインストール</h3>
+    <pre><code>apk update
+apk add sudo</code></pre>
+
+    <h3><span class="step-number">3</span> wheel グループの権限解放</h3>
+    <pre><code>visudo</code></pre>
+    <p>※ <code># %wheel ALL=(ALL:ALL) ALL</code> の行を探し、先頭の <code>#</code> を削除して保存します。</p>
+
+    <h3><span class="step-number">4</span> hoge ユーザーをグループに追加</h3>
+    <pre><code>addgroup hoge wheel</code></pre>
+    <p>設定が終わったら、root を抜けます。</p>
+    <pre><code>exit</code></pre>
+
+    <h2>2. 操作不能（フリーズ）防止の対策</h2>
+    <p>ここからは <code>hoge</code> ユーザーで <code>sudo</code> を使って実行します。</p>
+    <p>GUI起動時にキーボードやマウスが動かなくなるのを防ぐため、入力用ドライバーとデバイス管理ツールを事前に入れます。</p>
+    <pre><code>sudo apk add eudev xf86-input-libinput xf86-input-evdev
+sudo rc-update add udev sysinit</code></pre>
+
+    <h2>3. GUI と i3wm のインストール</h2>
+    <p>LXQtデスクトップ、i3ウィンドウマネージャー、およびログイン画面（SDDM）をまとめて導入します。</p>
+    <pre><code>sudo apk add lxqt-desktop lxqt-core lxqt-panel sddm i3wm i3status dmenu alacritty</code></pre>
+
+    <h2>4. LXQt の ウィンドウマネージャーを i3 に指定する</h2>
+    <p>LXQtセッションが立ち上がるときに i3 を使うよう、設定ファイルを作成します。</p>
+    <pre><code>mkdir -p ~/.config/lxqt
+vi ~/.config/lxqt/session.conf</code></pre>
+    <p>ファイルに以下の内容を書き込んで保存します：</p>
+    <pre><code>[General]
+window_manager=i3</code></pre>
+
+    <h2>5. 運命の起動テスト</h2>
+    <div class="danger">
+        <strong>⚠️ 注意！</strong><br>
+        実機画面が固まった場合に備えて、<strong>今繋いでいるこのSSHセッション（ターミナル）は絶対に閉じずに残しておいてください。</strong>
+    </div>
+    <p>手動でログイン画面（SDDM）を立ち上げます。</p>
+    <pre><code>sudo rc-service sddm start</code></pre>
+
+    <h3>🚨 万が一、画面が固まって操作できなくなった場合</h3>
+    <p>残しておいた <strong>SSHの画面側</strong> から以下のコマンドを打ち込んでください。SDDMを強制停止して元の黒い画面に戻れます。</p>
+    <pre><code>sudo rc-service sddm stop</code></pre>
+
+    <h3>🎉 正常に動いた場合</h3>
+    <ol>
+        <li>SDDM画面のセッション選択メニューから <strong>「LXQt Desktop」</strong> を選択します。</li>
+        <li><code>hoge</code> ユーザーでログインすれば、LXQtとi3が融合した快適なデスクトップが始まります！</li>
+    </ol>
+
+</body>
+</html>
