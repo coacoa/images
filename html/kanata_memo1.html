@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanata マウスモード備忘録</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #2c3e50;
+            margin-top: 30px;
+            background: #eef2f7;
+            padding: 8px 12px;
+            border-left: 4px solid #3498db;
+        }
+        .container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .key {
+            background: #e0e0e0;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-family: monospace;
+            font-weight: bold;
+            border-bottom: 2px solid #b5b5b5;
+        }
+        .important {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Kanata マウスモード操作マニュアル</h1>
+    <p>設定ファイル: <code class="key">configuration.kanata.lxqt.2605.nix</code></p>
+    
+    <hr>
+
+    <h2>1. 基本操作（ベース：変換キー長押し）</h2>
+    <p><strong><span class="key">変換キー</span> を押しっぱなし</strong>にしている間だけ、マウス操作モード（Navigationレイヤー）になります。</p>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>操作</th>
+                <th>キー</th>
+                <th>説明</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>マウス移動</strong></td>
+                <td><span class="key">H</span> / <span class="key">J</span> / <span class="key">K</span> / <span class="key">L</span></td>
+                <td>左 / 下 / 上 / 右 （Vimバインド）</td>
+            </tr>
+            <tr>
+                <td><strong>左クリック</strong></td>
+                <td><span class="key">A</span> または <span class="key">N</span></td>
+                <td>両手どちらでも押せる親切設計</td>
+            </tr>
+            <tr>
+                <td><strong>右クリック</strong></td>
+                <td><span class="key">S</span> または <span class="key">M</span></td>
+                <td>左クリックのすぐ右隣</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>2. 速度ブースト（同時押し）</h2>
+    <p><span class="key">変換キー</span> を押しながら、左手の装飾キーを組み合わせることで速度が3段階に変わります。</p>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>モード</th>
+                <th>同時押しキー</th>
+                <th>移動速度</th>
+                <th>用途</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>精密モード</strong></td>
+                <td><span class="key">変換</span> ＋ <span class="key">Shift</span></td>
+                <td><span class="important">10</span> (ゆっくり)</td>
+                <td>細かいボタンやリンクを狙うとき</td>
+            </tr>
+            <tr>
+                <td><strong>通常モード</strong></td>
+                <td><span class="key">変換</span> のみ</td>
+                <td><strong>50</strong> (普通)</td>
+                <td>いつもの標準的な移動</td>
+            </tr>
+            <tr>
+                <td><strong>高速モード</strong></td>
+                <td><span class="key">変換</span> ＋ <span class="key">Ctrl</span></td>
+                <td><span class="important" style="color: #27ae60;">150</span> (爆速)</td>
+                <td>画面の端から端へ一気に移動するとき</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>3. 特殊機能（ドラッグ＆ドロップ）</h2>
+    <ul>
+        <li><span class="key">変換キー</span> を押しながら <span class="key">Q</span> を1回押すと、<strong>ドラッグモード（固定）</strong>に入ります。</li>
+        <li>このモード中は自動的に左クリックが押しっぱなし状態になるので、<span class="key">H/J/K/L</span> でそのまま範囲選択やウィンドウの移動ができます。</li>
+        <li>ドラッグを解除して通常に戻りたいときは、<span class="key">W</span> を1回押すとデフォルトに戻ります。</li>
+    </ul>
+
+    <h2>4. その他の便利キー（変換キー押下中）</h2>
+    <ul>
+        <li><span class="key">E</span> : テンキーの <code class="key">/</code></li>
+        <li><span class="key">R</span> : テンキーの <code class="key">-</code></li>
+        <li><span class="key">X</span> : <code class="key">Delete</code></li>
+        <li><span class="key">D</span> : <code class="key">Backspace</code></li>
+        <li><span class="key">P</span> : <code class="key">Esc</code></li>
+    </ul>
+</div>
+
+</body>
+</html>
