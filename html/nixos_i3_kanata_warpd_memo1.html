@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Kanata + i3 + warpd 構築メモ</title>
+<style>
+body{
+    font-family: sans-serif;
+    line-height:1.7;
+    max-width:900px;
+    margin:40px auto;
+    padding:0 20px;
+}
+code{
+    background:#f5f5f5;
+    padding:2px 5px;
+}
+pre{
+    background:#f5f5f5;
+    padding:12px;
+    overflow:auto;
+}
+h2{
+    border-bottom:2px solid #ccc;
+}
+.ok{color:green;font-weight:bold;}
+.ng{color:red;font-weight:bold;}
+</style>
+</head>
+<body>
+
+<h1>Kanata + i3 + warpd 構築メモ</h1>
+
+<h2>目的</h2>
+
+<p>
+sxhkd を廃止し、
+<strong>Kanata をキー入力専用</strong>、
+<strong>i3 をコマンド実行専用</strong>
+として統一する。
+</p>
+
+<hr>
+
+<h2>最初の構成</h2>
+
+<pre>
+無変換 + H
+      ↓
+Kanata
+      ↓
+cmd warpd --hint
+</pre>
+
+結果
+
+<pre>
+Could not connect to X server
+</pre>
+
+原因
+
+<ul>
+<li>Kanata は systemd service として動作している</li>
+<li>DISPLAY が無い</li>
+<li>XAUTHORITY が無い</li>
+<li>GUIアプリ(warpd)を起動できない</li>
+</ul>
+
+<hr>
+
+<h2>次の案</h2>
+
+Kanata から F13 を送る。
+
+<pre>
+無変換 + H
+      ↓
+Kanata
+      ↓
+F13
+      ↓
+i3
+      ↓
+warpd --hint
+</pre>
+
+Kanata
+
+<pre>
+warpd-hint f13
+</pre>
+
+i3
+
+<pre>
+bindsym F13 exec --no-startup-id warpd --hint
+</pre>
+
+結果
+
+<p class="ng">動かなかった。</p>
+
+<hr>
+
+<h2>調査</h2>
+
+<ul>
+<li>Kanata のログを見ると F13 は送信されていた。</li>
+<li>i3 の bindsym も読み込まれていた。</li>
+<li>しかし X11 側では F13 が正常に扱われていなかった。</li>
+</ul>
+
+つまり
+
+<pre>
+Kanata
+   ↓
+F13
+   ↓
+X11
+   ↓
+（ここで失われる）
+</pre>
+
+環境依存で F13～F24 が使えないことがある。
+
+<hr>
+
+<h2>最終解決</h2>
+
+F13 をやめて Menu キーを使用。
+
+Kanata
+
+<pre>
+warpd-hint menu
+</pre>
+
+i3
+
+<pre>
+bindsym Menu exec --no-startup-id ${pkgs.warpd}/bin/warpd --hint
+</pre>
+
+結果
+
+<p class="ok">正常動作。</p>
+
+<hr>
+
+<h2>最終構成</h2>
+
+<pre>
+無変換 + H
+      ↓
+Kanata
+      ↓
+Menu (仮想キー)
+      ↓
+i3
+      ↓
+warpd --hint
+</pre>
+
+<h2>なぜ Menu は動くのか？</h2>
+
+<ul>
+<li>Menu は X11 が標準でサポートする keysym。</li>
+<li>物理キーが無くても Kanata が仮想キーとして送信できる。</li>
+<li>i3 が問題なく bindsym できる。</li>
+</ul>
+
+一方 F13～F24 は
+
+<ul>
+<li>XKB</li>
+<li>uinput</li>
+<li>キーボードレイアウト</li>
+</ul>
+
+によって認識されない場合がある。
+
+<hr>
+
+<h2>得られた構成</h2>
+
+<ul>
+<li>sxhkd 不要</li>
+<li>Kanata にショートカットを集約</li>
+<li>GUI 起動は i3 が担当</li>
+<li>X Server 問題を回避</li>
+<li>役割分担が明確</li>
+</ul>
+
+<hr>
+
+<h2>教訓</h2>
+
+<p>
+Kanata は「キー入力を変換するソフト」と考え、
+GUI アプリの起動は Window Manager(i3) に任せる方が設計として自然で安定する。
+</p>
+
+<p>
+仮想キーを経由する場合は、F13～F24 よりも Menu キーの方が環境依存が少なく、Linux/X11 では安定して利用できる。
+</p>
+
+</body>
+</html>
+
