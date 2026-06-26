@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NixOS ブラウザ起動不可問題の備忘録</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        h1 {
+            color: #1a1a1a;
+            border-bottom: 3px solid #23d160;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #2c3e50;
+            margin-top: 30px;
+            border-left: 5px solid #3273dc;
+            padding-left: 10px;
+        }
+        .status-badge {
+            background-color: #23d160;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        code {
+            background-color: #f1f1f1;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.95em;
+        }
+        pre {
+            background-color: #2d3748;
+            color: #fff;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+        .highlight {
+            background-color: #fff3cd;
+            padding: 2px 4px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>NixOS / Home Manager ブラウザ起動トラブル解決メモ <span class="status-badge">SOLVED</span></h1>
+
+    <div class="card">
+        <h2>1. 根本的な原因（何が起きていたか）</h2>
+        <p>原因は<strong>「同一モジュールの競合」</strong>と、それに伴う<strong>「プロファイルの多重ロック」</strong>のコンボでした。</p>
+        
+        <h3>① 設定の競合（Nix側の問題）</h3>
+        <p>BraveもGoogle Chromeも、内部は同じChromiumベースのブラウザです。そのため、Home Managerの <code>programs.chromium</code> モジュールを両方のファイルで同時に定義（インポート）したことで設定の衝突が発生し、環境が不安定になりました。</p>
+        
+        <h3>② ゾンビプロセスとSingletonLock（Linux/ブラウザ側の問題）</h3>
+        <p>不完全なビルドや起動の試行により、裏で<strong>ブラウザのプロセスが死にきれずにゾンビ化（常駐）</strong>してしまいました。Chromium系のブラウザは、多重起動によるデータの破損を防ぐため、プロファイルディレクトリ内に <code>SingletonLock</code> というファイル（シンボリックリンク）を作成してロックをかけます。</p>
+        <p>プロセスが残っていた（あるいはロックファイルが消えずに残った）ため、新しくブラウザを起動しようとした際に、<span class="highlight">「既に別の場所でプロファイルが使われています」</span>と判定され、安全のために起動がブロックされていました。</p>
+    </div>
+
+    <div class="card">
+        <h2>2. 解決したアプローチ</h2>
+        
+        <h3>ステップ1：設定の分離（宣言の適正化）</h3>
+        <p><code>programs.chromium</code> の奪い合いを避けるため、構成を以下のようにスリム化しました。</p>
+        <ul>
+            <li><strong>Brave:</strong> <code>programs.chromium</code> を使って管理（拡張機能も宣言可能）</li>
+            <li><strong>Chrome:</strong> <code>home.packages = [ pkgs.google-chrome ];</code> で単体パッケージとして独立化</li>
+        </ul>
+
+        <h3>ステップ2：ロックの強制解除（プロセスの大掃除）</h3>
+        <p>裏でプロファイルを掴んでいたゾンビプロセスを強制終了し、残留していたロックファイルを削除しました。</p>
+        <pre><code># 1. ゾンビプロセスをすべてキル
+pkill -f brave
+pkill -f chrome
+
+# 2. 残ってしまったロックファイルを強制排除
+rm -f ~/.config/BraveSoftware/Brave-Browser/SingletonLock
+rm -f ~/.config/google-chrome/SingletonLock</code></pre>
+    </div>
+
+    <div class="card">
+        <h2>3. 今後の教訓・メモ</h2>
+        <ul>
+            <li>Firefoxは独立した <code>programs.firefox</code> モジュールがあるため問題ないが、Chromium系（Brave, Chrome, Vivaldi等）を複数入れる時は <code>programs.chromium</code> の重複に注意する。</li>
+            <li>GUIでブラウザがウンともスンとも言わなくなった時は、まずターミナルから直接 <code>brave</code> や <code>google-chrome</code> を叩いて<strong>「エラーを吐いていないか」</strong>を確認するのが最速の解決ルート。</li>
+        </ul>
+    </div>
+
+</body>
+</html>
