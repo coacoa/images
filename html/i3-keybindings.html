@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>i3 Keybindings</title>
+<style>
+  :root {
+    --bg: #0f0f0e;
+    --surface: #1a1a18;
+    --surface2: #222220;
+    --border: rgba(255,255,255,0.08);
+    --text: #e8e6df;
+    --muted: #888680;
+    --accent: #3987e5;
+    --accent-dim: rgba(57,135,229,0.12);
+    --custom: #199e70;
+    --custom-dim: rgba(25,158,112,0.12);
+    --changed: #e66767;
+    --changed-dim: rgba(230,103,103,0.12);
+    --default: #888680;
+    --default-dim: rgba(136,134,128,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    padding: 2rem 1rem 4rem;
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  header {
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1.5rem;
+  }
+
+  header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+    margin-bottom: 0.5rem;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .legend {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 3px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .badge-custom  { background: var(--custom-dim);  color: var(--custom);  }
+  .badge-default { background: var(--default-dim); color: var(--default); }
+  .badge-changed { background: var(--changed-dim); color: var(--changed); }
+
+  section {
+    margin-bottom: 2rem;
+  }
+
+  .section-title {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0.25rem;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+
+  tr:last-child { border-bottom: none; }
+  tr:hover { background: var(--surface2); }
+
+  td {
+    padding: 7px 10px;
+    vertical-align: middle;
+  }
+
+  td:first-child { width: 42%; }
+  td:nth-child(2) { width: 38%; color: var(--muted); }
+  td:last-child  { width: 20%; text-align: right; }
+
+  kbd {
+    display: inline-block;
+    background: var(--surface2);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--text);
+    white-space: nowrap;
+    margin: 0 1px;
+  }
+
+  .plus {
+    color: var(--muted);
+    margin: 0 1px;
+    font-size: 11px;
+  }
+
+  .note {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  footer {
+    margin-top: 3rem;
+    font-size: 11px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+  }
+
+  @media (max-width: 600px) {
+    td:nth-child(2) { display: none; }
+    td:first-child { width: 70%; }
+    td:last-child  { width: 30%; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>i3 keybindings</h1>
+  <p>mod = <kbd>Alt</kbd> &nbsp;·&nbsp; home.i3.nix ベース</p>
+</header>
+
+<div class="legend">
+  <div class="legend-item"><span class="badge badge-custom">custom</span> configで追加・上書き</div>
+  <div class="legend-item"><span class="badge badge-default">default</span> i3デフォルトのまま</div>
+  <div class="legend-item"><span class="badge badge-changed">変更あり</span> デフォルトから意味が変わった</div>
+</div>
+
+<section>
+  <div class="section-title">起動・基本操作</div>
+  <table>
+    <tr>
+      <td><kbd>Alt</kbd><span class="plus">+</span><kbd>Return</kbd></td>
+      <td>ウィンドウをローテーション（レイアウト維持）</td>
+      <td><span class="badge badge-custom">custom</span></td>
+    </tr>
+    <tr>
+      <td><kbd>Alt</kbd><span class="plus">+</span><kbd>t</kbd></td>
+      <td>alacritty 起動</td>
+      <td><span class="badge badge-changed">変更あり</span></td>
+    </tr>
+    <tr>
+      <td><kbd>Alt</kbd><span class="plus">+</span><kbd>p</kbd></td>
+      <td>dmenu_run</td>
+      <td><span class="badge badge-custom">custom</span></td>
+    </tr>
+    <tr>
+      <td><kbd>Alt</kbd><span class="plus">+</span><kbd>Shift</kbd><span class="plus">+</span><kbd>c</kbd></td>
+      <td>ウィンドウを閉じる</td>
+      <td><span class="badge badge-changed">変更あり</span></td>
+    </tr>
+    <tr>
+      <td><kbd>Alt</kbd><span class="plus">+</span><kbd>f</kbd></td>
+      <td>フルスクリーン切り替え</td>
+      <td><span class="badge badge-default">default</span></td>
+    </tr>
+    <tr>
+      <td><kbd>Alt</kbd><span class="plus">+</span><kbd>Shift</kbd><span class="plus">+</span><kbd>Space</kbd></td>
+      <td>フローティング切り替え</td>
+      <td><span class="badge badge-default">default</span></td>
+    </tr>
+    <tr>
+      <td><kbd>Alt</kbd><span class="plus">+</span><kbd>Shift</kbd><span class="plus">+</span><kbd>/</kbd></td>
+      <td>rofi でキーバインド一覧表示</td>
+      <td><span class="badge badge-custom">custom</span></td>
+    </tr>
+  </table>
+</section>
+
+<section>
+  <div class="section-title">フォーカス移動</div>
+  <table>
+    <tr>
+      <td><kbd>Alt</kbd><span class="plus">+</span><kbd>h</kbd> / <kbd>j</kbd> / <kbd>k</kbd> / <kbd>l</kbd></td>
+      <td>左 / 下 / 上 / 右</td>
+      <td><span class="badge badge-custom">custom</span></td>
+    </tr>
+    <tr>
+      <td><kbd>Alt</kbd><span class="plus">+</span><kbd>←</kbd> / <kbd>↓</kbd> / <kbd>↑</kbd> / <kbd>→</kbd></td>
+      <td>左 / 下 / 上 / 右</td>
+      <td><span class="badge badge-default">default</span></td>
+    </tr>
+  </table>
+</section>
+
+<section>
+  <div class="section-title">ウィンドウ移動</div>
+  <table>
+    <tr>
+      <td><kbd>Alt</kbd><span class="plus">+</span><kbd>Shift</kbd><span class="plus">+</span><kbd>h/j/k/l</kbd></td>
+      <td>左 / 下 / 上 / 右に移動</td>
+      <td><span class="badge badge-custom">custom</span></td>
+    </tr>
+    <tr>
+      <td><kbd>Alt</kbd><span class="plus">+</span><kbd>Shift</kbd><span class="plus">+</span><kbd>←/↓/↑/→</kbd></td>
+      <td>左 / 下 / 上 / 右に移動</td>
+      <td><span class="badge badge-default">default</span></td>
+    </tr>
+  </table>
+</section>
+
+<section>
+  <div class="section-title">マーク・スワップ</div>
+  <table>
+    <tr>
+      <td><kbd>Alt</kbd><span class="plus">+</span><kbd>m</kbd></td>
+      <td>swap_target マークをトグル</td>
+      <td><span class="badge badge-custom">custom</span></td>
+    </tr>
+    <tr>
+      <td><kbd>Alt</kbd><span class="plus">+</span><kbd>Shift</kbd><span class="plus">+</span><kbd>m</kbd></td>
+      <td>マークしたコンテナとスワップ</td>
+      <td><span class="badge badge-custom">custom</span></td>
+    </tr>
+  </table>
+</section>
+
+<section>
+  <div class="section-title">ワークスペース</div>
+  <table>
+    <tr>
+      <td><kbd>Alt</kbd><span class="plus">+</span><kbd>Tab</kbd></td>
+      <td>次のWSへ</td>
+      <td><span class="badge badge-custom">custom</span></td>
+    </tr>
+    <tr>
+      <td><kbd>Alt</kbd><span class="plus">+</span><kbd>Shift</kbd><span class="plus">+</span><kbd>Tab</kbd></td>
+      <td>前のWSへ</td>
+      <td><span class="badge badge-custom">custom</span></td>
+    </tr>
+    <tr>
+      <td><kbd>Alt</kbd><span class="plus">+</span><kbd>1</kbd> 〜 <kbd>9</kbd></td>
+      <td>WS番号へ切り替え</td>
+      <td><span class="badge badge-default">default</span></td>
+    </tr>
+    <tr>
+      <td><kbd>Alt</kbd><span class="plus">+</span><kbd>Shift</kbd><span class="plus">+</span><kbd>1</kbd> 〜 <kbd>9</kbd></td>
+      <td>ウィンドウをWS番号へ移動</td>
+      <td><span class="badge badge-default">default</span></td>
+    </tr>
+  </table>
+</section>
+
+<section>
+  <div class="section-title">リサイズ</div>
+  <table>
+    <tr>
+      <td><kbd>Alt</kbd><span class="plus">+</span><kbd>Ctrl</kbd><span class="plus">+</span><kbd>h</kbd> / <kbd>l</kbd></td>
+      <td>幅を縮小 / 拡大</td>
+      <td><span class="badge badge-custom">custom</span></td>
+    </tr>
+    <tr>
+      <td><kbd>Alt</kbd><span class="plus">+</span><kbd>Ctrl</kbd><span class="plus">+</span><kbd>j</kbd> / <kbd>k</kbd></td>
+      <td>高さを拡大 / 縮小</td>
+      <td><span class="badge badge-custom">custom</span></td>
+    </tr>
+    <tr>
+      <td><kbd>Alt</kbd><span class="plus">+</span><kbd>r</kbd></td>
+      <td>resize モードへ</td>
+      <td><span class="badge badge-default">default</span></td>
+    </tr>
+  </table>
+</section>
+
+<section>
+  <div class="section-title">レイアウト</div>
+  <table>
+    <tr>
+      <td><kbd>Alt</kbd><span class="plus">+</span><kbd>e</kbd></td>
+      <td>toggle split</td>
+      <td><span class="badge badge-default">default</span></td>
+    </tr>
+    <tr>
+      <td><kbd>Alt</kbd><span class="plus">+</span><kbd>s</kbd></td>
+      <td>stacking</td>
+      <td><span class="badge badge-default">default</span></td>
+    </tr>
+    <tr>
+      <td><kbd>Alt</kbd><span class="plus">+</span><kbd>w</kbd></td>
+      <td>tabbed</td>
+      <td><span class="badge badge-default">default</span></td>
+    </tr>
+  </table>
+</section>
+
+<section>
+  <div class="section-title">その他</div>
+  <table>
+    <tr>
+      <td><kbd>Menu</kbd></td>
+      <td>warpd --hint（Kanata経由）</td>
+      <td><span class="badge badge-custom">custom</span></td>
+    </tr>
+    <tr>
+      <td><kbd>Alt</kbd><span class="plus">+</span><kbd>`</kbd></td>
+      <td>次のウィンドウにフォーカス</td>
+      <td><span class="badge badge-custom">custom</span></td>
+    </tr>
+    <tr>
+      <td><kbd>Alt</kbd><span class="plus">+</span><kbd>Shift</kbd><span class="plus">+</span><kbd>`</kbd></td>
+      <td>前のウィンドウにフォーカス</td>
+      <td><span class="badge badge-custom">custom</span></td>
+    </tr>
+    <tr>
+      <td><kbd>Alt</kbd><span class="plus">+</span><kbd>Shift</kbd><span class="plus">+</span><kbd>e</kbd></td>
+      <td>i3 終了</td>
+      <td><span class="badge badge-default">default</span></td>
+    </tr>
+    <tr>
+      <td><kbd>Alt</kbd><span class="plus">+</span><kbd>Shift</kbd><span class="plus">+</span><kbd>r</kbd></td>
+      <td>i3 リロード</td>
+      <td><span class="badge badge-default">default</span></td>
+    </tr>
+  </table>
+</section>
+
+<div style="background: var(--surface); border: 1px solid var(--changed-dim); border-left: 3px solid var(--changed); border-radius: 4px; padding: 10px 14px; margin-top: 1rem; font-size: 12px; color: var(--muted);">
+  ⚠ <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>c</kbd> はデフォルトの「config reload」から <strong style="color: var(--changed)">kill</strong> に上書き済み。config再読み込みはターミナルから <code>i3-msg reload</code> で。
+</div>
+
+<footer>
+  generated from home.i3.nix
+</footer>
+
+</body>
+</html>
