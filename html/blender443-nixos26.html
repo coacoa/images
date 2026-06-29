@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blender 4.4.3 on NixOS 26 — nix develop メモ</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0f10;
+    --surface: #1a1a1e;
+    --border: #2a2a30;
+    --accent: #e87d0d; /* blender orange */
+    --accent2: #4a9eff;
+    --text: #d4d4d8;
+    --text-dim: #71717a;
+    --code-bg: #141418;
+    --success: #4ade80;
+    --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.7;
+    padding: 2rem 1rem 4rem;
+  }
+
+  .container {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  /* header */
+  header {
+    border-left: 3px solid var(--accent);
+    padding-left: 1.2rem;
+    margin-bottom: 2.5rem;
+  }
+
+  header .label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    margin-bottom: .4rem;
+  }
+
+  header h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -.02em;
+  }
+
+  header .sub {
+    color: var(--text-dim);
+    font-size: 12px;
+    margin-top: .3rem;
+    font-family: var(--mono);
+  }
+
+  /* sections */
+  section {
+    margin-bottom: 2rem;
+  }
+
+  h2 {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--accent2);
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    margin-bottom: .8rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
+
+  h2::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  p {
+    color: var(--text);
+    margin-bottom: .6rem;
+  }
+
+  /* code blocks */
+  .code-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 1.2rem;
+  }
+
+  .code-block .code-label {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: .35rem .8rem;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+  }
+
+  .code-block .code-label .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: .7;
+  }
+
+  .code-block pre {
+    padding: 1rem;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.8;
+    color: #c9d1d9;
+  }
+
+  /* syntax colors (manual) */
+  .k { color: #ff79c6; }   /* keyword */
+  .s { color: #f1fa8c; }   /* string */
+  .c { color: #6272a4; font-style: italic; } /* comment */
+  .v { color: #bd93f9; }   /* variable */
+  .f { color: #50fa7b; }   /* function/attr */
+  .p { color: #ff6347; }   /* package name */
+
+  /* inline code */
+  code {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: .1em .4em;
+    color: #f8f8f2;
+  }
+
+  /* lib list */
+  .lib-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: .4rem;
+    margin-bottom: 1rem;
+  }
+
+  .lib-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: .35rem .7rem;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: #50fa7b;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+  }
+
+  .lib-item::before {
+    content: '+';
+    color: var(--accent);
+    font-weight: bold;
+  }
+
+  /* steps */
+  .steps {
+    counter-reset: step;
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    margin-bottom: 1rem;
+  }
+
+  .step {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .7rem 1rem;
+  }
+
+  .step-num {
+    counter-increment: step;
+    content: counter(step);
+    min-width: 22px;
+    height: 22px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: bold;
+    color: #000;
+    flex-shrink: 0;
+    margin-top: .1rem;
+  }
+
+  .step-body {
+    font-size: 13px;
+  }
+
+  .step-body code {
+    display: inline-block;
+    margin-top: .2rem;
+  }
+
+  /* note */
+  .note {
+    background: #1a1a0a;
+    border: 1px solid #3a3a10;
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: .7rem 1rem;
+    font-size: 12.5px;
+    color: #c4c490;
+    margin-bottom: 1rem;
+  }
+
+  .note strong { color: var(--accent); }
+
+  /* footer */
+  footer {
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="label">NixOS 26.05 // nix develop memo</div>
+    <h1>Blender 4.4.3 を動かす</h1>
+    <div class="sub">buildFHSEnv + nix develop — システムの blender5 はそのまま</div>
+  </header>
+
+  <section>
+    <h2>概要</h2>
+    <p>NixOS 26.05 のデフォルト <code>pkgs.blender</code> は 4.5.x。公式バイナリの 4.4.3 を <code>buildFHSEnv</code> で包んで、<code>nix develop</code> 中だけ使えるようにする。</p>
+    <div class="note">
+      <strong>Note:</strong> blender-4.4.3-linux-x64.tar.xz は <a href="https://www.blender.org/download/releases/4-4/" style="color:#4a9eff">blender.org</a> から手動DLして展開しておく。flake.nix と同じディレクトリに置く。
+    </div>
+  </section>
+
+  <section>
+    <h2>ディレクトリ構成</h2>
+    <div class="code-block">
+      <div class="code-label"><span class="dot"></span>tree</div>
+      <pre>~/flakes/blender4/
+├── blender-4.4.3-linux-x64/   ← 展開済みバイナリ
+│   └── blender
+├── flake.nix
+├── flake.lock
+└── .gitignore</pre>
+    </div>
+  </section>
+
+  <section>
+    <h2>flake.nix</h2>
+    <div class="code-block">
+      <div class="code-label"><span class="dot"></span>flake.nix</div>
+      <pre><span class="p">{</span>
+  <span class="f">description</span> = <span class="s">"Blender 4.4.3 FHS env"</span>;
+
+  <span class="f">inputs</span>.<span class="f">nixpkgs</span>.<span class="f">url</span> = <span class="s">"github:NixOS/nixpkgs/nixos-26.05"</span>;
+
+  <span class="f">outputs</span> = <span class="p">{</span> self, nixpkgs <span class="p">}</span>:
+  <span class="k">let</span>
+    <span class="v">system</span> = <span class="s">"x86_64-linux"</span>;
+    <span class="v">pkgs</span>   = import nixpkgs <span class="p">{</span> inherit system; <span class="p">}</span>;
+
+    <span class="v">blenderFHS</span> = pkgs.buildFHSEnv <span class="p">{</span>
+      <span class="f">name</span> = <span class="s">"blender-fhs"</span>;
+
+      <span class="f">targetPkgs</span> = pkgs: with pkgs; <span class="p">[</span>
+        <span class="p">libx11</span>
+        <span class="p">libxext</span>
+        <span class="p">libxrender</span>
+        <span class="p">libxfixes</span>
+        <span class="p">libxi</span>
+        <span class="p">libxrandr</span>
+        <span class="p">libxxf86vm</span>
+        <span class="p">libxkbcommon</span>
+        <span class="p">libSM</span>
+        <span class="p">libICE</span>
+        <span class="p">libxcb</span>
+        <span class="p">libXdmcp</span>
+        <span class="p">libXau</span>
+        <span class="p">dbus</span>
+        <span class="p">libGL</span>
+        <span class="p">libGLU</span>
+        <span class="p">glib</span>
+        <span class="p">fontconfig</span>
+        <span class="p">freetype</span>
+        <span class="p">zlib</span>
+        <span class="p">alsa-lib</span>
+        <span class="p">pipewire</span>
+        <span class="p">wayland</span>
+        <span class="p">vulkan-loader</span>
+      <span class="p">]</span>;
+
+      <span class="f">runScript</span> = pkgs.writeShellScript <span class="s">"run-blender"</span> <span class="s">''
+        exec "$BLENDER_DIR/blender" "$@"
+      ''</span>;
+    <span class="p">}</span>;
+  <span class="k">in</span> <span class="p">{</span>
+    <span class="f">devShells</span>.<span class="v">${system}</span>.<span class="f">default</span> = pkgs.mkShell <span class="p">{</span>
+      <span class="f">packages</span> = <span class="p">[ blenderFHS ]</span>;
+
+      <span class="f">shellHook</span> = <span class="s">''
+        export BLENDER_DIR="$PWD/blender-4.4.3-linux-x64"
+        echo "blender-fhs で Blender 4.4.3 が起動します"
+      ''</span>;
+    <span class="p">}</span>;
+  <span class="p">}</span>;
+<span class="p">}</span></pre>
+    </div>
+  </section>
+
+  <section>
+    <h2>必要ライブラリ一覧</h2>
+    <div class="lib-grid">
+      <div class="lib-item">libx11</div>
+      <div class="lib-item">libxext</div>
+      <div class="lib-item">libxrender</div>
+      <div class="lib-item">libxfixes</div>
+      <div class="lib-item">libxi</div>
+      <div class="lib-item">libxrandr</div>
+      <div class="lib-item">libxxf86vm</div>
+      <div class="lib-item">libxkbcommon</div>
+      <div class="lib-item">libSM</div>
+      <div class="lib-item">libICE</div>
+      <div class="lib-item">libxcb</div>
+      <div class="lib-item">libXdmcp</div>
+      <div class="lib-item">libXau</div>
+      <div class="lib-item">dbus</div>
+      <div class="lib-item">libGL</div>
+      <div class="lib-item">libGLU</div>
+      <div class="lib-item">glib</div>
+      <div class="lib-item">fontconfig</div>
+      <div class="lib-item">freetype</div>
+      <div class="lib-item">zlib</div>
+      <div class="lib-item">alsa-lib</div>
+      <div class="lib-item">pipewire</div>
+      <div class="lib-item">wayland</div>
+      <div class="lib-item">vulkan-loader</div>
+    </div>
+    <div class="note">
+      <strong>Note (26.05):</strong> xorg パッケージが rename された。<code>xorg.libX11</code> → <code>libx11</code> など小文字に。
+    </div>
+  </section>
+
+  <section>
+    <h2>使い方</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">blender4 ディレクトリに移動<br><code>cd ~/flakes/blender4</code></div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">FHS 環境に入る<br><code>nix develop</code></div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">Blender 4.4.3 を起動<br><code>blender-fhs</code></div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">終了は <code>exit</code> または Ctrl-D — システムの blender5 に戻る</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>不足ライブラリが出た場合</h2>
+    <p>エラー例: <code>error while loading shared libraries: libFoo.so.1</code></p>
+    <div class="code-block">
+      <div class="code-label"><span class="dot"></span>nix-locate で調べる</div>
+      <pre>nix-locate --top-level libFoo.so.1</pre>
+    </div>
+    <p>出てきたパッケージ名を <code>targetPkgs</code> リストに追記して <code>nix develop</code> し直す。</p>
+  </section>
+
+  <footer>
+    NixOS 26.05 · Blender 4.4.3 linux-x64 公式バイナリ · buildFHSEnv
+  </footer>
+
+</div>
+</body>
+</html>
