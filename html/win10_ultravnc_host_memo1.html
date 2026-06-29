@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows 10 VNCサーバー構築 備忘録</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        h1 {
+            color: #1a73e8;
+            border-bottom: 2px solid #1a73e8;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #2c3e50;
+            margin-top: 30px;
+            border-left: 5px solid #34495e;
+            padding-left: 10px;
+        }
+        .meta-box {
+            background-color: #e8f0fe;
+            border: 1px solid #b3d1ff;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .success-box {
+            background-color: #e6f4ea;
+            border: 1px solid #b7e1cd;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .trouble-box {
+            background-color: #fce8e6;
+            border: 1px solid #f9cb9c;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        code {
+            font-family: 'Consolas', 'Courier New', Courier, monospace;
+            background-color: #2d3748;
+            color: #f7fafc;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        pre {
+            background-color: #2d3748;
+            color: #f7fafc;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+        pre code {
+            background-color: transparent;
+            padding: 0;
+            color: #f7fafc;
+        }
+        .highlight {
+            font-weight: bold;
+            color: #d93025;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Windows 10 VNCサーバー構築 備忘録</h1>
+    <div class="meta-box">
+        <strong>目的:</strong> Linux環境（Remmina）からWindows 10をリモートデスクトップ操作する（再起動後・サインイン前でも自動待ち受け）<br>
+        <strong>最終採用構成:</strong> UltraVNC (Server) + Windowsシステムサービス化 (Port: 5900)
+    </div>
+
+    <h2>1. トラブルシューティングの軌跡（不採用ルート）</h2>
+    <div class="trouble-box">
+        <ul>
+            <li><strong>TigerVNC (GUIインストーラー):</strong> 通常のNext連打ではViewerしか入らず、Server機能（<code>winvnc.exe</code>）がインクルードされない罠がある。</li>
+            <li><strong>TigerVNC (スタンドアロン配置):</strong> SourceForgeからの直接ダウンロード時にファイルが破損（Corrupted / Unreadable）し、起動失敗。</li>
+            <li><strong>TigerVNC (GitHub ZIPルート):</strong> 公式リリースのURL構造変更、あるいは名称不一致により <code>404 Not Found</code> でダウンロード不能。</li>
+        </ul>
+        <strong>教訓:</strong> GUIインストーラーのバグや、海外ミラーのプロキシ起因の破損に依存しない「パッケージマネージャー（winget）による代替ツールの導入」へ舵を切ったのがブレイクスルーとなった。
+    </div>
+
+    <h2>2. 【確定版】UltraVNC 構築コマンド（管理者権限のPowerShell）</h2>
+    <p>以下は、今回開通に至った全手順のコマンドです。次回再構築する際はこのブロックを順番に実行するだけで完了します。</p>
+
+    <h3>ステップ①: 本体インストール</h3>
+    <pre><code># wingetを使ってUltraVNC（サーバー入りフルパッケージ）をサイレントインストール
+winget install uvncbvba.UltraVnc --accept-source-agreements --accept-package-agreements</code></pre>
+
+    <h3>ステップ②: パスワードの注入</h3>
+    <pre><code># パスワードを変数に代入し、設定用EXEへ引数として渡す
+$pass = "設定したパスワード"
+& "C:\Program Files\uvnc bvba\UltraVNC\Setpasswd.exe" $pass</code></pre>
+
+    <h3>ステップ③: サーバー強制起動と常駐・自動起動設定（Restart対策）</h3>
+    <pre><code># 既存プロセスを一度終了
+Stop-Process -Name "winvnc" -Force -ErrorAction SilentlyContinue
+
+# UltraVNCを「Windowsシステムサービス」としてシステムに正式登録
+& "C:\Program Files\uvnc bvba\UltraVNC\winvnc.exe" -install
+
+# サービス名を自動検出して、スタートアップの種類を「自動（常駐）」に変更＆サービス開始
+$vncService = Get-Service | Where-Object {$_.Name -like "*uvnc*" -or $_.DisplayName -like "*uvnc*"}
+if ($vncService) {
+    Set-Service -Name $vncService.Name -StartupType Automatic
+    Start-Service -Name $vncService.Name
+}</code></pre>
+
+    <h2>3. 状態確認用コマンド</h2>
+    <h3>Windows側での待ち受け（LISTEN）確認</h3>
+    <pre><code>netstat -ano | Select-String "5900"</code></pre>
+    <p><strong>成功時の出力例:</strong> <code>TCP 0.0.0.0:5900 ... LISTENING</code> が出ればWindows側は正常。</p>
+
+    <h3>サービスの自動起動ステータス確認</h3>
+    <pre><code>Get-Service | Where-Object {$_.Name -like "*uvnc*"} | Select-Object Name, Status, StartType</code></pre>
+    <p><strong>成功時の出力例:</strong> <code>Status: Running / StartType: Automatic</code></p>
+
+    <h2>4. Linux（Remmina）からの接続方法</h2>
+    <div class="success-box">
+        <ul>
+            <li><strong>プロトコル:</strong> <code>VNC - Virtual Network Computing</code></li>
+            <li><strong>サーバーアドレス:</strong> <code>[WindowsのIPアドレス]:5900</code> （例: <code>192.168.1.XX:5900</code>）</li>
+            <li><strong>パスワード:</strong> 上記ステップ②で指定したパスワード</li>
+        </ul>
+        <p>※Windows側のファイアウォール（ポート5900）は以前の工程で開放済みのため、これでいつでもホスト名やIP指定だけで即座にデスクトップに繋がります。</p>
+    </div>
+
+</body>
+</html>
