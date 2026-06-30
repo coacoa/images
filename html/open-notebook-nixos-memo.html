@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Open Notebook on NixOS 構築メモ</title>
+<style>
+  body {
+    font-family: -apple-system, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    max-width: 840px;
+    margin: 40px auto;
+    padding: 0 20px;
+    line-height: 1.7;
+    color: #222;
+    background: #fafafa;
+  }
+  h1 {
+    border-bottom: 3px solid #2e75b6;
+    padding-bottom: 10px;
+    color: #1a4d7a;
+  }
+  h2 {
+    margin-top: 40px;
+    color: #2e75b6;
+    border-left: 6px solid #2e75b6;
+    padding-left: 10px;
+  }
+  h3 {
+    color: #444;
+    margin-top: 24px;
+  }
+  .step {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 16px 0;
+  }
+  .problem {
+    background: #fff3f3;
+    border-left: 4px solid #d9534f;
+    padding: 10px 16px;
+    margin: 10px 0;
+  }
+  .solution {
+    background: #f0f8f0;
+    border-left: 4px solid #5cb85c;
+    padding: 10px 16px;
+    margin: 10px 0;
+  }
+  code, pre {
+    background: #2d2d2d;
+    color: #e8e8e8;
+    border-radius: 4px;
+    font-family: "Menlo", "Consolas", monospace;
+    font-size: 0.9em;
+  }
+  code {
+    padding: 2px 6px;
+  }
+  pre {
+    padding: 12px 16px;
+    overflow-x: auto;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 16px 0;
+  }
+  th, td {
+    border: 1px solid #ccc;
+    padding: 8px 12px;
+    text-align: left;
+  }
+  th {
+    background: #2e75b6;
+    color: #fff;
+  }
+  .tag {
+    display: inline-block;
+    background: #2e75b6;
+    color: #fff;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.8em;
+    margin-right: 6px;
+  }
+  .summary {
+    background: #eef5fb;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 20px 0;
+  }
+</style>
+</head>
+<body>
+
+<h1>Open Notebook on NixOS 構築メモ</h1>
+<p>ホスト: <code>h370m</code>（NixOS 26.05, NVIDIA GTX 1650 Super 4GB）<br>
+目的: NotebookLM 互換のセルフホスト環境を、ローカル LLM（Ollama）+ ローカル TTS（VOICEVOX）で完全ローカル運用する。</p>
+
+<div class="summary">
+<strong>最終構成</strong><br>
+Open Notebook（Web UI/API）+ SurrealDB（DB）+ Ollama（Chat/Embedding）+ VOICEVOX + 自作 FastAPI ラッパー（OpenAI互換TTS）
+すべて Docker コンテナ + systemd で NixOS 上に宣言的に管理。
+</div>
+
+<h2>1. Open Notebook 本体の導入</h2>
+<div class="step">
+<p>公式の docker-compose 構成（SurrealDB + open_notebook の2コンテナ）を NixOS モジュール化。<code>virtualisation.oci-containers</code> を使用。</p>
+<pre>configuration.opennotebook.nix
+configuration.docker.nix   ← dockerHost モジュールとして分離</pre>
+<p><span class="tag">ポイント</span> dockerHost モジュールを別ファイルに切り出し、<code>services.dockerHost.enable = true;</code> で他のサービスからも再利用できる形に。</p>
+</div>
+
+<div class="problem">
+<strong>問題1:</strong> <code>services.openNotebook.enable = true;</code> の呼び出し忘れでサービスが一切生成されなかった。
+</div>
+<div class="solution">
+<strong>解決:</strong> モジュールの options 定義だけでは何も起動しない。<code>configuration.h370m.nix</code> 側で実際に enable する記述が必要。
+</div>
+
+<h2>2. コンテナ間ネットワーク問題</h2>
+<div class="problem">
+<strong>問題2:</strong> open-notebook コンテナから SurrealDB への接続が <code>Name or service not known</code> で失敗。
+</div>
+<div class="solution">
+<strong>原因と解決:</strong> Docker のデフォルト bridge ネットワークではコンテナ名での名前解決ができない。専用ネットワーク <code>open-notebook-net</code> を systemd oneshot サービスで作成し、両コンテナの <code>extraOptions</code> に <code>--network=open-notebook-net</code> を追加して解決。
+</div>
+
+<h2>3. Ollama 導入（ローカル LLM）</h2>
+<div class="step">
+GPU: GTX 1650 Super 4GB → <code>pkgs.ollama-cuda</code> を使用。
+<pre>services.ollama = {
+  enable = true;
+  package = pkgs.ollama-cuda;
+  host = "0.0.0.0";
+};</pre>
+</div>
+
+<div class="problem">
+<strong>問題3:</strong> NixOS 26.05 で <code>services.ollama.acceleration</code> オプションが廃止されていてビルド失敗。
+</div>
+<div class="solution">
+<strong>解決:</strong> <code>package = pkgs.ollama-cuda</code> に置き換え。
+</div>
+
+<div class="problem">
+<strong>問題4:</strong> Open Notebook コンテナから Ollama (<code>host.docker.internal:11434</code>) に接続できず timeout。
+</div>
+<div class="solution">
+<strong>原因が複数重なっていた:</strong>
+<ol>
+<li>Ollama がデフォルトで <code>127.0.0.1</code> のみ listen → <code>host = "0.0.0.0"</code> で解消</li>
+<li><code>--add-host=host.docker.internal:host-gateway</code> が SurrealDB コンテナにしか付いておらず、肝心の open-notebook コンテナに付いていなかった → 両方に追加</li>
+<li>NixOS firewall が 11434 番ポートを許可していなかった → <code>allowedTCPPorts</code> に追加</li>
+</ol>
+</div>
+
+<h2>4. Podcast 機能（NotebookLM の Video/Audio Overview 相当）</h2>
+<p>調査の結果、Open Notebook には動画生成機能はなく、<strong>マルチスピーカー Podcast（音声）生成</strong>が NotebookLM の Deep Dive に相当する機能。</p>
+
+<div class="problem">
+<strong>問題5:</strong> Podcast 生成が "Setup required"。Episode Profile に紐づくモデルが見つからない（<code>NotFoundError: model:xxxx not found</code>）。
+</div>
+<div class="solution">
+<strong>解決:</strong> Settings → API Keys で Chat / Embedding / TTS モデルをそれぞれ登録し、Episode Profile / Speaker Profile の各モデル欄を選び直す。
+</div>
+
+<div class="problem">
+<strong>問題6:</strong> Ollama は Chat と Embedding しか提供せず、TTS（音声合成）のモデルが一覧に出てこない。
+</div>
+<div class="solution">
+<strong>方針決定:</strong> 完全ローカル運用にこだわるため、クラウド TTS（OpenAI 等）ではなく、既存の VOICEVOX 環境を活用する方向に。
+</div>
+
+<h2>5. VOICEVOX を OpenAI 互換 TTS サーバーに改修</h2>
+<div class="step">
+<p>Open Notebook の「OpenAI Compatible」プロバイダーは <code>POST /v1/audio/speech</code> エンドポイントを期待する。既存の VOICEVOX ラッパー（独自の <code>/tts</code> エンドポイント）を OpenAI 仕様に合わせて改修。</p>
+<table>
+<tr><th>変更前</th><th>変更後</th></tr>
+<tr><td><code>POST /tts</code></td><td><code>POST /v1/audio/speech</code></td></tr>
+<tr><td>なし</td><td><code>GET /v1/models</code> 追加</td></tr>
+<tr><td>speaker 固定（ID=3）</td><td><code>voice</code> パラメータ（alloy/echo/fable等）→ VOICEVOX speaker ID マッピング</td></tr>
+</table>
+<p>構成は変わらず Podman 上の VOICEVOX Engine（ポート50021）+ FastAPI ラッパー（ポート8001、systemd管理）。</p>
+</div>
+
+<div class="problem">
+<strong>問題7:</strong> Open Notebook の Test Connection が timeout。
+</div>
+<div class="solution">
+<strong>原因切り分けの手順:</strong>
+<ol>
+<li><code>ExtraHosts</code> がコンテナに反映されているか確認 → OK</li>
+<li>TTS API / VOICEVOX が起動しているか（<code>systemctl status</code>）→ OK</li>
+<li>ホストから直接 curl でTTS APIを叩けるか → OK</li>
+<li>コンテナ内から <code>host.docker.internal:8001</code> に届くか → OK</li>
+</ol>
+最終的に NixOS firewall が 8001 番ポートを許可していなかったのが原因。<code>allowedTCPPorts</code> に追加して解決。
+</div>
+
+<div class="problem">
+<strong>問題8:</strong> Podcast生成時に <code>"nomic-embed-text:latest" does not support chat</code> エラー。
+</div>
+<div class="solution">
+<strong>原因:</strong> Embedding 専用モデルが、Episode Profile の Outline/Transcript Model（チャット用）の欄に誤って割り当てられていた。チャット用モデル（<code>gemma:latest</code> 等）に正しく差し替えて解決。
+</div>
+
+<h2>6. 最終確認</h2>
+<div class="step">
+<p>Podcasts タブから Generate Podcast を実行し、ステータスが <strong>Processing → Completed</strong> に変わることを確認。完了後、エピソードをクリックすると音声プレイヤーで再生・ダウンロードが可能。</p>
+</div>
+
+<h2>つまずきポイントまとめ</h2>
+<table>
+<tr><th>#</th><th>症状</th><th>根本原因</th></tr>
+<tr><td>1</td><td>サービスが起動しない</td><td><code>enable = true</code> の呼び出し漏れ</td></tr>
+<tr><td>2</td><td>コンテナ間 DNS 解決失敗</td><td>Docker default bridge は名前解決不可</td></tr>
+<tr><td>3</td><td>NixOS rebuild 失敗</td><td>非推奨オプション <code>acceleration</code></td></tr>
+<tr><td>4</td><td>ホスト疎通 timeout（×2回）</td><td>listen アドレス + add-host 設定漏れ + firewall ポート未開放</td></tr>
+<tr><td>5</td><td>Podcast Setup required</td><td>Episode Profile の古いモデル参照</td></tr>
+<tr><td>6</td><td>TTS モデルが選べない</td><td>Ollama は TTS 非対応（仕様通り）</td></tr>
+<tr><td>7</td><td>Embedding選べない/Testエラー</td><td>UI上のモデル登録経路の混同（Embedding登録 と Chat Test は別物）</td></tr>
+<tr><td>8</td><td>Podcast生成エラー</td><td>Embeddingモデルがチャット欄に誤設定</td></tr>
+</table>
+
+<p style="margin-top:40px; color:#888; font-size:0.85em;">作成日: 2026年6月30日</p>
+
+</body>
+</html>
