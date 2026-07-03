@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>JP配列 vs US配列 キーマップ比較表</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            padding: 20px;
+        }
+        h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #34495e;
+            padding-bottom: 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            margin-bottom: 30px;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 12px;
+            text-align: center;
+        }
+        th {
+            background-color: #34495e;
+            color: #fff;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .key-cap {
+            font-weight: bold;
+            background: #eef2f3;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #b2bec3;
+            display: inline-block;
+        }
+        .diff {
+            background-color: #ffeaa7 !important;
+            font-weight: bold;
+        }
+        .mod {
+            background-color: #fab1a0 !important;
+        }
+        .note {
+            font-size: 0.9em;
+            color: #666;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>1. 数字行（最上段）のシフト挙動比較</h2>
+    <p>US配列にすると、<code>Shift</code> を押したときに入力される記号がガラッと変わります。（特に「2」「6」「7」「8」「9」「0」以降）</p>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 20%;">物理キーの位置 (JP基準)</th>
+                <th style="width: 40%;">JP配列としての出力 (単押し / Shift)</th>
+                <th style="width: 40%;">US配列として認識させた時の出力 (単押し / Shift)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="key-cap">1</span></td>
+                <td>1 / !</td>
+                <td>1 / !</td>
+            </tr>
+            <tr class="diff">
+                <td><span class="key-cap">2</span></td>
+                <td>2 / "</td>
+                <td>2 / <strong>@</strong></td>
+            </tr>
+            <tr>
+                <td><span class="key-cap">3</span></td>
+                <td>3 / #</td>
+                <td>3 / #</td>
+            </tr>
+            <tr>
+                <td><span class="key-cap">4</span></td>
+                <td>4 / $</td>
+                <td>4 / $</td>
+            </tr>
+            <tr>
+                <td><span class="key-cap">5</span></td>
+                <td>5 / %</td>
+                <td>5 / %</td>
+            </tr>
+            <tr class="diff">
+                <td><span class="key-cap">6</span></td>
+                <td>6 / &</td>
+                <td>6 / <strong>^</strong></td>
+            </tr>
+            <tr class="diff">
+                <td><span class="key-cap">7</span></td>
+                <td>7 / ' (シングルクォート)</td>
+                <td>7 / <strong>&</strong></td>
+            </tr>
+            <tr class="diff">
+                <td><span class="key-cap">8</span></td>
+                <td>8 / ( (開きカッコ)</td>
+                <td>8 / <strong>*</strong></td>
+            </tr>
+            <tr class="diff">
+                <td><span class="key-cap">9</span></td>
+                <td>9 / ) (閉じカッコ)</td>
+                <td>9 / <strong>(</strong></td>
+            </tr>
+            <tr class="diff">
+                <td><span class="key-cap">0</span></td>
+                <td>0 / 該当なし</td>
+                <td>0 / <strong>)</strong></td>
+            </tr>
+            <tr class="diff">
+                <td><span class="key-cap">ほ (-)</span></td>
+                <td>- / ＝</td>
+                <td>- / <strong>_</strong> (アンダースコア)</td>
+            </tr>
+            <tr class="diff">
+                <td><span class="key-cap">へ (^)</span></td>
+                <td>^ / ˜</td>
+                <td><strong>= / +</strong></td>
+            </tr>
+            <tr class="diff">
+                <td><span class="key-cap">￥</span></td>
+                <td>¥ / ｜</td>
+                <td>（US配列の認識では無効化、または <code>\</code> になることが多い）</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>2. 右手小指周辺（記号エリア）の比較</h2>
+    <p>プログラミングやLinuxの設定で最も重要なエリアです。US配列はコードが書きやすいように合理的に配置されています。</p>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 20%;">物理キーの位置 (JP基準)</th>
+                <th style="width: 40%;">JP配列としての出力 (単押し / Shift)</th>
+                <th style="width: 40%;">US配列として認識させた時の出力 (単押し / Shift)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="diff">
+                <td><span class="key-cap">れ (;)</span></td>
+                <td>; / +</td>
+                <td>; / <strong>:</strong> (コロン)</td>
+            </tr>
+            <tr class="diff">
+                <td><span class="key-cap">け (:)</span></td>
+                <td>: / ＊</td>
+                <td><strong>'</strong> / <strong>"</strong> (シングル/ダブルクォーテーション)</td>
+            </tr>
+            <tr class="diff">
+                <td><span class="key-cap">む (])</span></td>
+                <td>] / ｝</td>
+                <td><code>Enter</code> の一部、または <code>\ / |</code> に化ける（USのEnterは横長のため）</td>
+            </tr>
+            <tr class="diff">
+                <td><span class="key-cap">ら ([)</span></td>
+                <td>[ / ｛</td>
+                <td><strong>[ / {</strong></td>
+            </tr>
+            <tr class="diff">
+                <td><span class="key-cap">せ (])</span></td>
+                <td>] / ｝</td>
+                <td><strong>] / }</strong> （USはブラケットが左右に綺麗に並びます）</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>3. 最下段（親指・Modキー候補エリア）の比較</h2>
+    <p>ここがKanataでのカスタマイズのキモになります。</p>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 20%;">物理キーの位置 (JP基準)</th>
+                <th style="width: 40%;">JPキーボードのまま「US認識」にした場合</th>
+                <th style="width: 40%;">物理USキーボードに買い替えた場合</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="mod">
+                <td><span class="key-cap">無変換</span></td>
+                <td><strong>認識される（Kanataで自由に変更可能）</strong><br><span class="note">※USのキーコード（Alt等）を割り当てて極上Modにできる。</span></td>
+                <td><span class="diff">キー自体が存在しない</span><br><span class="note">（スペースキーの一部になっている）</span></td>
+            </tr>
+            <tr>
+                <td><span class="key-cap">スペース</span></td>
+                <td>通常の長さのスペース</td>
+                <td>横に長いスペース</td>
+            </tr>
+            <tr class="mod">
+                <td><span class="key-cap">変換</span></td>
+                <td><strong>認識される（Kanataで自由に変更可能）</strong><br><span class="note">※右側の親指Modとして活用可能。</span></td>
+                <td><span class="diff">キー自体が存在しない</span></td>
+            </tr>
+            <tr>
+                <td><span class="key-cap">左右の Alt</span></td>
+                <td>無変換・変換の外側にあるため、やや遠い</td>
+                <td>スペースのすぐ隣にあるため、<strong>親指Modとして最高に押しやすい</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div style="background-color: #dfe6e9; padding: 15px; border-radius: 5px; margin-top: 20px;">
+        <strong>視覚化してみてのポイント：</strong><br>
+        今のJPキーボードを「US認識」にすると、右手小指まわりの記号（特に <code>[ ]</code> が横並びになる点や、クォーテーション類）がUSの合理的な配置になります。その上で、<b>「無変換」「変換」という最高の位置にある物理キーをKanataのModキー（レイヤー切り替え）としてそのまま贅沢に使える</b>ため、実は「擬似US化」はLinuxユーザーにとって非常に強力な選択肢です。
+    </div>
+
+</body>
+</html>
