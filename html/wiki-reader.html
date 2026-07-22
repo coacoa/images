@@ -237,8 +237,20 @@ function showEmpty(msg) {
   displayControls.style.display = 'none';
 }
 
+// 参考文献・関連項目・外部リンクなど、読み上げに不要な末尾セクションの見出し名
+const BOILERPLATE_HEADINGS = [
+  '脚注', '出典', '注釈', '注記', '参照', '参考文献', '関連項目', '外部リンク', 'ソース',
+  'references', 'external links', 'see also', 'further reading', 'notes', 'citations', 'bibliography', 'sources'
+];
+
+function isBoilerplateHeading(text) {
+  const t = text.trim().toLowerCase();
+  return BOILERPLATE_HEADINGS.some(h => t === h.toLowerCase() || t.startsWith(h.toLowerCase()));
+}
+
 // 記事本文をプレーンテキストで取得し、段落・見出しをHTMLに整形して
-// 読み上げソフトが自然な順序で読めるようにする
+// 読み上げソフトが自然な順序で読めるようにする。
+// 参考文献・関連項目・外部リンク等の見出しに達したら、そこで本文を打ち切る。
 function renderExtract(title, extract, lang) {
   searchResultsEl.innerHTML = '';
   const lines = extract.split('\n');
@@ -247,6 +259,7 @@ function renderExtract(title, extract, lang) {
     if (!line.trim()) continue;
     const headingMatch = line.match(/^(={2,4})\s*(.+?)\s*\1$/);
     if (headingMatch) {
+      if (isBoilerplateHeading(headingMatch[2])) break;
       html += `<h2>${escapeHtml(headingMatch[2])}</h2>`;
     } else {
       html += `<p>${escapeHtml(line.trim())}</p>`;
@@ -267,7 +280,8 @@ function escapeHtml(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-// 記事本文（プレーンテキスト）を見出し・段落のHTML断片に変換するだけの補助関数
+// 記事本文（プレーンテキスト）を見出し・段落のHTML断片に変換する補助関数。
+// こちらも参考文献・関連項目・外部リンク等の見出しに達したら打ち切る。
 function extractToHtml(extract) {
   const lines = extract.split('\n');
   let html = '';
@@ -275,6 +289,7 @@ function extractToHtml(extract) {
     if (!line.trim()) continue;
     const headingMatch = line.match(/^(={2,4})\s*(.+?)\s*\1$/);
     if (headingMatch) {
+      if (isBoilerplateHeading(headingMatch[2])) break;
       html += `<h3>${escapeHtml(headingMatch[2])}</h3>`;
     } else {
       html += `<p>${escapeHtml(line.trim())}</p>`;
