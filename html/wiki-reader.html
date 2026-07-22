@@ -124,6 +124,20 @@
     border-bottom: 1px solid var(--border);
     padding-bottom: 4px;
   }
+  #content section {
+    margin-top: 2.4em;
+    padding-top: 1.2em;
+    border-top: 2px solid var(--border);
+  }
+  #content section:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+  #content h3 {
+    margin-top: 1.5em;
+    font-size: 1.1rem;
+  }
   .empty-state {
     color: var(--muted);
     padding: 40px 24px;
@@ -149,6 +163,10 @@
     <input type="text" id="query" placeholder="記事タイトルまたはキーワードを入力（例: 深層学習）">
     <button class="primary" id="fetchBtn">取得</button>
   </div>
+  <label style="display:flex; align-items:center; gap:6px; margin-top:10px; font-size:0.9rem; color:var(--muted);">
+    <input type="checkbox" id="combineMode">
+    見つかった候補記事をすべて結合して長文モードで読み込む
+  </label>
 </header>
 
 <div class="status" id="status"></div>
@@ -160,6 +178,9 @@
   <span id="sizeLabel"></span>
 </div>
 
+<div id="searchResultsHeader" style="display:none; padding: 0 24px 8px 24px;">
+  <button id="combineAllBtn">候補をすべて結合して読み込む</button>
+</div>
 <ul id="searchResults"></ul>
 
 <main id="main">
@@ -172,8 +193,15 @@
 const statusEl = document.getElementById('status');
 const mainEl = document.getElementById('main');
 const searchResultsEl = document.getElementById('searchResults');
+const searchResultsHeaderEl = document.getElementById('searchResultsHeader');
+const combineAllBtn = document.getElementById('combineAllBtn');
+const combineModeCheckbox = document.getElementById('combineMode');
 const displayControls = document.getElementById('displayControls');
 const sizeLabel = document.getElementById('sizeLabel');
+
+let lastResults = [];
+let lastLang = 'ja';
+let lastKeyword = '';
 
 let readingSize = parseFloat(localStorage.getItem('readingSize') || '1.15');
 applySize();
@@ -239,6 +267,64 @@ function escapeHtml(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+// 記事本文（プレーンテキスト）を見出し・段落のHTML断片に変換するだけの補助関数
+function extractToHtml(extract) {
+  const lines = extract.split('\n');
+  let html = '';
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const headingMatch = line.match(/^(={2,4})\s*(.+?)\s*\1$/);
+    if (headingMatch) {
+      html += `<h3>${escapeHtml(headingMatch[2])}</h3>`;
+    } else {
+      html += `<p>${escapeHtml(line.trim())}</p>`;
+    }
+  }
+  return html;
+}
+
+// 複数記事を1つの長文としてすべて結合し、記事ごとの見出し(h2)で区切って表示する
+async function fetchAllAndCombine(results, lang, keyword) {
+  searchResultsHeaderEl.style.display = 'none';
+  searchResultsEl.innerHTML = '';
+  let combinedHtml = '';
+  for (let i = 0; i < results.length; i++) {
+    const title = results[i].title;
+    setStatus(`(${i + 1}/${results.length}) 「${title}」を取得中...`);
+    try {
+      const data = await apiGet(lang, {
+        action: 'query',
+        prop: 'extracts',
+        explaintext: 1,
+        redirects: 1,
+        titles: title
+      });
+      const pages = data.query && data.query.pages;
+      const page = pages ? Object.values(pages)[0] : null;
+      if (!page || page.missing !== undefined) continue;
+      const pageUrl = `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(page.title.replace(/ /g, '_'))}`;
+      combinedHtml += `
+        <section>
+          <h2>${escapeHtml(page.title)}</h2>
+          <span class="source-link">出典: <a href="${pageUrl}" target="_blank" rel="noopener">${pageUrl}</a></span>
+          ${extractToHtml(page.extract || '')}
+        </section>
+      `;
+    } catch (e) {
+      continue;
+    }
+  }
+  mainEl.innerHTML = `
+    <article>
+      <h1>結合ドキュメント: ${escapeHtml(keyword)}</h1>
+      <span class="source-link">${results.length}件の候補記事を結合して表示しています。</span>
+      <div id="content">${combinedHtml || '<p>取得できる本文がありませんでした。</p>'}</div>
+    </article>
+  `;
+  displayControls.style.display = 'flex';
+  setStatus(`結合完了（${results.length}件）。読み上げ拡張機能から再生してください。`);
+}
+
 async function fetchArticle(title, lang) {
   setStatus(`「${title}」を取得中...`);
   try {
@@ -267,6 +353,7 @@ async function fetchArticle(title, lang) {
 
 async function search(keyword, lang) {
   setStatus(`「${keyword}」を検索中...`);
+  searchResultsHeaderEl.style.display = 'none';
   try {
     const data = await apiGet(lang, {
       action: 'query',
@@ -280,6 +367,15 @@ async function search(keyword, lang) {
       setStatus('');
       return;
     }
+    lastResults = results;
+    lastLang = lang;
+    lastKeyword = keyword;
+
+    if (combineModeCheckbox.checked) {
+      await fetchAllAndCombine(results, lang, keyword);
+      return;
+    }
+
     if (results.length === 1) {
       await fetchArticle(results[0].title, lang);
       return;
@@ -287,7 +383,8 @@ async function search(keyword, lang) {
     searchResultsEl.innerHTML = results.map(r =>
       `<li><button data-title="${escapeHtml(r.title)}">${escapeHtml(r.title)}</button></li>`
     ).join('');
-    showEmpty('候補から記事を選んでください。');
+    searchResultsHeaderEl.style.display = 'block';
+    showEmpty('候補から記事を選ぶか、上の「すべて結合して読み込む」で長文モードにできます。');
     setStatus(`${results.length}件の候補が見つかりました。`);
     searchResultsEl.querySelectorAll('button').forEach(btn => {
       btn.addEventListener('click', () => fetchArticle(btn.dataset.title, lang));
@@ -304,6 +401,12 @@ document.getElementById('fetchBtn').addEventListener('click', () => {
   if (!q) return;
   searchResultsEl.innerHTML = '';
   search(q, lang);
+});
+
+combineAllBtn.addEventListener('click', () => {
+  if (lastResults.length > 0) {
+    fetchAllAndCombine(lastResults, lastLang, lastKeyword);
+  }
 });
 
 document.getElementById('query').addEventListener('keydown', (e) => {
