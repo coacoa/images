@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wikipedia 読み上げビューア</title>
+<style>
+  :root {
+    --bg: #fdfdfb;
+    --text: #1e1e1e;
+    --muted: #6b6b6b;
+    --accent: #2f5d50;
+    --border: #ddd8ce;
+    --panel: #f4f2ec;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.9;
+  }
+  header {
+    padding: 20px 24px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 {
+    margin: 0 0 12px 0;
+    font-size: 1.3rem;
+    letter-spacing: 0.02em;
+  }
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  .controls input[type="text"] {
+    flex: 1 1 260px;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 1rem;
+  }
+  select, button {
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.95rem;
+    background: #fff;
+    cursor: pointer;
+  }
+  button.primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  button.primary:hover { opacity: 0.9; }
+  .status {
+    padding: 4px 24px;
+    color: var(--muted);
+    font-size: 0.9rem;
+    min-height: 1.4em;
+  }
+  .display-controls {
+    padding: 8px 24px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .display-controls button {
+    padding: 4px 10px;
+    font-size: 0.85rem;
+  }
+  #searchResults {
+    margin: 0 24px;
+    padding: 0;
+    list-style: none;
+  }
+  #searchResults li {
+    border-bottom: 1px solid var(--border);
+  }
+  #searchResults button {
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    padding: 10px 4px;
+    font-size: 0.95rem;
+  }
+  #searchResults button:hover { background: var(--panel); }
+
+  /* ここから下が読み上げ対象の本文領域。
+     Read Aloud等の拡張は可視テキストを上から順に読むため、
+     余計な装飾要素を挟まず、見出し・段落のみのシンプルな構造にしています。 */
+  main {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 32px 24px 80px 24px;
+  }
+  article h1 {
+    font-size: 1.8rem;
+    margin-bottom: 4px;
+  }
+  article .source-link {
+    display: block;
+    margin-bottom: 24px;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  article .source-link a { color: var(--muted); }
+  #content p {
+    margin: 0 0 1.3em 0;
+    font-size: var(--reading-size, 1.15rem);
+  }
+  #content h2 {
+    margin-top: 1.8em;
+    font-size: 1.3rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 4px;
+  }
+  .empty-state {
+    color: var(--muted);
+    padding: 40px 24px;
+    text-align: center;
+  }
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.8rem;
+    padding: 20px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Wikipedia 読み上げビューア</h1>
+  <div class="controls">
+    <select id="lang">
+      <option value="ja" selected>日本語版</option>
+      <option value="en">English</option>
+    </select>
+    <input type="text" id="query" placeholder="記事タイトルまたはキーワードを入力（例: 深層学習）">
+    <button class="primary" id="fetchBtn">取得</button>
+  </div>
+</header>
+
+<div class="status" id="status"></div>
+
+<div class="display-controls" id="displayControls" style="display:none;">
+  文字サイズ:
+  <button id="sizeDown">小</button>
+  <button id="sizeUp">大</button>
+  <span id="sizeLabel"></span>
+</div>
+
+<ul id="searchResults"></ul>
+
+<main id="main">
+  <div class="empty-state">記事タイトルを入力して「取得」を押してください。<br>あいまいなキーワードの場合は候補一覧から選べます。</div>
+</main>
+
+<footer>本文はWikipedia (CC BY-SA) から取得しています。</footer>
+
+<script>
+const statusEl = document.getElementById('status');
+const mainEl = document.getElementById('main');
+const searchResultsEl = document.getElementById('searchResults');
+const displayControls = document.getElementById('displayControls');
+const sizeLabel = document.getElementById('sizeLabel');
+
+let readingSize = parseFloat(localStorage.getItem('readingSize') || '1.15');
+applySize();
+
+function applySize() {
+  document.documentElement.style.setProperty('--reading-size', readingSize + 'rem');
+  sizeLabel.textContent = readingSize.toFixed(2) + 'rem';
+  localStorage.setItem('readingSize', readingSize);
+}
+document.getElementById('sizeUp').addEventListener('click', () => { readingSize = Math.min(2, readingSize + 0.1); applySize(); });
+document.getElementById('sizeDown').addEventListener('click', () => { readingSize = Math.max(0.8, readingSize - 0.1); applySize(); });
+
+function apiBase(lang) {
+  return `https://${lang}.wikipedia.org/w/api.php`;
+}
+
+async function apiGet(lang, params) {
+  const url = new URL(apiBase(lang));
+  params.format = 'json';
+  params.origin = '*';
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  const res = await fetch(url.toString());
+  if (!res.ok) throw new Error('ネットワークエラー: ' + res.status);
+  return res.json();
+}
+
+function setStatus(msg) {
+  statusEl.textContent = msg;
+}
+
+function showEmpty(msg) {
+  mainEl.innerHTML = `<div class="empty-state">${msg}</div>`;
+  displayControls.style.display = 'none';
+}
+
+// 記事本文をプレーンテキストで取得し、段落・見出しをHTMLに整形して
+// 読み上げソフトが自然な順序で読めるようにする
+function renderExtract(title, extract, lang) {
+  searchResultsEl.innerHTML = '';
+  const lines = extract.split('\n');
+  let html = '';
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const headingMatch = line.match(/^(={2,4})\s*(.+?)\s*\1$/);
+    if (headingMatch) {
+      html += `<h2>${escapeHtml(headingMatch[2])}</h2>`;
+    } else {
+      html += `<p>${escapeHtml(line.trim())}</p>`;
+    }
+  }
+  const pageUrl = `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))}`;
+  mainEl.innerHTML = `
+    <article>
+      <h1>${escapeHtml(title)}</h1>
+      <span class="source-link">出典: <a href="${pageUrl}" target="_blank" rel="noopener">${pageUrl}</a></span>
+      <div id="content">${html || '<p>本文を取得できませんでした。</p>'}</div>
+    </article>
+  `;
+  displayControls.style.display = 'flex';
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+async function fetchArticle(title, lang) {
+  setStatus(`「${title}」を取得中...`);
+  try {
+    const data = await apiGet(lang, {
+      action: 'query',
+      prop: 'extracts',
+      explaintext: 1,
+      redirects: 1,
+      titles: title
+    });
+    const pages = data.query && data.query.pages;
+    if (!pages) throw new Error('データ形式エラー');
+    const page = Object.values(pages)[0];
+    if (page.missing !== undefined) {
+      showEmpty(`「${title}」という記事は見つかりませんでした。検索候補から選び直してください。`);
+      setStatus('');
+      return;
+    }
+    renderExtract(page.title, page.extract || '', lang);
+    setStatus('取得完了。ページ上部の再生ボタン等の読み上げ拡張機能から再生してください。');
+  } catch (e) {
+    setStatus('');
+    showEmpty(`エラーが発生しました: ${e.message}<br>ブラウザのCORS制限の場合、このHTMLをローカルサーバー経由（例: <code>python3 -m http.server</code>）で開くと解決することがあります。`);
+  }
+}
+
+async function search(keyword, lang) {
+  setStatus(`「${keyword}」を検索中...`);
+  try {
+    const data = await apiGet(lang, {
+      action: 'query',
+      list: 'search',
+      srsearch: keyword,
+      srlimit: 8
+    });
+    const results = data.query && data.query.search;
+    if (!results || results.length === 0) {
+      showEmpty('該当する記事が見つかりませんでした。');
+      setStatus('');
+      return;
+    }
+    if (results.length === 1) {
+      await fetchArticle(results[0].title, lang);
+      return;
+    }
+    searchResultsEl.innerHTML = results.map(r =>
+      `<li><button data-title="${escapeHtml(r.title)}">${escapeHtml(r.title)}</button></li>`
+    ).join('');
+    showEmpty('候補から記事を選んでください。');
+    setStatus(`${results.length}件の候補が見つかりました。`);
+    searchResultsEl.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => fetchArticle(btn.dataset.title, lang));
+    });
+  } catch (e) {
+    setStatus('');
+    showEmpty(`エラーが発生しました: ${e.message}`);
+  }
+}
+
+document.getElementById('fetchBtn').addEventListener('click', () => {
+  const q = document.getElementById('query').value.trim();
+  const lang = document.getElementById('lang').value;
+  if (!q) return;
+  searchResultsEl.innerHTML = '';
+  search(q, lang);
+});
+
+document.getElementById('query').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') document.getElementById('fetchBtn').click();
+});
+</script>
+
+</body>
+</html>
