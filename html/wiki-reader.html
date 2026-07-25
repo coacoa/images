@@ -179,7 +179,8 @@
   <span style="margin-left:12px; border-left:1px solid var(--border); padding-left:12px;">
     <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
       <input type="checkbox" id="skipShortLines">
-      短い断片行（1行程度の文）を省略する
+      <input type="number" id="shortLineThreshold" min="1" step="1" value="40" style="width:56px; padding:2px 4px;">
+      文字未満の改行区切り行を省略する
     </label>
   </span>
 </div>
@@ -205,6 +206,7 @@ const combineModeCheckbox = document.getElementById('combineMode');
 const displayControls = document.getElementById('displayControls');
 const sizeLabel = document.getElementById('sizeLabel');
 const skipShortLinesCheckbox = document.getElementById('skipShortLines');
+const shortLineThresholdInput = document.getElementById('shortLineThreshold');
 
 let lastResults = [];
 let lastLang = 'ja';
@@ -215,12 +217,21 @@ let currentArticles = null;   // [{ title, extract, lang }]
 let currentIsCombined = false;
 let currentKeyword = '';
 
-const SHORT_LINE_THRESHOLD = 40; // これ未満の文字数の段落は断片（書誌一覧の1行エントリ等）とみなす
+function getShortLineThreshold() {
+  const v = parseInt(shortLineThresholdInput.value, 10);
+  return (Number.isFinite(v) && v > 0) ? v : 40;
+}
 
 skipShortLinesCheckbox.checked = localStorage.getItem('skipShortLines') === '1';
+shortLineThresholdInput.value = localStorage.getItem('shortLineThreshold') || '40';
+
 skipShortLinesCheckbox.addEventListener('change', () => {
   localStorage.setItem('skipShortLines', skipShortLinesCheckbox.checked ? '1' : '0');
   if (currentArticles) renderCurrent();
+});
+shortLineThresholdInput.addEventListener('input', () => {
+  localStorage.setItem('shortLineThreshold', String(getShortLineThreshold()));
+  if (currentArticles && skipShortLinesCheckbox.checked) renderCurrent();
 });
 
 let readingSize = parseFloat(localStorage.getItem('readingSize') || '1.15');
@@ -277,8 +288,8 @@ function isBoilerplateHeading(text) {
 
 // 記事本文（プレーンテキスト）を見出し・段落のHTML断片に変換する補助関数。
 // 参考文献・関連項目・外部リンク等の見出しに達したら打ち切る。
-// skipShort が true の場合、SHORT_LINE_THRESHOLD 未満の短い断片行（見出しは除く）を省略する。
-function extractToHtml(extract, headingTag, skipShort) {
+// skipShort が true の場合、threshold 文字未満の短い断片行（見出しは除く）を省略する。
+function extractToHtml(extract, headingTag, skipShort, threshold) {
   const lines = extract.split('\n');
   let html = '';
   for (const line of lines) {
@@ -289,7 +300,7 @@ function extractToHtml(extract, headingTag, skipShort) {
       html += `<${headingTag}>${escapeHtml(headingMatch[2])}</${headingTag}>`;
     } else {
       const text = line.trim();
-      if (skipShort && text.length < SHORT_LINE_THRESHOLD) continue;
+      if (skipShort && text.length < threshold) continue;
       html += `<p>${escapeHtml(text)}</p>`;
     }
   }
@@ -299,9 +310,10 @@ function extractToHtml(extract, headingTag, skipShort) {
 // 保持しているcurrentArticlesの内容から、現在のチェックボックス設定に基づいて再描画する
 function renderCurrent() {
   const skipShort = skipShortLinesCheckbox.checked;
+  const threshold = getShortLineThreshold();
   if (!currentIsCombined) {
     const a = currentArticles[0];
-    const html = extractToHtml(a.extract, 'h2', skipShort);
+    const html = extractToHtml(a.extract, 'h2', skipShort, threshold);
     const pageUrl = `https://${a.lang}.wikipedia.org/wiki/${encodeURIComponent(a.title.replace(/ /g, '_'))}`;
     mainEl.innerHTML = `
       <article>
@@ -317,7 +329,7 @@ function renderCurrent() {
         <section>
           <h2>${escapeHtml(a.title)}</h2>
           <span class="source-link">出典: <a href="${pageUrl}" target="_blank" rel="noopener">${pageUrl}</a></span>
-          ${extractToHtml(a.extract, 'h3', skipShort)}
+          ${extractToHtml(a.extract, 'h3', skipShort, threshold)}
         </section>
       `;
     }).join('');
