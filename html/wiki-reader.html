@@ -176,6 +176,12 @@
   <button id="sizeDown">小</button>
   <button id="sizeUp">大</button>
   <span id="sizeLabel"></span>
+  <span style="margin-left:12px; border-left:1px solid var(--border); padding-left:12px;">
+    <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+      <input type="checkbox" id="skipShortLines">
+      短い断片行（1行程度の文）を省略する
+    </label>
+  </span>
 </div>
 
 <div id="searchResultsHeader" style="display:none; padding: 0 24px 8px 24px;">
@@ -198,10 +204,24 @@ const combineAllBtn = document.getElementById('combineAllBtn');
 const combineModeCheckbox = document.getElementById('combineMode');
 const displayControls = document.getElementById('displayControls');
 const sizeLabel = document.getElementById('sizeLabel');
+const skipShortLinesCheckbox = document.getElementById('skipShortLines');
 
 let lastResults = [];
 let lastLang = 'ja';
 let lastKeyword = '';
+
+// 現在表示中のデータ（チェックボックス切り替え時に再取得せず再描画するために保持する）
+let currentArticles = null;   // [{ title, extract, lang }]
+let currentIsCombined = false;
+let currentKeyword = '';
+
+const SHORT_LINE_THRESHOLD = 20; // これ未満の文字数の段落は断片とみなす
+
+skipShortLinesCheckbox.checked = localStorage.getItem('skipShortLines') === '1';
+skipShortLinesCheckbox.addEventListener('change', () => {
+  localStorage.setItem('skipShortLines', skipShortLinesCheckbox.checked ? '1' : '0');
+  if (currentArticles) renderCurrent();
+});
 
 let readingSize = parseFloat(localStorage.getItem('readingSize') || '1.15');
 applySize();
@@ -237,6 +257,10 @@ function showEmpty(msg) {
   displayControls.style.display = 'none';
 }
 
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 // 参考文献・関連項目・外部リンクなど、読み上げに不要な末尾セクションの見出し名
 const BOILERPLATE_HEADINGS = [
   '脚注', '出典', '注釈', '注記', '参照', '参考文献', '関連項目', '外部リンク', 'ソース',
@@ -248,41 +272,10 @@ function isBoilerplateHeading(text) {
   return BOILERPLATE_HEADINGS.some(h => t === h.toLowerCase() || t.startsWith(h.toLowerCase()));
 }
 
-// 記事本文をプレーンテキストで取得し、段落・見出しをHTMLに整形して
-// 読み上げソフトが自然な順序で読めるようにする。
-// 参考文献・関連項目・外部リンク等の見出しに達したら、そこで本文を打ち切る。
-function renderExtract(title, extract, lang) {
-  searchResultsEl.innerHTML = '';
-  const lines = extract.split('\n');
-  let html = '';
-  for (const line of lines) {
-    if (!line.trim()) continue;
-    const headingMatch = line.match(/^(={2,4})\s*(.+?)\s*\1$/);
-    if (headingMatch) {
-      if (isBoilerplateHeading(headingMatch[2])) break;
-      html += `<h2>${escapeHtml(headingMatch[2])}</h2>`;
-    } else {
-      html += `<p>${escapeHtml(line.trim())}</p>`;
-    }
-  }
-  const pageUrl = `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))}`;
-  mainEl.innerHTML = `
-    <article>
-      <h1>${escapeHtml(title)}</h1>
-      <span class="source-link">出典: <a href="${pageUrl}" target="_blank" rel="noopener">${pageUrl}</a></span>
-      <div id="content">${html || '<p>本文を取得できませんでした。</p>'}</div>
-    </article>
-  `;
-  displayControls.style.display = 'flex';
-}
-
-function escapeHtml(s) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
 // 記事本文（プレーンテキスト）を見出し・段落のHTML断片に変換する補助関数。
-// こちらも参考文献・関連項目・外部リンク等の見出しに達したら打ち切る。
-function extractToHtml(extract) {
+// 参考文献・関連項目・外部リンク等の見出しに達したら打ち切る。
+// skipShort が true の場合、SHORT_LINE_THRESHOLD 未満の短い断片行（見出しは除く）を省略する。
+function extractToHtml(extract, headingTag, skipShort) {
   const lines = extract.split('\n');
   let html = '';
   for (const line of lines) {
@@ -290,19 +283,57 @@ function extractToHtml(extract) {
     const headingMatch = line.match(/^(={2,4})\s*(.+?)\s*\1$/);
     if (headingMatch) {
       if (isBoilerplateHeading(headingMatch[2])) break;
-      html += `<h3>${escapeHtml(headingMatch[2])}</h3>`;
+      html += `<${headingTag}>${escapeHtml(headingMatch[2])}</${headingTag}>`;
     } else {
-      html += `<p>${escapeHtml(line.trim())}</p>`;
+      const text = line.trim();
+      if (skipShort && text.length < SHORT_LINE_THRESHOLD) continue;
+      html += `<p>${escapeHtml(text)}</p>`;
     }
   }
   return html;
+}
+
+// 保持しているcurrentArticlesの内容から、現在のチェックボックス設定に基づいて再描画する
+function renderCurrent() {
+  const skipShort = skipShortLinesCheckbox.checked;
+  if (!currentIsCombined) {
+    const a = currentArticles[0];
+    const html = extractToHtml(a.extract, 'h2', skipShort);
+    const pageUrl = `https://${a.lang}.wikipedia.org/wiki/${encodeURIComponent(a.title.replace(/ /g, '_'))}`;
+    mainEl.innerHTML = `
+      <article>
+        <h1>${escapeHtml(a.title)}</h1>
+        <span class="source-link">出典: <a href="${pageUrl}" target="_blank" rel="noopener">${pageUrl}</a></span>
+        <div id="content">${html || '<p>本文を取得できませんでした。</p>'}</div>
+      </article>
+    `;
+  } else {
+    const combinedHtml = currentArticles.map(a => {
+      const pageUrl = `https://${a.lang}.wikipedia.org/wiki/${encodeURIComponent(a.title.replace(/ /g, '_'))}`;
+      return `
+        <section>
+          <h2>${escapeHtml(a.title)}</h2>
+          <span class="source-link">出典: <a href="${pageUrl}" target="_blank" rel="noopener">${pageUrl}</a></span>
+          ${extractToHtml(a.extract, 'h3', skipShort)}
+        </section>
+      `;
+    }).join('');
+    mainEl.innerHTML = `
+      <article>
+        <h1>結合ドキュメント: ${escapeHtml(currentKeyword)}</h1>
+        <span class="source-link">${currentArticles.length}件の候補記事を結合して表示しています。</span>
+        <div id="content">${combinedHtml || '<p>取得できる本文がありませんでした。</p>'}</div>
+      </article>
+    `;
+  }
+  displayControls.style.display = 'flex';
 }
 
 // 複数記事を1つの長文としてすべて結合し、記事ごとの見出し(h2)で区切って表示する
 async function fetchAllAndCombine(results, lang, keyword) {
   searchResultsHeaderEl.style.display = 'none';
   searchResultsEl.innerHTML = '';
-  let combinedHtml = '';
+  const articles = [];
   for (let i = 0; i < results.length; i++) {
     const title = results[i].title;
     setStatus(`(${i + 1}/${results.length}) 「${title}」を取得中...`);
@@ -317,27 +348,16 @@ async function fetchAllAndCombine(results, lang, keyword) {
       const pages = data.query && data.query.pages;
       const page = pages ? Object.values(pages)[0] : null;
       if (!page || page.missing !== undefined) continue;
-      const pageUrl = `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(page.title.replace(/ /g, '_'))}`;
-      combinedHtml += `
-        <section>
-          <h2>${escapeHtml(page.title)}</h2>
-          <span class="source-link">出典: <a href="${pageUrl}" target="_blank" rel="noopener">${pageUrl}</a></span>
-          ${extractToHtml(page.extract || '')}
-        </section>
-      `;
+      articles.push({ title: page.title, extract: page.extract || '', lang });
     } catch (e) {
       continue;
     }
   }
-  mainEl.innerHTML = `
-    <article>
-      <h1>結合ドキュメント: ${escapeHtml(keyword)}</h1>
-      <span class="source-link">${results.length}件の候補記事を結合して表示しています。</span>
-      <div id="content">${combinedHtml || '<p>取得できる本文がありませんでした。</p>'}</div>
-    </article>
-  `;
-  displayControls.style.display = 'flex';
-  setStatus(`結合完了（${results.length}件）。読み上げ拡張機能から再生してください。`);
+  currentArticles = articles;
+  currentIsCombined = true;
+  currentKeyword = keyword;
+  renderCurrent();
+  setStatus(`結合完了（${articles.length}件）。読み上げ拡張機能から再生してください。`);
 }
 
 async function fetchArticle(title, lang) {
@@ -358,7 +378,11 @@ async function fetchArticle(title, lang) {
       setStatus('');
       return;
     }
-    renderExtract(page.title, page.extract || '', lang);
+    searchResultsEl.innerHTML = '';
+    currentArticles = [{ title: page.title, extract: page.extract || '', lang }];
+    currentIsCombined = false;
+    currentKeyword = page.title;
+    renderCurrent();
     setStatus('取得完了。ページ上部の再生ボタン等の読み上げ拡張機能から再生してください。');
   } catch (e) {
     setStatus('');
