@@ -215,7 +215,7 @@ let currentArticles = null;   // [{ title, extract, lang }]
 let currentIsCombined = false;
 let currentKeyword = '';
 
-const SHORT_LINE_THRESHOLD = 20; // これ未満の文字数の段落は断片とみなす
+const SHORT_LINE_THRESHOLD = 40; // これ未満の文字数の段落は断片（書誌一覧の1行エントリ等）とみなす
 
 skipShortLinesCheckbox.checked = localStorage.getItem('skipShortLines') === '1';
 skipShortLinesCheckbox.addEventListener('change', () => {
@@ -262,6 +262,9 @@ function escapeHtml(s) {
 }
 
 // 参考文献・関連項目・外部リンクなど、読み上げに不要な末尾セクションの見出し名
+// （個別の単語をキリなく追加していくのではなく、これらの本当に定型的なものだけに限定。
+//  翻訳一覧・漫画化・翻案などの「短文が並ぶだけのリスト」は下のSHORT_LINE_THRESHOLDによる
+//  文字数ベースのフィルタ（短い断片行を省略するチェックボックス）側で処理する）
 const BOILERPLATE_HEADINGS = [
   '脚注', '出典', '注釈', '注記', '参照', '参考文献', '関連項目', '外部リンク', 'ソース',
   'references', 'external links', 'see also', 'further reading', 'notes', 'citations', 'bibliography', 'sources'
