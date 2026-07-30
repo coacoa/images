@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Obsidian Vimキーバインド完全一覧</title>
+    <title>Obsidian Vimキーバインド ＆ 独自機能ショートカット完全一覧</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -13,6 +13,7 @@
             --accent-color: #38bdf8;
             --border-color: #334155;
             --code-bg: #090d16;
+            --highlight-color: #34d399;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -71,28 +72,50 @@
         }
         code {
             background-color: var(--code-bg);
-            color: #34d399;
+            color: var(--highlight-color);
             padding: 2px 6px;
             border-radius: 4px;
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
             font-size: 0.9em;
             border: 1px solid var(--border-color);
         }
+        .note {
+            background-color: rgba(56, 189, 248, 0.05);
+            border-left: 4px solid var(--accent-color);
+            padding: 10px 15px;
+            margin: 10px 0;
+            font-size: 0.95em;
+            color: var(--text-muted);
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Obsidian Vim キーバインド完全一覧</h1>
-    <p class="subtitle">Obsidianの標準Vimモード（簡易Vimエディタ）で使える主要なコマンド・ショートカットの完全版</p>
+    <h1>Obsidian Vim ＆ 独自ショートカット完全一覧</h1>
+    <p class="subtitle">Vimモードの基本操作に加え、リンク移動・ノーマルモードからの独自機能拡張を完全網羅</p>
+
+    <!-- Obsidian特有のVim拡張機能 -->
+    <div class="section">
+        <h2>1. Obsidian特有のVim操作（リンク・見出し・履歴）</h2>
+        <div class="note">ノーマルモード時、ObsidianのVim設定（<code>Use Vim key bindings</code>）によって有効になる独自のキーマッピングです。</div>
+        <table>
+            <tr><th>操作</th><th>説明</th></tr>
+            <tr><td><code>gd</code></td><td>カーソル下の**内部リンクにジャンプ**（ファイルを開く）</td></tr>
+            <tr><td><code>[[</code></td><td>前の見出し（Heading）へジャンプ</td></tr>
+            <tr><td><code>]]</code></td><td>次の見出し（Heading）へジャンプ</td></tr>
+            <tr><td><code>Ctrl + o</code></td><td>ジャンプ履歴を**戻る**（ブラウザの「戻る」に相当）</td></tr>
+            <tr><td><code>Ctrl + i</code></td><td>ジャンプ履歴を**進む**</td></tr>
+        </table>
+    </div>
 
     <!-- モード切り替え -->
     <div class="section">
-        <h2>1. モードの切り替え</h2>
+        <h2>2. モードの切り替え</h2>
         <table>
             <tr><th>操作</th><th>説明</th></tr>
-            <tr><td><code>ESC</code></td><td>コマンドモード（ノーマルモード）へ移行</td></tr>
-            <tr><td><code>i</code></td><td>カートルの位置からインサートモードへ移行</td></tr>
+            <tr><td><code>ESC</code> または <code>Ctrl + c</code></td><td>コマンドモード（ノーマルモード）へ移行</td></tr>
+            <tr><td><code>i</code></td><td>カーソルの位置からインサートモードへ移行</td></tr>
             <tr><td><code>I</code></td><td>行頭に移動してインサートモードへ移行</td></tr>
             <tr><td><code>a</code></td><td>カーソルの右隣からインサートモードへ移行</td></tr>
             <tr><td><code>A</code></td><td>行末に移動してインサートモードへ移行</td></tr>
@@ -103,17 +126,13 @@
 
     <!-- カーソル移動 -->
     <div class="section">
-        <h2>2. カーソル移動（モーション）</h2>
+        <h2>3. カーソル移動（モーション）</h2>
         <table>
             <tr><th>操作</th><th>説明</th></tr>
             <tr><td><code>h</code> / <code>j</code> / <code>k</code> / <code>l</code></td><td>左 / 下 / 上 / 右へ移動</td></tr>
-            <tr><td><code>w</code></td><td>次の単語の先頭へ移動</td></tr>
-            <tr><td><code>b</code></td><td>前の単語の先頭へ移動</td></tr>
-            <tr><td><code>e</code></td><td>単語の末尾へ移動</td></tr>
-            <tr><td><code>0</code> / <code>^</code></td><td>行頭へ移動</td></tr>
-            <tr><td><code>$</code></td><td>行末へ移動</td></tr>
-            <tr><td><code>gg</code></td><td>ファイルの先頭へ移動</td></tr>
-            <tr><td><code>G</code></td><td>ファイルの末尾へ移動</td></tr>
+            <tr><td><code>w</code> / <code>b</code> / <code>e</code></td><td>次の単語の先頭 / 前の単語の先頭 / 単語の末尾へ移動</td></tr>
+            <tr><td><code>0</code> / <code>^</code> / <code>$</code></td><td>行頭（絶対） / 行頭（最初の文字） / 行末へ移動</td></tr>
+            <tr><td><code>gg</code> / <code>G</code></td><td>ファイルの先頭 / 末尾へ移動</td></tr>
             <tr><td><code>数字 + G</code></td><td>指定した行番号へ移動（例: <code>15G</code>）</td></tr>
             <tr><td><code>%</code></td><td>対応する括弧（() や {}）へジャンプ</td></tr>
         </table>
@@ -121,61 +140,53 @@
 
     <!-- 編集・削除 -->
     <div class="section">
-        <h2>3. 編集・削除・変更</h2>
+        <h2>4. 編集・削除・変更</h2>
         <table>
             <tr><th>操作</th><th>説明</th></tr>
             <tr><td><code>x</code></td><td>カーソル上の文字を削除</td></tr>
-            <tr><td><code>dd</code></td><td>行全体を削除（カット）</td></tr>
-            <tr><td><code>dw</code></td><td>1単語を削除</td></tr>
-            <tr><td><code>D</code></td><td>カーソルから行末までを削除</td></tr>
-            <tr><td><code>cc</code></td><td>行全体を削除してインサートモードへ</td></tr>
-            <tr><td><code>cw</code></td><td>単語を変更（削除してインサートモードへ）</td></tr>
+            <tr><td><code>dd</code> / <code>dw</code> / <code>D</code></td><td>行全体を削除 / 1単語削除 / カーソルから行末まで削除</td></tr>
+            <tr><td><code>cc</code> / <code>cw</code></td><td>行全体を変更（削除して入力） / 単語を変更して入力</td></tr>
             <tr><td><code>r</code></td><td>指定した1文字に置換</td></tr>
             <tr><td><code>~</code></td><td>大文字・小文字を反転</td></tr>
-            <tr><td><code>u</code></td><td>元に戻す（アンドゥ）</td></tr>
-            <tr><td><code>Ctrl + r</code> または <code>.</code></td><td>やり直す（リドゥ） / 直前の操作を繰り返し</td></tr>
+            <tr><td><code>u</code> / <code>Ctrl + r</code></td><td>元に戻す（アンドゥ） / やり直す（リドゥ）</td></tr>
+            <tr><td><code>.</code></td><td>直前の操作を繰り返す</td></tr>
         </table>
     </div>
 
     <!-- コピー・ペースト -->
     <div class="section">
-        <h2>4. コピー（ヤンク）・ペースト・ビジュアルモード</h2>
+        <h2>5. コピー・ペースト・ビジュアルモード</h2>
         <table>
             <tr><th>操作</th><th>説明</th></tr>
-            <tr><td><code>v</code></td><td>文字単位のビジュアルモード（選択開始）</td></tr>
-            <tr><td><code>V</code></td><td>行単位のビジュアルモード（行選択）</td></tr>
-            <tr><td><code>Ctrl + v</code></td><td>矩形選択モード</td></tr>
-            <tr><td><code>y</code></td><td>選択範囲をコピー（ヤンク）</td></tr>
-            <tr><td><code>yy</code></td><td>行全体をコピー</td></tr>
-            <tr><td><code>p</code></td><td>カーソルの後ろに貼り付け（プット）</td></tr>
-            <tr><td><code>P</code></td><td>カーソルの前に貼り付け</td></tr>
+            <tr><td><code>v</code> / <code>V</code> / <code>Ctrl + v</code></td><td>文字単位 / 行単位 / 矩形選択のビジュアルモード</td></tr>
+            <tr><td><code>y</code> / <code>yy</code></td><td>選択範囲をコピー（ヤンク） / 行全体をコピー</td></tr>
+            <tr><td><code>p</code> / <code>P</code></td><td>カーソルの後ろ / 前に貼り付け（プット）</td></tr>
         </table>
     </div>
 
-    <!-- 検索・置換 -->
+    <!-- 検索 -->
     <div class="section">
-        <h2>5. 検索・置換</h2>
+        <h2>6. 検索・置換</h2>
         <table>
             <tr><th>操作</th><th>説明</th></tr>
-            <tr><td><code>/</code></td><td>前方検索</td></tr>
-            <tr><td><code>?</code></td><td>後方検索</td></tr>
-            <tr><td><code>n</code> / <code>N</code></td><td>次の検索結果へ / 前の検索結果へ</td></tr>
+            <tr><td><code>/</code> / <code>?</code></td><td>前方検索 / 後方検索</td></tr>
+            <tr><td><code>n</code> / <code>N</code></td><td>次の検索結果 / 前の検索結果へ移動</td></tr>
             <tr><td><code>*</code></td><td>カーソル上の単語を前方一致で検索</td></tr>
             <tr><td><code>:%s/旧/新/g</code></td><td>ファイル内の文字列を一括置換</td></tr>
         </table>
     </div>
 
-    <!-- テキストオブジェクト -->
+    <!-- Obsidian標準の強力な機能ショートカットとの連携 -->
     <div class="section">
-        <h2>6. テキストオブジェクト（応用）</h2>
-        <p style="color: var(--text-muted); font-size: 0.9em; margin-top: 0;">動詞（<code>d</code>, <code>c</code>, <code>y</code>）と組み合わせることで、記号の内側などを効率よく操作できます。</p>
+        <h2>7. ノーマルモードから役立つObsidian標準ショートカット</h2>
+        <div class="note">Vimモード有効時でも、一部のグローバルショートカットやコマンドパレットを併用することでObsidianの操作性が飛躍的に向上します。</div>
         <table>
-            <tr><th>操作</th><th>説明</th></tr>
-            <tr><td><code>di(</code> または <code>di)</code></td><td>括弧 <code>()</code> の内側を削除</td></tr>
-            <tr><td><code>da(</code> または <code>da)</code></td><td>括弧 <code>()</code> ごとすべて削除</td></tr>
-            <tr><td><code>di{</code> / <code>da{</code></td><td>波括弧 <code>{}</code> の内側 / 全体を削除</td></tr>
-            <tr><td><code>di"</code> / <code>da"</code></td><td>ダブルクォーテーション <code>""</code> の内側 / 全体を削除</td></tr>
-            <tr><td><code>ci`</code></td><td>バックティック <code>``</code> の内側を変更（Markdownのインラインコード編集に便利）</td></tr>
+            <tr><th>操作 (Obsidian標準)</th><th>説明</th></tr>
+            <tr><td><code>Ctrl + p</code></td><td>**コマンドパレットを開く**（あらゆる機能・プラグインを文字入力で実行）</td></tr>
+            <tr><td><code>Ctrl + o</code></td><td>**クイックスイッチャー**（ファイル名検索して素早く切り替え）</td></tr>
+            <tr><td><code>Ctrl + Shift + f</code></td><td>ファイル全体（ヴォールト内）を横断検索</td></tr>
+            <tr><td><code>Ctrl + Shift + i</code></td><td>リンクを挿入（<code>[[]]</code> の補完メニューを呼び出し）</td></tr>
+            <tr><td><code>Ctrl + Enter</code></td><td>チェックボックスのオン/オフを切り替え</td></tr>
         </table>
     </div>
 
