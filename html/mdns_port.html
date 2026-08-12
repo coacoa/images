@@ -1,0 +1,366 @@
+html_content = """<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homelab / Loogle ポート・ロードマップ 備忘録</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 15mm 12mm;
+            background-color: #f8fafc;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, 'Hiragino Sans', 'Meiryo', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #1e293b;
+            background-color: #f8fafc;
+            font-size: 10pt;
+            line-height: 1.5;
+        }
+
+        .header {
+            background-color: #1e293b;
+            color: #ffffff;
+            margin: -15mm -12mm 20px -12mm;
+            padding: 20px 12mm;
+            border-bottom: 4px solid #3b82f6;
+        }
+
+        .header h1 {
+            margin: 0 0 6px 0;
+            font-size: 18pt;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            margin: 0;
+            font-size: 9.5pt;
+            color: #94a3b8;
+        }
+
+        .grid-2 {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+            margin-bottom: 16px;
+        }
+
+        .col {
+            display: table-cell;
+            vertical-align: top;
+            width: 50%;
+        }
+
+        .col:first-child {
+            padding-right: 8px;
+        }
+
+        .col:last-child {
+            padding-left: 8px;
+        }
+
+        .card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 12px 14px;
+            margin-bottom: 16px;
+        }
+
+        h2 {
+            font-size: 12pt;
+            margin: 0 0 10px 0;
+            color: #0f172a;
+            padding-left: 8px;
+            border-left: 4px solid #3b82f6;
+            page-break-after: avoid;
+        }
+
+        h3 {
+            font-size: 10.5pt;
+            margin: 10px 0 6px 0;
+            color: #334155;
+            page-break-after: avoid;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9pt;
+            margin-top: 6px;
+        }
+
+        th {
+            background-color: #f1f5f9;
+            color: #475569;
+            text-align: left;
+            padding: 6px 8px;
+            font-weight: 600;
+            border-bottom: 2px solid #cbd5e1;
+        }
+
+        td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        tr:nth-child(even) td {
+            background-color: #f8fafc;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            font-size: 7.5pt;
+            font-weight: 600;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .badge-existing {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-new {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .code-block {
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 8pt;
+            line-height: 1.4;
+            white-space: pre;
+            overflow-x: auto;
+            margin-top: 8px;
+        }
+
+        .timeline-item {
+            padding-left: 14px;
+            border-left: 2px solid #3b82f6;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -5px;
+            top: 4px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #3b82f6;
+        }
+
+        .timeline-title {
+            font-weight: bold;
+            font-size: 9.5pt;
+            color: #1e293b;
+        }
+
+        .timeline-desc {
+            font-size: 8.5pt;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        ul {
+            margin: 4px 0;
+            padding-left: 18px;
+            font-size: 8.5pt;
+        }
+
+        li {
+            margin-bottom: 3px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Loogle & Homelab ポート設計・設計メモ</h1>
+        <p>NixOS セルフホスト構成 / 既存環境維持 ＆ 今後追加用のポート管理規則</p>
+    </div>
+
+    <div class="card">
+        <h2>1. ポート番号割り当て管理表 (Port Rule)</h2>
+        <p style="margin: 0 0 8px 0; font-size: 8.5pt; color: #64748b;">既存のポート設定は一切変更せず、今後追加するサービスを用途別ブロック（81xx, 82xx, 83xx...）へ整理。</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 15%;">ポート</th>
+                    <th style="width: 25%;">サービス</th>
+                    <th style="width: 20%;">分類・区分</th>
+                    <th style="width: 40%;">説明 / 状態</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>9090</code></td>
+                    <td><strong>Cockpit</strong></td>
+                    <td>システム管理</td>
+                    <td><span class="badge badge-existing">既存維持</span> サーバー管理ダッシュボード</td>
+                </tr>
+                <tr>
+                    <td><code>8081</code></td>
+                    <td><strong>Nextcloud</strong></td>
+                    <td>ストレージ/クラウド</td>
+                    <td><span class="badge badge-existing">既存維持</span> Drive/Docs/Calendar 代替</td>
+                </tr>
+                <tr>
+                    <td><code>8088</code></td>
+                    <td><strong>Miniflux</strong></td>
+                    <td>情報 / RSS</td>
+                    <td><span class="badge badge-existing">既存維持</span> 軽量RSSリーダー</td>
+                </tr>
+                <tr>
+                    <td><code>8096</code></td>
+                    <td><strong>Jellyfin</strong></td>
+                    <td>メディア</td>
+                    <td><span class="badge badge-existing">既存維持</span> メディアサーバー</td>
+                </tr>
+                <tr>
+                    <td><code>2283</code></td>
+                    <td><strong>Immich</strong></td>
+                    <td>写真 / メディア</td>
+                    <td><span class="badge badge-existing">既存維持</span> Google Photos 代替</td>
+                </tr>
+                <tr>
+                    <td><code>81xx</code></td>
+                    <td>Vaultwarden / Syncthing など</td>
+                    <td>ストレージ・暗号化</td>
+                    <td><span class="badge badge-new">新規規則</span> 例: Vaultwarden (8180)</td>
+                </tr>
+                <tr>
+                    <td><code>82xx</code></td>
+                    <td>Audiobookshelf / Navidrome</td>
+                    <td>メディア拡張</td>
+                    <td><span class="badge badge-new">新規規則</span> 音声・音楽配信系サービス</td>
+                </tr>
+                <tr>
+                    <td><code>83xx</code></td>
+                    <td>SearXNG / AdGuard Home</td>
+                    <td>ネット・検索・セキュリティ</td>
+                    <td><span class="badge badge-new">新規規則</span> 例: SearXNG (8388)</td>
+                </tr>
+                <tr>
+                    <td><code>84xx</code></td>
+                    <td>Portainer / Ollama / ツール系</td>
+                    <td>開発・AI・自動化</td>
+                    <td><span class="badge badge-new">新規規則</span> 例: Portainer (8480)</td>
+                </tr>
+                <tr>
+                    <td><code>85xx</code></td>
+                    <td>LibreSpeed / Speedtest-Tracker</td>
+                    <td>速度測定・監視</td>
+                    <td><span class="badge badge-new">新規規則</span> 例: LibreSpeed (8580)</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="grid-2">
+        <div class="col">
+            <div class="card">
+                <h2>2. 脱Google (Loogle) の基本アプローチ</h2>
+                
+                <div class="timeline-item">
+                    <div class="timeline-title">Phase 1: ストレージ & 写真</div>
+                    <div class="timeline-desc">Immich (写真) と Nextcloud (ファイル/カレンダー) で手元にデータを完全移動。</div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-title">Phase 2: アカウント & パスワード</div>
+                    <div class="timeline-desc">Vaultwarden でパスワード管理、Authentik でSSO(一元ログイン)基盤構築。</div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-title">Phase 3: 検索 & DNS</div>
+                    <div class="timeline-desc">SearXNG (プライベートメタ検索) と AdGuard Home (追跡遮断) を導入。</div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-title">Phase 4: Gmail & ネットワーク</div>
+                    <div class="timeline-desc">独自ドメイン + Proton Mail / Stalwart (SMTP Relay) / Tailscale によるリモート接続。</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="card">
+                <h2>3. ローカル速度測定 (iperf3 GUI等)</h2>
+                <ul>
+                    <li><strong>LibreSpeed</strong> (旧 HTML5 Speedtest)<br>
+                        <span style="color:#64748b;">NixOS標準モジュール <code>services.librespeed-go</code> で即座にブラウザ測定可能。</span>
+                    </li>
+                    <li><strong>OpenSpeedtest</strong><br>
+                        <span style="color:#64748b;">10GbEなどの広帯域ローカル網向け、マルチスレッド対応。</span>
+                    </li>
+                    <li><strong>Speedtest-Tracker</strong><br>
+                        <span style="color:#64748b;">定期測定＆グラフ化ダッシュボード。</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>4. Homepage 設定 (`homepage/services.yaml`) 記述例</h2>
+        <div class="code-block"># サービス一覧（自宅サーバー liva）
+# ポート規則: 80xx(既存), 81xx(ストレージ), 82xx(メディア), 83xx(ネット/検索), 85xx(速度測定), 90xx(管理)
+
+environment.etc."homepage/services.yaml".text = ''
+  - System:
+      - Cockpit:
+          icon: cockpit.png
+          href: http://liva:9090
+
+  - Information & Search:
+      - Miniflux:
+          icon: miniflux.png
+          href: http://liva:8088
+      - SearXNG:
+          icon: searxng.png
+          href: http://liva:8388
+
+  - Storage & Security:
+      - Nextcloud:
+          icon: nextcloud.png
+          href: http://liva:8081
+      - Vaultwarden:
+          icon: vaultwarden.png
+          href: http://liva:8180
+
+  - Media:
+      - Immich:
+          icon: immich.png
+          href: http://liva:2283
+      - Jellyfin:
+          icon: jellyfin.png
+          href: http://liva:8096
+
+  - Network & Utilities:
+      - LibreSpeed:
+          icon: librespeed.png
+          href: http://liva:8580
+'';</div>
+    </div>
+
+</body>
+</html>
