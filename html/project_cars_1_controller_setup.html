@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project CARS 1 - GT7-Style Controller Setup Guide</title>
+<style>
+    :root {
+        --primary-color: #1e293b;
+        --accent-color: #2563eb;
+        --accent-light: #eff6ff;
+        --border-color: #cbd5e1;
+        --text-color: #0f172a;
+        --text-muted: #475569;
+        --bg-color: #f8fafc;
+        --card-bg: #ffffff;
+    }
+    
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        line-height: 1.6;
+        padding: 24px;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    header {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        color: #ffffff;
+        padding: 28px 32px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    header h1 {
+        font-size: 22px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        letter-spacing: -0.02em;
+    }
+
+    header p {
+        color: #94a3b8;
+        font-size: 14px;
+    }
+
+    .badge {
+        display: inline-block;
+        background-color: var(--accent-color);
+        color: white;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+    }
+
+    .section-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 20px 24px;
+        margin-bottom: 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .section-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 14px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid var(--accent-light);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .path-box {
+        background-color: var(--accent-light);
+        border-left: 4px solid var(--accent-color);
+        padding: 12px 16px;
+        border-radius: 0 6px 6px 0;
+        font-weight: 600;
+        font-size: 14px;
+        color: #1e3a8a;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        font-size: 13.5px;
+    }
+
+    th {
+        background-color: #f1f5f9;
+        color: var(--primary-color);
+        text-align: left;
+        padding: 10px 12px;
+        font-weight: 600;
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    td {
+        padding: 12px;
+        border-bottom: 1px solid #e2e8f0;
+        vertical-align: top;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f8fafc;
+    }
+
+    .eng-name {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-weight: 700;
+        color: #0f172a;
+        font-size: 13px;
+    }
+
+    .jp-name {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+
+    .value-tag {
+        display: inline-block;
+        background-color: #0f172a;
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 13px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        text-align: center;
+        min-width: 60px;
+    }
+
+    .key-setting {
+        background-color: #fef2f2 !important;
+    }
+
+    .key-setting .value-tag {
+        background-color: #dc2626;
+    }
+
+    ul {
+        padding-left: 20px;
+    }
+
+    li {
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+
+    .highlight {
+        font-weight: bold;
+        color: var(--accent-color);
+    }
+
+    footer {
+        text-align: center;
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 30px;
+        padding-top: 15px;
+        border-top: 1px solid var(--border-color);
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <span class="badge">Project CARS 1 (PS4/PS5)</span>
+    <h1>Controller Setup Guide / コントローラー最適化設定メモ</h1>
+    <p>Target: GT7-like handling response with Right-Stick Throttle (右スティックアクセル仕様)</p>
+</header>
+
+<div class="section-card">
+    <div class="section-title">📍 Menu Path / 設定画面へのアクセス</div>
+    <div class="path-box">
+        Options &gt; Controls &gt; Configuration / Advanced
+    </div>
+</div>
+
+<div class="section-card">
+    <div class="section-title">⚙️ Recommended Controller Settings / 推奨設定一覧</div>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 35%;">Setting Item (English / 日本語)</th>
+                <th style="width: 20%;">Value (設定値)</th>
+                <th style="width: 45%;">Description & Role (役割と理由)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <div class="eng-name">Steering Deadzone</div>
+                    <div class="jp-name">ステアリングデッドゾーン</div>
+                </td>
+                <td><span class="value-tag">0</span></td>
+                <td>Eliminate stick play for immediate response.<br>遊びを無くし、GT7のような即座のレスポンスにします。</td>
+            </tr>
+            <tr class="key-setting">
+                <td>
+                    <div class="eng-name">Steering Sensitivity ★</div>
+                    <div class="jp-name">ステアリング感度 [最重要]</div>
+                </td>
+                <td><span class="value-tag">0 – 10</span></td>
+                <td><strong>Crucial!</strong> Lowering this prevents twitchy/over-sensitive steering.<br>デフォルト(50)だと過敏すぎるため、大幅に下げて滑らかにします。</td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="eng-name">Throttle Deadzone</div>
+                    <div class="jp-name">スロットルデッドゾーン</div>
+                </td>
+                <td><span class="value-tag">0</span></td>
+                <td>Ensures immediate throttle response from right stick.<br>右スティックの動き始めからすぐにアクセルを反応させます。</td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="eng-name">Throttle Sensitivity</div>
+                    <div class="jp-name">スロットル感度</div>
+                </td>
+                <td><span class="value-tag">0 – 20</span></td>
+                <td>Allows precise, smooth acceleration with the right stick.<br>スティックでのアクセル微調整をしやすくします。</td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="eng-name">Braking Deadzone</div>
+                    <div class="jp-name">ブレーキデッドゾーン</div>
+                </td>
+                <td><span class="value-tag">0</span></td>
+                <td>Eliminates play in brake response.<br>ブレーキ操作の遊びを削除します。</td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="eng-name">Braking Sensitivity</div>
+                    <div class="jp-name">ブレーキ感度</div>
+                </td>
+                <td><span class="value-tag">0 – 20</span></td>
+                <td>Prevents sudden lockups on heavy braking.<br>ガツンと効きすぎてタイヤがロックするのを防ぎます。</td>
+            </tr>
+            <tr class="key-setting">
+                <td>
+                    <div class="eng-name">Speed Sensitivity ★</div>
+                    <div class="jp-name">速度感度 [最重要]</div>
+                </td>
+                <td><span class="value-tag">70 – 85</span></td>
+                <td>Stabilizes high-speed handling like GT7.<br>高速走行時にハンドルが切れすぎるのを抑え、GT7風の安定感を出します。</td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="eng-name">Controller Filtering Sensitivity</div>
+                    <div class="jp-name">コントローラーフィルター感度</div>
+                </td>
+                <td><span class="value-tag">35 – 50</span></td>
+                <td>Smoothens sudden stick inputs.<br>急激なスティック入力をマイルドに補正します。</td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="eng-name">Controller Input Mode</div>
+                    <div class="jp-name">コントローラー入力モード</div>
+                </td>
+                <td><span class="value-tag">3</span></td>
+                <td>Applies optimal controller algorithm.<br>パッド操作に最適化された挙動アルゴリズムを適用します。</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="section-card">
+    <div class="section-title">🔧 Fine-Tuning Guide / フィーリング微調整</div>
+    <ul>
+        <li>
+            <strong>If turning feels understeer / 曲がり足りないと感じる場合:</strong><br>
+            Decrease <span class="highlight">Speed Sensitivity</span> (e.g. 80 → 70) or slightly increase <span class="highlight">Steering Sensitivity</span> (e.g. 5 → 15).
+        </li>
+        <li style="margin-top: 10px;">
+            <strong>If the car feels nervous or spins easily / カクついてスピンしやすい場合:</strong><br>
+            Set <span class="highlight">Steering Sensitivity</span> to <strong>0</strong> and increase <span class="highlight">Speed Sensitivity</span> up to <strong>85</strong>.
+        </li>
+    </ul>
+</div>
+
+<div class="section-card">
+    <div class="section-title">🎮 Right Stick Throttle Tips / 右スティックアクセル（縦入力）のコツ</div>
+    <p style="font-size: 13.5px;">
+        When using Right Stick UP (Throttle) / DOWN (Brake):<br>
+        Keep deadzones at <strong>0</strong> and sensitivities low (<strong>0–20</strong>). This mimics GT7's analog trigger/stick precision, allowing fine modulation without accidental diagonal inputs.
+        <br><br>
+        右スティック（上：アクセル / 下：ブレーキ）操作では、デッドゾーンを0、感度を0〜20の低めに設定することで、GT7のような繊細なアクセル開度調整が可能になります。
+    </p>
+</div>
+
+<footer>
+    Project CARS 1 Controller Optimization Memo — Bilingual Reference Guide
+</footer>
+
+</body>
+</html>
