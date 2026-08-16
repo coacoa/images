@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenWrt (ac16) mDNS & AdGuard Home 設定作業メモ</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --success: #4ade80;
+    --warning: #facc15;
+    --code-bg: #020617;
+    --border: #334155;
+  }
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+  }
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+  }
+  h1 {
+    color: var(--accent);
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 10px;
+    font-size: 1.8rem;
+  }
+  h2 {
+    color: #f8fafc;
+    margin-top: 30px;
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+  }
+  .badge {
+    background: #0369a1;
+    color: #e0f2fe;
+    font-size: 0.8rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 10px;
+    text-align: left;
+  }
+  th {
+    background: #0f172a;
+    color: var(--accent);
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    overflow-x: auto;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9rem;
+    color: #f1f5f9;
+  }
+  code {
+    font-family: 'Courier New', Courier, monospace;
+    color: var(--accent);
+  }
+  .note {
+    background: rgba(250, 204, 21, 0.1);
+    border-left: 4px solid var(--warning);
+    padding: 10px 15px;
+    margin: 10px 0;
+    font-size: 0.95rem;
+  }
+  .success-note {
+    background: rgba(74, 222, 128, 0.1);
+    border-left: 4px solid var(--success);
+    padding: 10px 15px;
+    margin: 10px 0;
+    font-size: 0.95rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>OpenWrt (ac16) mDNS導入 & AdGuard Home ポート調整メモ</h1>
+
+  <div class="card">
+    <span class="badge">環境情報</span>
+    <ul>
+      <li><strong>OS:</strong> OpenWrt 23.05.6</li>
+      <li><strong>ホスト名:</strong> <code>ac16</code>（変更済み）</li>
+      <li><strong>ネットワーク構成:</strong>
+        <ul>
+          <li>WAN/上流側: <code>192.168.1.1/24</code></li>
+          <li>LAN/Wi-Fi側: <code>192.168.230.1/24</code> (NAT構成)</li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+
+  <h2>1. ポート割り当て構成図</h2>
+  <div class="card">
+    <p><code>5353/UDP</code> ポートにおける <code>AdGuard Home</code> と <code>umdns</code> の競合を回避するため、以下の配置に整理。</p>
+    <table>
+      <thead>
+        <tr>
+          <th>サービス</th>
+          <th>ポート</th>
+          <th>役割・接続フロー</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>dnsmasq</strong></td>
+          <td><code>53</code></td>
+          <td>LAN端末からのDNS問い合わせを受信 ➔ <code>127.0.0.1#5553</code> へ転送</td>
+        </tr>
+        <tr>
+          <td><strong>AdGuard Home (DNS)</strong></td>
+          <td><code>5553</code></td>
+          <td>広告ブロック処理を実施 ➔ 外部DNS (1.1.1.1等) へ上流問い合わせ</td>
+        </tr>
+        <tr>
+          <td><strong>umdns (mDNS)</strong></td>
+          <td><code>5353</code></td>
+          <td><code>ac16.local</code> の名前解決に対応 (mDNS標準規格のため変更不可)</td>
+        </tr>
+        <tr>
+          <td><strong>AdGuard Home (WebUI)</strong></td>
+          <td><code>8080</code></td>
+          <td>管理画面アクセス用 (<code>http://ac16.local:8080</code>)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>2. 実施手順ログ</h2>
+
+  <div class="card">
+    <h3>Step 1. ホスト名を `ac16` に変更</h3>
+    <p><code>/etc/config/system</code> を書き換えて固定。</p>
+    <pre><code>vi /etc/config/system
+
+# 以下の行を変更
+config system
+        option hostname 'ac16'
+
+# 反映
+hostname ac16
+/etc/init.d/system reload</code></pre>
+  </div>
+
+  <div class="card">
+    <h3>Step 2. `umdns` (mDNS) のインストール</h3>
+    <pre><code>opkg update
+opkg install umdns
+/etc/init.d/umdns enable
+/etc/init.d/umdns start</code></pre>
+  </div>
+
+  <div class="card">
+    <h3>Step 3. AdGuard Home の DNS ポート変更 (`5553`)</h3>
+    <p>設定ファイルの <code>dns.port</code> を <code>5553</code> に変更して衝突回避。</p>
+    <pre><code>vi /etc/adguardhome.yaml
+
+# 変更箇所
+dns:
+  bind_hosts:
+    - 0.0.0.0
+  port: 5553</code></pre>
+  </div>
+
+  <div class="card">
+    <h3>Step 4. dnsmasq の転送先指定 & DHCPオプション確認</h3>
+    <p><code>dnsmasq</code> から AdGuard Home (<code>5553</code>) へフォワードを設定。</p>
+    <pre><code># 上流を 127.0.0.1#5553 に指定
+uci del dhcp.@dnsmasq[0].server 2>/dev/null
+uci add_list dhcp.@dnsmasq[0].server='127.0.0.1#5553'
+uci set dhcp.@dnsmasq[0].noresolv='1'
+
+# LAN側端末に配るDNSサーバーを自身(192.168.230.1)に固定
+uci del dhcp.lan.dhcp_option 2>/dev/null
+uci add_list dhcp.lan.dhcp_option='6,192.168.230.1'
+
+uci commit dhcp
+/etc/init.d/dnsmasq restart</code></pre>
+  </div>
+
+  <div class="card">
+    <h3>Step 5. サービスの全再起動</h3>
+    <pre><code>/etc/init.d/adguardhome restart
+/etc/init.d/dnsmasq restart
+/etc/init.d/umdns restart</code></pre>
+  </div>
+
+  <h2>3. 状態確認用コマンド（トラブルシューティング）</h2>
+  <div class="card">
+    <p><strong>ポート確認:</strong></p>
+    <pre><code>netstat -tulpn | grep -E ":53|:5553"</code></pre>
+
+    <p><strong>AdGuard Home の設定エラーチェック:</strong></p>
+    <pre><code>/usr/bin/AdGuardHome --config /etc/adguardhome.yaml --check-config</code></pre>
+
+    <p><strong>DNS応答テスト:</strong></p>
+    <pre><code>nslookup google.com 127.0.0.1#5553</code></pre>
+  </div>
+
+  <div class="success-note">
+    <strong>接続確認用URL:</strong><br>
+    ・OpenWrt 管理画面: <a href="http://ac16.local" target="_blank" style="color:var(--accent);">http://ac16.local</a><br>
+    ・AdGuard Home 管理画面: <a href="http://ac16.local:8080" target="_blank" style="color:var(--accent);">http://ac16.local:8080</a>
+  </div>
+
+</div>
+
+</body>
+</html>
