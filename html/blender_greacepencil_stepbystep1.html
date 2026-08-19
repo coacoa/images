@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Blender Grease Pencil 学習ステップ</title>
+<style>
+body { font-family: sans-serif; line-height: 1.7; padding: 20px; }
+h2 { border-left: 6px solid #4a90e2; padding-left: 10px; }
+code { background: #eee; padding: 2px 4px; }
+ul { margin-bottom: 20px; }
+</style>
+</head>
+<body>
+
+<h1>Blender Grease Pencil 学習ステップ（2.7 / 2.8+ 共通）</h1>
+
+<h2>1. 基本操作の理解</h2>
+<ul>
+  <li><strong>Grease Pencil の追加</strong><br>
+    2.7: <code>N パネル → Grease Pencil</code><br>
+    2.8+: <code>Shift + A → Grease Pencil → Blank / Stroke / Monkey</code>
+  </li>
+  <li><strong>描画モード切替</strong><br>
+    2.7: <code>D + LMB</code>（デフォルト）<br>
+    2.8+: <code>Ctrl + Tab → Draw</code>
+  </li>
+  <li><strong>基本ショートカット</strong><br>
+    描画: <code>D + LMB</code>（2.7） / <code>Draw モード</code><br>
+    消しゴム: <code>E</code><br>
+    ストローク選択: <code>L</code> / <code>A</code><br>
+    移動: <code>G</code> / 回転: <code>R</code> / スケール: <code>S</code>
+  </li>
+</ul>
+
+<h2>2. ストローク編集の基礎</h2>
+<ul>
+  <li><strong>Edit モード</strong><br>
+    2.7: <code>Tab</code>（Grease Pencil → Edit）<br>
+    2.8+: <code>Ctrl + Tab → Edit</code>
+  </li>
+  <li><strong>ポイント編集</strong><br>
+    選択: <code>B</code> / <code>C</code><br>
+    スムーズ: <code>Shift + S</code><br>
+    太さ変更: <code>N → Stroke → Thickness</code>
+  </li>
+</ul>
+
+<h2>3. レイヤー管理</h2>
+<ul>
+  <li>レイヤー追加: <code>+</code></li>
+  <li>レイヤーのロック・表示切替</li>
+  <li>アニメ用に「背景」「キャラ」「線画」など分離</li>
+</ul>
+
+<h2>4. マテリアル（色・線幅）</h2>
+<ul>
+  <li>色設定: <code>Properties → Material</code></li>
+  <li>線幅: <code>Stroke Thickness</code></li>
+  <li>塗りつぶし: <code>Fill</code></li>
+</ul>
+
+<h2>5. アニメーションの基礎</h2>
+<ul>
+  <li><strong>キーフレーム追加</strong>: <code>I</code></li>
+  <li><strong>フレーム移動</strong>: <code>左右矢印キー</code></li>
+  <li><strong>Onion Skin</strong>: <code>Viewport Display → Onion Skin</code></li>
+</ul>
+
+<h2>6. 実践ステップ（順番）</h2>
+<ol>
+  <li>線を描く（Draw）</li>
+  <li>ポイント編集（Edit）</li>
+  <li>レイヤー分け</li>
+  <li>色・線幅設定</li>
+  <li>簡単な動き（2〜3フレーム）</li>
+  <li>短いループアニメ（歩き・揺れ）</li>
+</ol>
+
+<h2>7. 2.7 系で注意する点</h2>
+<ul>
+  <li>描画は <code>D + LMB</code> が基本</li>
+  <li>Grease Pencil は「補助線」扱い → 2.8 以降のような完全なオブジェクトではない</li>
+  <li>アニメ機能は簡易的（本格的には 2.8+ 推奨）</li>
+</ul>
+
+</body>
+</html>
+
