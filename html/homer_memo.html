@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Homer Dashboard Config Memo</title>
+  <style>
+    :root {
+      --bg: #121212;
+      --card-bg: #1e1e1e;
+      --border: #333333;
+      --text: #e0e0e0;
+      --text-sub: #a0a0a0;
+      --code-bg: #2a2a2a;
+      --accent: #4a90e2;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: monospace, sans-serif;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    h1 {
+      font-size: 1.5rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      color: var(--accent);
+    }
+    h2 {
+      font-size: 1.2rem;
+      margin-top: 24px;
+      color: #fff;
+    }
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+    li {
+      margin-bottom: 8px;
+    }
+    code {
+      background-color: var(--code-bg);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.9em;
+      color: #e6c07b;
+    }
+    pre {
+      background-color: var(--code-bg);
+      padding: 12px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+    }
+    .date {
+      font-size: 0.85rem;
+      color: var(--text-sub);
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Homer Dashboard Configuration Memo</h1>
+  <p class="date">最終更新: 2026-08-21</p>
+
+  <div class="card">
+    <h2>1. 改修の概要</h2>
+    <ul>
+      <li>NixOS (Flakes) 上で Nginx + Homer によるローカルダッシュボードを構築。</li>
+      <li>画面最上部のアナウンス領域（<code>message</code>）に NixOS の日常メンテナンス用コマンド（クリーンアップ／再構築）を配置。</li>
+      <li>一時的に非表示にしたい項目は YAML のコメントアウト（<code>#</code>）で制御。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>2. 設定時のハマりポイント・ノウハウ</h2>
+    <ul>
+      <li>
+        <strong>YAMLのブロック構文（<code>content: |</code>）:</strong><br>
+        <code>content</code> 内にダブルクォーテーションや HTML タグ（<code>&lt;code&gt;</code> 等）を直接書くと、Nix の多行文字列（<code>''</code>）や YAML 解析でクォートエラー（<code>YAMLParseError</code>）が発生する。多行テキストには <code>|</code> を使用する。
+      </li>
+      <li>
+        <strong><code>message</code> の配置場所:</strong><br>
+        Homer の仕様上、<code>message</code> ブロックは YAML ファイル内の記述順に関係なく、**常に画面最上部（ヘッダー直下）に強制配置**される。
+      </li>
+      <li>
+        <strong>リンクの無効化（コメントアウト）:</strong><br>
+        サービス単位やアイテム単位で頭に <code>#</code> を付けて無効化する。
+      </li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>3. 登録済み NixOS コマンド (Cheatsheet)</h2>
+    <pre><code># ガベージコレクション（1日以上前の世代を削除）
+sudo nix-collect-garbage --delete-older-than 1d
+
+# Nix Store の最適化（ハードリンク化）
+nixos-rebuild switch --option store-optimise true
+
+# Flake からのシステム再構築
+sudo nixos-rebuild switch --flake .#hostname</code></pre>
+  </div>
+
+</body>
+</html>
