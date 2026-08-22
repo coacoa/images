@@ -2,16 +2,18 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>Obsidian / nvim リンク操作 早見表</title>
+<title>Obsidian / nvim 操作 完全早見表</title>
 <style>
   :root {
     --bg: #1e1e2e;
     --panel: #282a3a;
     --accent: #8ab4f8;
     --accent2: #f5c2e7;
+    --accent3: #a6e3a1;
     --text: #e0e0e8;
     --muted: #9a9ab0;
     --border: #3a3a4d;
+    --warn: #f9a86a;
   }
   body {
     margin: 0;
@@ -20,119 +22,227 @@
     color: var(--text);
     font-family: -apple-system, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
     line-height: 1.6;
+    max-width: 980px;
   }
   h1 {
-    font-size: 1.4rem;
+    font-size: 1.5rem;
     color: var(--accent);
     border-bottom: 2px solid var(--border);
     padding-bottom: 0.5rem;
+  }
+  h2 {
+    font-size: 1.05rem;
+    color: var(--accent3);
+    margin-top: 2.2rem;
+    margin-bottom: 0.4rem;
+    padding-left: 0.5rem;
+    border-left: 4px solid var(--accent3);
   }
   .note {
     background: #33334a;
     border-left: 4px solid var(--accent2);
     padding: 0.8rem 1rem;
-    margin: 1rem 0 2rem;
-    font-size: 0.9rem;
+    margin: 1rem 0 1.5rem;
+    font-size: 0.88rem;
     color: var(--muted);
     border-radius: 4px;
   }
   table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
   }
   th, td {
     text-align: left;
-    padding: 0.7rem 0.9rem;
+    padding: 0.6rem 0.8rem;
     border-bottom: 1px solid var(--border);
     vertical-align: top;
+    font-size: 0.92rem;
   }
   th {
     color: var(--accent);
-    font-size: 0.85rem;
+    font-size: 0.78rem;
     text-transform: uppercase;
     letter-spacing: 0.03em;
   }
   td.op { font-weight: bold; white-space: nowrap; }
   code {
     background: #11111c;
-    padding: 0.15rem 0.4rem;
+    padding: 0.12rem 0.4rem;
     border-radius: 3px;
     color: var(--accent2);
     font-size: 0.92em;
   }
-  .caveat {
-    font-size: 0.82rem;
-    color: var(--muted);
+  .req {
+    display: inline-block;
+    margin-top: 0.3rem;
+    font-size: 0.76rem;
+    color: var(--warn);
+    background: #3a2f22;
+    padding: 0.1rem 0.45rem;
+    border-radius: 3px;
+  }
+  .ok {
+    display: inline-block;
+    margin-top: 0.3rem;
+    font-size: 0.76rem;
+    color: var(--accent3);
+    background: #22331f;
+    padding: 0.1rem 0.45rem;
+    border-radius: 3px;
   }
 </style>
 </head>
 <body>
 
-<h1>Obsidian ⇔ nvim(obsidian.nvim) リンク操作 早見表</h1>
+<h1>Obsidian ⇔ nvim(obsidian.nvim) 完全操作早見表</h1>
 
 <div class="note">
-現状の設定ファイル(<code>home.obsidian.nix</code> / <code>home.vi.nix</code>)を前提にしています。<br>
-obsidian.nvim側は <code>mappings</code> を明示的に上書きしていないため、プラグインのデフォルトキーマップがそのまま有効です。<br>
-telescope.nvim 等は入れていないため、クイックスイッチャー系コマンドは動作しない可能性があります(下表に注記)。
+現状の flake(<code>home.obsidian.nix</code> / <code>home.vi.nix</code>)を前提。<br>
+<code>mapleader = " "</code>(スペース)なので、<code>&lt;leader&gt;</code> は「スペースキー」に読み替えてください。<br>
+<span class="req">要追加設定</span> の項目は、今のnix設定に依存パッケージが無いため現状は使えません。<span class="ok">動作可</span> は現状のままで使えるものです。
 </div>
 
+<h2>① リンク・ナビゲーション</h2>
 <table>
-<tr>
-  <th>操作</th>
-  <th>Obsidianアプリ(Vimモード)</th>
-  <th>nvim(obsidian.nvim)</th>
-</tr>
-
+<tr><th>操作</th><th>Obsidianアプリ(Vim mode)</th><th>nvim(obsidian.nvim)</th></tr>
 <tr>
   <td class="op">リンクへジャンプ</td>
-  <td><code>gf</code>(ノーマルモード、カーソルをリンク内に置いて)</td>
-  <td><code>gf</code>(プラグインの<code>gf_passthrough</code>により、カーソルが<code>[[リンク]]</code>上ならObsidian側のジャンプ、それ以外は通常のvim <code>gf</code>として動作)</td>
+  <td><code>gf</code>(カーソルをリンク内に置いて)</td>
+  <td><code>gf</code>(<span class="ok">動作可</span> — デフォルトの<code>gf_passthrough</code>でリンク判定→ジャンプ)</td>
 </tr>
-
 <tr>
-  <td class="op">ジャンプ履歴を戻る/進む</td>
+  <td class="op">ジャンプ履歴 戻る/進む</td>
   <td><code>Ctrl+Alt+←</code> / <code>Ctrl+Alt+→</code></td>
-  <td><code>Ctrl-o</code>(戻る) / <code>Ctrl-i</code>(進む) — vim標準のジャンプリスト</td>
+  <td><code>Ctrl-o</code> / <code>Ctrl-i</code>(vim標準ジャンプリスト)</td>
 </tr>
-
 <tr>
-  <td class="op">新規リンク作成</td>
-  <td><code>[[</code> と入力 → サジェスト表示 → 選択で自動補完</td>
-  <td>手入力の <code>[[note]]</code>、または今回追加した独自マッピング <code>&lt;C-y&gt;s</code>(カーソル下の単語/選択範囲を <code>[[ ]]</code> で囲む)</td>
-</tr>
-
-<tr>
-  <td class="op">バックリンク確認</td>
-  <td>右サイドバーの「バックリンク」パネル</td>
+  <td class="op">バックリンク一覧</td>
+  <td>右サイドバー「バックリンク」パネル</td>
   <td><code>:ObsidianBacklinks</code></td>
 </tr>
-
 <tr>
-  <td class="op">クイックオープン/検索</td>
-  <td><code>Ctrl+O</code>(Quick switcher)</td>
-  <td class="caveat"><code>:ObsidianQuickSwitch</code>(要 telescope.nvim — 現状の flake には未導入のため、追加しないと動きません)</td>
+  <td class="op">現在のノートのリンク一覧</td>
+  <td>アウトラインパネル(見出しのみ、リンクは非対応)</td>
+  <td><code>:ObsidianLinks</code></td>
 </tr>
-
 <tr>
-  <td class="op">リンク補完(入力中)</td>
-  <td><code>[[</code> でファイル名サジェスト自動表示</td>
-  <td class="caveat">nvim-cmp + <code>cmp-obsidian</code> 未導入のため自動サジェストなし。手打ちで <code>[[ファイル名]]</code> を入力する必要あり</td>
+  <td class="op">Obsidianアプリで開く</td>
+  <td>(既にアプリ内)</td>
+  <td><code>:ObsidianOpen</code>(nvimで編集中のノートをObsidianアプリ側で開く)</td>
 </tr>
+</table>
 
+<h2>② ノート作成・編集</h2>
+<table>
+<tr><th>操作</th><th>Obsidianアプリ</th><th>nvim(obsidian.nvim)</th></tr>
+<tr>
+  <td class="op">新規ノート作成</td>
+  <td><code>Ctrl+N</code></td>
+  <td><code>:ObsidianNew [タイトル]</code></td>
+</tr>
+<tr>
+  <td class="op">選択テキストをリンク化+新規ノート作成</td>
+  <td>選択→右クリック→「Create note」</td>
+  <td><code>:ObsidianLinkNew</code>(visualモードで選択後)</td>
+</tr>
+<tr>
+  <td class="op">既存ノートへリンク化</td>
+  <td><code>[[</code> と入力しサジェストから選択</td>
+  <td><code>:ObsidianLink</code>(visualモードで選択後、既存ノートを指定してリンク化)</td>
+</tr>
+<tr>
+  <td class="op">選択範囲を [[ ]] で囲む</td>
+  <td>—</td>
+  <td><code>&lt;C-y&gt;s</code>(今回の独自マッピング、ノーマル/ビジュアル両対応)</td>
+</tr>
+<tr>
+  <td class="op">選択範囲を別ノートへ切り出し</td>
+  <td>選択→右クリック→「Extract to new note」</td>
+  <td><code>:ObsidianExtractNote</code></td>
+</tr>
+<tr>
+  <td class="op">ノートのリネーム(リンク自動更新込み)</td>
+  <td>F2 または右クリック→Rename</td>
+  <td><code>:ObsidianRename</code></td>
+</tr>
+</table>
+
+<h2>③ 検索・移動</h2>
+<table>
+<tr><th>操作</th><th>Obsidianアプリ</th><th>nvim(obsidian.nvim)</th></tr>
+<tr>
+  <td class="op">クイックスイッチャー(ファイル名検索)</td>
+  <td><code>Ctrl+O</code></td>
+  <td><code>:ObsidianQuickSwitch</code><br><span class="req">要追加設定</span>(telescope.nvim / fzf-lua / mini.pick のいずれかが必要)</td>
+</tr>
+<tr>
+  <td class="op">全文検索</td>
+  <td><code>Ctrl+Shift+F</code></td>
+  <td><code>:ObsidianSearch</code><br><span class="req">要追加設定</span>(同上のpicker系プラグインが必要)</td>
+</tr>
+<tr>
+  <td class="op">タグ検索</td>
+  <td>左サイドバー「タグ」パネル、またはタグクリック</td>
+  <td><code>:ObsidianTags [タグ名]</code><br><span class="req">要追加設定</span>(picker必須)</td>
+</tr>
+</table>
+
+<h2>④ デイリーノート・テンプレート</h2>
+<table>
+<tr><th>操作</th><th>Obsidianアプリ</th><th>nvim(obsidian.nvim)</th></tr>
 <tr>
   <td class="op">今日のノートを開く</td>
-  <td><code>Ctrl+P</code> → "今日のノートを開く" コマンド、またはリボンアイコン</td>
+  <td>コマンドパレット→「Open today's daily note」(コアプラグイン有効化が必要)</td>
   <td><code>:ObsidianToday</code></td>
 </tr>
+<tr>
+  <td class="op">昨日/明日のノート</td>
+  <td>コマンドパレットから該当コマンド</td>
+  <td><code>:ObsidianYesterday</code> / <code>:ObsidianTomorrow</code></td>
+</tr>
+<tr>
+  <td class="op">テンプレート挿入</td>
+  <td><code>Ctrl+T</code>(コアプラグイン「テンプレート」有効化が必要)</td>
+  <td><code>:ObsidianTemplate</code><br><span class="req">要追加設定</span>(<code>templates</code>オプションでディレクトリ指定が必要、現状未設定)</td>
+</tr>
+</table>
 
+<h2>⑤ チェックボックス・TODO</h2>
+<table>
+<tr><th>操作</th><th>Obsidianアプリ</th><th>nvim(obsidian.nvim)</th></tr>
+<tr>
+  <td class="op">チェックボックスの状態切替</td>
+  <td>クリック、または <code>Ctrl+Enter</code></td>
+  <td><code>&lt;leader&gt;ch</code>(=スペース+ch、デフォルトマッピング。空→ [ ] → [x] → [~] と巡回)</td>
+</tr>
+</table>
+
+<h2>⑥ 画像・添付ファイル</h2>
+<table>
+<tr><th>操作</th><th>Obsidianアプリ</th><th>nvim(obsidian.nvim)</th></tr>
+<tr>
+  <td class="op">クリップボード画像を貼り付け</td>
+  <td><code>Ctrl+V</code>で自動保存・埋め込み</td>
+  <td><code>:ObsidianPasteImg</code><br><span class="req">要追加設定</span>(<code>img-clip.nvim</code>等の依存が必要、現状未導入)</td>
+</tr>
+</table>
+
+<h2>⑦ ワークスペース</h2>
+<table>
+<tr><th>操作</th><th>Obsidianアプリ</th><th>nvim(obsidian.nvim)</th></tr>
+<tr>
+  <td class="op">Vault(ワークスペース)切替</td>
+  <td>左下のVaultアイコン→切替</td>
+  <td><code>:ObsidianWorkspace [名前]</code><br>現状は <code>pc</code>(<code>~/obsidian/pc</code>)の1つのみ登録</td>
+</tr>
 </table>
 
 <div class="note">
-補足:<br>
-・obsidian.nvim の workspace は現状 <code>~/obsidian/pc</code> の1つのみ登録済みです。<br>
-・<code>gf</code> の賢い切り替えはプラグインのデフォルト値なので、<code>opts.mappings</code> を将来カスタマイズすると挙動が変わります。<br>
-・クイックスイッチャーや補完を使いたい場合は telescope.nvim / nvim-cmp をnix設定に追加する必要があります。
+まとめ:<br>
+・<code>gf</code>・戻る/進む・チェックボックス切替・独自の<code>&lt;C-y&gt;s</code>は<span class="ok">今すぐ使えます</span>。<br>
+・クイックスイッチャー/検索/タグ/テンプレート/画像貼り付け系は<span class="req">telescope.nvim・img-clip.nvim・templatesディレクトリ設定</span>などの追加が必要です。<br>
+・追加したい機能があれば、対応するnix設定(<code>home.vi.nix</code>への追記)も書けます。
 </div>
 
 </body>
