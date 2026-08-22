@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Obsidian / nvim リンク操作 早見表</title>
+<style>
+  :root {
+    --bg: #1e1e2e;
+    --panel: #282a3a;
+    --accent: #8ab4f8;
+    --accent2: #f5c2e7;
+    --text: #e0e0e8;
+    --muted: #9a9ab0;
+    --border: #3a3a4d;
+  }
+  body {
+    margin: 0;
+    padding: 2rem;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    line-height: 1.6;
+  }
+  h1 {
+    font-size: 1.4rem;
+    color: var(--accent);
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 0.5rem;
+  }
+  .note {
+    background: #33334a;
+    border-left: 4px solid var(--accent2);
+    padding: 0.8rem 1rem;
+    margin: 1rem 0 2rem;
+    font-size: 0.9rem;
+    color: var(--muted);
+    border-radius: 4px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 2rem;
+  }
+  th, td {
+    text-align: left;
+    padding: 0.7rem 0.9rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th {
+    color: var(--accent);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  td.op { font-weight: bold; white-space: nowrap; }
+  code {
+    background: #11111c;
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    color: var(--accent2);
+    font-size: 0.92em;
+  }
+  .caveat {
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<h1>Obsidian ⇔ nvim(obsidian.nvim) リンク操作 早見表</h1>
+
+<div class="note">
+現状の設定ファイル(<code>home.obsidian.nix</code> / <code>home.vi.nix</code>)を前提にしています。<br>
+obsidian.nvim側は <code>mappings</code> を明示的に上書きしていないため、プラグインのデフォルトキーマップがそのまま有効です。<br>
+telescope.nvim 等は入れていないため、クイックスイッチャー系コマンドは動作しない可能性があります(下表に注記)。
+</div>
+
+<table>
+<tr>
+  <th>操作</th>
+  <th>Obsidianアプリ(Vimモード)</th>
+  <th>nvim(obsidian.nvim)</th>
+</tr>
+
+<tr>
+  <td class="op">リンクへジャンプ</td>
+  <td><code>gf</code>(ノーマルモード、カーソルをリンク内に置いて)</td>
+  <td><code>gf</code>(プラグインの<code>gf_passthrough</code>により、カーソルが<code>[[リンク]]</code>上ならObsidian側のジャンプ、それ以外は通常のvim <code>gf</code>として動作)</td>
+</tr>
+
+<tr>
+  <td class="op">ジャンプ履歴を戻る/進む</td>
+  <td><code>Ctrl+Alt+←</code> / <code>Ctrl+Alt+→</code></td>
+  <td><code>Ctrl-o</code>(戻る) / <code>Ctrl-i</code>(進む) — vim標準のジャンプリスト</td>
+</tr>
+
+<tr>
+  <td class="op">新規リンク作成</td>
+  <td><code>[[</code> と入力 → サジェスト表示 → 選択で自動補完</td>
+  <td>手入力の <code>[[note]]</code>、または今回追加した独自マッピング <code>&lt;C-y&gt;s</code>(カーソル下の単語/選択範囲を <code>[[ ]]</code> で囲む)</td>
+</tr>
+
+<tr>
+  <td class="op">バックリンク確認</td>
+  <td>右サイドバーの「バックリンク」パネル</td>
+  <td><code>:ObsidianBacklinks</code></td>
+</tr>
+
+<tr>
+  <td class="op">クイックオープン/検索</td>
+  <td><code>Ctrl+O</code>(Quick switcher)</td>
+  <td class="caveat"><code>:ObsidianQuickSwitch</code>(要 telescope.nvim — 現状の flake には未導入のため、追加しないと動きません)</td>
+</tr>
+
+<tr>
+  <td class="op">リンク補完(入力中)</td>
+  <td><code>[[</code> でファイル名サジェスト自動表示</td>
+  <td class="caveat">nvim-cmp + <code>cmp-obsidian</code> 未導入のため自動サジェストなし。手打ちで <code>[[ファイル名]]</code> を入力する必要あり</td>
+</tr>
+
+<tr>
+  <td class="op">今日のノートを開く</td>
+  <td><code>Ctrl+P</code> → "今日のノートを開く" コマンド、またはリボンアイコン</td>
+  <td><code>:ObsidianToday</code></td>
+</tr>
+
+</table>
+
+<div class="note">
+補足:<br>
+・obsidian.nvim の workspace は現状 <code>~/obsidian/pc</code> の1つのみ登録済みです。<br>
+・<code>gf</code> の賢い切り替えはプラグインのデフォルト値なので、<code>opts.mappings</code> を将来カスタマイズすると挙動が変わります。<br>
+・クイックスイッチャーや補完を使いたい場合は telescope.nvim / nvim-cmp をnix設定に追加する必要があります。
+</div>
+
+</body>
+</html>
