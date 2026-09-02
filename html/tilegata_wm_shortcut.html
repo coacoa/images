@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tiling Window Manager & Omarchy Keybindings</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-color: #38bdf8;
+            --border-color: #334155;
+            --code-bg: #090d16;
+        }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        h1 {
+            color: var(--accent-color);
+            margin-bottom: 10px;
+        }
+        p.subtitle {
+            color: var(--text-muted);
+        }
+        .section {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--border-color);
+        }
+        h2 {
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 8px;
+            margin-top: 0;
+            color: var(--accent-color);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        th {
+            background-color: rgba(56, 189, 248, 0.1);
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+        kbd {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            box-shadow: 0 1px 1px rgba(0,0,0,.2);
+            color: var(--text-color);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.85em;
+            padding: 2px 6px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: var(--text-muted);
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Tiling WM & Omarchy Keybindings</h1>
+        <p class="subtitle">Omarchy, Hyprland, Niri, Sway, i3, dwm のデフォルトショートカット一覧</p>
+    </header>
+
+    <!-- Omarchy / Hyprland -->
+    <div class="section">
+        <h2>Omarchy / Hyprland</h2>
+        <p>OmarchyはHyprlandをベースにしており、通常のHyprlandデフォルト設定をさらに洗練させています。MODキーは通常 <kbd>SUPER</kbd> です。</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>操作</th>
+                    <th>デフォルトショートカット</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>ターミナル起動</td><td><kbd>SUPER</kbd> + <kbd>Q</kbd> または <kbd>SUPER</kbd> + <kbd>ENTER</kbd></td></tr>
+                <tr><td>アプリランチャー (Fuzzel/Rofi)</td><td><kbd>SUPER</kbd> + <kbd>SPACE</kbd> または <kbd>ALT</kbd> + <kbd>F1</kbd></td></tr>
+                <tr><td>ウィンドウを閉じる</td><td><kbd>SUPER</kbd> + <kbd>C</kbd> または <kbd>SUPER</kbd> + <kbd>Q</kbd></td></tr>
+                <tr><td>フォーカス移動</td><td><kbd>SUPER</kbd> + <kbd>H/J/K/L</kbd> または 矢印キー</td></tr>
+                <tr><td>ウィンドウ移動</td><td><kbd>SUPER</kbd> + <kbd>SHIFT</kbd> + <kbd>H/J/K/L</kbd></td></tr>
+                <tr><td>ワークスペース移動</td><td><kbd>SUPER</kbd> + <kbd>1〜9</kbd></td></tr>
+                <tr><td>ウィンドウをワークスペースへ送る</td><td><kbd>SUPER</kbd> + <kbd>SHIFT</kbd> + <kbd>1〜9</kbd></td></tr>
+                <tr><td>フロート/タイル切替</td><td><kbd>SUPER</kbd> + <kbd>F</kbd> (または独自キー)</td></tr>
+                <tr><td>リロード / 終了</td><td><kbd>SUPER</kbd> + <kbd>SHIFT</kbd> + <kbd>R</kbd> / <kbd>SUPER</kbd> + <kbd>M</kbd> (Exit)</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Niri -->
+    <div class="section">
+        <h2>Niri (スクロール型 Wayland コンポジター)</h2>
+        <p>無限に広がる水平方向のスクロールレイアウトが特徴です。MODキーは <kbd>SUPER</kbd>。</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>操作</th>
+                    <th>デフォルトショートカット</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>ターミナル起動</td><td><kbd>SUPER</kbd> + <kbd>T</kbd></td></tr>
+                <tr><td>アプリランチャー (App Launcher)</td><td><kbd>SUPER</kbd> + <kbd>D</kbd></td></tr>
+                <tr><td>ウィンドウを閉じる</td><td><kbd>SUPER</kbd> + <kbd>Q</kbd></td></tr>
+                <tr><td>フォーカス移動 (左右カラム)</td><td><kbd>SUPER</kbd> + <kbd>Left / Right</kbd> (または <kbd>H</kbd> / <kbd>L</kbd>)</td></tr>
+                <tr><td>カラム内ウィンドウ移動</td><td><kbd>SUPER</kbd> + <kbd>Up / Down</kbd> (または <kbd>K</kbd> / <kbd>J</kbd>)</td></tr>
+                <tr><td>ウィンドウの列移動</td><td><kbd>SUPER</kbd> + <kbd>SHIFT</kbd> + <kbd>Left / Right</kbd></td></tr>
+                <tr><td>フルスクリーン切替</td><td><kbd>SUPER</kbd> + <kbd>F</kbd></td></tr>
+                <tr><td>セッション終了 (Quit)</td><td><kbd>SUPER</kbd> + <kbd>SHIFT</kbd> + <kbd>E</kbd></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Sway / i3 -->
+    <div class="section">
+        <h2>Sway / i3 (i3互換環境)</h2>
+        <p>X11 (i3) および Wayland (Sway) で共通の極めて似たキーバインドを持ちます。MODキーは <kbd>SUPER</kbd> (Mod4) または <kbd>ALT</kbd> (i3のデフォルト一部設定)。</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>操作</th>
+                    <th>デフォルトショートカット</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>ターミナル起動</td><td><kbd>SUPER</kbd> + <kbd>ENTER</kbd></td></tr>
+                <tr><td>アプリランチャー (dmenu / rofi)</td><td><kbd>SUPER</kbd> + <kbd>D</kbd></td></tr>
+                <tr><td>ウィンドウを閉じる</td><td><kbd>SUPER</kbd> + <kbd>SHIFT</kbd> + <kbd>Q</kbd></td></tr>
+                <tr><td>フォーカス移動</td><td><kbd>SUPER</kbd> + <kbd>J/K/L/;</kbd> (または矢印)</td></tr>
+                <tr><td>ウィンドウ移動</td><td><kbd>SUPER</kbd> + <kbd>SHIFT</kbd> + <kbd>J/K/L/;</kbd></td></tr>
+                <tr><td>分割方向切替 (水平/垂直)</td><td><kbd>SUPER</kbd> + <kbd>H</kbd> / <kbd>SUPER</kbd> + <kbd>V</kbd></td></tr>
+                <tr><td>フルスクリーン切替</td><td><kbd>SUPER</kbd> + <kbd>F</kbd></td></tr>
+                <tr><td>ワークスペース移動</td><td><kbd>SUPER</kbd> + <kbd>1〜9</kbd></td></tr>
+                <tr><td>設定リロード</td><td><kbd>SUPER</kbd> + <kbd>SHIFT</kbd> + <kbd>C</kbd></td></tr>
+                <tr><td>Sway/i3 終了</td><td><kbd>SUPER</kbd> + <kbd>SHIFT</kbd> + <kbd>E</kbd></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- dwm -->
+    <div class="section">
+        <h2>dwm (Dynamic Window Manager - X11)</h2>
+        <p>C言語で書かれた軽量WM。MODキーはデフォルトで <kbd>ALT</kbd> (<kbd>Mod1</kbd>) です。</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>操作</th>
+                    <th>デフォルトショートカット</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>ターミナル起動 (st等)</td><td><kbd>ALT</kbd> + <kbd>SHIFT</kbd> + <kbd>ENTER</kbd></td></tr>
+                <tr><td>アプリランチャー (dmenu)</td><td><kbd>ALT</kbd> + <kbd>P</kbd></td></tr>
+                <tr><td>ウィンドウを閉じる</td><td><kbd>ALT</kbd> + <kbd>SHIFT</kbd> + <kbd>C</kbd></td></tr>
+                <tr><td>フォーカスの順次切替</td><td><kbd>ALT</kbd> + <kbd>J</kbd> / <kbd>ALT</kbd> + <kbd>K</kbd></td></tr>
+                <tr><td>マスターウィンドウへ昇格</td><td><kbd>ALT</kbd> + <kbd>ENTER</kbd></td></tr>
+                <tr><td>マスター領域の拡大/縮小</td><td><kbd>ALT</kbd> + <kbd>H</kbd> / <kbd>ALT</kbd> + <kbd>L</kbd></td></tr>
+                <tr><td>レイアウト切替 (タイル/モンクル等)</td><td><kbd>ALT</kbd> + <kbd>T</kbd> / <kbd>ALT</kbd> + <kbd>M</kbd> 等</td></tr>
+                <tr><td>ワークスペース (Tag) 移動</td><td><kbd>ALT</kbd> + <kbd>1〜9</kbd></td></tr>
+                <tr><td>dwmの終了 (Quit)</td><td><kbd>ALT</kbd> + <kbd>SHIFT</kbd> + <kbd>Q</kbd></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <footer>
+        <p>Generated for GitHub Pages | Customizable Tiling Window Manager Cheatsheet</p>
+    </footer>
+</div>
+
+</body>
+</html>
