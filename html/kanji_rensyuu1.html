@@ -91,32 +91,46 @@
 
     .question-item {
       display: flex;
-      align-items: center;
-      padding: 12px 0;
+      align-items: flex-start;
+      padding: 14px 0;
       border-bottom: 1px solid #EEEEEE;
-      font-size: 18px;
-      line-height: 1.6;
     }
 
     /* 左側のマスク切替ボタン */
     .toggle-btn {
       margin-right: 16px;
-      padding: 6px 12px;
+      padding: 8px 12px;
       border: none;
-      background: #E0E0E0;
-      color: #333;
+      background: var(--primary-color);
+      color: white;
       border-radius: 4px;
       cursor: pointer;
       font-size: 13px;
-      min-width: 60px;
+      min-width: 65px;
       text-align: center;
       user-select: none;
       flex-shrink: 0;
     }
 
-    .toggle-btn.active {
-      background: var(--primary-color);
-      color: white;
+    .toggle-btn.revealed {
+      background: #E0E0E0;
+      color: #333;
+    }
+
+    .content-area {
+      flex-grow: 1;
+    }
+
+    .main-text {
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    /* ひらがな文（下部表示） */
+    .sub-hiragana {
+      font-size: 13px;
+      color: #666666;
+      margin-top: 4px;
     }
 
     /* マスク（隠す漢字）のスタイル */
@@ -164,53 +178,53 @@
 </div>
 
 <script>
-  // {漢字} の部分がマスクされます
+  // [漢字入り問題文, 全文ひらがな] の形式
   const questionsData = {
     1: [
-      "あさ {日}が のぼり、きもちの いい {天}{気}だ。",
-      "{一}{年}{生}の おともだちと {学}{校}へ いきます。",
-      "{川}の ちかくで {大}きな {犬}と あるく。",
-      "{山}に のぼって {木}や {花}を みる。",
-      "たんじょうびに {大}きな {本}を もらった。",
-      "{車}に つけて {手}と {足}を あらう。",
-      "{右}を つぎに {左}を よく みて わたる。",
-      "{目}と {耳}を すまして おとを きく。",
-      "{水}を のんで {火}を けします。",
-      "{青}い そらに {白}い くもが うかぶ。",
-      "{赤}い ふうせんと {黄}いろい はな。",
-      "{三}にんの {男}のことも {四}にんの {女}のこ。",
-      "{千}えんを もって {町}に でかける。",
-      "{雨}の あとに {立}っぱな にじが でた。",
-      "{早}く おきて {王}さまの えほんを よむ。"
+      ["あさ {日}が のぼり、きもちの いい {天}{気}だ。", "あさ ひが のぼり、きもちの いい てんきだ。"],
+      ["{一}{年}{生}の おともだちと {学}{校}へ いきます。", "いちねんせいの おともだちと がっこうへ いきます。"],
+      ["{川}の ちかくで {大}きな {犬}と あるく。", "かわの ちかくで おおきな いぬと あるく。"],
+      ["{山}に のぼって {木}や {花}を みる。", "やまに のぼって きや はなを みる。"],
+      ["たんじょうびに {大}きな {本}を もらった。", "たんじょうびに おおきな ほんを もらった。"],
+      ["{車}に つけて {手}と {足}を あらう。", "くるまに つけて てと あしを あらう。"],
+      ["{右}を つぎに {左}を よく みて わたる。", "みぎを つぎに ひだりを よく みて わたる。"],
+      ["{目}と {耳}を すまして おとを きく。", "めと みみを すまして おとを きく。"],
+      ["{水}を のんで {火}を けします。", "みずを のんで ひを けします。"],
+      ["{青}い そらに {白}い くもが うかぶ。", "あおい そらに しろい くもが うかぶ。"],
+      ["{赤}い ふうせんと {黄}いろい はな。", "あかい ふうせんと きいろい はな。"],
+      ["{三}にんの {男}のことも {四}にんの {女}のこ。", "さんにんの おとこのことも よんにんの おんなのこ。"],
+      ["{千}えんを もって {町}に でかける。", "せんえんを もって まちに でかける。"],
+      ["{雨}の あとに {立}っぱな にじが でた。", "あめの あとに たっぱな にじが でた。"],
+      ["{早}く おきて {王}さまの えほんを よむ。", "はやく おきて おうさまの えほんを よむ。"]
     ],
     2: [
-      "きょうは {朝}から {雨}が ふっています。",
-      "{風}が つよくて {傘}を さすのが {大}変だ。",
-      "{友}だちと {広}い {広}場であそぶ。",
-      "{新}しい ノートを {買}いに行きました。",
-      "{話}を {読}んで {感}そうを {書}きます。",
-      "{春}が すぎて {夏}が やってきました。",
-      "{秋}には もみじが きれいに {紅}葉する。",
-      "{冬}の {夜}は とても {冷}えこみます。",
-      "{長}い {道}を ぐんぐん {走}っていきます。",
-      "{高}い {山}の 上から {海}が みえた。",
-      "{今}日の {昼}ごはんは {多}めに たべた。",
-      "{店}で {何}を {買}うか {考}える。",
-      "{声}を {出}して {古}い {歌}を うたう。"
+      ["きょうは {朝}から {雨}が ふっています。", "きょうは あさから あめが ふっています。"],
+      ["{風}が つよくて {傘}を さすのが {大}変だ。", "かぜが つよくて かさを さすのが たいへんだ。"],
+      ["{友}だちと {広}い {広}場であそぶ。", "ともだちと ひろい ひろばであそぶ。"],
+      ["{新}しい ノートを {買}いに行きました。", "あたらしい のーとを かいに粋きました。"],
+      ["{話}を {読}んで {感}そうを {書}きます。", "はなしを よんで かんそうを かきます。"],
+      ["{春}が すぎて {夏}が やってきました。", "はるが すぎて なつが やってきました。"],
+      ["{秋}には もみじが きれいに {紅}葉する。", "あきには もみじが きれいに こうようする。"],
+      ["{冬}の {夜}は とても {冷}えこみます。", "ふゆの よるは とても ひえこみます。"],
+      ["{長}い {道}を ぐんぐん {走}っていきます。", "ながい みちを ぐんぐん はしっていきます。"],
+      ["{高}い {山}の 上から {海}が みえた。", "たかい やまの うえから うみが みえた。"],
+      ["{今}日の {昼}ごはんは {多}めに たべた。", "きょうの ひるごはんは おおめに たべた。"],
+      ["{店}で {何}を {買}うか {考}える。", "みせで なにを かうか かんがえる。"],
+      ["{声}を {出}して {古}い {歌}を うたう。", "こえを だして ふるい うたを うたう。"]
     ],
     3: [
-      "毎日 {家}で {勉}{強}と {習}字の 練習をする。",
-      "{漢}{字}を たくさん {覚}えて {組}合わせる。",
-      "新しい {教}{室}で {感}想を {発}{表}する。",
-      "{楽}しい {旅}行の {予}{定}を たてる。",
-      "{重}い {荷}{物}を {軽}々と 持ちあげる。",
-      "試合に {勝}つために {全}{力}を つくす。",
-      "相手に {負}けても あきらめずに {進}む。",
-      "{窓}を {開}けて {自}{然}の 風を いれる。",
-      "{理}{科}の 実験で {物}の 重さを はかる。",
-      "{社}{会}の 授業で {市}の 歴史を しらべる。",
-      "{洋}{服}を 着て {友}達と {集}まる。",
-      "{運}{動}かいで {リ}レーの {選}{手}に えらばれた。"
+      ["毎日 {家}で {勉}{強}と {習}字の 練習をする。", "まいにち うちで べんきょうと しゅうじの れんしゅうをする。"],
+      ["{漢}{字}を たくさん {覚}えて {組}合わせる。", "かんじを たくさん おぼえて くみあわせる。"],
+      ["新しい {教}{室}で {感}想を {発}{表}する。", "あたらしい きょうしつで かんそうを はっぴょうする。"],
+      ["{楽}しい {旅}行の {予}{定}を たてる。", "たのしい りょこうの よていを たてる。"],
+      ["{重}い {荷}{物}を {軽}々と 持ちあげる。", "おもい にもつを かかるがると もちあげる。"],
+      ["試合に {勝}つために {全}{力}を つくす。", "しあいに かつために ぜんりょくを つくす。"],
+      ["相手に {負}けても あきらめずに {進}む。", "あいてに まけても あきらめずに すすむ。"],
+      ["{窓}を {開}けて {自}{然}の 風を いれる。", "まどを あけて しぜんの かぜを いれる。"],
+      ["{理}{科}の 実験で {物}の 重さを はかる。", "りかの じっけんで ものの おもさを はかる。"],
+      ["{社}{会}の 授業で {市}の 歴史を しらべる。", "しゃかいの じゅぎょうで しの れきしを しらべる。"],
+      ["{洋}{服}を 着て {友}達と {集}まる。", "ようふくを きて ともだちと あつまる。"],
+      ["{運}{動}かいで {リ}レーの {選}{手}に えらばれた。", "うんどうかいで りれーの せんしゅに えらばれた。"]
     ]
   };
 
@@ -223,16 +237,21 @@
 
     const list = questionsData[grade] || [];
 
-    list.forEach((text, index) => {
+    list.forEach((item, index) => {
+      const text = item[0];
+      const hiragana = item[1];
+
       const li = document.createElement('li');
       li.className = 'question-item';
 
-      // HTML用テキスト変換（ {漢字} -> <span class="mask">漢字</span> ）
       const formattedText = text.replace(/\{([^}]+)\}/g, '<span class="mask">$1</span>');
 
       li.innerHTML = `
-        <button class="toggle-btn" onclick="toggleSingleMask(this)">かくす</button>
-        <div>${index + 1}. ${formattedText}</div>
+        <button class="toggle-btn" onclick="toggleSingleMask(this)">みせる</button>
+        <div class="content-area">
+          <div class="main-text">${index + 1}. ${formattedText}</div>
+          <div class="sub-hiragana">（ ${hiragana} ）</div>
+        </div>
       `;
 
       container.appendChild(li);
@@ -243,7 +262,7 @@
   function toggleSingleMask(buttonElement) {
     const item = buttonElement.closest('.question-item');
     const masks = item.querySelectorAll('.mask');
-    const isCurrentlyHidden = masks[0] ? !masks[0].classList.contains('revealed') : false;
+    const isCurrentlyHidden = masks[0] ? !masks[0].classList.contains('revealed') : true;
 
     masks.forEach(mask => {
       if (isCurrentlyHidden) {
@@ -254,11 +273,11 @@
     });
 
     if (isCurrentlyHidden) {
-      buttonElement.textContent = 'みせる';
-      buttonElement.classList.add('active');
-    } else {
       buttonElement.textContent = 'かくす';
-      buttonElement.classList.remove('active');
+      buttonElement.classList.add('revealed');
+    } else {
+      buttonElement.textContent = 'みせる';
+      buttonElement.classList.remove('revealed');
     }
   }
 
@@ -278,11 +297,11 @@
       });
 
       if (hide) {
-        button.textContent = 'かくす';
-        button.classList.remove('active');
-      } else {
         button.textContent = 'みせる';
-        button.classList.add('active');
+        button.classList.remove('revealed');
+      } else {
+        button.textContent = 'かくす';
+        button.classList.add('revealed');
       }
     });
   }
