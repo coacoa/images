@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>かん字・漢字 れんしゅう</title>
+  <style>
+    :root {
+      --primary-color: #4A90E2;
+      --bg-color: #F5F7FA;
+      --card-bg: #FFFFFF;
+      --mask-color: #2C3E50;
+      --text-color: #333333;
+    }
+
+    body {
+      font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--primary-color);
+      margin-bottom: 20px;
+    }
+
+    /* 学年タブ */
+    .tabs-wrapper {
+      margin-bottom: 20px;
+      border-bottom: 2px solid #E0E0E0;
+      padding-bottom: 8px;
+    }
+
+    .tab-group-title {
+      font-weight: bold;
+      font-size: 13px;
+      color: #666;
+      margin: 8px 0 4px 0;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tab-btn {
+      padding: 6px 12px;
+      border: none;
+      background: #EAEAEA;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    .tab-btn.active {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    /* 一括操作エリア */
+    .controls {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .global-btn {
+      padding: 6px 12px;
+      border: 1px solid var(--primary-color);
+      background: white;
+      color: var(--primary-color);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .global-btn:hover {
+      background: #F0F7FF;
+    }
+
+    /* 問題リスト */
+    .question-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .question-item {
+      display: flex;
+      align-items: flex-start;
+      padding: 14px 0;
+      border-bottom: 1px solid #EEEEEE;
+    }
+
+    /* 左側のマスク切替ボタン */
+    .toggle-btn {
+      margin-right: 16px;
+      padding: 8px 12px;
+      border: none;
+      background: var(--primary-color);
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      min-width: 65px;
+      text-align: center;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .toggle-btn.revealed {
+      background: #E0E0E0;
+      color: #333;
+    }
+
+    .content-area {
+      flex-grow: 1;
+    }
+
+    .main-text {
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    /* ひらがな文（下部表示） */
+    .sub-hiragana {
+      font-size: 13px;
+      color: #666666;
+      margin-top: 4px;
+    }
+
+    /* マスク（隠す漢字）のスタイル */
+    .mask {
+      display: inline-block;
+      background-color: var(--mask-color);
+      color: transparent;
+      padding: 0 6px;
+      margin: 0 2px;
+      border-radius: 4px;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+
+    /* マスク解除時 */
+    .mask.revealed {
+      background-color: transparent;
+      color: #D32F2F; /* 確認しやすいように赤色で表示 */
+      font-weight: bold;
+      border-bottom: 2px solid #D32F2F;
+      border-radius: 0;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>漢字 れんしゅう</h1>
+
+  <div class="tabs-wrapper">
+    <div class="tab-group-title">小学校</div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchGrade('1')">1年</button>
+      <button class="tab-btn" onclick="switchGrade('2')">2年</button>
+      <button class="tab-btn" onclick="switchGrade('3')">3年</button>
+      <button class="tab-btn" onclick="switchGrade('4')">4年</button>
+      <button class="tab-btn" onclick="switchGrade('5')">5年</button>
+      <button class="tab-btn" onclick="switchGrade('6')">6年</button>
+    </div>
+    <div class="tab-group-title">中学校</div>
+    <div class="tabs">
+      <button class="tab-btn" onclick="switchGrade('c1')">中1</button>
+      <button class="tab-btn" onclick="switchGrade('c2')">中2</button>
+      <button class="tab-btn" onclick="switchGrade('c3')">中3</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="global-btn" onclick="setAllMasks(true)">ぜんぶ かくす</button>
+    <button class="global-btn" onclick="setAllMasks(false)">ぜんぶ みせる</button>
+  </div>
+
+  <ul id="questionContainer" class="question-list"></ul>
+</div>
+
+<script>
+  // [漢字入り問題文, 全文ひらがな] の形式
+  const questionsData = {
+    "1": [
+      ["あさ {日}が のぼり、きもちの いい {天}{気}だ。", "あさ ひが のぼり、きもちの いい てんきだ。"],
+      ["{一}{年}{生}の おともだちと {学}{校}へ いきます。", "いちねんせいの おともだちと がっこうへ いきます。"],
+      ["{川}の ちかくで {大}きな {犬}と あるく。", "かわの ちかくで おおきな いぬと あるく。"],
+      ["{山}に のぼって {木}や {花}を みる。", "やまに のぼって きや はなを みる。"],
+      ["たんじょうびに {大}きな {本}を もらった。", "たんじょうびに おおきな ほんを もらった。"],
+      ["{車}に つけて {手}と {足}を あらう。", "くるまに つけて てと あしを あらう。"],
+      ["{右}を つぎに {左}を よく みて わたる。", "みぎを つぎに ひだりを よく みて わたる。"],
+      ["{目}と {耳}を すまして おとを きく。", "めと みみを すまして おとを きく。"],
+      ["{水}を のんで {火}を けします。", "みずを のんで ひを けします。"],
+      ["{青}い そらに {白}い くもが うかぶ。", "あおい そらに しろい くもが うかぶ。"],
+      ["{赤}い ふうせんと {黄}いろい はな。", "あかい ふうせんと きいろい はな。"],
+      ["{三}にんの {男}のことも {四}にんの {女}のこ。", "さんにんの おとこのことも よんにんの おんなのこ。"],
+      ["{千}えんを もって {町}に でかける。", "せんえんを もって まちに でかける。"],
+      ["{雨}の あとに {立}っぱな にじが でた。", "あめの あとに たっぱな にじが でた。"],
+      ["{早}く おきて {王}さまの えほんを よむ。", "はやく おきて おうさまの えほんを よむ。"]
+    ],
+    "2": [
+      ["きょうは {朝}から {雨}が ふっています。", "きょうは あさから あめが ふっています。"],
+      ["{風}が つよくて {傘}を さすのが {大}変だ。", "かぜが つよくて かさを さすのが たいへんだ。"],
+      ["{友}だちと {広}い {広}場であそぶ。", "ともだちと ひろい ひろばであそぶ。"],
+      ["{新}しい ノートを {買}いに行きました。", "あたらしい のーとを かいにいきした。"],
+      ["{話}を {読}んで {感}そうを {書}きます。", "はなしを よんで かんそうを かきます。"],
+      ["{春}が すぎて {夏}が やってきました。", "はるが すぎて なつが やってきました。"],
+      ["{秋}には もみじが きれいに {紅}葉する。", "あきには もみじが きれいに こうようする。"],
+      ["{冬}の {夜}は とても {冷}えこみます。", "ふゆの よるは とても ひえこみます。"],
+      ["{長}い {道}を ぐんぐん {走}っていきます。", "ながい みちを ぐんぐん はしっていきます。"],
+      ["{高}い {山}の 上から {海}が みえた。", "たかい やまの うえから うみが みえた。"],
+      ["{今}日の {昼}ごはんは {多}めに たべた。", "きょうの ひるごはんは おおめに たべた。"],
+      ["{店}で {何}を {買}うか {考}える。", "みせで なにを かうか かんがえる。"],
+      ["{声}を {出}して {古}い {歌}を うたう。", "こえを だして ふるい うたを うたう。"]
+    ],
+    "3": [
+      ["毎日 {家}で {勉}{強}と {習}字の 練習をする。", "まいにち うちで べんきょうと しゅうじの れんしゅうをする。"],
+      ["{漢}{字}を たくさん {覚}えて {組}合わせる。", "かんじを たくさん おぼえて くみあわせる。"],
+      ["新しい {教}{室}で {感}想を {発}{表}する。", "あたらしい きょうしつで かんそうを はっぴょうする。"],
+      ["{楽}しい {旅}行の {予}{定}を たてる。", "たのしい りょこうの よていを たてる。"],
+      ["{重}い {荷}{物}を {軽}々と 持ちあげる。", "おもい にもつを かかるがると もちあげる。"],
+      ["試合に {勝}つために {全}{力}を つくす。", "しあいに かつために ぜんりょくを つくす。"],
+      ["相手に {負}けても あきらめずに {進}む。", "あいてに まけても あきらめずに すすむ。"],
+      ["{窓}を {開}けて {自}{然}の 風を いれる。", "まどを あけて しぜんの かぜを いれる。"],
+      ["{理}{科}の 実験で {物}の 重さを はかる。", "りかの じっけんで ものの おもさを はかる。"],
+      ["{社}{会}の 授業で {市}の 歴史を しらべる。", "しゃかいの じゅぎょうで しの れきしを しらべる。"],
+      ["{洋}{服}を 着て {友}達と {集}まる。", "ようふくを きて ともだちと あつまる。"],
+      ["{運}{動}かいで {リ}レーの {選}{手}に えらばれた。", "うんどうかいで りれーの せんしゅに えらばれた。"]
+    ],
+    "4": [
+      ["日本の {都}{道}{府}{県}の 名前を おぼえる。", "にほんの とどうふけんの なまえを おぼえる。"],
+      ["{愛}{媛}県や {香}{川}県は 四国にある。", "えひめけんや かがわけんは しこくにある。"],
+      ["{清}{潔}な 衣類に {着}替える。", "せいけつな いるいに きかえる。"],
+      ["{成}{功}のために {努}{力}を 重ねる。", "せいこうのために どりょくを かさねる。"],
+      ["{希}{望}に みちた {新}{年}を むかえる。", "きぼうに みちた しんねんを むかえる。"],
+      ["{冷}{蔵}{庫}から 冷たい 水を 出す。", "れいぞうこから つめたい みずを だす。"],
+      ["{特}{別}な イベントに {参}{加}する。", "とくべつな いべんとにかんかする。"],
+      ["{特}{徴}を とらえて 似顔絵を かく。", "とくちょうを とらえて にがおえを かく。"]
+    ],
+    "5": [
+      ["{条}{件}を 整えて 実験を {開}{始}する。", "じょうけんを ととのえて じっけんを かいしする。"],
+      ["{複}{雑}な パズルを {解}き明かす。", "ふくざつな ぱずるを ときあかす。"],
+      ["地域の {快}{適}な 暮らしを {守}る。", "ちいきの かいてきな くらしを まもる。"],
+      ["{報}{告}書を まとめ提出する。", "ほうこくしょを まとめ ていしゅつする。"],
+      ["{確}{認}作業を 怠らないようにする。", "かくにんさぎょうを おこたらないようにする。"],
+      ["{豊}{富}な 知識を 身につける。", "ほうふな ちしきを みにつける。"],
+      ["相手の {意}{見}を {尊}{重}する。", "あいての いけんを そんちょうする。"]
+    ],
+    "6": [
+      ["{憲}{法}の 理念を 理解する。", "けんぽうの りねんを りかいする。"],
+      ["{厳}{格}な ルールに 従う。", "げんかくの るーるに したがう。"],
+      ["{推}{測}ではなく {確}{証}を得る。", "すいそくではなく かくしょうを える。"],
+      ["{誠}{実}な 対応を 心がける。", "せいじつな たいおうを こころがける。"],
+      ["伝統文化を {継}{承}していく。", "でんとうぶんかを けいしょうしていく。"],
+      ["{磁}{石}の 性質を 利用する。", "じしゃくの せいしつを りようする。"],
+      ["{臨}{機}{応}{変}に 行動する。", "りんきおうへんに こうどうする。"]
+    ],
+    "c1": [
+      ["{新}{進}{気}{鋭}の 作家による 新作。", "しんしんきえいの さっかによる しんさく。"],
+      ["古代の {遺}{跡}から {出}{土}した 土器。", "こだいの いせきから しゅつどした どき。"],
+      ["{曖}{昧}な 表現を 避けて {明}{確}に 伝える。", "あいまいな ひょうげんを さけて めいかくに つたえる。"],
+      ["{感}{慨}深く 景色を 眺める。", "かんがいぶかく けしきを ながめる。"],
+      ["{試}{行}{錯}{誤}を 繰り返して 完成させる。", "しこうさくごを くりかえして かんせいさせる。"],
+      ["{縦}{横}{無}{尽}に 駆け巡る。", "じゅうおうむじんに かけめぐる。"]
+    ],
+    "c2": [
+      ["{矛盾}する 証言に 疑問を 抱く。", "むじゅんする しょうげんに ぎもんを いだく。"],
+      ["{臨}{場}{感}の ある 映像を 楽しむ。", "りんじょうかんの ある えいぞうを たのしむ。"],
+      ["自然環境の {保}{全}に 努める。", "しぜんかんきょうの ほぜんに つとめる。"],
+      ["{切}{歯}{扼}{腕}の 思いで 悔しがる。", "せっしやくわんの おもいで くやしがる。"],
+      ["{虚}{心}{坦}{怀}な 態度で 話を 聞く。", "きょしんたんかいな たいどで はなしを きく。"]
+    ],
+    "c3": [
+      ["{切}{磋}{琢}{磨}して 互いの 技術を 高める。", "せっさたくまして たがいの ぎじゅつを たかめる。"],
+      ["{温}{故}{知}{新}の 精神を 大切にする。", "おんこちしんの せいしんを たいせつにする。"],
+      ["{質}{実}{剛}{健}な 校風で 知られる。", "しつじつごうけんな こうふうで しられる。"],
+      ["社会の {構}{造}的な 問題を 分析する。", "しゃかいの こうぞうてきな もんだいを ぶんせきする。"],
+      ["{臥}{薪}{嘗}{胆}の 末に 勝利を つかむ。", "がしんしょうたんの すえに しょうりを つかむ。"]
+    ]
+  };
+
+  let currentGrade = '1';
+
+  // 問題を描画する関数
+  function renderQuestions(grade) {
+    const container = document.getElementById('questionContainer');
+    container.innerHTML = '';
+
+    const list = questionsData[grade] || [];
+
+    list.forEach((item, index) => {
+      const text = item[0];
+      const hiragana = item[1];
+
+      const li = document.createElement('li');
+      li.className = 'question-item';
+
+      const formattedText = text.replace(/\{([^}]+)\}/g, '<span class="mask">$1</span>');
+
+      li.innerHTML = `
+        <button class="toggle-btn" onclick="toggleSingleMask(this)">みせる</button>
+        <div class="content-area">
+          <div class="main-text">${index + 1}. ${formattedText}</div>
+          <div class="sub-hiragana">（ ${hiragana} ）</div>
+        </div>
+      `;
+
+      container.appendChild(li);
+    });
+  }
+
+  // 個別のマスクON/OFF切り替え
+  function toggleSingleMask(buttonElement) {
+    const item = buttonElement.closest('.question-item');
+    const masks = item.querySelectorAll('.mask');
+    const isCurrentlyHidden = masks[0] ? !masks[0].classList.contains('revealed') : true;
+
+    masks.forEach(mask => {
+      if (isCurrentlyHidden) {
+        mask.classList.add('revealed');
+      } else {
+        mask.classList.remove('revealed');
+      }
+    });
+
+    if (isCurrentlyHidden) {
+      buttonElement.textContent = 'かくす';
+      buttonElement.classList.add('revealed');
+    } else {
+      buttonElement.textContent = 'みせる';
+      buttonElement.classList.remove('revealed');
+    }
+  }
+
+  // 全体一括操作
+  function setAllMasks(hide) {
+    const items = document.querySelectorAll('.question-item');
+    items.forEach(item => {
+      const button = item.querySelector('.toggle-btn');
+      const masks = item.querySelectorAll('.mask');
+
+      masks.forEach(mask => {
+        if (hide) {
+          mask.classList.remove('revealed');
+        } else {
+          mask.classList.add('revealed');
+        }
+      });
+
+      if (hide) {
+        button.textContent = 'みせる';
+        button.classList.remove('revealed');
+      } else {
+        button.textContent = 'かくす';
+        button.classList.add('revealed');
+      }
+    });
+  }
+
+  // 学年切り替え
+  function switchGrade(grade) {
+    currentGrade = grade;
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      const onClickAttr = btn.getAttribute('onclick');
+      btn.classList.toggle('active', onClickAttr.includes(`'${grade}'`));
+    });
+    renderQuestions(grade);
+  }
+
+  // 初期化（1年生を表示）
+  renderQuestions('1');
+</script>
+
+</body>
+</html>
