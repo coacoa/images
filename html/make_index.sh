@@ -11,6 +11,9 @@ cat > "$OUTPUT" << 'EOF'
 <head>
   <meta charset="UTF-8">
   <title>Index</title>
+  <!-- Cloudflare Web Analytics -->
+  <script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c0e482c867484a3fa0c49fe8b8dfd8b4"}'></script>
+  <!-- End Cloudflare Web Analytics -->
 </head>
 <body>
 <h1>HTML list</h1>
@@ -29,4 +32,3 @@ cat >> "$OUTPUT" << 'EOF'
 EOF
 
 echo "done"
-
