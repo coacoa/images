@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Linux コマンド＆おもしろ用語 れんしゅう</title>
+  <style>
+    :root {
+      --primary-color: #2D3748;
+      --accent-color: #319795;
+      --bg-color: #F7FAFC;
+      --card-bg: #FFFFFF;
+      --mask-color: #2C3E50;
+      --text-color: #2D3748;
+    }
+
+    body {
+      font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 950px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--accent-color);
+      margin-bottom: 20px;
+    }
+
+    /* レベルタブ */
+    .tabs-wrapper {
+      margin-bottom: 20px;
+      border-bottom: 2px solid #E2E8F0;
+      padding-bottom: 8px;
+    }
+
+    .tab-group-title {
+      font-weight: bold;
+      font-size: 13px;
+      color: #718096;
+      margin: 8px 0 4px 0;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tab-btn {
+      padding: 6px 14px;
+      border: none;
+      background: #EDF2F7;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 13px;
+      color: #4A5568;
+    }
+
+    .tab-btn.active {
+      background: var(--accent-color);
+      color: white;
+    }
+
+    /* 一括操作エリア */
+    .controls {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .global-btn {
+      padding: 6px 12px;
+      border: 1px solid var(--accent-color);
+      background: white;
+      color: var(--accent-color);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .global-btn:hover {
+      background: #E6FFFA;
+    }
+
+    /* 問題リスト */
+    .question-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .question-item {
+      display: flex;
+      align-items: flex-start;
+      padding: 14px 0;
+      border-bottom: 1px solid #EDF2F7;
+    }
+
+    /* 左側のマスク切替ボタン */
+    .toggle-btn {
+      margin-right: 16px;
+      padding: 8px 12px;
+      border: none;
+      background: var(--accent-color);
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      min-width: 65px;
+      text-align: center;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .toggle-btn.revealed {
+      background: #E2E8F0;
+      color: #4A5568;
+    }
+
+    .content-area {
+      flex-grow: 1;
+    }
+
+    .main-text {
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    /* 読み方・解説（下部表示） */
+    .sub-hiragana {
+      font-size: 13px;
+      color: #718096;
+      margin-top: 4px;
+    }
+
+    /* マスク（隠すコマンドや単語）のスタイル */
+    .mask {
+      display: inline-block;
+      background-color: var(--mask-color);
+      color: transparent;
+      padding: 0 6px;
+      margin: 0 2px;
+      border-radius: 4px;
+      user-select: none;
+      transition: all 0.2s ease;
+      font-family: monospace;
+    }
+
+    /* マスク解除時 */
+    .mask.revealed {
+      background-color: transparent;
+      color: #E53E3E; /* 赤色で強調 */
+      font-weight: bold;
+      border-bottom: 2px solid #E53E3E;
+      border-radius: 0;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Linux コマンド＆おもしろ用語 れんしゅう</h1>
+
+  <div class="tabs-wrapper">
+    <div class="tab-group-title">初心者向け（基本と日常の悲劇）</div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchGrade('beginner')">初級・基本</button>
+      <button class="tab-btn" onclick="switchGrade('beginner2')">初級・トラブル</button>
+    </div>
+    <div class="tab-group-title">中級・上級者向け（実務と魔改造）</div>
+    <div class="tabs">
+      <button class="tab-btn" onclick="switchGrade('intermediate')">中級・検索と権限</button>
+      <button class="tab-btn" onclick="switchGrade('advanced')">上級・変態構文</button>
+      <button class="tab-btn" onclick="switchGrade('dark')">地獄・深夜の沼</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="global-btn" onclick="setAllMasks(true)">ぜんぶ かくす</button>
+    <button class="global-btn" onclick="setAllMasks(false)">ぜんぶ みせる</button>
+  </div>
+
+  <ul id="questionContainer" class="question-list"></ul>
+</div>
+
+<script>
+  // [Linuxコマンドや用語入り問題文, 読み方・解説] の形式
+  const questionsData = {
+    "beginner": [
+      ["現在地が分からなくなって {pwd} コマンドで {迷子} を救う。", "げんざいちが わからなくなって ぷﾞどぅ るこまんどで まいごをすくう。"],
+      ["カレントディレクトリのゴミファイルを {ls -la} で {発掘} する。", "かれんとでりくとりの ごみふぁいるを えれすえるえー で はっくつする。"],
+      ["ファイルの中身を {cat} で覗き見して {後悔} する。", "ふぁいらのなかみを きゃっと で のぞきみして こうかいする。"],
+      ["間違えて打ったやばいコマンドを {history} で {回想} する。", "まちがえてうった やばいこまんどを ひすとりー で かいそうする。"],
+      ["画面が文字だらけになったので {clear} で {浄化} する。", "がめんがもじだらけになったので くりあ で じょうかする。"]
+    ],
+    "beginner2": [
+      ["深夜3時に {rm -rf /} を実行してしまい、{絶望} の淵に沈む。", "しんやさんじに あーるえむあーるふぉーすらいし をじっこうしてしまい、ぜつぼうの ふちにしずむ。"],
+      ["保存し忘れたシェルスクリプトが {消滅} し、夜中に {発狂} する。", "ほぞんしわすれた しぇるすくりぷとが しょうめつし、よるなかに はっきょうする。"],
+      ["エディタの終了方法が分からなくなり {(:|&);} で {永遠} のループに入る。", "えでぃたのしゅうりょうほうが わからなくなり でぃころんあんど で えいえんの るーぷにはいる。"],
+      ["間違えて別のファイルを上書きし、{バックアップ} の {重要性} を痛感する。", "まちがえて べつのふぁいるを うわがきし、ばっくあっぷの じゅうようせいを つうかんする。"]
+    ],
+    "intermediate": [
+      ["ログファイルからエラーを {grep} で {生贄} のように炙り出す。", "ろぐふぁいらから えらーを ぐれっぷ で いけにえの ようにあぶりだす。"],
+      ["Permission denied にキレながら {chmod} で {暴力} 的に権限を奪う。", "ぱーみっしょん でにうど に きれながら ちゃもうど で ぼうりょくてきに けんげんをうばう。"],
+      ["容量不足の犯人を探すため {du -sh *} で {家宅捜索} を行う。", "ようりょうぶそくの はんにんをさがすため でぃーゆーえすえいちほし で けたくそうさくを おこなう。"],
+      ["迷子のファイルを {find} で {執念} のように探し出す。", "まいごのふぁいらすを ふぁいんど で しゅうねんの ようにさがしだす。"],
+      ["暴走したプロセスを {kill -9} で {葬り去る} 。", "ぼうそうした ぷろせすを きるきゅう で ほうむりさる。"]
+    ],
+    "advanced": [
+      ["{awk} と {sed} の {禁断} のコンボでテキストを魔改造する。", "あーどぶりゅけー と せっど の きんだん の こんぼで てきすとを まかいぞうする。"],
+      ["標準エラー出力を華麗に {2>&1} で {闇に葬る} 。", "ひょうじゅんえらーしゅつりょくを かれいに にすたんどあんどいち で やみにほうむる。"],
+      ["何をやっているのか自分でも分からない {xargs} の {暴走} を眺める。", "なにをやっているのか じぶんでもわからない えけつあーぐす の ぼうそうを ながめる。"],
+      ["シンボリックリンクの {ln -s} を {盛大} に貼り間違える。", "しんぼりっくりんくの えれぬえす を せいだいに はりまちがえる。"]
+    ],
+    "dark": [
+      ["無限ループするシェルスクリプトを書いて {CPU} を {炭化} させる。", "むげんるーぷする しぇるすくりぷとをかいて しーぴーゆー を たんかさせる。"],
+      ["深夜のデバッグ中に {無限} の {沼} にハマり朝日を迎える。", "しんやのでばっぐちゅうに むげんの ぬまに はまり あさひをむかえる。"],
+      ["履歴の裏技 {!!} で直前の盛大な過ちを {全肯定} する。", "りれきのうらわざ びっぐばん で ちょくぜんの せいだいなあやまちを ぜんこうていする。"],
+      ["謎のコンテナエラーに直面し {Podman} のログを {凝視} する。", "なぞの こんてなえらーに ちょくめんし ぽどまん の ろぐを ぎょうし する。"]
+    ]
+  };
+
+  let currentGrade = 'beginner';
+
+  // 問題を描画する関数
+  function renderQuestions(grade) {
+    const container = document.getElementById('questionContainer');
+    container.innerHTML = '';
+
+    const list = questionsData[grade] || [];
+
+    list.forEach((item, index) => {
+      const text = item[0];
+      const hiragana = item[1];
+
+      const li = document.createElement('li');
+      li.className = 'question-item';
+
+      const formattedText = text.replace(/\{([^}]+)\}/g, '<span class="mask">$1</span>');
+
+      li.innerHTML = `
+        <button class="toggle-btn" onclick="toggleSingleMask(this)">みせる</button>
+        <div class="content-area">
+          <div class="main-text">${index + 1}. ${formattedText}</div>
+          <div class="sub-hiragana">（ ${hiragana} ）</div>
+        </div>
+      `;
+
+      container.appendChild(li);
+    });
+  }
+
+  // 個別のマスクON/OFF切り替え
+  function toggleSingleMask(buttonElement) {
+    const item = buttonElement.closest('.question-item');
+    const masks = item.querySelectorAll('.mask');
+    const isCurrentlyHidden = masks[0] ? !masks[0].classList.contains('revealed') : true;
+
+    masks.forEach(mask => {
+      if (isCurrentlyHidden) {
+        mask.classList.add('revealed');
+      } else {
+        mask.classList.remove('revealed');
+      }
+    });
+
+    if (isCurrentlyHidden) {
+      buttonElement.textContent = 'かくす';
+      buttonElement.classList.add('revealed');
+    } else {
+      buttonElement.textContent = 'みせる';
+      buttonElement.classList.remove('revealed');
+    }
+  }
+
+  // 全体一括操作
+  function setAllMasks(hide) {
+    const items = document.querySelectorAll('.question-item');
+    items.forEach(item => {
+      const button = item.querySelector('.toggle-btn');
+      const masks = item.querySelectorAll('.mask');
+
+      masks.forEach(mask => {
+        if (hide) {
+          mask.classList.remove('revealed');
+        } else {
+          mask.classList.add('revealed');
+        }
+      });
+
+      if (hide) {
+        button.textContent = 'みせる';
+        button.classList.remove('revealed');
+      } else {
+        button.textContent = 'かくす';
+        button.classList.add('revealed');
+      }
+    });
+  }
+
+  // タブ切り替え
+  function switchGrade(grade) {
+    currentGrade = grade;
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      const onClickAttr = btn.getAttribute('onclick');
+      btn.classList.toggle('active', onClickAttr.includes(`'${grade}'`));
+    });
+    renderQuestions(grade);
+  }
+
+  // 初期化（初級を表示）
+  renderQuestions('beginner');
+</script>
+
+</body>
+</html>
