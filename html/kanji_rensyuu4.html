@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>漢字とことばのれんしゅう（昭和・平成・令和＋ASCIIアート）</title>
+  <style>
+    :root {
+      --primary-color: #4A90E2;
+      --bg-color: #F5F7FA;
+      --card-bg: #FFFFFF;
+      --mask-color: #2C3E50;
+      --text-color: #333333;
+      --accent-color: #D32F2F;
+      --memo-bg: #F0F7FF;
+    }
+
+    body {
+      font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 950px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--primary-color);
+      margin-bottom: 20px;
+    }
+
+    .tabs-wrapper {
+      margin-bottom: 20px;
+      border-bottom: 2px solid #E0E0E0;
+      padding-bottom: 12px;
+    }
+
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      padding: 10px 24px;
+      border: none;
+      background: #EAEAEA;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 15px;
+      transition: background 0.2s;
+    }
+
+    .tab-btn.active {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .global-btn {
+      padding: 6px 12px;
+      border: 1px solid var(--primary-color);
+      background: white;
+      color: var(--primary-color);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .global-btn:hover {
+      background: #F0F7FF;
+    }
+
+    .question-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .question-item {
+      display: flex;
+      align-items: flex-start;
+      padding: 16px 0;
+      border-bottom: 1px solid #EEEEEE;
+    }
+
+    .toggle-btn {
+      margin-right: 16px;
+      padding: 8px 12px;
+      border: none;
+      background: var(--primary-color);
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      min-width: 65px;
+      text-align: center;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .toggle-btn.revealed {
+      background: #E0E0E0;
+      color: #333;
+    }
+
+    .content-area {
+      flex-grow: 1;
+    }
+
+    .main-text {
+      font-size: 18px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .sub-hiragana {
+      font-size: 13px;
+      color: #666666;
+      margin-top: 4px;
+    }
+
+    .kanji-origin {
+      margin-top: 8px;
+      padding: 8px 12px;
+      background-color: var(--memo-bg);
+      border-left: 4px solid var(--primary-color);
+      font-size: 13px;
+      color: #444;
+      border-radius: 0 4px 4px 0;
+      display: none;
+      white-space: pre-wrap;
+    }
+
+    .kanji-origin.show {
+      display: block;
+    }
+
+    .kanji-origin strong {
+      color: var(--primary-color);
+    }
+
+    .mask {
+      display: inline-block;
+      background-color: var(--mask-color);
+      color: transparent;
+      padding: 0 6px;
+      margin: 0 2px;
+      border-radius: 4px;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+
+    .mask.revealed {
+      background-color: transparent;
+      color: var(--accent-color);
+      font-weight: bold;
+      border-bottom: 2px solid var(--accent-color);
+      border-radius: 0;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>漢字とことばのれんしゅう（昭和・平成・令和＋ASCIIアート）</h1>
+
+  <div class="tabs-wrapper">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchCategory('elementary')">小学生（漢字＋ことば）</button>
+      <button class="tab-btn" onclick="switchCategory('junior')">中学生（熟語・語源）</button>
+      <button class="tab-btn" onclick="switchCategory('era_words')">昭和・平成・令和ことば</button>
+      <button class="tab-btn" onclick="switchCategory('ascii')">ASCIIアート問題</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="global-btn" onclick="setAllMasks(true)">ぜんぶ かくす</button>
+    <button class="global-btn" onclick="setAllMasks(false)">ぜんぶ みせる</button>
+  </div>
+
+  <ul id="questionContainer" class="question-list"></ul>
+</div>
+
+<script>
+  // [漢字入り問題文, 全文ひらがな, 成り立ち・解説] の形式
+  const questionsData = {
+    "elementary": [
+      ["朝日に向かって{清}らかな{水}を飲む。", "あさひにむかってきよらかなみずをのむ。", "【清】「さんずい（水）」＋「青（澄み切った様子）」で、水が澄んで清らかなさまを表します。"],
+      ["青空に{白}い鳥が優雅に{飛}ぶ。", "あおぞらにしろいとりがゆうがにとぶ。", "【飛】鳥が翼を広げて空へ高く舞い上がる姿を形どった象形文字です。"],
+      ["{海}の{遠}くから温かい{風}が吹く。", "うみのとおくからあたたかいかぜがふく。", "【海】「さんずい（水）」＋「毎（母が子どもを育む）」で、生命を育む大きな水の広がりを表します。"],
+      ["{春}の{訪}れを告げる{花}が咲く。", "はるのおとずれをつげるはながさく。", "【春】草木が芽吹き、太陽の光（日）を受けて植物が成長する季節を表しています。"],
+      ["{秋}の夜長に{読}書を楽しむ。", "あきのよながにどくしょをたのしむ。", "【秋】実った穀物を収穫し、畑を荒らす虫（火・バッタの象形）を焼き払う様子から秋を表します。"],
+      ["自分の{夢}に向かって{努}力する。", "じぶんのゆめにむかってどりょくする。", "【夢】「目」に「夕・ハ」を合わせ、夜の眠る中でぼんやりと目に見える幻影（ゆめ）を表します。"],
+      ["{算}数の問題を{解}いて{正}解する。", "さんすうのもんだいをといてせいかいする。", "【解】「角」に「刀」と「牛」で、牛の角を刀で解きほぐし分けることから「とく」の意味になりました。"],
+      ["図書館で{静}かに{読}書する。", "としょかんでしずかにどくしょする。", "【静】「青（澄んで落ち着いた色・気配）」＋「争」で、争いがなく穏やかで静まり返った様子です。"],
+      ["{森}の中で{光}る{星}を見上げる。", "もりのなかでひかるほしをみあげる。", "【森】「木」が三つ重なり、木々がたくさん集まった深い森を表します。"],
+      ["{空}にかかる{虹}を友だちと{見}る。", "そらにかかるにじをともだちとみる。", "【虹】虫偏＋工で、昔は空に現れる大きな蛇のような存在と考えられていました。"]
+    ],
+
+    "junior": [
+      ["{曖}{昧}な態度を避けて{明}確に伝える。", "あいまいなたいどをさけてめいかくにつたえる。", "【曖昧】「日」が「愛・蒙」など隠される様子から、光がハッキリせずぼやけている状態を表します。"],
+      ["{試}{行}{錯}誤を繰り返して{完}成させる。", "しこうさくごをくりかえしてかんせいさせる。", "【錯】「金（金属・金物）」＋「昔（重なる）」で、交じり合って混乱する様子から「あやまる・まざる」の意味に。"],
+      ["自然環境の{保}{全}に{努}める。", "しぜんかんきょうのほぜんにつとめる。", "【保】「人」が「子」を背負って大切に守り育てる姿から、まもる・たもつという意味になりました。"],
+      ["{縦}{横}{無}{尽}にグラウンドを駆け巡る。", "じゅうおうむじんにぐらうんどをかけめぐる。", "【縦横】「縦」は織物のたて糸、「横」はよこ糸を表し、転じて四方八方くまなく広がる様子を意味します。"],
+      ["互いに{切}{磋}{琢}{磨}して実力を高める。", "たがいにせっさたくましてじつりょくをたかめる。", "【切磋琢磨】骨や角、玉や石を「切る・削る・磨く」ように、学問や人格を懸命に磨き上げる古来の言葉です。"],
+      ["{臨}{機}{応}変に対応を{変}える。", "りんきおうへんにたいおうをかえる。", "【臨機】「臨」は高い所から見下ろす・直面する、「機」は物事のきざし。その場に応じた適切な処置を指します。"],
+      ["{矛盾}のない{論}理的な説明を求める。", "むじゅんのないろんりてきなせつめいをもとめる。", "【矛盾】「矛（攻撃の武器）」と「盾（防御の防具）」。どんなものも突き通す矛と、どんなものも防ぐ盾のエピソードから由来します。"],
+      ["{深}い{感}慨に{浸}りながら昔を{顧}みる。", "ふかいかんがいにひたりながらむかしをかえりみる。", "【慨】「心」＋「既（すでにそうである）」で、心の内からわき起こる深い感情や感慨を表します。"],
+      ["{共}{感}と{同}{情}の違いを{考}える。", "きょうかんとどうじょうのちがいをかんがえる。", "【共感】相手の立場に立って同じように感じること。【同情】かわいそうだと感じるが、必ずしも同じ立場ではない。"],
+      ["{客}{観}{的}な{視}{点}で物事を{見}直す。", "きゃっかんてきなしてんでものごとをみなおす。", "【客観】自分の外側から、第三者の目で物事を見ること。主観との対比で使われます。"]
+    ],
+
+    // 昭和・平成・令和のことば変化
+    "era_words": [
+      ["父の呼び方は時代でかわる。昭和は「{お父様}」、平成は「{お父さん}」、令和は「{パパ}」。", "ちちのよびかたはじだいでかわる。しょうわは「おとうさま」、へいせいは「おとうさん」、れいわは「ぱぱ」。", "【父の呼び方】昭和は格式を重んじる時代で「お父様」。平成は家族の距離が近づき「お父さん」。令和はカジュアル化が進み「パパ」も一般的に。"],
+      ["昭和の子どもは母を「{お母様}」と呼んだ。平成は「{お母さん}」、令和は「{ママ}」。", "しょうわのこどもはははを「おかあさま」とよんだ。へいせいは「おかあさん」、れいわは「まま」。", "【母の呼び方】家族の呼び方は時代の価値観を映す鏡。令和では親しみやすい「ママ」が広く使われています。"],
+      ["昭和のあいさつは「{ごきげんよう}」、平成は「{こんにちは}」、令和はSNSで「{やほー}」。", "しょうわのあいさつは「ごきげんよう」、へいせいは「こんにちは」、れいわはえすえぬえすで「やほー」。", "【あいさつの変化】昭和は丁寧語が主流。平成は標準的な「こんにちは」。令和はネット文化の影響で軽い挨拶が広まる。"],
+      ["昭和の別れの言葉は「{さようなら}」、平成は「{じゃあね}」、令和は「{バイバイ}」「{またね}」。", "しょうわのわかれのことばは「さようなら」、へいせいは「じゃあね」、れいわは「ばいばい」「またね」。", "【別れの言葉】形式的な「さようなら」から、距離の近い「じゃあね」「バイバイ」へ。人間関係のあり方の変化が見えます。"],
+      ["昭和の敬語「{恐れ入ります}」は、平成・令和では「{すみません}」「{ありがとうございます}」がよく使われる。", "しょうわのけいご「おそれいります」は、へいせい・れいわでは「すみません」「ありがとうございます」がよくつかわれる。", "【敬語の変化】かしこまった表現から、シンプルで分かりやすい敬語へ。ビジネスメールでも変化が見られます。"],
+      ["昭和の若者言葉「{ナウい}」は、平成では「{イケてる}」、令和では「{エモい}」「{尊い}」。", "しょうわのわかものことば「なうい」は、へいせいでは「いけてる」、れいわでは「えもい」「とうとい」。", "【若者言葉】いつの時代も新しい感覚を表す言葉が生まれる。意味は似ていても、響きやニュアンスが変化します。"],
+      ["昭和の連絡手段は「{手紙}」「{公衆電話}」、平成は「{メール}」、令和は「{SNS}」「{チャット}」。", "しょうわのれんらくしゅだんは「てがみ」「こうしゅうでんわ」、へいせいは「めーる」、れいわは「えすえぬえす」「ちゃっと」。", "【連絡手段の変化】ことばだけでなく、使われる道具も変わる。それに合わせて表現も変化していきます。"],
+      ["昭和の学校では先生を「{先生}」と呼び、平成・令和では「{〇〇先生}」「{〇〇せんせー}」など呼び方がくだけている。", "しょうわのがっこうではせんせいを「せんせい」とよび、へいせい・れいわでは「〇〇せんせい」「〇〇せんせー」などよびかたがくだけている。", "【先生の呼び方】敬意は保ちつつ、距離感は少し近くなっていることがうかがえます。"]
+    ],
+
+    // ASCIIアート問題（画像なし）
+    "ascii": [
+      [
+        "これは何の動物？ {動物}",
+        "これはなんのどうぶつ？",
+        "【答え（ASCIIアート）】\n\n  (=^･ω･^=)\n  ネコ"
+      ],
+      [
+        "これは何の乗り物？ {乗り物}",
+        "これはなんののりもの？",
+        "【答え（ASCIIアート）】\n\n   ____\n _/  |_\\__\n|  _     _|\n'(_)---(_)'\n  バス"
+      ],
+      [
+        "これは何の顔？ {顔}",
+        "これはなんのかお？",
+        "【答え（ASCIIアート）】\n\n  (＾▽＾)\n  わらっているかお"
+      ],
+      [
+        "これは何をしている人？ {しぐさ}",
+        "これはなにをしているひと？",
+        "【答え（ASCIIアート）】\n\n  m(_ _)m\n  あやまっているひと"
+      ],
+      [
+        "これは何の天気？ {天気}",
+        "これはなんのてんき？",
+        "【答え（ASCIIアート）】\n\n   \\   /\n    .-.\n ― (   ) ―\n    `-'\n   /   \\\n  はれ"
+      ],
+      [
+        "これは何の食べ物？ {食べ物}",
+        "これはなんのたべもの？",
+        "【答え（ASCIIアート）】\n\n   🍙\n  おにぎり（Unicode絵文字だが画像ではなく文字）"
+      ],
+      [
+        "これは何の建物？ {建物}",
+        "これはなんのたてもの？",
+        "【答え（ASCIIアート）】\n\n   /\\\n  /  \\\n /____\\\n |    |\n |____|\n  いえ"
+      ],
+      [
+        "これは何の楽器？ {楽器}",
+        "これはなんのがっき？",
+        "【答え（ASCIIアート）】\n\n  |￣￣|\n  |♩ ♪|\n  |____|\n   ギター（イメージ）"
+      ]
+    ]
+  };
+
+  let currentCategory = 'elementary';
+
+  function renderQuestions(category) {
+    const container = document.getElementById('questionContainer');
+    container.innerHTML = '';
+
+    const list = questionsData[category] || [];
+
+    list.forEach((item, index) => {
+      const text = item[0];
+      const hiragana = item[1];
+      const origin = item[2];
+
+      const li = document.createElement('li');
+      li.className = 'question-item';
+
+      const formattedText = text.replace(/\{([^}]+)\}/g, '<span class="mask">$1</span>');
+
+      li.innerHTML = `
+        <button class="toggle-btn" onclick="toggleSingleMask(this)">みせる</button>
+        <div class="content-area">
+          <div class="main-text">${index + 1}. ${formattedText}</div>
+          <div class="sub-hiragana">（ ${hiragana} ）</div>
+          <div class="kanji-origin">💡 <strong>解説・答え:</strong>\n${origin}</div>
+        </div>
+      `;
+
+      container.appendChild(li);
+    });
+  }
+
+  function toggleSingleMask(buttonElement) {
+    const item = buttonElement.closest('.question-item');
+    const masks = item.querySelectorAll('.mask');
+    const originBox = item.querySelector('.kanji-origin');
+    const isCurrentlyHidden = masks[0] ? !masks[0].classList.contains('revealed') : true;
+
+    masks.forEach(mask => {
+      if (isCurrentlyHidden) {
+        mask.classList.add('revealed');
+      } else {
+        mask.classList.remove('revealed');
+      }
+    });
+
+    if (isCurrentlyHidden) {
+      buttonElement.textContent = 'かくす';
+      buttonElement.classList.add('revealed');
+      originBox.classList.add('show');
+    } else {
+      buttonElement.textContent = 'みせる';
+      buttonElement.classList.remove('revealed');
+      originBox.classList.remove('show');
+    }
+  }
+
+  function setAllMasks(hide) {
+    const items = document.querySelectorAll('.question-item');
+    items.forEach(item => {
+      const button = item.querySelector('.toggle-btn');
+      const masks = item.querySelectorAll('.mask');
+      const originBox = item.querySelector('.kanji-origin');
+
+      masks.forEach(mask => {
+        if (hide) {
+          mask.classList.remove('revealed');
+        } else {
+          mask.classList.add('revealed');
+        }
+      });
+
+      if (hide) {
+        button.textContent = 'みせる';
+        button.classList.remove('revealed');
+        originBox.classList.remove('show');
+      } else {
+        button.textContent = 'かくす';
+        button.classList.add('revealed');
+        originBox.classList.add('show');
+      }
+    });
+  }
+
+  function switchCategory(category) {
+    currentCategory = category;
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      const onClickAttr = btn.getAttribute('onclick');
+      btn.classList.toggle('active', onClickAttr.includes(`'${category}'`));
+    });
+    renderQuestions(category);
+  }
+
+  renderQuestions('elementary');
+</script>
+
+</body>
+</html>
+
