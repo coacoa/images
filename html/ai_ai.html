@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI & AIエージェント 構造化リファレンスマップ</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-color: #38bdf8;
+            --border-color: #334155;
+            
+            --l6-color: #ec4899;
+            --l5-color: #a855f7;
+            --l4-color: #3b82f6;
+            --l3-color: #10b981;
+            --l2-color: #f59e0b;
+            --l1-color: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        /* Controls / Filter */
+        .controls {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-btn {
+            background-color: var(--card-bg);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background-color: var(--accent-color);
+            color: var(--bg-color);
+            border-color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        /* Table Styling */
+        .table-container {
+            overflow-x: auto;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            margin-bottom: 2.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            min-width: 800px;
+        }
+
+        th, td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+
+        th {
+            background-color: #111827;
+            color: var(--accent-color);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Badges & Tags */
+        .layer-badge {
+            display: inline-block;
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            color: #ffffff;
+            margin-bottom: 0.4rem;
+        }
+
+        .tag {
+            display: inline-block;
+            background-color: rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin: 0.15rem;
+        }
+
+        .tag.maker {
+            border-left: 2px solid var(--accent-color);
+        }
+
+        .tag.tool {
+            border-left: 2px solid #10b981;
+        }
+
+        .tag.keyword {
+            border-left: 2px solid #f59e0b;
+        }
+
+        .layer-description {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Supplementary Section */
+        .guide-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .guide-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.25rem;
+        }
+
+        .guide-card h3 {
+            color: var(--accent-color);
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .guide-card ul {
+            list-style-type: none;
+        }
+
+        .guide-card li {
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .guide-card strong {
+            color: var(--text-primary);
+        }
+
+        /* Custom Layer Colors */
+        .l6 { background-color: var(--l6-color); }
+        .l5 { background-color: var(--l5-color); }
+        .l4 { background-color: var(--l4-color); }
+        .l3 { background-color: var(--l3-color); }
+        .l2 { background-color: var(--l2-color); }
+        .l1 { background-color: var(--l1-color); }
+
+        @media (max-width: 768px) {
+            body { padding: 1rem 0.5rem; }
+            header h1 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>AI & AIエージェント 構造化マップ</h1>
+        <p>AIの基礎インフラから自律型エージェントまでの階層構造マトリックス</p>
+    </header>
+
+    <div class="controls">
+        <button class="filter-btn active" onclick="filterLayer('all')">すべて表示</button>
+        <button class="filter-btn" onclick="filterLayer('l6')">L6: 応用エージェント</button>
+        <button class="filter-btn" onclick="filterLayer('l5')">L5: アプリ機能</button>
+        <button class="filter-btn" onclick="filterLayer('l4')">L4: オーケストレーション</button>
+        <button class="filter-btn" onclick="filterLayer('l3')">L3: 基盤モデル</button>
+        <button class="filter-btn" onclick="filterLayer('l2')">L2: クラウド基盤</button>
+        <button class="filter-btn" onclick="filterLayer('l1')">L1: ハードウェア</button>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 22%;">階層 (レイヤー) / 定義</th>
+                    <th style="width: 20%;">該当メーカー・組織</th>
+                    <th style="width: 28%;">代表的なAIツール・モデル</th>
+                    <th style="width: 30%;">主要な構成要素・関連用語</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <tr data-layer="l6">
+                    <td>
+                        <span class="layer-badge l6">L6: 応用エージェント・活用層</span>
+                        <div class="layer-description">ユーザーの代わりに目的を理解し、自律的にマルチステップタスクを実行するシステム。</div>
+                    </td>
+                    <td>
+                        <span class="tag maker">OpenAI</span>
+                        <span class="tag maker">Anthropic</span>
+                        <span class="tag maker">Google</span>
+                        <span class="tag maker">Cognition</span>
+                        <span class="tag maker">AutoGPT</span>
+                    </td>
+                    <td>
+                        <span class="tag tool">ChatGPT (with Tasks)</span>
+                        <span class="tag tool">Claude Artifacts</span>
+                        <span class="tag tool">Devin</span>
+                        <span class="tag tool">AutoGPT</span>
+                        <span class="tag tool">BabyAGI</span>
+                    </td>
+                    <td>
+                        <span class="tag keyword">Agentic Workflow</span>
+                        <span class="tag keyword">Multi-Agent</span>
+                        <span class="tag keyword">Web Browsing</span>
+                        <span class="tag keyword">Code Interpreter</span>
+                    </td>
+                </tr>
+                <tr data-layer="l5">
+                    <td>
+                        <span class="layer-badge l5">L5: アプリケーション・UI層</span>
+                        <div class="layer-description">エンドユーザーが対話や作業で直接利用するフロントエンドGUIおよび機能拡張部。</div>
+                    </td>
+                    <td>
+                        <span class="tag maker">OpenAI</span>
+                        <span class="tag maker">Anthropic</span>
+                        <span class="tag maker">Google</span>
+                        <span class="tag maker">Microsoft</span>
+                        <span class="tag maker">Notion</span>
+                        <span class="tag maker">Perplexity</span>
+                    </td>
+                    <td>
+                        <span class="tag tool">ChatGPT</span>
+                        <span class="tag tool">Claude</span>
+                        <span class="tag tool">Gemini</span>
+                        <span class="tag tool">Copilot</span>
+                        <span class="tag tool">Notion AI</span>
+                        <span class="tag tool">Perplexity AI</span>
+                    </td>
+                    <td>
+                        <span class="tag keyword">Chat UI</span>
+                        <span class="tag keyword">Prompting</span>
+                        <span class="tag keyword">Context Window</span>
+                        <span class="tag keyword">Streaming</span>
+                        <span class="tag keyword">System Prompt</span>
+                    </td>
+                </tr>
+                <tr data-layer="l4">
+                    <td>
+                        <span class="layer-badge l4">L4: オーケストレーション層</span>
+                        <div class="layer-description">LLMを組み合わせて自律型エージェントやRAG（知識検索）を構築する基盤。</div>
+                    </td>
+                    <td>
+                        <span class="tag maker">LangChain Inc.</span>
+                        <span class="tag maker">LlamaIndex</span>
+                        <span class="tag maker">Microsoft</span>
+                        <span class="tag maker">CrewAI</span>
+                    </td>
+                    <td>
+                        <span class="tag tool">LangChain</span>
+                        <span class="tag tool">LangGraph</span>
+                        <span class="tag tool">LlamaIndex</span>
+                        <span class="tag tool">AutoGen</span>
+                        <span class="tag tool">CrewAI</span>
+                    </td>
+                    <td>
+                        <span class="tag keyword">RAG</span>
+                        <span class="tag keyword">Vector Search</span>
+                        <span class="tag keyword">Embedding</span>
+                        <span class="tag keyword">Tool / Function Calling</span>
+                        <span class="tag keyword">Memory</span>
+                    </td>
+                </tr>
+                <tr data-layer="l3">
+                    <td>
+                        <span class="layer-badge l3">L3: モデル・AIエンジン層</span>
+                        <div class="layer-description">テキスト・画像・音声入力を処理し、推論や生成を行うコアとなる言語・生成モデル。</div>
+                    </td>
+                    <td>
+                        <span class="tag maker">OpenAI</span>
+                        <span class="tag maker">Anthropic</span>
+                        <span class="tag maker">Google</span>
+                        <span class="tag maker">Meta</span>
+                        <span class="tag maker">DeepSeek</span>
+                        <span class="tag maker">Stability AI</span>
+                    </td>
+                    <td>
+                        <span class="tag tool">GPT-4o</span>
+                        <span class="tag tool">Claude 3.5 Sonnet</span>
+                        <span class="tag tool">Gemini 1.5 Pro</span>
+                        <span class="tag tool">Llama 3</span>
+                        <span class="tag tool">Midjourney</span>
+                        <span class="tag tool">Flux</span>
+                    </td>
+                    <td>
+                        <span class="tag keyword">LLM / SLM</span>
+                        <span class="tag keyword">Multi-Modal</span>
+                        <span class="tag keyword">Fine-tuning</span>
+                        <span class="tag keyword">Open-source</span>
+                        <span class="tag keyword">Token</span>
+                    </td>
+                </tr>
+                <tr data-layer="l2">
+                    <td>
+                        <span class="layer-badge l2">L2: クラウド・プラットフォーム層</span>
+                        <div class="layer-description">モデル開発、API提供、ファインチューニングを行うクラウドサービス。</div>
+                    </td>
+                    <td>
+                        <span class="tag maker">Microsoft</span>
+                        <span class="tag maker">AWS</span>
+                        <span class="tag maker">Google Cloud</span>
+                        <span class="tag maker">Hugging Face</span>
+                        <span class="tag maker">Scale AI</span>
+                    </td>
+                    <td>
+                        <span class="tag tool">Azure OpenAI Service</span>
+                        <span class="tag tool">AWS Bedrock</span>
+                        <span class="tag tool">Vertex AI</span>
+                        <span class="tag tool">Hugging Face Hub</span>
+                    </td>
+                    <td>
+                        <span class="tag keyword">API</span>
+                        <span class="tag keyword">MLOps</span>
+                        <span class="tag keyword">Data Labeling</span>
+                        <span class="tag keyword">Fine-tuning API</span>
+                        <span class="tag keyword">Serverless Inference</span>
+                    </td>
+                </tr>
+                <tr data-layer="l1">
+                    <td>
+                        <span class="layer-badge l1">L1: ハードウェア・インフラ層</span>
+                        <div class="layer-description">AIの学習・推論計算を行う物理演算チップ、サーバー、データセンター。</div>
+                    </td>
+                    <td>
+                        <span class="tag maker">NVIDIA</span>
+                        <span class="tag maker">AMD</span>
+                        <span class="tag maker">Intel</span>
+                        <span class="tag maker">Google (TPU)</span>
+                        <span class="tag maker">TSMC</span>
+                    </td>
+                    <td>
+                        <span class="tag tool">H100 / B200 (NVIDIA)</span>
+                        <span class="tag tool">TPU v5 (Google)</span>
+                        <span class="tag tool">MI300 (AMD)</span>
+                    </td>
+                    <td>
+                        <span class="tag keyword">GPU / TPU / NPU</span>
+                        <span class="tag keyword">CUDA</span>
+                        <span class="tag keyword">Inference</span>
+                        <span class="tag keyword">Training</span>
+                        <span class="tag keyword">FLOPS</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="guide-grid">
+        <div class="guide-card">
+            <h3>階層の読み方</h3>
+            <ul>
+                <li><strong>下層 (L1-L3):</strong> AIの脳みそ・基盤を作る技術。巨大な計算とモデル作成。</li>
+                <li><strong>中層 (L4):</strong> モデルに知識（RAG）や手足（Tool）を授けて賢く動かす仕組み。</li>
+                <li><strong>上層 (L5-L6):</strong> ユーザーが直接使ったり、全自動でタスクを実行させる応用製品。</li>
+            </ul>
+        </div>
+        <div class="guide-card">
+            <h3>重要キー概念</h3>
+            <ul>
+                <li><strong>Agentic Workflow:</strong> AIが指示に対して「計画 → 実行 → 検証」のループを自律的に回す仕組み。</li>
+                <li><strong>Function Calling:</strong> AIが自分の判断で「検索」「計算」などの外部ツールを呼び出す技術。</li>
+                <li><strong>RAG:</strong> 社内文書などをAIにリアルタイム検索させて回答精度を上げる技術。</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    function filterLayer(layer) {
+        const rows = document.querySelectorAll('#table-body tr');
+        const buttons = document.querySelectorAll('.filter-btn');
+
+        buttons.forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+
+        rows.forEach(row => {
+            if (layer === 'all' || row.getAttribute('data-layer') === layer) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
