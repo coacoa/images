@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<meta name="description" content="Vim / gVim 経験者のための Doom Emacs チュートリアル。Evil で Vim の手癖を活かしながら、SPC リーダー、Magit、Org までステップ式に学べる。Neovim との対照表とスマホ復習用フラッシュカード付き。" />
+<link rel="icon" href="data:," />
+<title>Doom Emacs チュートリアル — Vimから来た人のために</title>
+<style>
+  :root{
+    --bg:#fbfbf8; --bg2:#f1f2ec; --surface:#ffffff; --surface2:#f4f5ef;
+    --ink:#171a18; --ink2:#3f4742; --muted:#6b756e; --line:#dde1d8;
+    --green:#166b4a; --green2:#0f4d34; --green-soft:#e3f2e9;
+    --orange:#c75109; --orange-soft:#fdeee3; --amber:#8a6d00; --amber-soft:#fff6cf;
+    --code-bg:#111714; --code-ink:#e8f0e9; --code-line:#263029;
+    --shadow:0 10px 30px rgba(20,30,22,.08);
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0e1210; --bg2:#121714; --surface:#161c18; --surface2:#1a211c;
+      --ink:#edf2ee; --ink2:#c8d2ca; --muted:#95a399; --line:#28322b;
+      --green:#4cc38a; --green2:#7ee2b0; --green-soft:#173427;
+      --orange:#ff9a5c; --orange-soft:#342014; --amber:#ffd94d; --amber-soft:#2e2a10;
+      --code-bg:#090c0a; --code-ink:#e8f0e9; --code-line:#222c25;
+      --shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  *{box-sizing:border-box}
+  html{scroll-padding-top:84px;overflow-x:clip}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans CJK JP","Noto Sans JP","Yu Gothic UI",sans-serif;line-height:1.75;font-size:16px;-webkit-font-smoothing:antialiased;overflow-x:clip;overflow-wrap:break-word}
+  .hero-grid>*,.grid2>*,.lessons>*,.how>*,.plan>*,.stats>*{min-width:0}
+  .terminal,.codeblock,.table-wrap{max-width:100%;min-width:0}
+  h1,h2,h3,h4,p,li{overflow-wrap:break-word}
+  a{color:var(--green);text-underline-offset:3px}
+  .mono,code,kbd{font-family:ui-monospace,"JetBrains Mono","Cascadia Mono",SFMono-Regular,Menlo,Consolas,monospace}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+  /* Header nav */
+  .topbar{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--bg) 88%, transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .topbar-in{display:flex;align-items:center;gap:10px;overflow-x:auto;padding:10px 0;scrollbar-width:none}
+  .topbar-in::-webkit-scrollbar{display:none}
+  .brand{font-weight:900;white-space:nowrap;font-size:14px;letter-spacing:.02em}
+  .brand span{color:var(--green)}
+  .topbar a.nav{white-space:nowrap;text-decoration:none;color:var(--ink2);font-size:13px;font-weight:700;padding:7px 11px;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
+  .topbar a.nav:hover{border-color:var(--green);color:var(--green)}
+  /* Hero */
+  .hero{padding:44px 0 28px;border-bottom:1px solid var(--line);background:var(--bg2)}
+  .hero-grid{display:grid;grid-template-columns:1.25fr .75fr;gap:28px;align-items:start}
+  .eyebrow{display:inline-flex;gap:8px;align-items:center;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--green);border:1px solid var(--line);background:var(--surface);padding:6px 10px;border-radius:999px}
+  .eyebrow i{width:8px;height:8px;border-radius:50%;background:var(--green);display:block}
+  h1{font-size:clamp(32px,6vw,56px);line-height:1.08;letter-spacing:-.03em;margin:16px 0 14px;font-weight:900}
+  h1 em{font-style:normal;color:var(--green)}
+  .lead{font-size:17px;color:var(--ink2);margin:0 0 18px;max-width:34em}
+  .lead strong{color:var(--ink)}
+  .hero-cta{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}
+  .btn{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-weight:800;font-size:14px;padding:11px 16px;border-radius:10px;border:1px solid var(--ink);cursor:pointer;background:var(--ink);color:var(--bg)}
+  .btn.secondary{background:var(--surface);color:var(--ink);border-color:var(--line)}
+  .btn.small{padding:8px 12px;font-size:13px}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .stat b{font-size:24px;line-height:1;display:block}
+  .stat span{font-size:12px;color:var(--muted);font-weight:700}
+  .terminal{background:var(--code-bg);color:var(--code-ink);border-radius:14px;overflow:hidden;border:1px solid var(--code-line);box-shadow:var(--shadow)}
+  .terminal-head{display:flex;gap:6px;align-items:center;padding:11px 14px;border-bottom:1px solid var(--code-line);font-size:12px;color:#9fb3a4}
+  .dot{width:10px;height:10px;border-radius:50%}
+  .terminal pre{margin:0;padding:16px;overflow-x:auto;font-size:12.5px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
+  .terminal .c{color:#7f9685}.terminal .g{color:#6ee7a8}.terminal .o{color:#fdba74}.terminal .p{color:#fda4af}
+  .progress-box{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:12px}
+  .progress-top{display:flex;justify-content:space-between;font-size:13px;font-weight:800}
+  .bar{height:10px;background:var(--surface2);border:1px solid var(--line);border-radius:999px;overflow:hidden;margin-top:8px}
+  .bar i{display:block;height:100%;width:0;background:var(--green);transition:width .35s ease}
+  .progress-note{font-size:12px;color:var(--muted);margin:8px 0 0}
+  /* Sections */
+  section.block{padding:38px 0}
+  .sec-head{display:flex;gap:16px;align-items:flex-start;margin-bottom:18px}
+  .sec-num{flex:0 0 auto;width:42px;height:42px;border-radius:10px;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-weight:900;font-family:"JetBrains Mono",monospace}
+  h2{font-size:clamp(24px,4vw,34px);line-height:1.2;margin:2px 0 6px;letter-spacing:-.02em}
+  .sec-head p{margin:0;color:var(--ink2);max-width:46em}
+  h3{font-size:18px;margin:0 0 8px;line-height:1.35}
+  /* How to use */
+  .how{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .how article{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+  .how b.num{font-family:"JetBrains Mono",monospace;color:var(--green);font-size:13px}
+  .how p{margin:6px 0 0;color:var(--ink2);font-size:14px}
+  /* Phase */
+  .phase{margin:26px 0;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--surface)}
+  .phase-head{padding:20px 20px 16px;background:var(--surface2);border-bottom:1px solid var(--line);display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between;align-items:flex-start}
+  .phase-head .tag{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;padding:5px 8px;border-radius:999px;background:var(--green-soft);color:var(--green)}
+  .phase-head .tag.nvim{background:var(--orange-soft);color:var(--orange)}
+  .phase-head h3{font-size:22px;margin:6px 0 4px}
+  .phase-head p{margin:0;color:var(--ink2);font-size:14px;max-width:44em}
+  .phase-meta{font-size:12px;font-weight:800;color:var(--muted);white-space:nowrap;text-align:right}
+  .lessons{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  .lesson{padding:18px 20px;border-top:1px solid var(--line)}
+  .lesson:nth-child(odd){border-right:1px solid var(--line)}
+  .lesson:first-child,.lesson:nth-child(2){border-top:none}
+  .lesson.done{background:var(--green-soft)}
+  .lesson-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+  .lesson h4{margin:0;font-size:16px;line-height:1.4}
+  .lesson .time{font-size:11px;color:var(--muted);font-weight:800;white-space:nowrap}
+  .lesson p{font-size:14px;color:var(--ink2);margin:8px 0}
+  .keys{display:flex;flex-direction:column;gap:6px;margin:10px 0}
+  .keyrow{display:flex;gap:8px;align-items:flex-start;font-size:13px}
+  .keyrow .label{flex:0 0 74px;font-size:11px;font-weight:900;letter-spacing:.04em;padding-top:3px}
+  .label.doom{color:var(--green)} .label.nvim{color:var(--orange)} .label.vim{color:var(--muted)}
+  kbd{display:inline-block;background:var(--surface);border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1px 6px;font-size:12.5px;font-weight:700;line-height:1.5;white-space:nowrap;color:var(--ink)}
+  .lesson.done kbd{background:var(--surface)}
+  .exercise{background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:10px 12px;font-size:13px;margin:10px 0}
+  .exercise b{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--green)}
+  .exercise ul{margin:6px 0 0;padding-left:18px}
+  .done-btn{margin-top:8px;background:var(--surface);border:1px solid var(--line);color:var(--ink);font-weight:800;font-size:13px;padding:8px 12px;border-radius:999px;cursor:pointer}
+  .done-btn[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
+  @media (prefers-color-scheme: dark){.done-btn[aria-pressed="true"]{color:#08110c}}
+  .warn{background:var(--amber-soft);border:1px solid color-mix(in srgb,var(--amber) 35%, var(--line));border-radius:10px;padding:12px 14px;font-size:14px;margin:12px 0}
+  .warn b{color:var(--amber)}
+  /* Tables */
+  .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+  table{width:100%;border-collapse:collapse;min-width:640px;font-size:14px}
+  th,td{padding:11px 13px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+  th{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);background:var(--surface2)}
+  tr:last-child td{border-bottom:none}
+  td:first-child{font-weight:700}
+  .searchbar{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 12px}
+  .searchbar input{flex:1 1 240px;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:15px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{border:1px solid var(--line);background:var(--surface);color:var(--ink2);padding:9px 12px;border-radius:999px;font-weight:800;font-size:13px;cursor:pointer}
+  .chip.active{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  /* Code */
+  .codeblock{background:var(--code-bg);color:var(--code-ink);border-radius:12px;overflow:hidden;border:1px solid var(--code-line);margin:12px 0}
+  .codeblock-head{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-bottom:1px solid var(--code-line);font-size:12px;color:#9fb3a4;font-weight:700}
+  .copy-btn{background:transparent;border:1px solid var(--code-line);color:var(--code-ink);border-radius:999px;padding:5px 10px;font-size:12px;font-weight:800;cursor:pointer}
+  .codeblock pre{margin:0;padding:14px;overflow-x:auto;font-size:13px;line-height:1.7;font-family:"JetBrains Mono",monospace}
+  /* Two col */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+  .card p,.card li{color:var(--ink2);font-size:14px}
+  .card ul{padding-left:18px;margin:8px 0}
+  .pill{display:inline-block;font-size:11px;font-weight:900;padding:4px 8px;border-radius:999px;letter-spacing:.04em}
+  .pill.doom{background:var(--green-soft);color:var(--green)} .pill.nvim{background:var(--orange-soft);color:var(--orange)}
+  /* Flashcards */
+  .flash{background:var(--ink);color:var(--bg);border-radius:18px;padding:22px;overflow:hidden}
+  .flash h3{color:var(--bg)} .flash p{color:color-mix(in srgb,var(--bg) 78%, transparent)}
+  .flashcard{margin:16px 0;background:var(--surface);color:var(--ink);border-radius:14px;min-height:190px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:24px;cursor:pointer;border:1px solid var(--line)}
+  .flashcard .q{font-size:clamp(20px,4vw,28px);font-weight:900;line-height:1.35}
+  .flashcard .a{font-size:16px;color:var(--ink2);margin-top:12px;display:none;max-width:36em}
+  .flashcard.flipped .a{display:block}
+  .flashcard .hint{font-size:12px;color:var(--muted);font-weight:800;margin-top:14px;letter-spacing:.05em;text-transform:uppercase}
+  .flash-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .flash-controls .btn{background:var(--bg);color:var(--ink);border-color:var(--bg)}
+  .flash-controls .btn.secondary{background:transparent;color:var(--bg);border-color:color-mix(in srgb,var(--bg) 35%, transparent)}
+  .flash-count{font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:800}
+  /* Plan */
+  .plan{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .plan article{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .plan b{display:block;font-size:13px;color:var(--green)}
+  .plan ul{margin:8px 0 0;padding-left:17px;font-size:13.5px;color:var(--ink2)}
+  footer{border-top:1px solid var(--line);padding:28px 0 44px;color:var(--muted);font-size:13px}
+  footer .links{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+  @media (max-width:860px){
+    html{scroll-padding-top:178px}
+    .hero-grid,.grid2{grid-template-columns:minmax(0,1fr)}
+    .how,.plan{grid-template-columns:1fr 1fr}
+    .lessons{grid-template-columns:minmax(0,1fr)}
+    .lesson:nth-child(odd){border-right:none}
+    .lesson:nth-child(2){border-top:1px solid var(--line)}
+    .stats{grid-template-columns:repeat(3,1fr)}
+    .stat b{font-size:19px}
+    .topbar-in{flex-wrap:wrap;overflow-x:visible}
+    .terminal pre,.codeblock pre{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;overflow-x:hidden}
+    /* Wide tables become stacked cards on small screens — no sideways scroll */
+    .table-wrap{overflow-x:visible}
+    table{min-width:0;display:block;width:100%}
+    table thead{display:none}
+    table tbody{display:block}
+    table tr{display:block;padding:10px 0;border-bottom:1px solid var(--line)}
+    table tr:last-child{border-bottom:none}
+    table td{display:block;border-bottom:none;padding:4px 13px}
+    table td:first-child{font-size:15px;padding-top:2px}
+  }
+  @media (max-width:520px){
+    .how,.plan{grid-template-columns:1fr}
+    .hero{padding-top:28px}
+    h1{font-size:32px}
+    .phase-head,.lesson{padding-left:16px;padding-right:16px}
+    .keyrow .label{flex-basis:62px}
+    .stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+    .stat{padding:10px}
+  }
+  @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto} *{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <div class="brand">DOOM<span>×</span>EVIL <span>/</span> NEOVIM</div>
+    <a class="nav" href="#roadmap">ロードマップ</a>
+    <a class="nav" href="#keys">キー対照表</a>
+    <a class="nav" href="#mental">考え方の切替</a>
+    <a class="nav" href="#neovim">Neovim編</a>
+    <a class="nav" href="#config">設定ファイル</a>
+    <a class="nav" href="#review">スマホ復習</a>
+    <a class="nav" href="#plan">7日プラン</a>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow"><i></i> For Vim / gVim users</span>
+      <h1>Vimの手癖は、<br>捨てなくていい。<em>Doomで活かす。</em></h1>
+      <p class="lead">Doom Emacs は <strong>Evil</strong> によって Vim のモーダル編集をほぼそのまま再現する Emacs ディストリビューションです。あなたが覚えるべきなのは Vim の置き換えではなく、<strong><kbd>SPC</kbd> リーダーを起点にした Emacs の生態系</strong>——バッファ、プロジェクト、Magit、Org——への足し算です。</p>
+      <p class="lead" style="font-size:14px">ついでに Neovim も並行して学べるよう、各ステップに Neovim での対応操作を併記しました。片方で覚えた概念は、もう片方でもだいたい通用します。</p>
+      <div class="hero-cta">
+        <a class="btn" href="#phase0">STEP 0 から始める →</a>
+        <a class="btn secondary" href="#review">スマホで復習する</a>
+      </div>
+      <div class="stats">
+        <div class="stat"><b>7</b><span>フェーズ</span></div>
+        <div class="stat"><b>16</b><span>レッスン</span></div>
+        <div class="stat"><b>14</b><span>復習カード</span></div>
+      </div>
+      <div class="progress-box" aria-live="polite">
+        <div class="progress-top"><span>あなたの進み具合</span><span id="progressText">0 / 16 完了</span></div>
+        <div class="bar"><i id="progressBar"></i></div>
+        <p class="progress-note">各レッスンの「できた」を押すと、この端末のブラウザに保存されて次回開いたときも残ります。保存は端末・ブラウザごとです（PCとスマホで進み具合は別々になります）。</p>
+      </div>
+    </div>
+    <div>
+      <div class="terminal" aria-label="Doom Emacs の起動イメージ">
+        <div class="terminal-head"><span class="dot" style="background:#f87171"></span><span class="dot" style="background:#fbbf24"></span><span class="dot" style="background:#34d399"></span><span style="margin-left:6px">~ / doom — 最初に打つ3つ</span></div>
+        <pre><span class="c"># インストール直後（公式手順）</span>
+$ git clone --depth 1 \
+    https://github.com/doomemacs/doomemacs \
+    ~/.config/emacs
+$ ~/.config/emacs/bin/doom install
+
+<span class="c"># 起動したら、まずこれだけ</span>
+<span class="g">SPC</span> <span class="o">.</span>      <span class="c">ファイルを開く</span>
+<span class="g">SPC</span> <span class="o">b b</span>    <span class="c">バッファを切り替える</span>
+<span class="g">SPC</span> <span class="o">h</span>      <span class="c">ヘルプ（困ったらここ）</span>
+
+<span class="c"># 設定を変えたら</span>
+$ doom sync <span class="p">&amp;&amp;</span> doom doctor</pre>
+      </div>
+      <div class="warn" style="margin-bottom:0"><b>最初に1つだけ注意：</b> Doom の <kbd>SPC</kbd> は Vim の <code>&lt;leader&gt;</code> と似ていますが、実体は「どのキーに何が割り当たっているか」をその場で教えてくれる <strong>which-key</strong> 付きのメニューです。覚えきる前に、押して眺める癖をつけるのが近道です。</div>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <!-- How to use -->
+  <section class="block" aria-labelledby="how-title">
+    <div class="sec-head"><div class="sec-num">?</div><div><h2 id="how-title">このチュートリアルの使い方</h2><p>PCでは実際に Doom を開きながら、スマホでは通勤・待ち時間にカードで復習する——その往復で定着させる設計です。</p></div></div>
+    <div class="how">
+      <article><b class="num">01 — PCで手を動かす</b><h3>レッスンを上から順に</h3><p>各レッスンの「やってみよう」をそのまま自分のファイルで試してください。1レッスン5〜15分が目安。詰まったら <kbd>SPC</kbd> <kbd>h</kbd> <kbd>k</kbd> でそのキーの説明を読めます。</p></article>
+      <article><b class="num">02 — Vimと比べて覚える</b><h3>差分だけを頭に入れる</h3><p>モーションやオペレータは Vim と共通なので新しく覚える必要はありません。「Vimと違う所」に黄色い注意書きを置きました。そこだけ意識すれば十分です。</p></article>
+      <article><b class="num">03 — スマホで復習</b><h3>カードをめくるだけ</h3><p>ページ末尾のフラッシュカードは電波が弱い場所でもその場で使えます。このファイルを GitHub Pages に置けば、ホーム画面に追加してアプリのように開けます。</p></article>
+    </div>
+  </section>
+
+  <!-- Roadmap -->
+  <section class="block" id="roadmap" aria-labelledby="roadmap-title">
+    <div class="sec-head"><div class="sec-num">▸</div><div><h2 id="roadmap-title">ロードマップ — ステップごとに「できること」を増やす</h2><p>Phase 0〜2 で日常の編集が回るようになり、Phase 3〜4 で Emacs ならではの強み（Magit / Org / 設定の育て方）に進みます。Phase 5 は Neovim への橋渡しです。</p></div></div>
+
+    <!-- PHASE 0 -->
+    <div class="phase" id="phase0">
+      <div class="phase-head"><div><span class="tag">Phase 0 · 土台</span><h3>Emacsの世界観をつかむ</h3><p>Vim と Emacs は「エディタ」の定義が違います。ここを誤解すると全部が遠回りになります。</p></div><div class="phase-meta">目安 30分<br>レッスン 2</div></div>
+      <div class="lessons">
+        <article class="lesson" data-lesson>
+          <div class="lesson-top"><h4>0-1. バッファ＝開いているもの全部</h4><span class="time">10分</span></div>
+          <p>Vim の「ファイルを開く」感覚に近いのがバッファですが、Emacs ではファイルでないもの（Magit画面、ヘルプ、ターミナル）も全部バッファです。「ウィンドウはバッファを覗く窓」と捉えると混乱が消えます。</p>
+          <div class="keys">
+            <div class="keyrow"><span class="label doom">DOOM</span><span><kbd>SPC</kbd> <kbd>b</kbd> <kbd>b</kbd> バッファ一覧から切替 ／ <kbd>SPC</kbd> <kbd>b</kbd> <kbd>d</kbd> 今のバッファを閉じる</span></div>
+            <div class="keyrow"><span class="label vim">VIM</span><span><kbd>:ls</kbd> と <kbd>:b</kbd> に相当。ただし Emacs のバッファはファイル以外も含む</span></div>
+            <div class="keyrow"><span class="label nvim">NEOVIM</span><span><kbd>:ls</kbd> ／ Telescope なら <kbd>SPC</kbd> <kbd>b</kbd> <kbd>b</kbd> 相当（LazyVim）</span></div>
+          </div>
+          <div class="exercise"><b>やってみよう</b><ul><li>適当なファイルを3つ開いて <kbd>SPC</kbd> <kbd>b</kbd> <kbd>b</kbd> で行き来する</li><li><kbd>SPC</kbd> <kbd>h</kbd> <kbd>f</kbd> で関数ヘルプを開き、それもバッファだと確認する</li></ul></div>
+          <button class="done-btn" type="button" aria-pressed="false">できた ✓ にする</button>
+        </article>
+        <article class="lesson" data-lesson>
+          <div class="lesson-top"><h4>0-2. モードではなく「ステート」</h4><span class="time">10分</span></div>
+          <p>Evil の Normal / Insert / Visual は Vim とほぼ同じ。違いは、Emacs 本来のキー（<kbd>C-</kbd> 系）が Insert 中にも生きていることと、Emacs ステートという「素の Emacs」状態があること。</p>
+          <div class="keys">
+            <div class="keyrow"><span class="label doom">DOOM</span><span><kbd>Esc</kbd> Normalへ ／ Insert中 <kbd>C-h</kbd> ヘルプ、<kbd>C-n</kbd>/<kbd>C-p</kbd> 補完移動</span></div>
+            <div class="keyrow"><span class="label vim">VIMとの差</span><span><kbd>C-c</kbd> は Insert を抜けない（Doomでは設定で変更可）。まず <kbd>Esc</kbd> で覚える</span></div>
+          </div>
+          <div class="exercise"><b>やってみよう</b><ul><li>Insert 中に <kbd>C-a</kbd> / <kbd>C-e</kbd> で行頭・行末へ動いてみる</li><li>ステータスライン（モードライン）で今のステート表示を確認する</li></ul></div>
+          <button class="done-btn" type="button" aria-pressed="false">できた ✓ にする</button>
+        </article>
+      </div>
+    </div>
+
+    <!-- PHASE 1 -->
+    <div class="phase" id="phase1">
+      <div class="phase-head"><div><span class="tag">Phase 1 · 生存</span><h3>ファイル・バッファ・ウィンドウ</h3><p>ここが回れば「とりあえず Doom で仕事ができる」状態になります。SPC の2文字目がカテゴリです： f=file, b=buffer, w=window, p=project。</p></div><div class="phase-meta">目安 1時間<br>レッスン 3</div></div>
+      <div class="lessons">
+        <article class="lesson" data-lesson>
+          <div class="lesson-top"><h4>1-1. ファイルを開く・保存する・最近のファイル</h4><span class="time">15分</span></div>
+          <div class="keys">
+            <div class="keyrow"><span class="label doom">DOOM</span><span><kbd>SPC</kbd> <kbd>.</kbd> / <kbd>SPC</kbd> <kbd>f</kbd> <kbd>f</kbd> ファイル検索 ／ <kbd>SPC</kbd> <kbd>f</kbd> <kbd>r</kbd> 最近開いたファイル ／ <kbd>SPC</kbd> <kbd>f</kbd> <kbd>s</kbd> 保存</span></div>
+            <div class="keyrow"><span class="label nvim">NEOVIM</span><span>LazyVim: <kbd>SPC</kbd> <kbd>f</kbd> <kbd>f</kbd> (Telescope find_files) ／ 素の Neovim: <kbd>:e</kbd> ファイル名</span></div>
+          </div>
+          <div class="exercise"><b>やってみよう</b><ul><li><kbd>:w</kbd> の代わりに <kbd>SPC</kbd> <kbd>f</kbd> <kbd>s</kbd> で1日保存してみる</li><li>存在しないパスを <kbd>SPC</kbd> <kbd>f</kbd> <kbd>f</kbd> で入力すると新規ファイルになることを確認</li></ul></div>
+          <button class="done-btn" type="button" aria-pressed="false">できた ✓ にする</button>
+        </article>
+        <article class="lesson" data-lesson>
+          <div class="lesson-top"><h4>1-2. ウィンドウ分割は Vim とほぼ同じ</h4><span class="time">10分</span></div>
+          <div class="keys">
+            <div class="keyrow"><span class="label doom">DOOM</span><span><kbd>SPC</kbd> <kbd>w</kbd> <kbd>v</kbd> 縦分割 ／ <kbd>SPC</kbd> <kbd>w</kbd> <kbd>s</kbd> 横分割 ／ <kbd>SPC</kbd> <kbd>w</kbd> <kbd>d</kbd> 閉じる ／ <kbd>C-w</kbd> <kbd>h/j/k/l</kbd> 移動（Vim互換あり）</span></div>
+            <div class="keyrow"><span class="label vim">VIM</span><span><kbd>:vs</kbd> / <kbd>:sp</kbd> / <kbd>C-w</kbd> 系はそのまま使えることが多い</span></div>
+          </div>
+          <div class="exercise"><b>やってみよう</b><ul><li>縦分割して左右で別ファイルを開き、<kbd>C-w</kbd> <kbd>w</kbd> で行き来する</li><li><kbd>SPC</kbd> <kbd>w</kbd> <kbd>m</kbd> で今のウィンドウだけ最大化 → もう一度押して戻す</li></ul></div>
+          <button class="done-btn" type="button" aria-pressed="false">できた ✓ にする</button>
+        </article>
+        <article class="lesson" data-lesson>
+          <div class="lesson-top"><h4>1-3. プロジェクトという単位</h4><span class="time">15分</span></div>
+          <p>Doom は Git リポジトリなどを自動で「プロジェクト」として認識します（Projectile）。<kbd>SPC</kbd> <kbd>p</kbd> 配下がプロジェクト操作の入口です。</p>
+          <div class="keys">
+            <div class="keyrow"><span class="label doom">DOOM</span><span><kbd>SPC</kbd> <kbd>p</kbd> <kbd>p</kbd> プロジェクト切替 ／ <kbd>SPC</kbd> <kbd>p</kbd> <kbd>f</kbd> プロジェクト内ファイル検索 ／ <kbd>SPC</kbd> <kbd>p</kbd> <kbd>a</kbd> プロジェクト追加</span></div>
+            <div class="keyrow"><span class="label nvim">NEOVIM</span><span>Telescope <code>find_files</code> が <code>cwd</code> 単位で近い感覚。プロジェクト切替はプラグイン依存</span></div>
+          </div>
+          <div class="exercise"><b>やってみよう</b><ul><li>自分のリポジトリを2つ登録して <kbd>SPC</kbd> <kbd>p</kbd> <kbd>p</kbd> で切り替える</li></ul></div>
+          <button class="done-btn" type="button" aria-pressed="false">できた ✓ にする</button>
+        </article>
+      </div>
+    </div>
+
+    <!-- PHASE 2 -->
+    <div class="phase" id="phase2">
+      <div class="phase-head"><div><span class="tag">Phase 2 · 編集</span><h3>Vimの編集を「拡張」する</h3><p>モーション・オペレータ・テキストオブジェクトは既に知っているはず。ここでは Doom / Evil が足したものだけを拾います。</p></div><div class="phase-meta">目安 1〜2時間<br>レッスン 3</div></div>
+      <div class="lessons">
+        <article class="lesson" data-lesson>
+          <div class="lesson-top"><h4>2-1. そのまま使えるもの（安心材料）</h4><span class="time">10分</span></div>
+          <p><kbd>ciw</kbd> <kbd>di"</kbd> <kbd>ys</kbd> 系の基本、<kbd>.</kbd> リピート、マーク、マクロ <kbd>q</kbd>、レジスタ——大半は Evil が再現しています。まずは疑わず Vim のつもりで打ってみてください。</p>
+          <div class="warn"><b>Vimと違う所：</b> アンドゥはツリー構造です。<kbd>u</kbd> で戻り、<kbd>C-r</kbd> で進むのは同じですが、途中で編集すると分岐が残ります。またヤンクは Emacs の kill-ring と連動するため、<kbd>p</kbd> の挙動が微妙に違う場面があります。</div>
+          <button class="done-btn" type="button" aria-pressed="false">できた ✓ にする</button>
+        </article>
+        <article class="lesson" data-lesson>
+          <div class="lesson-top"><h4>2-2. コメントと整形は SPC c 系＋ gc</h4><span class="time">15分</span></div>
+          <div class="keys">
+            <div class="keyrow"><span class="label doom">DOOM</span><span><kbd>g</kbd><kbd>c</kbd><kbd>c</kbd> 行コメント切替 ／ <kbd>g</kbd><kbd>c</kbd>＋モーション 範囲コメント ／ <kbd>SPC</kbd> <kbd>c</kbd> 配下に LSP・整形系</span></div>
+            <div class="keyrow"><span class="label nvim">NEOVIM</span><span>標準では <kbd>g</kbd><kbd>c</kbd><kbd>c</kbd> は Neovim 0.10+ で組込みあり。それ以前は Comment.nvim 等</span></div>
+          </div>
+          <div class="exercise"><b>やってみよう</b><ul><li>Visual で数行選んで <kbd>g</kbd><kbd>c</kbd> でまとめてコメント／解除する</li></ul></div>
+          <button class="done-btn" type="button" aria-pressed="false">できた ✓ にする</button>
+        </article>
+        <article class="lesson" data-lesson>
+          <div class="lesson-top"><h4>2-3. 検索と置換：バッファ内 → プロジェクト全体</h4><span class="time">20分</span></div>
+          <div class="keys">
+            <div class="keyrow"><span class="label doom">DOOM</span><span><kbd>/</kbd> バッファ内検索（Vim同様）／ <kbd>SPC</kbd> <kbd>s</kbd> <kbd>s</kbd> 候補一覧で絞る検索 ／ <kbd>SPC</kbd> <kbd>s</kbd> <kbd>p</kbd> プロジェクト全体を ripgrep 検索 ／ <kbd>SPC</kbd> <kbd>s</kbd> <kbd>r</kbd> 置換系</span></div>
+            <div class="keyrow"><span class="label nvim">NEOVIM</span><span><kbd>/</kbd> は同じ。全体検索は Telescope <code>live_grep</code>（LazyVim: <kbd>SPC</kbd> <kbd>/</kbd>）</span></div>
+          </div>
+          <div class="exercise"><b>やってみよう</b><ul><li><kbd>SPC</kbd> <kbd>s</kbd> <kbd>p</kbd> で自分のコードから関数名を全体検索し、結果からジャンプする</li><li>検索結果バッファも「バッファ」として扱えることを確認する</li></ul></div>
+          <button class="done-btn" type="button" aria-pressed="false">できた ✓ にする</button>
+        </article>
+      </div>
+    </div>
+
+    <!-- PHASE 3 -->
+    <div class="phase" id="phase3">
+      <div class="phase-head"><div><span class="tag">Phase 3 · 移動と補完</span><h3>コードを「読む」速度を上げる</h3><p>定義ジャンプ、参照、ドキュメント表示。LSP が効いている言語では Vim 時代より一段速くなります。</p></div><div class="phase-meta">目安 1時間<br>レッスン 2</div></div>
+      <div class="lessons">
+        <article class="lesson" data-lesson>
+          <div class="lesson-top"><h4>3-1. gd / gr / K は共通言語</h4><span class="time">15分</span></div>
+          <div class="keys">
+            <div class="keyrow"><span class="label doom">DOOM</span><span><kbd>g</kbd><kbd>d</kbd> 定義へ ／ <kbd>g</kbd><kbd>D</kbd> 参照一覧 ／ <kbd>K</kbd> ドキュメント表示 ／ <kbd>C-o</kbd> 戻る（Vim同様のジャンプリスト感覚）</span></div>
+            <div class="keyrow"><span class="label nvim">NEOVIM</span><span>LSP 有効時 <kbd>g</kbd><kbd>d</kbd> / <kbd>g</kbd><kbd>r</kbd> / <kbd>K</kbd> がほぼ同じ役割</span></div>
+          </div>
+          <div class="exercise"><b>やってみよう</b><ul><li>よく使う言語で <kbd>g</kbd><kbd>d</kbd> → <kbd>C-o</kbd> の往復を5回繰り返す</li></ul></div>
+          <button class="done-btn" type="button" aria-pressed="false">できた ✓ にする</button>
+        </article>
+        <article class="lesson" data-lesson>
+          <div class="lesson-top"><h4>3-2. 補完は Insert 中の C-n / C-p</h4><span class="time">15分</span></div>
+          <p>Doom の補完（Corfu / Company は設定依存）は Insert ステートでポップアップします。候補移動は <kbd>C-n</kbd>/<kbd>C-p</kbd>、確定は <kbd>Enter</kbd> や <kbd>C-Enter</kbd> 系（環境で差あり）。自分の環境で <kbd>SPC</kbd> <kbd>h</kbd> <kbd>k</kbd> を使って実際の割当を確認してください。</p>
+          <div class="exercise"><b>やってみよう</b><ul><li>補完候補を出した状態で <kbd>SPC</kbd> <kbd>h</kbd> ではなく、一度 Normal に戻ってから候補キーのヘルプを引く練習をする</li></ul></div>
+          <button class="done-btn" type="button" aria-pressed="false">できた ✓ にする</button>
+        </article>
+      </div>
+    </div>
+
+    <!-- PHASE 4 -->
+    <div class="phase" id="phase4">
+      <div class="phase-head"><div><span class="tag">Phase 4 · Emacsの強み</span><h3>Magit と Org — ここが本丸</h3><p>多くの Vim ユーザーが Doom に移る決め手がこの2つです。Vim 側に完全な対抗馬がない領域なので、優先して触ってください。</p></div><div class="phase-meta">目安 2時間〜<br>レッスン 3</div></div>
+      <div class="lessons">
+        <article class="lesson" data-lesson>
+          <div class="lesson-top"><h4>4-1. Magit：Gitをバッファで操作する</h4><span class="time">30分</span></div>
+          <div class="keys">
+            <div class="keyrow"><span class="label doom">DOOM</span><span><kbd>SPC</kbd> <kbd>g</kbd> <kbd>g</kbd> Magit status ／ 中では <kbd>s</kbd> stage、<kbd>u</kbd> unstage、<kbd>c</kbd> <kbd>c</kbd> commit、<kbd>P</kbd> <kbd>p</kbd> push、<kbd>F</kbd> <kbd>p</kbd> pull</span></div>
+            <div class="keyrow"><span class="label nvim">NEOVIM</span><span>Neogit が近い体験。LazyGit（外部TUI）を端末で開く運用も人気</span></div>
+          </div>
+          <p>Magit のキーは Vim とも素の Git とも違う独自体系ですが、画面に出るヒント（transient メニュー）を読みながら進める設計です。まず status → stage → commit → push の一本道だけ覚えれば実用になります。</p>
+          <div class="exercise"><b>やってみよう</b><ul><li>テスト用リポジトリでファイルを変更 → <kbd>SPC</kbd> <kbd>g</kbd> <kbd>g</kbd> → <kbd>s</kbd> → <kbd>c</kbd> <kbd>c</kbd> でコミットまで完走する</li><li>hunk（差分の一部）だけ stage できることを試す ← これが Magit の真骨頂</li></ul></div>
+          <button class="done-btn" type="button" aria-pressed="false">できた ✓ にする</button>
+        </article>
+        <article class="lesson" data-lesson>
+          <div class="lesson-top"><h4>4-2. Org mode 入門：メモとTODOを同じファイルに</h4><span class="time">30分</span></div>
+          <div class="keys">
+            <div class="keyrow"><span class="label doom">DOOM</span><span><kbd>SPC</kbd> <kbd>n</kbd> 配下が notes 系（環境設定に依存）／ Org バッファ内では見出し移動・TODO切替が <kbd>Tab</kbd> や <kbd>SPC</kbd> <kbd>m</kbd> 系のローカルリーダーに集まる</span></div>
+          </div>
+          <p>Org は「Markdown の先祖にして上位互換」のような存在で、見出し・リスト・TODO・表・コードブロックがプレーンテキストで書けます。Doom では <code>org</code> モジュールを有効化するのが前提です（Phase 6 の設定編参照）。</p>
+          <div class="exercise"><b>やってみよう</b><ul><li><code>notes.org</code> を作り、見出し3つ＋TODO 2つを書いて折りたたみ（<kbd>Tab</kbd>）を試す</li></ul></div>
+          <button class="done-btn" type="button" aria-pressed="false">できた ✓ にする</button>
+        </article>
+        <article class="lesson" data-lesson>
+          <div class="lesson-top"><h4>4-3. ヘルプを使い倒す（自走力）</h4><span class="time">15分</span></div>
+          <div class="keys">
+            <div class="keyrow"><span class="label doom">DOOM</span><span><kbd>SPC</kbd> <kbd>h</kbd> <kbd>f</kbd> 関数を調べる ／ <kbd>SPC</kbd> <kbd>h</kbd> <kbd>v</kbd> 変数 ／ <kbd>SPC</kbd> <kbd>h</kbd> <kbd>k</kbd> キーの割当 ／ <kbd>SPC</kbd> <kbd>h</kbd> <kbd>d</kbd> Doom のドキュメント・FAQ系</span></div>
+            <div class="keyrow"><span class="label nvim">NEOVIM</span><span><kbd>:help</kbd> 対象 ／ <kbd>:map</kbd> キー確認。思想は同じ「エディタ内蔵ドキュメント」</span></div>
+          </div>
+          <p>Emacs のヘルプはエディタの中に全部入っています。「ググる前に <kbd>SPC</kbd> <kbd>h</kbd>」が身につくと、学習速度が一段変わります。</p>
+          <button class="done-btn" type="button" aria-pressed="false">できた ✓ にする</button>
+        </article>
+      </div>
+    </div>
+
+    <!-- PHASE 5 / Neovim bridge inside roadmap -->
+    <div class="phase" id="phase5">
+      <div class="phase-head"><div><span class="tag nvim">Phase 5 · Neovim橋渡し</span><h3>Neovimと行き来できるようになる</h3><p>Doom と Neovim（特に LazyVim）は「ディストリビューション」という考え方自体がそっくりです。対応関係を押さえると二刀流が楽になります。</p></div><div class="phase-meta">目安 1時間<br>レッスン 2</div></div>
+      <div class="lessons">
+        <article class="lesson" data-lesson>
+          <div class="lesson-top"><h4>5-1. 概念の対応表を頭に置く</h4><span class="time">15分</span></div>
+          <p>Doom の <code>init.el</code>（モジュール選択）↔ LazyVim のプラグインスペック、<code>doom sync</code> ↔ <code>:Lazy sync</code>、<code>doom doctor</code> ↔ <code>:checkhealth</code>。詳しくは下の「Neovim編」セクションへ。</p>
+          <button class="done-btn" type="button" aria-pressed="false">できた ✓ にする</button>
+        </article>
+        <article class="lesson" data-lesson>
+          <div class="lesson-top"><h4>5-2. Neovimで違うのは「Lua」と「:」の世界</h4><span class="time">20分</span></div>
+          <div class="keys">
+            <div class="keyrow"><span class="label nvim">NEOVIM</span><span><kbd>:checkhealth</kbd> 診断 ／ <kbd>:Lazy</kbd> プラグイン管理 ／ <kbd>:Mason</kbd> LSP・フォーマッタの導入 ／ 設定は <code>~/.config/nvim/init.lua</code></span></div>
+            <div class="keyrow"><span class="label doom">DOOM</span><span>対応物： <code>doom doctor</code> ／ <code>doom sync</code> ／ LSP はモジュール有効化＋各言語サーバ導入</span></div>
+          </div>
+          <div class="exercise"><b>やってみよう</b><ul><li>Neovim で <kbd>:checkhealth</kbd> を開き、Doom の <code>doom doctor</code> 出力と見比べる</li><li>同じファイルを両方で開いて、モーションが共通なことを体で確認する</li></ul></div>
+          <button class="done-btn" type="button" aria-pressed="false">できた ✓ にする</button>
+        </article>
+      </div>
+    </div>
+
+    <!-- PHASE 6 -->
+    <div class="phase" id="phase6">
+      <div class="phase-head"><div><span class="tag">Phase 6 · 育てる</span><h3>自分の設定ファイルを持つ</h3><p>Doom の設定は3ファイルだけ。役割分担さえ分かれば怖くありません。</p></div><div class="phase-meta">目安 1時間〜<br>レッスン 1</div></div>
+      <div class="lessons">
+        <article class="lesson" data-lesson>
+          <div class="lesson-top"><h4>6-1. init.el / config.el / packages.el の役割</h4><span class="time">30分</span></div>
+          <p><code>~/.config/doom/init.el</code> は「どのモジュールを使うか」の選択、<code>config.el</code> は自分の設定本体、<code>packages.el</code> は追加パッケージの宣言。変えたらターミナルで <code>doom sync</code>、困ったら <code>doom doctor</code>。</p>
+          <div class="keys">
+            <div class="keyrow"><span class="label doom">DOOM</span><span><kbd>SPC</kbd> <kbd>f</kbd> <kbd>P</kbd> 自分の設定ファイルを開く（Doom の定番キー）／ <kbd>SPC</kbd> <kbd>h</kbd> <kbd>r</kbd> <kbd>r</kbd> 設定のリロード系（表記は環境で確認）</span></div>
+          </div>
+          <div class="exercise"><b>やってみよう</b><ul><li><code>config.el</code> に行番号表示やフォントなど、小さな設定を1つだけ足して <code>doom sync</code> なしで反映されるもの／必要なものの違いを体感する</li></ul></div>
+          <button class="done-btn" type="button" aria-pressed="false">できた ✓ にする</button>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Key table -->
+  <section class="block" id="keys" aria-labelledby="keys-title">
+    <div class="sec-head"><div class="sec-num">⌨</div><div><h2 id="keys-title">キー対照表 — 検索できます</h2><p>「あの操作、Doomでは何だっけ？」を引くための表です。スマホでは項目ごとに縦に積んで表示されます。検索で絞るのがおすすめです。</p></div></div>
+    <div class="searchbar">
+      <label class="sr-only" for="keySearch">キー対照表を検索</label>
+      <input id="keySearch" type="search" placeholder="例：保存 / magit / バッファ / SPC g" autocomplete="off">
+    </div>
+    <div class="chips" role="group" aria-label="カテゴリで絞り込み" style="margin-bottom:12px">
+      <button class="chip active" type="button" data-filter="all">すべて</button>
+      <button class="chip" type="button" data-filter="file">ファイル</button>
+      <button class="chip" type="button" data-filter="edit">編集・移動</button>
+      <button class="chip" type="button" data-filter="git">Git</button>
+      <button class="chip" type="button" data-filter="help">ヘルプ・設定</button>
+    </div>
+    <div class="table-wrap">
+      <table id="keyTable">
+        <thead><tr><th>やりたいこと</th><th>Doom Emacs (Evil)</th><th>Neovim / LazyVim目安</th><th>Vimとの違い・メモ</th></tr></thead>
+        <tbody>
+          <tr data-cat="file"><td>ファイルを開く</td><td><kbd>SPC</kbd> <kbd>.</kbd> / <kbd>SPC</kbd> <kbd>f</kbd> <kbd>f</kbd></td><td><kbd>SPC</kbd> <kbd>f</kbd> <kbd>f</kbd> (Telescope)</td><td>:e の置き換え。曖昧検索が標準</td></tr>
+          <tr data-cat="file"><td>保存する</td><td><kbd>SPC</kbd> <kbd>f</kbd> <kbd>s</kbd></td><td><kbd>C-s</kbd> (LazyVim) / <kbd>:w</kbd></td><td>:w も Evil の Ex で使える</td></tr>
+          <tr data-cat="file"><td>バッファ切替</td><td><kbd>SPC</kbd> <kbd>b</kbd> <kbd>b</kbd></td><td><kbd>SPC</kbd> <kbd>b</kbd> <kbd>b</kbd> (LazyVim)</td><td>ファイル以外も一覧に出る</td></tr>
+          <tr data-cat="file"><td>バッファを閉じる</td><td><kbd>SPC</kbd> <kbd>b</kbd> <kbd>d</kbd></td><td><kbd>SPC</kbd> <kbd>b</kbd> <kbd>d</kbd></td><td>ウィンドウは閉じない</td></tr>
+          <tr data-cat="file"><td>プロジェクト切替</td><td><kbd>SPC</kbd> <kbd>p</kbd> <kbd>p</kbd></td><td>プラグイン依存</td><td>Projectile が自動認識</td></tr>
+          <tr data-cat="edit"><td>定義ジャンプ</td><td><kbd>g</kbd><kbd>d</kbd></td><td><kbd>g</kbd><kbd>d</kbd> (LSP)</td><td>ほぼ共通</td></tr>
+          <tr data-cat="edit"><td>参照を探す</td><td><kbd>g</kbd><kbd>D</kbd></td><td><kbd>g</kbd><kbd>r</kbd> (LSP)</td><td>大文字小文字に注意</td></tr>
+          <tr data-cat="edit"><td>ドキュメント表示</td><td><kbd>K</kbd></td><td><kbd>K</kbd> (LSP hover)</td><td>ほぼ共通</td></tr>
+          <tr data-cat="edit"><td>コメント切替</td><td><kbd>g</kbd><kbd>c</kbd><kbd>c</kbd> / <kbd>g</kbd><kbd>c</kbd>+motion</td><td><kbd>g</kbd><kbd>c</kbd><kbd>c</kbd> (0.10+組込み)</td><td>ほぼ共通</td></tr>
+          <tr data-cat="edit"><td>プロジェクト全体検索</td><td><kbd>SPC</kbd> <kbd>s</kbd> <kbd>p</kbd></td><td><kbd>SPC</kbd> <kbd>/</kbd> (live_grep)</td><td>ripgrep 前提が多い</td></tr>
+          <tr data-cat="git"><td>Git status</td><td><kbd>SPC</kbd> <kbd>g</kbd> <kbd>g</kbd> (Magit)</td><td>Neogit / LazyGit</td><td>Magit 内のキーは独自体系</td></tr>
+          <tr data-cat="git"><td>blame</td><td><kbd>SPC</kbd> <kbd>g</kbd> <kbd>b</kbd> 系（Magit blame）</td><td>Gitsigns 等</td><td>環境で割当差あり、SPC g で辿れる</td></tr>
+          <tr data-cat="help"><td>キーの意味を調べる</td><td><kbd>SPC</kbd> <kbd>h</kbd> <kbd>k</kbd></td><td><kbd>:map</kbd> / <kbd>:help</kbd></td><td>Emacs のヘルプは全文内蔵</td></tr>
+          <tr data-cat="help"><td>コマンドパレット的に探す</td><td><kbd>SPC</kbd> <kbd>:</kbd> (M-x)</td><td><kbd>SPC</kbd> <kbd>:</kbd> 系 / <kbd>:Telescope commands</kbd></td><td>名前の一部で絞れる</td></tr>
+          <tr data-cat="help"><td>自分の設定を開く</td><td><kbd>SPC</kbd> <kbd>f</kbd> <kbd>P</kbd></td><td><kbd>:e</kbd> ~/.config/nvim/init.lua</td><td>Doom 専用の定番キー</td></tr>
+          <tr data-cat="help"><td>終了する</td><td><kbd>SPC</kbd> <kbd>q</kbd> <kbd>q</kbd></td><td><kbd>:qa</kbd> / <kbd>SPC</kbd> <kbd>q</kbd> <kbd>q</kbd> (LazyVim)</td><td>Emacs は常駐させる人も多い</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p id="noResult" style="display:none;color:var(--muted);font-size:14px;margin-top:10px">一致する項目がありません。別の言葉（例：「git」「保存」）で試してください。</p>
+  </section>
+
+  <!-- Mental shift -->
+  <section class="block" id="mental" aria-labelledby="mental-title">
+    <div class="sec-head"><div class="sec-num">⇄</div><div><h2 id="mental-title">考え方の切替 — Vim脳のまま引っかかる所</h2><p>操作よりも先に、この4つの前提がずれるとずっと違和感が残ります。</p></div></div>
+    <div class="grid2">
+      <article class="card"><span class="pill doom">DOOM / EMACS</span><h3 style="margin-top:10px">「全部バッファ、全部テキスト」</h3><p>Git画面もヘルプもファイルツリーもテキストのバッファなので、Vim のモーションで読めて、検索できて、コピーできます。UIを覚えるのではなく「バッファを読む」感覚に寄せるのがコツです。</p></article>
+      <article class="card"><span class="pill nvim">NEOVIM</span><h3 style="margin-top:10px">「エディタ＋プラグインで組む」</h3><p>Neovim は素の状態が軽く、Telescope や LSP を自分（や LazyVim）で組む思想。Doom の「モジュールを選べば揃う」と対照的です。両方触ると、自分の好みがはっきりします。</p></article>
+      <article class="card"><h3>Exコマンドは補助輪</h3><p>Doom(Evil) でも <kbd>:</kbd> から <code>:w</code> <code>:q</code> <code>:e</code> は使えます。最初は頼ってよく、徐々に SPC 系に置き換えていくのが現実的です。無理に断たなくて大丈夫。</p></article>
+      <article class="card"><h3>「終了しない」という選択肢</h3><p>Emacs は起動しっぱなしでバッファを開閉する文化が強く、<code>emacsclient</code> で既存の Emacs にファイルを開かせる運用も定番です。Vim の「開いて閉じる」と両方知っておくと楽です。</p></article>
+    </div>
+  </section>
+
+  <!-- Neovim -->
+  <section class="block" id="neovim" aria-labelledby="nvim-title">
+    <div class="sec-head"><div class="sec-num">N</div><div><h2 id="nvim-title">Neovim編 — Doomと並べて覚える</h2><p>gVim 時代との最大の差は、設定が Vim script 中心から <strong>Lua</strong> 中心になったことと、LSP・Tree-sitter が標準の前提になったことです。</p></div></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>観点</th><th>Doom Emacs</th><th>Neovim（素）</th><th>LazyVim（配布版）</th></tr></thead>
+        <tbody>
+          <tr><td>位置づけ</td><td>Emacs のディストリビューション</td><td>エディタ本体</td><td>Neovim のディストリビューション</td></tr>
+          <tr><td>設定言語</td><td>Emacs Lisp</td><td>Lua（Vim scriptも可）</td><td>Lua</td></tr>
+          <tr><td>設定の入口</td><td>~/.config/doom/init.el ほか3ファイル</td><td>~/.config/nvim/init.lua</td><td>~/.config/nvim/（lazy.nvim 構成）</td></tr>
+          <tr><td>パッケージ更新</td><td><code>doom sync</code> / <code>doom upgrade</code></td><td>プラグインマネージャ次第</td><td><code>:Lazy sync</code></td></tr>
+          <tr><td>健康診断</td><td><code>doom doctor</code></td><td><code>:checkhealth</code></td><td><code>:checkhealth</code></td></tr>
+          <tr><td>Git UI</td><td>Magit（内蔵級の完成度）</td><td>なし（追加する）</td><td>LazyGit 連携など</td></tr>
+          <tr><td>リーダーキー</td><td><kbd>SPC</kbd> が大前提</td><td>自分で決める</td><td><kbd>SPC</kbd> が大前提（Doomと感覚が近い）</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid2" style="margin-top:14px">
+      <article class="card"><h3>Neovim 最初の1週間でやること</h3><ul><li><code>:Tutor</code> ではなく、まず <code>:checkhealth</code> で環境を緑にする</li><li>Telescope の find_files / live_grep だけ先に体に入れる</li><li>LSP は Mason から1言語だけ入れて gd / K を試す</li><li>設定は init.lua に少しずつ。いきなり大きな構成をコピペしない</li></ul></article>
+      <article class="card"><h3>Vim / gVim から来た人の注意点</h3><ul><li><code>.vimrc</code> はそのままでは使わない。Neovim は <code>init.lua</code> か <code>init.vim</code> を読む</li><li>クリップボードは <code>clipboard=unnamedplus</code> 相当を設定しないと OS と共有されないことがある</li><li>ターミナル内 Neovim が主戦場。GUI は Neovide など別プロジェクト</li></ul></article>
+    </div>
+  </section>
+
+  <!-- Config -->
+  <section class="block" id="config" aria-labelledby="config-title">
+    <div class="sec-head"><div class="sec-num">{}</div><div><h2 id="config-title">設定ファイル — 最小の実例</h2><p>コピーして終わりではなく、「どこに何を書くか」の見本として使ってください。ボタンを押すとそのままコピーできます。</p></div></div>
+
+    <h3>Doom： <code>~/.config/doom/config.el</code> に足す小さな設定例</h3>
+    <div class="codeblock"><div class="codeblock-head"><span>config.el — 表示と手癖の微調整だけ</span><button class="copy-btn" type="button" data-copy-target="code-doom-config">コピー</button></div><pre id="code-doom-config">;; 行番号を相対表示にする（Vim の relativenumber 相当の感覚）
+(setq display-line-numbers-type 'relative)
+
+;; テーマは Doom 同梱のものから選ぶ例
+(setq doom-theme 'doom-one)
+
+;; 保存時に末尾の空白を消す、など小さな好みはここに少しずつ
+;; 大きく変える前に SPC h v で変数名を確認する癖をつける</pre></div>
+
+    <h3 style="margin-top:22px">Doom： ターミナルで使うコマンド早見</h3>
+    <div class="codeblock"><div class="codeblock-head"><span>shell — doom コマンド</span><button class="copy-btn" type="button" data-copy-target="code-doom-cli">コピー</button></div><pre id="code-doom-cli">doom sync      # packages.el / init.el の変更を反映
+doom upgrade   # Doom 本体とパッケージを更新
+doom doctor    # 環境診断（困ったらまずこれ）
+doom env       # 環境変数まわりで困ったとき</pre></div>
+
+    <h3 style="margin-top:22px">Neovim： <code>~/.config/nvim/init.lua</code> 最小構成</h3>
+    <div class="codeblock"><div class="codeblock-head"><span>init.lua — 素の Neovim 用の最小例</span><button class="copy-btn" type="button" data-copy-target="code-nvim">コピー</button></div><pre id="code-nvim">-- ~/.config/nvim/init.lua
+vim.g.mapleader = " "          -- リーダーを SPC に（Doom / LazyVim と揃える）
+vim.opt.number = true
+vim.opt.relativenumber = true
+vim.opt.clipboard = "unnamedplus"
+vim.opt.expandtab = true
+vim.opt.shiftwidth = 2
+
+-- ファイル検索などは Telescope 等を入れてから割り当てる
+-- vim.keymap.set("n", "&lt;leader&gt;ff", "&lt;cmd&gt;Telescope find_files&lt;cr&gt;")</pre></div>
+    <div class="warn"><b> NixOS でのメモ：</b> あなたの環境は NixOS が前提なので、Doom / Neovim ともに「通常の手順で入れたバイナリや言語サーバがそのまま動かない」場面があります。詰まったらまず <code>doom doctor</code> / <code>:checkhealth</code> の出力を見て、不足している外部コマンド（ripgrep、fd、node、言語サーバなど）を Nix 側で用意する、という順番で切り分けてください。</div>
+  </section>
+
+  <!-- Review / flashcards -->
+  <section class="block" id="review" aria-labelledby="review-title">
+    <div class="flash">
+      <span class="pill doom" style="background:var(--bg);color:var(--ink)">スマホ復習モード</span>
+      <h3 style="font-size:24px;margin-top:12px">フラッシュカード — タップで答え合わせ</h3>
+      <p>カードをタップすると答えが出ます。通勤中や待ち時間に、指だけで1周するのがおすすめです。全14枚。</p>
+      <div class="flashcard" id="flashcard" role="button" tabindex="0" aria-label="フラッシュカード。タップで答えを表示">
+        <div class="q" id="flashQ">読み込み中…</div>
+        <div class="a" id="flashA"></div>
+        <div class="hint" id="flashHint">タップで答えを見る</div>
+      </div>
+      <div class="flash-controls">
+        <button class="btn secondary" type="button" id="flashPrev">← 前へ</button>
+        <button class="btn" type="button" id="flashNext">次へ →</button>
+        <button class="btn secondary" type="button" id="flashShuffle">シャッフル</button>
+        <span class="flash-count" id="flashCount">1 / 14</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Plan -->
+  <section class="block" id="plan" aria-labelledby="plan-title">
+    <div class="sec-head"><div class="sec-num">7</div><div><h2 id="plan-title">7日プラン — 無理のない進め方</h2><p>1日30〜60分想定。終わらなかった日は翌日にずらして構いません。大事なのは「毎日 Doom で何かを開く」ことです。</p></div></div>
+    <div class="plan">
+      <article><b>DAY 1</b><ul><li>Phase 0 を読む</li><li>インストールと起動確認</li><li>SPC . でファイルを開く</li></ul></article>
+      <article><b>DAY 2</b><ul><li>Phase 1：ファイル／バッファ／分割</li><li>:w を SPC f s に置き換える</li></ul></article>
+      <article><b>DAY 3–4</b><ul><li>Phase 2：編集と全体検索</li><li>自分のプロジェクトで SPC s p を使う</li></ul></article>
+      <article><b>DAY 5</b><ul><li>Phase 3：gd / K でコードを読む</li><li>カード14枚を1周</li></ul></article>
+      <article><b>DAY 6</b><ul><li>Phase 4：Magit でコミット1回</li><li>Org で notes.org を作る</li></ul></article>
+      <article><b>DAY 7</b><ul><li>Phase 5–6：Neovim と設定ファイル</li><li>config.el に設定を1つ足す</li></ul></article>
+      <article><b>DAY 8〜</b><ul><li>日常の編集を Doom に寄せる</li><li>詰まったら SPC h、カードで復習</li></ul></article>
+      <article><b>困ったら</b><ul><li><kbd>SPC</kbd> を押して which-key を眺める</li><li><code>doom doctor</code> / <code>:checkhealth</code></li><li>公式ドキュメント（下記）</li></ul></article>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="links">
+      <a href="https://github.com/doomemacs/doomemacs" target="_blank" rel="noopener">Doom Emacs (GitHub)</a>
+      <a href="https://docs.doomemacs.org" target="_blank" rel="noopener">Doom ドキュメント</a>
+      <a href="https://neovim.io/doc/" target="_blank" rel="noopener">Neovim ドキュメント</a>
+      <a href="https://www.lazyvim.org" target="_blank" rel="noopener">LazyVim</a>
+      <a href="https://magit.vc" target="_blank" rel="noopener">Magit</a>
+      <a href="https://orgmode.org" target="_blank" rel="noopener">Org Mode</a>
+    </div>
+    <p>キーの割り当ては Doom / Neovim のバージョンや有効化したモジュールで変わることがあります。最終確認は自分の環境で <kbd>SPC</kbd> <kbd>h</kbd> <kbd>k</kbd>（Doom）／ <kbd>:help</kbd>（Neovim）で行ってください。このページは単一の HTML ファイルなので、そのまま GitHub Pages に置いてスマホから開けます。</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  /* Progress (saved to localStorage) */
+  var lessons = Array.prototype.slice.call(document.querySelectorAll("[data-lesson]"));
+  var bar = document.getElementById("progressBar");
+  var text = document.getElementById("progressText");
+  var LS_KEY = "doomEmacsTutorialProgressV1";
+  function saveProgress(){
+    try {
+      var arr = lessons.map(function(l){ return l.classList.contains("done") ? 1 : 0; });
+      localStorage.setItem(LS_KEY, JSON.stringify(arr));
+    } catch(e){}
+  }
+  function loadProgress(){
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem(LS_KEY) || "null"); } catch(e){}
+    if(!saved) return;
+    lessons.forEach(function(lesson, i){
+      if(!saved[i]) return;
+      lesson.classList.add("done");
+      var btn = lesson.querySelector(".done-btn");
+      if(btn){
+        btn.setAttribute("aria-pressed", "true");
+        btn.textContent = "できた ✓（押すと戻す）";
+      }
+    });
+  }
+  function updateProgress(){
+    var done = lessons.filter(function(l){ return l.classList.contains("done"); }).length;
+    text.textContent = done + " / " + lessons.length + " 完了";
+    bar.style.width = (lessons.length ? (done/lessons.length*100) : 0) + "%";
+  }
+  lessons.forEach(function(lesson){
+    var btn = lesson.querySelector(".done-btn");
+    if(!btn) return;
+    btn.addEventListener("click", function(){
+      var now = lesson.classList.toggle("done");
+      btn.setAttribute("aria-pressed", now ? "true" : "false");
+      btn.textContent = now ? "できた ✓（押すと戻す）" : "できた ✓ にする";
+      saveProgress();
+      updateProgress();
+    });
+  });
+  loadProgress();
+  updateProgress();
+
+  /* Key table search + chips */
+  var input = document.getElementById("keySearch");
+  var rows = Array.prototype.slice.call(document.querySelectorAll("#keyTable tbody tr"));
+  var noResult = document.getElementById("noResult");
+  var activeFilter = "all";
+  function applyFilter(){
+    var q = (input.value || "").trim().toLowerCase();
+    var visible = 0;
+    rows.forEach(function(row){
+      var catOk = activeFilter === "all" || row.getAttribute("data-cat") === activeFilter;
+      var qOk = !q || row.textContent.toLowerCase().indexOf(q) !== -1;
+      var show = catOk && qOk;
+      row.style.display = show ? "" : "none";
+      if(show) visible++;
+    });
+    noResult.style.display = visible ? "none" : "block";
+  }
+  if(input){ input.addEventListener("input", applyFilter); }
+  document.querySelectorAll(".chip").forEach(function(chip){
+    chip.addEventListener("click", function(){
+      document.querySelectorAll(".chip").forEach(function(c){ c.classList.remove("active"); });
+      chip.classList.add("active");
+      activeFilter = chip.getAttribute("data-filter");
+      applyFilter();
+    });
+  });
+
+  /* Copy buttons */
+  document.querySelectorAll(".copy-btn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var target = document.getElementById(btn.getAttribute("data-copy-target"));
+      if(!target) return;
+      var textToCopy = target.textContent;
+      function done(){ var old = btn.textContent; btn.textContent = "コピーしました ✓"; setTimeout(function(){ btn.textContent = old; }, 1600); }
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(textToCopy).then(done).catch(function(){ fallback(); });
+      } else { fallback(); }
+      function fallback(){
+        var ta = document.createElement("textarea");
+        ta.value = textToCopy; ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand("copy"); done(); } catch(e){}
+        document.body.removeChild(ta);
+      }
+    });
+  });
+
+  /* Flashcards */
+  var cards = [
+    {q:"SPC . は何をする？", a:"ファイルを開く（find file）。SPC f f でも同じ入口に入れます。"},
+    {q:"バッファを切り替えるキーは？", a:"SPC b b。ファイル以外のバッファ（ヘルプやMagit）も一覧に出ます。"},
+    {q:"保存は？（:w の代わり）", a:"SPC f s。もちろん Evil の :w も使えます。"},
+    {q:"ウィンドウを縦に分割するには？", a:"SPC w v。横分割は SPC w s、閉じるのは SPC w d。"},
+    {q:"プロジェクトを切り替えるには？", a:"SPC p p。プロジェクト内ファイル検索は SPC p f。"},
+    {q:"プロジェクト全体を文字列検索するには？", a:"SPC s p（ripgrep）。バッファ内の候補検索は SPC s s。"},
+    {q:"定義ジャンプと参照は？", a:"gd で定義へ、gD で参照一覧。K でドキュメント表示、C-o で戻ります。"},
+    {q:"行コメントの切り替えは？", a:"gcc。範囲は Visual 選択後に gc、または gc＋モーション。"},
+    {q:"Magit の status を開くには？", a:"SPC g g。中では s=stage、u=unstage、c c=commit、P p=push。"},
+    {q:"キーの意味を調べるには？", a:"SPC h k。関数は SPC h f、変数は SPC h v。まずヘルプ、がEmacs流。"},
+    {q:"自分の Doom 設定ファイルを開くには？", a:"SPC f P。設定は ~/.config/doom/ の init.el / config.el / packages.el。"},
+    {q:"Doom の設定変更を反映するコマンドは？", a:"ターミナルで doom sync。診断は doom doctor、更新は doom upgrade。"},
+    {q:"Neovim の健康診断コマンドは？", a:":checkhealth。Doom の doom doctor に対応するものです。"},
+    {q:"Neovim でプラグイン管理画面（LazyVim等）は？", a:":Lazy。LSPやツール導入は :Mason。設定入口は ~/.config/nvim/init.lua。"}
+  ];
+  var idx = 0;
+  var cardEl = document.getElementById("flashcard");
+  var qEl = document.getElementById("flashQ");
+  var aEl = document.getElementById("flashA");
+  var hintEl = document.getElementById("flashHint");
+  var countEl = document.getElementById("flashCount");
+  function renderCard(){
+    cardEl.classList.remove("flipped");
+    qEl.textContent = cards[idx].q;
+    aEl.textContent = cards[idx].a;
+    hintEl.textContent = "タップで答えを見る";
+    countEl.textContent = (idx+1) + " / " + cards.length;
+  }
+  function flip(){
+    var flipped = cardEl.classList.toggle("flipped");
+    hintEl.textContent = flipped ? "答えを表示中 — もう一度タップで隠す" : "タップで答えを見る";
+  }
+  cardEl.addEventListener("click", flip);
+  cardEl.addEventListener("keydown", function(e){ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); flip(); } });
+  document.getElementById("flashNext").addEventListener("click", function(){ idx = (idx+1) % cards.length; renderCard(); });
+  document.getElementById("flashPrev").addEventListener("click", function(){ idx = (idx-1+cards.length) % cards.length; renderCard(); });
+  document.getElementById("flashShuffle").addEventListener("click", function(){
+    for(var i=cards.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)); var t=cards[i]; cards[i]=cards[j]; cards[j]=t; }
+    idx = 0; renderCard();
+  });
+  renderCard();
+})();
+</script>
+</body>
+</html>
