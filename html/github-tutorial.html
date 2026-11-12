@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GitHub ひとり運用チュートリアル ― プルリクエストと Actions を覚える</title>
+<style>
+  :root { --fg:#1f2328; --mut:#656d76; --line:#d1d9e0; --acc:#0969da; --bg:#f6f8fa; }
+  * { box-sizing: border-box; }
+  body { font-family: sans-serif; color: var(--fg); max-width: 820px; margin: 0 auto; padding: 1em 1em 4em; line-height: 1.75; }
+  h1 { font-size: 1.5em; line-height: 1.4; }
+  h2 { border-bottom: 2px solid var(--line); padding-bottom: .25em; margin-top: 2em; font-size: 1.25em; }
+  h3 { margin-top: 1.6em; font-size: 1.05em; }
+  p, li { font-size: .98em; }
+  .mut { color: var(--mut); font-size: .88em; }
+  .card { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: .8em 1em; margin: 1em 0; }
+  pre { background: #0d1117; color: #e6edf3; border-radius: 8px; padding: .8em 1em; overflow-x: auto; font-size: .85em; line-height: 1.55; position: relative; }
+  pre code { font-family: ui-monospace, monospace; white-space: pre; }
+  code.ic { background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 0 .3em; font-size: .88em; }
+  .copy { position: absolute; top: .4em; right: .4em; font-size: .78em; padding: .15em .6em; cursor: pointer; }
+  .goal { border-left: 4px solid var(--acc); background: #ddf4ff33; padding: .5em 1em; margin: 1em 0; }
+  .try { background: #fff8c5; border: 1px solid #d4a72c66; border-radius: 8px; padding: .6em 1em; margin: 1em 0; }
+  label.done { display: inline-flex; gap: .4em; align-items: center; background: #dafbe1; border: 1px solid #1a7f3766; border-radius: 6px; padding: .2em .7em; cursor: pointer; font-size: .9em; }
+  #bar-wrap { background: var(--bg); border: 1px solid var(--line); border-radius: 999px; height: 14px; overflow: hidden; }
+  #bar { background: #1a7f37; height: 100%; width: 0%; transition: width .3s; }
+  table { border-collapse: collapse; width: 100%; font-size: .92em; }
+  th, td { border: 1px solid var(--line); padding: .35em .6em; text-align: left; vertical-align: top; }
+  th { background: var(--bg); }
+  #q { width: 100%; padding: .5em; font-size: 1em; margin: .5em 0 1em; }
+  .fc { border: 1px solid var(--line); border-radius: 8px; padding: 1em; margin: .6em 0; cursor: pointer; background: #fff; }
+  .fc .back { display: none; color: var(--acc); margin-top: .5em; }
+  .fc.open .back { display: block; }
+  .fc .hint { color: var(--mut); font-size: .8em; }
+  details { margin: .5em 0; }
+  summary { cursor: pointer; font-weight: bold; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #0d1117; color: #e6edf3; }
+    .card, th { background: #161b22; }
+    .fc { background: #161b22; }
+    code.ic { background: #161b22; }
+  }
+</style>
+</head>
+<body>
+
+<h1>GitHub ひとり運用チュートリアル<br>― プルリクエストと Actions を覚える</h1>
+<p class="mut">対象：git の push / pull はできるけど、プルリクエスト（PR）と GitHub Actions は未経験、という人向け。ひとりで使っているリポジトリで、そのまま練習できる構成にしてある。進捗（「できた」チェック）はこのブラウザに自動保存される（端末・ブラウザごとに別）。</p>
+
+<div class="card">
+  <strong>進捗</strong> <span id="count">0 / 14</span>
+  <div id="bar-wrap"><div id="bar"></div></div>
+  <p class="mut">各レッスン末尾の「できた」を押すとここに反映される。GitHub Pages に置けばスマホでも続きから復習できる。</p>
+</div>
+
+<h2>Phase 0 ― 全体像</h2>
+
+<h3>レッスン1：ソロでも PR と Actions が効く理由</h3>
+<div class="goal"><strong>ゴール：</strong>「PR はチーム開発のもの」という思い込みを外す。</div>
+<p>ひとり運用でも、PR と Actions には実利がある。</p>
+<ul>
+  <li><strong>PR = 変更の「検品工程」。</strong>main に直接 push すると、間違いは即公開される。ブランチ＋PR を挟むと、「差分を目で見る」「自動チェックを通す」という関所ができる。昨日の自分が今日の自分のレビュアーになる。</li>
+  <li><strong>PR = 変更の履歴書。</strong>「なぜ変えたか」を PR の説明に書いておくと、半年後に <code class="ic">git log</code> を掘るより速く思い出せる。</li>
+  <li><strong>Actions = 「push したら勝手にやってくれる作業」の置き場。</strong>たとえば君のメモサイトの <code class="ic">make_index.sh</code>。今は手元で回しているはずだけど、Actions に載せれば push するだけで index.html が自動生成・自動コミットされる（レッスン12 が本命）。</li>
+</ul>
+<p>覚え方はひとつずつでいい。このチュートリアルの順番どおり、<strong>ブランチ → PR → 保護 → Actions 入門 → 実践（index 自動生成）</strong>と進めれば、必要なものだけ身につく。</p>
+<div class="try"><strong>やってみる：</strong>自分のリポジトリを1つ決める（メモサイトの <code class="ic">images</code> リポジトリが題材にちょうどいい）。以降の練習は全部そのリポジトリでやる。</div>
+<label class="done"><input type="checkbox" data-lesson="l1"> できた</label>
+
+<h3>レッスン2：用語の地図</h3>
+<div class="goal"><strong>ゴール：</strong>PR と Actions まわりの言葉を、自分の作業に結びつけて言える。</div>
+<table>
+  <tr><th>言葉</th><th>意味（ひとことで）</th></tr>
+  <tr><td>ブランチ (branch)</td><td>作業用の枝分かれ。main を汚さずに変更を育てる場所</td></tr>
+  <tr><td>プルリクエスト (PR)</td><td>「このブランチを main に取り込んで」と頼むページ。差分レビューと自動チェックの場</td></tr>
+  <tr><td>マージ (merge)</td><td>ブランチの変更を main に取り込むこと</td></tr>
+  <tr><td>スカッシュ (squash)</td><td>ブランチの細かいコミットを1つに潰してからマージする方式。履歴がきれいになる</td></tr>
+  <tr><td>ブランチ保護 (branch protection)</td><td>main への直接 push 禁止などのルールを課す仕組み</td></tr>
+  <tr><td>ワークフロー (workflow)</td><td>Actions の定義ファイル。<code class="ic">.github/workflows/*.yml</code> に書く</td></tr>
+  <tr><td>トリガー (<code class="ic">on:</code>)</td><td>ワークフローが動くきっかけ。push、PR、手動実行など</td></tr>
+  <tr><td>ジョブ (job) / ステップ (step)</td><td>ジョブ＝作業の単位（仮想マシン1台分）。ステップ＝その中の1手順</td></tr>
+  <tr><td>ランナー (runner)</td><td>ジョブを実行する仮想マシン。<code class="ic">ubuntu-latest</code> などと指定する</td></tr>
+  <tr><td>アクション (action)</td><td>使い回しできる部品。<code class="ic">actions/checkout</code> のように <code class="ic">uses:</code> で呼ぶ</td></tr>
+</table>
+<p class="mut">全部覚えなくていい。付録の早見表とフラッシュカードで後から引ける。</p>
+<label class="done"><input type="checkbox" data-lesson="l2"> できた</label>
+
+<h2>Phase 1 ― ブランチの基礎</h2>
+
+<h3>レッスン3：ブランチを作って切り替える</h3>
+<div class="goal"><strong>ゴール：</strong>main から作業ブランチを切り、コミットして戻ってこられる。</div>
+<pre><code># main を最新にしてから枝を切る
+git switch main
+git pull
+git switch -c add-readme-line
+
+# 何か1つ変更してコミット（例：README に1行足す）
+git add .
+git commit -m "README に1行追加"
+
+# ブランチ一覧と現在地の確認
+git branch</code></pre>
+<p>ブランチ名は <code class="ic">add-readme-line</code> のように「何をするか」が分かる短い名前がよい。<code class="ic">work</code> や <code class="ic">test2</code> みたいな名前は後で困る。</p>
+<div class="try"><strong>やってみる：</strong>練習用ブランチを1つ切り、どうでもいい1行変更をコミットする。終わったら <code class="ic">git switch main</code> で戻り、その変更が main に<strong>入っていない</strong>ことを確認する（ここがブランチの価値）。</div>
+<label class="done"><input type="checkbox" data-lesson="l3"> できた</label>
+
+<h3>レッスン4：差分を見る</h3>
+<div class="goal"><strong>ゴール：</strong>「何が変わるか」をマージ前に言葉で説明できる。</div>
+<pre><code># 作業中の変更（まだコミット前）
+git status
+git diff
+
+# ブランチが main とどう違うか（PR の差分と同じもの）
+git diff main...HEAD</code></pre>
+<p>PR の「Files changed」タブに出るのは、最後の <code class="ic">git diff main...HEAD</code> と同じ内容。つまり PR のレビューは、手元でも先にできる。</p>
+<div class="try"><strong>やってみる：</strong>レッスン3 のブランチで <code class="ic">git diff main...HEAD</code> を実行し、自分の変更が過不足なく出るか見る。</div>
+<label class="done"><input type="checkbox" data-lesson="l4"> できた</label>
+
+<h2>Phase 2 ― 初めてのプルリクエスト</h2>
+
+<h3>レッスン5：PR を作る</h3>
+<div class="goal"><strong>ゴール：</strong>ブランチを push して、PR ページを開く。</div>
+<pre><code># ブランチを GitHub に送る（-u は初回だけ）
+git push -u origin add-readme-line</code></pre>
+<p>push すると GitHub のリポジトリ画面に「Compare &amp; pull request」というボタンが出る。それを押して PR を作る。ボタンが出ない場合は「Pull requests」タブ →「New pull request」からブランチを選ぶ。</p>
+<ul>
+  <li><strong>タイトル：</strong>変更内容を1行で（例：「README に使い方を追記」）。</li>
+  <li><strong>説明：</strong>「何を・なぜ」を2〜3行。未来の自分へのメモだと思って書く。</li>
+  <li><strong>base / compare の確認：</strong><code class="ic">base: main ← compare: add-readme-line</code> の向きになっているか必ず見る。逆だと事故る。</li>
+</ul>
+<div class="try"><strong>やってみる：</strong>レッスン3 のブランチで PR を1つ作る。説明には「練習用 PR」と目的を書いておく。</div>
+<label class="done"><input type="checkbox" data-lesson="l5"> できた</label>
+
+<h3>レッスン6：セルフレビューとマージ</h3>
+<div class="goal"><strong>ゴール：</strong>自分の差分をレビューしてからマージし、後片付けまでやる。</div>
+<ol>
+  <li>PR の <strong>「Files changed」</strong>タブを開き、差分を最初から最後まで目で追う。自分が書いたつもりのない変更が混ざっていないか、ここで気づくのが PR の一番の効能。</li>
+  <li>気になる行には行コメントを残せる（自分宛のメモで OK）。</li>
+  <li>問題なければ <strong>「Merge pull request」</strong>。マージ方式は3種類選べる：
+    <ul>
+      <li><strong>Squash and merge（おすすめ）：</strong>ブランチの細かいコミットを1つに潰して main に入れる。ソロ運用の main はこれで十分きれいになる。</li>
+      <li>Create a merge commit：コミット履歴をそのまま残し、マージコミットを1つ追加。</li>
+      <li>Rebase and merge：コミットを main の先端に並べ替える。慣れてからでいい。</li>
+    </ul>
+  </li>
+  <li>マージ後は <strong>「Delete branch」</strong>で GitHub 側のブランチを消す。手元でも片づける：</li>
+</ol>
+<pre><code>git switch main
+git pull
+git branch -d add-readme-line   # 手元のブランチも削除</code></pre>
+<div class="try"><strong>やってみる：</strong>練習 PR をスカッシュでマージし、ブランチを両方（GitHub 側・手元）消す。main に変更が1コミットで入っていることを <code class="ic">git log --oneline -3</code> で確認する。</div>
+<label class="done"><input type="checkbox" data-lesson="l6"> できた</label>
+
+<h2>Phase 3 ― PR 運用を固める</h2>
+
+<h3>レッスン7：main を守る（ブランチ保護）</h3>
+<div class="goal"><strong>ゴール：</strong>「main へは PR 経由でしか入れない」を GitHub の仕組みで強制する。</div>
+<p>意志の力に頼ると必ず直接 push する日が来る。仕組みで縛るのが正解。手順：リポジトリの <strong>Settings → Branches → Add classic branch protection rule</strong> で、Branch name pattern に <code class="ic">main</code> と入れ、次にチェックする：</p>
+<ul>
+  <li><strong>Require a pull request before merging</strong> ― PR 経由を必須にする。ソロなら Required approvals は <strong>0</strong> でよい（自分で自分の PR を承認する儀式は不要）。</li>
+  <li>（レッスン11 の後で）<strong>Require status checks to pass before merging</strong> ― Actions のチェックが緑のときだけマージ可にする。</li>
+</ul>
+<p class="mut">注意：保護を有効にすると、緊急時でも直接 push できなくなる。管理者にも適用するか（Do not allow bypassing）は最初は緩めでよい。「うっかり直接 push」を防げれば目的は達成。</p>
+<div class="try"><strong>やってみる：</strong>練習リポジトリに保護を設定し、わざと main に直接 push して<strong>拒否される</strong>ことを確認する。これが正常動作。</div>
+<label class="done"><input type="checkbox" data-lesson="l7"> できた</label>
+
+<h3>レッスン8：gh CLI で PR を回す</h3>
+<div class="goal"><strong>ゴール：</strong>ブラウザを開かずに PR の作成・確認・マージができる。</div>
+<p>GitHub 公式 CLI の <code class="ic">gh</code> を入れると、PR 操作がターミナルで完結する。NixOS なら <code class="ic">gh</code> パッケージを入れて <code class="ic">gh auth login</code> で認証するだけ。</p>
+<pre><code># PR を作る（タイトルと本文をコミットから自動生成）
+gh pr create --fill
+
+# 自分の PR の状態を見る
+gh pr status
+
+# 差分をターミナルで見る
+gh pr diff
+
+# スカッシュでマージして、ブランチも消す
+gh pr merge --squash --delete-branch</code></pre>
+<p>Doom Emacs やターミナル中心の生活なら、こちらの方が手に馴染むはず。ブラウザの PR 画面は「差分をじっくり見る」ときだけ開けばいい。</p>
+<div class="try"><strong>やってみる：</strong>次の練習 PR は <code class="ic">gh pr create --fill</code> から <code class="ic">gh pr merge</code> まで CLI だけで済ませる。</div>
+<label class="done"><input type="checkbox" data-lesson="l8"> できた</label>
+
+<h2>Phase 4 ― GitHub Actions 入門</h2>
+
+<h3>レッスン9：ワークフロー YAML の骨格</h3>
+<div class="goal"><strong>ゴール：</strong>ワークフローファイルの3要素（on / jobs / steps）を読み解ける。</div>
+<p>ワークフローは <code class="ic">.github/workflows/</code> に置く YAML ファイル。骨格はこれだけ：</p>
+<pre><code>name: ワークフローの名前
+
+on:            # いつ動くか（トリガー）
+  push:
+
+jobs:          # 何をするか
+  job-name:
+    runs-on: ubuntu-latest   # どの仮想マシンで
+    steps:                   # 手順（上から順に実行）
+      - run: echo "1つ目の手順"
+      - uses: actions/checkout@v4   # 部品（アクション）を使う手順</code></pre>
+<ul>
+  <li><code class="ic">run:</code> はシェルコマンド。そのまま Ubuntu のターミナルだと思えばいい。bash / git / python などは最初から入っている。</li>
+  <li><code class="ic">uses:</code> は誰かが作った部品の呼び出し。<code class="ic">actions/checkout</code> は「リポジトリのコードを仮想マシンに持ってくる」部品で、ほぼ全てのワークフローの最初に置く。</li>
+  <li>YAML は<strong>インデントが命</strong>。スペース2つずつ、タブ禁止。Actions の失敗原因の筆頭がこれ。</li>
+</ul>
+<label class="done"><input type="checkbox" data-lesson="l9"> できた</label>
+
+<h3>レッスン10：最初のワークフローを動かす</h3>
+<div class="goal"><strong>ゴール：</strong>手動実行でワークフローを走らせ、ログを読める。</div>
+<p>最初は「push したら」ではなく<strong>手動実行</strong>で試すのが安全。<code class="ic">workflow_dispatch</code> というトリガーを付けると、GitHub の「Actions」タブからボタンで実行できる。</p>
+<pre><code># .github/workflows/hello.yml
+name: hello
+
+on:
+  workflow_dispatch:
+
+jobs:
+  greet:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Hello, Actions"
+      - run: date; pwd; ls</code></pre>
+<p>これを main に置いて push すると、Actions タブに「hello」ワークフローが現れ、「Run workflow」ボタンから実行できる。実行結果（run）を開くと、ステップごとのログが読める。</p>
+<p class="mut">料金の心配：公開リポジトリなら Actions は実質無料で使える（標準ランナー）。非公開でも月2,000分まで無料枠がある。練習で破産することはない。</p>
+<div class="try"><strong>やってみる：</strong>hello.yml を置いて手動実行し、ログで <code class="ic">date</code> の出力（UTC で表示されるはず）を確認する。ランナーの中身を <code class="ic">uname -a</code> や <code class="ic">which nix</code> で眺めてみるのも面白い。</div>
+<label class="done"><input type="checkbox" data-lesson="l10"> できた</label>
+
+<h2>Phase 5 ― PR × Actions</h2>
+
+<h3>レッスン11：PR に自動チェックを付ける</h3>
+<div class="goal"><strong>ゴール：</strong>PR を開くたびに自動でチェックが走り、結果が PR 画面に付く状態にする。</div>
+<p>トリガーを <code class="ic">pull_request</code> にすると、PR の作成・更新のたびにワークフローが走る。題材はメモサイト：<code class="ic">make_index.sh</code> がエラーなく走るか＋ <code class="ic">&lt;title&gt;</code> の無い HTML が混ざっていないか、を PR の時点で確かめる。</p>
+<pre><code># .github/workflows/pr-check.yml
+name: pr-check
+
+on:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: title の無い HTML を洗い出す
+        run: |
+          missing=$(grep -L '&lt;title&gt;' html/*.html || true)
+          if [ -n "$missing" ]; then
+            echo "title が無いファイル: $missing"
+            exit 1
+          fi
+
+      - name: make_index.sh が動くか確認
+        working-directory: html
+        run: bash make_index.sh</code></pre>
+<ul>
+  <li>チェックが成功すると PR に緑の ✓、失敗すると赤い × が付き、マージ前に気づける。</li>
+  <li>さらにレッスン7 のブランチ保護で <strong>Require status checks to pass before merging</strong> にこのチェックを指定すると、「緑でないとマージできない」まで強制できる。ここまで行くとソロでも立派な CI。</li>
+  <li><code class="ic">working-directory:</code> はステップの実行場所。<code class="ic">make_index.sh</code> は html フォルダの中で回す前提のスクリプトだから、ここが大事（v2 の「カレントディレクトリの *.html を見る」仕様と一致）。</li>
+</ul>
+<div class="try"><strong>やってみる：</strong>わざと <code class="ic">&lt;title&gt;</code> の無い HTML を1つ足した PR を作り、チェックが赤くなることを確認してから、title を直して緑になるのを見る。</div>
+<label class="done"><input type="checkbox" data-lesson="l11"> できた</label>
+
+<h2>Phase 6 ― 実践（本命）：index.html の自動生成</h2>
+
+<h3>レッスン12：push したら make_index.sh が走ってコミットまでされる</h3>
+<div class="goal"><strong>ゴール：</strong>メモを push するだけで index.html が自動で最新になる。手元でスクリプトを回す作業を卒業する。</div>
+<p>レッスン11 のチェックと違い、こちらは「生成して<strong>コミットまでする</strong>」ワークフロー。完成形がこれ：</p>
+<pre><code># .github/workflows/make-index.yml
+name: make-index
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'html/*.html'
+      - '!html/index.html'   # index.html 自身の変更では再実行しない（無限ループ防止）
+  workflow_dispatch:          # 手動でも実行できるように
+
+permissions:
+  contents: write   # bot がコミットを push するために必要
+
+jobs:
+  index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # 全履歴を持ってくる（理由は下）
+
+      - name: index.html を生成
+        working-directory: html
+        run: bash make_index.sh
+
+      - name: 変更があればコミットして push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add html/index.html
+          git diff --cached --quiet || git commit -m "index.html を自動生成"
+          git push</code></pre>
+<p>大事なポイントは3つ：</p>
+<ul>
+  <li><strong><code class="ic">fetch-depth: 0</code></strong> ― make_index.sh v2 は日付に <code class="ic">git log</code> を使う。checkout の初期設定（fetch-depth: 1）は履歴が1件しか無いので、日付が全部おかしくなる。全履歴を持ってくるこの指定が必須。</li>
+  <li><strong><code class="ic">paths</code> の <code class="ic">!html/index.html</code></strong> ― bot のコミット（index.html の変更）がまた push になって再実行…という無限ループを防ぐ。「対象に含める」指定の後ろに「ただしこれは除く」を書くのが GitHub の書法。</li>
+  <li><strong><code class="ic">git diff --cached --quiet ||</code></strong> ― 生成しても中身が変わらなかったらコミットしない。これでも二重の安全策になる。</li>
+</ul>
+<p class="mut">前提の確認：この例は「リポジトリ直下に html フォルダがあり、その中に make_index.sh と *.html がいる」構成（coacoa.github.io/images/html/ の形）。フォルダ名が違う場合は paths と working-directory を実物に合わせて直すこと。</p>
+<div class="try"><strong>やってみる：</strong>このワークフロー自体も、レッスン5〜6 の作法どおり<strong>ブランチ＋PR で入れる</strong>。マージ後、メモを1つ push して Actions タブで bot のコミットが自動で積まれるのを確認する。手元の make_index.sh 手回しは、ここで引退。</div>
+<label class="done"><input type="checkbox" data-lesson="l12"> できた</label>
+
+<h2>Phase 7 ― 運用と次の一歩</h2>
+
+<h3>レッスン13：失敗したときの調べ方</h3>
+<div class="goal"><strong>ゴール：</strong>赤くなったワークフローを、ログから自力で直せる。</div>
+<ol>
+  <li><strong>Actions タブ → 失敗した run → 失敗したジョブ → 失敗したステップ</strong>を開く。ログはステップ単位で畳まれているので、赤いステップだけ広げる。</li>
+  <li>エラーの<strong>最後の数行</strong>に答えがあることが多い（コマンドのエラーは末尾に出る）。</li>
+  <li>よくある原因トップ3：
+    <ul>
+      <li><strong>YAML のインデント崩れ</strong> ― 「workflow file issue」でそもそも実行されない。エディタの YAML 表示で確認。</li>
+      <li><strong>権限不足</strong> ― bot の push が <code class="ic">403</code> になる → <code class="ic">permissions: contents: write</code> の付け忘れ。</li>
+      <li><strong>パス違い</strong> ― 「ファイルが無い」系。手元と違い、ランナーは毎回まっさらな環境＋作業フォルダはリポジトリ直下、という前提で見直す。</li>
+    </ul>
+  </li>
+  <li>直したら、失敗した run の「Re-run jobs」で再実行できる（新しい push は不要）。</li>
+</ol>
+<div class="try"><strong>やってみる：</strong>hello.yml の echo をわざと存在しないコマンドに変えて失敗させ、ログから原因を特定して直す。この「壊して直す」一往復が一番の練習。</div>
+<label class="done"><input type="checkbox" data-lesson="l13"> できた</label>
+
+<h3>レッスン14：役割分担と次の一歩</h3>
+<div class="goal"><strong>ゴール：</strong>学んだ型を他の作業にも広げる見通しを持つ。</div>
+<ul>
+  <li><strong>手元（NixOS）：</strong>書く・試す・コミットする場所。重い処理や対話的な作業はここ。</li>
+  <li><strong>PR：</strong>変更の関所と履歴書。どんな小さな変更でも、ブランチ＋PR＋スカッシュマージを型にする。</li>
+  <li><strong>Actions：</strong>「push のたびにやる定型作業」の置き場。index 生成の次は、たとえば「リンク切れチェック」「ファイル名の命名規則チェック」などが候補。</li>
+  <li>余力が出たら：<strong>Issue</strong> を自分の TODO 置き場にする（PR と Issue を紐付けると履歴がさらに追いやすい）、<strong>Release / タグ</strong>で節目を付ける、くらいが次の階段。</li>
+</ul>
+<p>全部を一度にやらないこと。型は「PR で入れる→チェックが付く→自動作業が増える」の順で、1つずつ増やすのが続くコツ。</p>
+<label class="done"><input type="checkbox" data-lesson="l14"> できた</label>
+
+<h2>付録A ― 早見表</h2>
+<input id="q" type="search" placeholder="用語・コマンドで検索">
+<table id="ref">
+  <tr><th>やりたいこと</th><th>コマンド / 書式</th></tr>
+  <tr><td>ブランチを作って切り替え</td><td><code class="ic">git switch -c &lt;名前&gt;</code></td></tr>
+  <tr><td>ブランチを GitHub へ</td><td><code class="ic">git push -u origin &lt;名前&gt;</code></td></tr>
+  <tr><td>main との差分</td><td><code class="ic">git diff main...HEAD</code></td></tr>
+  <tr><td>PR を作る（CLI）</td><td><code class="ic">gh pr create --fill</code></td></tr>
+  <tr><td>PR の状態確認（CLI）</td><td><code class="ic">gh pr status</code></td></tr>
+  <tr><td>PR をマージ（CLI）</td><td><code class="ic">gh pr merge --squash --delete-branch</code></td></tr>
+  <tr><td>Actions の実行一覧（CLI）</td><td><code class="ic">gh run list</code></td></tr>
+  <tr><td>失敗ログを見る（CLI）</td><td><code class="ic">gh run view --log-failed</code></td></tr>
+  <tr><td>手動実行トリガー</td><td><code class="ic">on: workflow_dispatch:</code></td></tr>
+  <tr><td>PR のたびに実行</td><td><code class="ic">on: pull_request:</code></td></tr>
+  <tr><td>コードをランナーに持ってくる</td><td><code class="ic">uses: actions/checkout@v4</code></td></tr>
+  <tr><td>全履歴つき checkout</td><td><code class="ic">with: fetch-depth: 0</code></td></tr>
+  <tr><td>bot に書き込み権限</td><td><code class="ic">permissions: contents: write</code></td></tr>
+  <tr><td>特定パスの変更時だけ実行</td><td><code class="ic">on.push.paths: ['html/*.html', '!html/index.html']</code></td></tr>
+</table>
+
+<h2>付録B ― フラッシュカード</h2>
+<p class="mut">タップ／クリックで答えが出る。</p>
+<div class="fc"><strong>Q. ソロ開発で PR を使う一番の実利は？</strong><span class="hint">（タップで答え）</span><div class="back">A. main に入る前の「関所」。差分レビューと自動チェックで事故を止められ、変更理由の履歴書にもなる。</div></div>
+<div class="fc"><strong>Q. スカッシュマージとは？</strong><span class="hint">（タップで答え）</span><div class="back">A. ブランチ内の複数のコミットを1つに潰してから main に取り込む方式。main の履歴がきれいに保てる。</div></div>
+<div class="fc"><strong>Q. ブランチ保護で Required approvals を 0 にするのはなぜ？</strong><span class="hint">（タップで答え）</span><div class="back">A. ソロでは承認者が自分しかおらず儀式になるだけだから。「PR 経由でないと入れない」こと自体が本体。</div></div>
+<div class="fc"><strong>Q. <code class="ic">workflow_dispatch</code> とは？</strong><span class="hint">（タップで答え）</span><div class="back">A. ワークフローの手動実行トリガー。Actions タブに「Run workflow」ボタンが出る。試し運転に最適。</div></div>
+<div class="fc"><strong>Q. <code class="ic">fetch-depth: 0</code> が必要なのはどんなとき？</strong><span class="hint">（タップで答え）</span><div class="back">A. ワークフロー内で <code class="ic">git log</code> など履歴を使うとき。初期設定は最新1件しか取得しない。make_index.sh v2 の日付がその例。</div></div>
+<div class="fc"><strong>Q. bot のコミットが Actions を無限ループさせるのを防ぐ手は？</strong><span class="hint">（タップで答え）</span><div class="back">A. <code class="ic">paths</code> で生成物（index.html）を対象から外す（<code class="ic">'!html/index.html'</code>）、生成物に変化が無いときはコミットしない、の二重構え。</div></div>
+<div class="fc"><strong>Q. Actions の失敗調査、最初に見る場所は？</strong><span class="hint">（タップで答え）</span><div class="back">A. 失敗した run → ジョブ → ステップのログ、その末尾数行。原因トップ3は YAML のインデント、権限、パス違い。</div></div>
+<div class="fc"><strong>Q. <code class="ic">actions/checkout</code> の役割は？</strong><span class="hint">（タップで答え）</span><div class="back">A. リポジトリのコードをランナー（仮想マシン）に持ってくる部品。ほぼ全てのワークフローの最初のステップに置く。</div></div>
+
+<h2>付録C ― 7日プラン（目安）</h2>
+<table>
+  <tr><th>日</th><th>やること</th></tr>
+  <tr><td>1日目</td><td>Phase 0〜1。練習ブランチを切って戻る</td></tr>
+  <tr><td>2日目</td><td>Phase 2。初 PR を作ってスカッシュマージ</td></tr>
+  <tr><td>3日目</td><td>Phase 3。ブランチ保護＋ gh CLI 導入</td></tr>
+  <tr><td>4日目</td><td>Phase 4。hello.yml を手動実行してログを読む</td></tr>
+  <tr><td>5日目</td><td>Phase 5。PR チェックを付けて、赤→緑を体験</td></tr>
+  <tr><td>6日目</td><td>Phase 6。make-index 自動化を PR で入れて本番化</td></tr>
+  <tr><td>7日目</td><td>Phase 7＋フラッシュカードで復習。わざと壊して直す</td></tr>
+</table>
+
+<script>
+// 進捗：localStorage に保存（この端末・ブラウザごと）
+var KEY = 'githubTutorialProgressV1';
+var boxes = Array.prototype.slice.call(document.querySelectorAll('input[data-lesson]'));
+var saved = {};
+try { saved = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { saved = {}; }
+function render() {
+  var done = boxes.filter(function (b) { return b.checked; }).length;
+  document.getElementById('count').textContent = done + ' / ' + boxes.length;
+  document.getElementById('bar').style.width = (boxes.length ? (done / boxes.length * 100) : 0) + '%';
+}
+boxes.forEach(function (b) {
+  if (saved[b.getAttribute('data-lesson')]) b.checked = true;
+  b.addEventListener('change', function () {
+    saved[b.getAttribute('data-lesson')] = b.checked;
+    try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {}
+    render();
+  });
+});
+render();
+
+// 早見表の検索
+document.getElementById('q').addEventListener('input', function (e) {
+  var q = e.target.value.toLowerCase();
+  document.querySelectorAll('#ref tr').forEach(function (tr, i) {
+    if (i === 0) return;
+    tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+
+// フラッシュカード
+document.querySelectorAll('.fc').forEach(function (c) {
+  c.addEventListener('click', function () { c.classList.toggle('open'); });
+});
+
+// コードのコピーボタン
+document.querySelectorAll('pre').forEach(function (pre) {
+  var btn = document.createElement('button');
+  btn.className = 'copy';
+  btn.textContent = 'コピー';
+  btn.addEventListener('click', function () {
+    navigator.clipboard.writeText(pre.querySelector('code').innerText).then(function () {
+      btn.textContent = '済';
+      setTimeout(function () { btn.textContent = 'コピー'; }, 1200);
+    });
+  });
+  pre.appendChild(btn);
+});
+</script>
+</body>
+</html>
