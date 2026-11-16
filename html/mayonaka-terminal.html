@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>まよなかターミナル ― 8bit風ADV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{
+--ink:#dfe6ff; --dim:#8fa3d9; --blue:#3355ff; --panel:#0a0e24;
+--win:#101736; --accent:#ffd94a; --good:#7ee787; --bad:#ff7b72;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+body{margin:0;background:#05060f;color:var(--ink);
+font-family:"DotGothic16","Hiragino Kaku Gothic ProN","Noto Sans JP",monospace,sans-serif;
+-webkit-font-smoothing:none;font-smooth:never;
+display:flex;justify-content:center;padding:14px 10px 40px}
+.cab{width:100%;max-width:760px}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{font-weight:900;letter-spacing:2px;font-size:18px;color:#fff;
+text-shadow:2px 2px 0 var(--blue), 4px 4px 0 #101736}
+.logo small{display:block;font-size:11px;color:var(--dim);letter-spacing:1px;text-shadow:none}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer}
+.sbtn{background:var(--win);color:var(--ink);border:2px solid var(--dim);
+padding:4px 10px;font-size:12px;border-radius:4px}
+.sbtn:hover{border-color:#fff;color:#fff}
+.params{display:flex;gap:14px;background:var(--panel);border:2px solid var(--dim);
+padding:6px 12px;font-size:12px;margin-bottom:10px;flex-wrap:wrap}
+.params b{color:var(--accent)}
+.bar{display:inline-block;width:74px;height:10px;background:#1a2148;vertical-align:middle;margin-left:4px;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--good);display:block}
+.screen{position:relative;border:6px solid var(--dim);border-radius:6px;overflow:hidden;
+aspect-ratio:16/10;background:#000;image-rendering:pixelated}
+.screen::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+background:repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 3px, transparent 3px 6px)}
+.bg{position:absolute;inset:0;transition:opacity.4s}
+.bg-room{background:linear-gradient(#0d1440 0 55%, #182257 55% 100%)}
+.bg-room::before{content:"";position:absolute;right:8%;top:8%;width:110px;height:130px;
+background:linear-gradient(#1b2a63,#0d1440);border:6px solid #05081a;
+box-shadow:0 0 0 4px #26398a, inset 0 0 0 3px #26398a}
+.bg-term{background:radial-gradient(ellipse at 50% 40%, #06280f 0%, #02140a 70%)}
+.bg-term::before{content:"$ nixos-rebuild switch --flake.#endeavor ❄ building... ❄ $ doom sync ❄ $ nvim init.lua ❄";
+position:absolute;inset:6%;color:#2f9e44;font-size:13px;line-height:2.1;opacity:.55;
+font-family:ui-monospace,Menlo,monospace;word-break:break-all}
+.bg-router{background:linear-gradient(#070b1e,#0a1030)}
+.bg-router::before{content:"● ● ●";position:absolute;left:10%;bottom:24%;color:#51ff7a;
+font-size:22px;letter-spacing:26px;text-shadow:0 0 12px #51ff7a}
+.bg-router::after{content:"";position:absolute;left:6%;bottom:16%;width:280px;height:56px;
+background:#0d1440;border:4px solid #26398a}
+.bg-way{background:linear-gradient(#1b1040 0%, #4a2a7a 55%, #c65b8f 82%, #ffb36b 100%)}
+.bg-way::before{content:"";position:absolute;left:0;right:0;bottom:0;height:26%;
+background:linear-gradient(transparent,#0a0618)}
+.stars{position:absolute;inset:0;z-index:1;
+background-image:radial-gradient(2px 2px at 12% 18%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 32% 8%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 55% 22%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 74% 10%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 88% 26%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 44% 30%, #9fb4ff 50%, transparent 51%)}
+.char{position:absolute;bottom:29%;left:50%;transform:translateX(-50%);z-index:2;
+filter:drop-shadow(0 0 10px rgba(60,100,255,.75))}
+.char svg{display:block}
+.ground{position:absolute;left:0;right:0;bottom:0;height:29%;z-index:1;
+background:linear-gradient(transparent, rgba(3,5,16,.92) 30%)}
+.namebox{position:absolute;left:14px;bottom:calc(29% + 8px);z-index:8;color:#ffffff;
+background:var(--win);border:3px solid var(--dim);padding:2px 14px;font-weight:700;font-size:16px;
+letter-spacing:.06em;text-shadow:2px 2px 0 #000}
+.textbox{position:absolute;left:0;right:0;bottom:0;height:29%;z-index:7;color:#ffffff;
+background:rgba(4,6,20,.97);border-top:4px solid var(--dim);
+padding:12px 16px;font-size:18px;line-height:1.8;letter-spacing:.06em;
+text-shadow:2px 2px 0 #000;
+cursor:pointer;white-space:pre-wrap;overflow-y:auto;overflow-x:hidden;
+scrollbar-width:thin;scrollbar-color:#3355ff #0a0e24}
+.textbox::-webkit-scrollbar{width:10px}
+.textbox::-webkit-scrollbar-track{background:#0a0e24}
+.textbox::-webkit-scrollbar-thumb{background:#3355ff;border:2px solid #04061a}
+.textbox.next{position:absolute;right:12px;bottom:6px;color:var(--accent);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.choices{position:absolute;top:0;left:0;right:0;bottom:calc(29% + 46px);z-index:9;display:none;flex-direction:column;
+align-items:center;justify-content:center;gap:12px;background:rgba(3,5,16,.78);padding:16px}
+.choices.show{display:flex}
+.choice{width:min(92%,520px);background:#05081f;color:#ffffff;font-weight:700;
+border:3px solid #d5ddff;padding:12px 16px;font-size:18px;letter-spacing:.08em;
+text-shadow:2px 2px 0 #000;text-align:left;border-radius:4px}
+.choice:hover{border-color:var(--accent);color:#fff;background:#1b2a6e}
+.choice::before{content:"▶ ";color:var(--accent)}
+.title{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
+justify-content:center;gap:14px;background:radial-gradient(ellipse at 50% 35%, #14205e 0%, #05060f 75%);text-align:center;padding:16px}
+.title h1{margin:0;font-size:clamp(26px,6vw,44px);letter-spacing:3px;color:#fff;
+text-shadow:3px 3px 0 var(--blue), 6px 6px 0 #101736}
+.title p{color:#d5ddff;font-size:14px;margin:0;line-height:1.9}
+.tbtn{background:#05081f;color:#fff;font-weight:700;border:3px solid #d5ddff;padding:10px 26px;font-size:17px;letter-spacing:.08em;border-radius:4px}
+.tbtn:hover{border-color:var(--accent)}
+.tbtn:disabled{opacity:.35;cursor:default}
+.endmark{position:absolute;top:12px;right:12px;z-index:8;background:#000a;border:2px solid var(--accent);
+color:var(--accent);padding:2px 10px;font-size:12px;display:none}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
+border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;opacity:0;transition:opacity.3s;z-index:50;pointer-events:none}
+.toast.show{opacity:1}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;z-index:40;align-items:center;justify-content:center;padding:16px}
+.modal.show{display:flex}
+.modal.box{background:var(--panel);border:3px solid var(--dim);max-width:640px;width:100%;
+max-height:78vh;overflow:auto;padding:16px 20px;font-size:13px;line-height:1.9;white-space:pre-wrap}
+footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
+@media (max-width:560px){.textbox{font-size:15px}.char{bottom:30%}}
+</style>
+</head>
+<body>
+<div class="cab">
+<header>
+<div class="logo">まよなかターミナル<small>― 8bit風ADV：EmacsとVimとNixOSの夜 ―</small></div>
+<div class="btns">
+<button class="sbtn" id="btnLog">📜 ログ</button>
+<button class="sbtn" id="btnSound">🔊 音ON</button>
+<button class="sbtn" id="btnTitle">🏠 タイトル</button>
+<button class="sbtn" id="btnReset">🗑 セーブ消去</button>
+</div>
+</header>
+
+<div class="params">
+<span>EMACS力 <b id="pEmacs">0</b><span class="bar"><i id="bEmacs" style="width:0%"></i></span></span>
+<span>VIM力 <b id="pVim">0</b><span class="bar"><i id="bVim" style="width:0%"></i></span></span>
+<span>NIX力 <b id="pNix">0</b><span class="bar"><i id="bNix" style="width:0%"></i></span></span>
+<span style="margin-left:auto;color:var(--dim)">💾 自動セーブ：localStorage</span>
+</div>
+
+<div class="screen" id="screen">
+<div class="bg bg-room" id="bg"></div>
+<div class="stars"></div>
+<div class="ground"></div>
+<div class="char" id="char"></div>
+<div class="endmark" id="endmark">END</div>
+<div class="namebox" id="namebox" style="display:none"></div>
+<div class="textbox" id="textbox"><span id="text"></span><span class="next" id="nextmark" style="display:none">▼</span></div>
+<div class="choices" id="choices"></div>
+<div class="title" id="title">
+<h1>まよなかターミナル</h1>
+<p>深夜2時。キーボードの悲鳴と、青く光る NixOS の画面。<br>
+これは、ひとりの NixOS 使いが Doom Emacs と Neovim と<br>
+Wayland の扉のあいだを彷徨う、ちいさな夜の物語。</p>
+<button class="tbtn" id="btnNew">▶ はじめから</button>
+<button class="tbtn" id="btnContinue">▶ つづきから</button>
+<p>所要時間：約5分 ／ 選択肢は少なめ ／ セーブはブラウザ内（localStorage）</p>
+</div>
+</div>
+
+<footer>
+遊び方：本文をクリックすると文字表示を一気に進められます。選択肢で物語とパラメータが変わり、結末も変わります（エンディング複数）。
+セーブは Cookie ではなく localStorage を使っています（容量が大きく、GitHub Pages に置いてもそのまま動くため）。進捗はシーンごとに自動保存。
+v1.1：ドット絵フォント（DotGothic16、読み込めない環境では等幅フォントにフォールバック）＋文字送り「ピピピ」音を追加。音は 🔊 ボタンで ON/OFF。
+</footer>
+</div>
+
+<div class="modal" id="logModal"><div class="box" id="logBox"></div></div>
+<div class="toast" id="toast">💾 セーブしました</div>
+
+<script>
+"use strict";
+/* ============ キャラのシルエット（SVG） ============ */
+function sil(body, extra){
+return '<svg width="150" height="190" viewBox="0 0 120 150">'
++ '<circle cx="60" cy="34" r="17" fill="#141f52"/>'
++ '<path d="M22 150 C22 96 40 66 60 66 C80 66 98 96 98 150 Z" fill="#141f52"/>'
++ (extra || '') + (body || '') + '</svg>';
+}
+const CHARS = {
+ore: sil('', ''),
+sennin: sil('', '<path d="M28 26 L60 2 L92 26 L84 30 L60 14 L36 30 Z" fill="#141f52"/>'
++ '<path d="M48 44 L72 44 L66 92 L54 92 Z" fill="#141f52"/>'),
+ninja: sil('', '<rect x="41" y="26" width="38" height="8" fill="#141f52"/>'
++ '<path d="M79 28 L104 20 L100 30 L79 34 Z" fill="#141f52"/>'
++ '<path d="M79 32 L102 38 L96 46 L79 38 Z" fill="#141f52"/>'),
+seirei: sil('', '<path d="M44 20 L52 4 L60 18 L68 4 L76 20 L68 26 L52 26 Z" fill="#141f52"/>'
++ '<rect x="96" y="70" width="5" height="62" fill="#141f52"/>'
++ '<circle cx="98" cy="64" r="8" fill="#141f52"/>'),
+none: ''
+};
+
+/* ============ シナリオ ============ */
+/* fx: パラメータ加算 {e:Emacs, v:Vim, n:Nix} */
+const NODES = {
+start: { bg:'bg-room', char:'ore', name:'俺',
+text:'深夜2時。Endeavor のキーボードが、また「カチャ……」と小さく悲鳴を上げた。\n画面の中では NixOS だけが青く、静かに光っている。\n今夜もまた、環境をいじり倒す長い夜が始まる――。',
+choices:[
+{ t:'Alt+Enter で ghostty を開く', to:'term', fx:{n:1}},
+{ t:'今日はもう寝る', to:'sleep_end'}
+]},
+term: { bg:'bg-term', char:'none', name:'',
+text:'ターミナルが開いた。flake.nix、home-manager、dotfiles……。\n俺の環境は全部ここにある。宣言的で、再現可能で、たまに盛大に壊れる。\nさて、今夜はどの扉を叩く？',
+choices:[
+{ t:'Doom Emacs の扉を叩く', to:'emacs1'},
+{ t:'Neovim の抜け道に入る', to:'nvim1'},
+{ t:'OpenWrt ルーターの様子を見る', to:'router1', fx:{n:1}}
+]},
+emacs1: { bg:'bg-term', char:'sennin', name:'エマクス仙人',
+text:'「ほほう…… evil-mode の気配。Vim の指を持つ者が、とうとうこの山門を叩いたか」\n白い髭の仙人が、シルエットの奥から現れた。\n「では試そう。Doom Emacs でファイルを開くキーは何じゃ？」',
+choices:[
+{ t:'SPC f f', to:'emacs2', fx:{e:2}},
+{ t:'Alt+W', to:'gag_altw'},
+{ t:':wq', to:'gag_wq'}
+]},
+gag_altw: { bg:'bg-term', char:'sennin', name:'エマクス仙人',
+text:'――バンッ！ ウィンドウが閉じた。\n「それは i3 の作法じゃ。Alt+W は窓を閉じるキーであろうが」\n仙人は呆れたように髭をしごいた。体が i3 に染まりすぎている……。',
+choices:[ { t:'出直す', to:'emacs1'}]},
+gag_wq: { bg:'bg-term', char:'sennin', name:'エマクス仙人',
+text:'「……:wq は隣の道場（Vim）の作法じゃな」\n仙人は静かに首を振った。\n「焦るな。道は違えど、指の記憶は裏切らん」',
+choices:[ { t:'出直す', to:'emacs1'}]},
+emacs2: { bg:'bg-term', char:'sennin', name:'エマクス仙人',
+text:'「うむ、SPC f f。正解じゃ」\n「Doom の要は SPC リーダー。押せば which-key が道案内をしてくれる。\nそして何より―― hjkl は、そのまま使える。お主の Vim の指は、ここでも生きる」',
+choices:[
+{ t:'修行を続ける（SPC. のファイル検索も覚える）', to:'emacs3', fx:{e:1}},
+{ t:'やっぱり Neovim も気になる', to:'nvim1'}
+]},
+emacs3: { bg:'bg-term', char:'sennin', name:'エマクス仙人',
+text:'仙人の杖が光り、無数のファイル名が宙に浮かんだ。\n「覚えたな。これが Emacs の森の歩き方じゃ」\nEMACS力が上がった気がした。',
+choices:[ { t:'夜の続きへ', to:'hub'}]},
+nvim1: { bg:'bg-term', char:'ninja', name:'ヴィム忍者',
+text:'闇の中から、頭にバンドを巻いた忍者が音もなく現れた。\n「……よく来た。Neovim の道は、まず“出られること”から始まる」\n「試そう。保存して終了するコマンドは？」',
+choices:[
+{ t:':wq', to:'nvim2', fx:{v:2}},
+{ t:'SPC w', to:'gag_spcw'},
+{ t:'Ctrl+S を連打', to:'gag_ctrls'}
+]},
+gag_spcw: { bg:'bg-term', char:'ninja', name:'ヴィム忍者',
+text:'「……それは Doom の作法だ。山門を間違えている」\n忍者は静かに、しかし確かに首を振った。',
+choices:[ { t:'出直す', to:'nvim1'}]},
+gag_ctrls: { bg:'bg-term', char:'ninja', name:'ヴィム忍者',
+text:'画面が固まった。端末が S キーの連打を受け付けない。\n「……この世界に Ctrl+S の安らぎはない。あるのは:wq だけだ」',
+choices:[ { t:'出直す', to:'nvim1'}]},
+nvim2: { bg:'bg-term', char:'ninja', name:'ヴィム忍者',
+text:'「正解だ、:wq」\n「Neovim の設定は init.lua。そして NixOS なら home-manager で宣言的に置ける。\nお前の環境作りの癖と、相性は悪くないはずだ」\nVIM力が上がった気がした。',
+choices:[ { t:'夜の続きへ', to:'hub', fx:{v:1}}]},
+router1: { bg:'bg-router', char:'none', name:'',
+text:'OpenWrt ルーターのランプが、緑に瞬いている。\nSSH で入ってみると、ログは平和そのもの。不審なアクセスもなし。\n……のはずが、ひとつだけ、見慣れない接続元の記録があった。',
+choices:[
+{ t:'Hermes に定期巡回させる構想をメモする', to:'hub', fx:{n:2}},
+{ t:'今夜この場でファームウェア更新を敢行する', to:'router_gag'}
+]},
+router_gag: { bg:'bg-router', char:'none', name:'',
+text:'――いや、待て。深夜2時に本番ルーターの更新は、冒険ではなく事故だ。\n俺は静かに手を止めた。これもまた、運用者の判断である。\nNIX力が上がった気がした（賢明さ的な意味で）。',
+choices:[ { t:'夜の続きへ', to:'hub', fx:{n:1}}]},
+hub: { bg:'bg-room', char:'ore', name:'俺',
+text:'夜はさらに深まっていく。\nモニターの向こうで、まだ開かれていない扉がひとつ、淡く光っている。\n―― Wayland への扉だ。',
+choices:[
+{ t:'Tatami の扉を開く', to:'tatami1'},
+{ t:'i3 の早見表を復習してから行く', to:'i3_review', fx:{n:1}},
+{ t:'エディタ修行に戻る', to:'term'}
+]},
+i3_review: { bg:'bg-room', char:'ore', name:'俺',
+text:'自分の i3 設定を読み返す。\nmod は Alt。Alt+Tab は窓切り替えじゃなくワークスペース移動。数字キーに Ctrl を足すと +10 番。\n……そうだ、俺の指はこれを覚えている。問題は、向こう側が同じとは限らないことだ。',
+choices:[ { t:'Tatami の扉を開く', to:'tatami1'}]},
+tatami1: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'扉の向こうは、紫から橙へ染まる Wayland の空だった。\n畳の精霊が、杖をくるりと回して微笑む。\n「よく来たね。じゃあ最初に聞くよ―― Tatami の“主キー”は、どっち？」',
+choices:[
+{ t:'Alt', to:'tatami2', fx:{n:2}},
+{ t:'Super', to:'gag_super'}
+]},
+gag_super: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'「ぶっぶー。Super は補助キーだよ。ウィンドウ巡回とか、サイレント移動とか、脇役専門」\n精霊は楽しそうに笑った。\n「実物の hyprland.lua を読んだ人なら分かるはず。主役は Alt の方だよ」',
+choices:[ { t:'出直す', to:'tatami1'}]},
+tatami2: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'「正解。君の i3 と同じ Alt が主キー。指の記憶は、思ったより残せるよ」\n「じゃあ次。Tatami で Alt+J は何をするキー？」',
+choices:[
+{ t:'分割トグル（toggle-split）', to:'tatami3', fx:{n:1}},
+{ t:'フォーカスを下へ', to:'gag_focus'}
+]},
+gag_focus: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'「それは i3 の君の答えだね。こっちのフォーカスは矢印キーが既定なんだ」\n「hjkl を使いたければ、Alt+J / K / L を unbind してから足す。順番が大事だよ」',
+choices:[ { t:'出直す', to:'tatami2'}]},
+tatami3: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'精霊の杖先で、空にキー配置の星図が描かれた。\nAlt+H は空き。J と K と L には先客がいる。でも、外して付け直せばいい。\n「君の夜の彷徨も、そろそろ結末だよ。――さあ、どの道を行く？」',
+choices:[ { t:'最終選択へ', to:'final_gate'}]},
+final_gate: { bg:'bg-way', char:'ore', name:'俺',
+text:'東の空が、ほんの少しだけ白み始めている。\n仙人の山門、忍者の抜け道、精霊の星図。全部を見てきた俺は、最後にひとつだけ選ばなければならない。\nこれからの俺の環境は――',
+choices:[
+{ t:'Doom Emacs を極める', to:'end_emacs'},
+{ t:'Neovim を極める', to:'end_nvim'},
+{ t:'Tatami で Wayland へ移行する', to:'end_wayland'},
+{ t:'i3 を極める（今の環境も悪くない）', to:'end_i3'}
+]},
+end_emacs: { bg:'bg-way', char:'sennin', name:'エマクス仙人', ending:true,
+text:'「うむ、その目だ。ようこそ、Emacs の森へ」\n仙人と並んで朝日を見る。SPC の先には、まだ見ぬ拡張の森が広がっていた。\n俺の指は Vim のまま、住む世界だけが広がっていく――。\n',
+choices:[]},
+end_nvim: { bg:'bg-way', char:'ninja', name:'ヴィム忍者', ending:true,
+text:'「……良い選択だ。:wq の先で、また会おう」\n忍者は朝霧の中へ消えた。init.lua の最後の行に、静かにカーソルが瞬いている。\n軽く、速く、宣言的に。俺の夜は、Neovim と共に明けた。\n',
+choices:[]},
+end_wayland: { bg:'bg-way', char:'seirei', name:'タタミの精霊', ending:true,
+text:'「決めたね。じゃあ、行こうか。Wayland の朝へ」\nAlt を押す指は、もう迷わない。unbind すべきキーの一覧も、星図に刻んである。\nLXQt+i3 の夜が終わり、Tatami の朝が始まる――。\n',
+choices:[]},
+end_i3: { bg:'bg-way', char:'ore', name:'俺', ending:true,
+text:'俺は静かに扉を閉めた。\nAlt+Tab でワークスペースを巡り、Ctrl+数字で 20 番まで自在に行き来するこの環境は、伊達に育ててきたわけじゃない。\n新しい世界はいつでも逃げない。まずはこの城を、極めるまで使う。\n',
+choices:[]},
+sleep_end: { bg:'bg-room', char:'ore', name:'俺', ending:true,
+text:'俺はそっとモニターの電源を落とした。\nflake も、エディタも、Wayland も、明日にはちゃんとそこにある。\n健康的な判断の代償は、ただひとつ――この物語が、ここで終わることだけだ。\n',
+choices:[]}
+};
+
+/* ============ エンジン ============ */
+const SAVE_KEY = 'mayonakaTerminalSaveV1';
+let state = { node:'start', stats:{e:0,v:0,n:0}, log:[]};
+let typing = null, fullText = '', soundOn = true;
+
+const $ = id => document.getElementById(id);
+const bgEl=$('bg'), charEl=$('char'), nameEl=$('namebox'), textEl=$('text'),
+boxEl=$('textbox'), chEl=$('choices'), nextEl=$('nextmark'), endEl=$('endmark');
+
+function beep(freq, dur, delay, vol){
+if(!soundOn) return;
+try{
+const ctx = beep.ctx || (beep.ctx = new (window.AudioContext||window.webkitAudioContext)());
+if(ctx.state === 'suspended') ctx.resume();
+const o = ctx.createOscillator(), g = ctx.createGain();
+o.type='square'; o.frequency.value = freq || 660;
+g.gain.value = vol || 0.03;
+o.connect(g); g.connect(ctx.destination);
+const t = ctx.currentTime + (delay||0);
+o.start(t); o.stop(t + (dur||0.06));
+}catch(e){}
+}
+function save(){
+try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); toast();}catch(e){}
+}
+function loadSave(){
+try{ const s = localStorage.getItem(SAVE_KEY); return s? JSON.parse(s): null;}catch(e){ return null;}
+}
+function toast(){
+const t=$('toast'); t.classList.add('show');
+clearTimeout(toast.tm); toast.tm=setTimeout(()=>t.classList.remove('show'), 900);
+}
+function renderParams(){
+$('pEmacs').textContent = state.stats.e;
+$('pVim').textContent = state.stats.v;
+$('pNix').textContent = state.stats.n;
+$('bEmacs').style.width = Math.min(100, state.stats.e*16) + '%';
+$('bVim').style.width = Math.min(100, state.stats.v*16) + '%';
+$('bNix').style.width = Math.min(100, state.stats.n*14) + '%';
+}
+function typeText(txt, done){
+clearInterval(typing);
+fullText = txt; textEl.textContent=''; nextEl.style.display='none';
+boxEl.scrollTop = 0;
+let i=0;
+typing = setInterval(()=>{
+i++;
+textEl.textContent = txt.slice(0, i);
+boxEl.scrollTop = boxEl.scrollHeight;
+const ch = txt.charAt(i-1);
+if(ch && ch !== ' ' && ch !== '\n' && i % 2 === 1){
+beep(980 + Math.random()*520, 0.018, 0, 0.012);
+}
+if(i >= txt.length){ clearInterval(typing); typing=null; nextEl.style.display=''; if(done) done();}
+}, 26);
+boxEl.onclick = ()=>{
+if(typing){ clearInterval(typing); typing=null; textEl.textContent=txt; boxEl.scrollTop = boxEl.scrollHeight; nextEl.style.display=''; if(done) done();}
+};
+}
+function showNode(id){
+const n = NODES[id];
+if(!n) return;
+state.node = id;
+bgEl.className = 'bg ' + n.bg;
+charEl.innerHTML = CHARS[n.char] || '';
+charEl.style.display = n.char && n.char!== 'none'? '': 'none';
+if(n.name){ nameEl.textContent = n.name; nameEl.style.display='';} else nameEl.style.display='none';
+endEl.style.display = n.ending? '': 'none';
+chEl.classList.remove('show'); chEl.innerHTML='';
+state.log.push((n.name? '': '') + n.text);
+renderParams();
+typeText(n.text, ()=>{
+if(n.ending){ showEnding();}
+else if(n.choices && n.choices.length){ showChoices(n.choices);}
+});
+save();
+}
+function showChoices(choices){
+chEl.innerHTML='';
+choices.forEach(c=>{
+const b=document.createElement('button');
+b.className='choice'; b.textContent=c.t;
+b.onclick=()=>{
+beep(520,.06); setTimeout(()=>beep(780,.07), 70);
+if(c.fx){
+state.stats.e += c.fx.e||0; state.stats.v += c.fx.v||0; state.stats.n += c.fx.n||0;
+}
+state.log.push('▶ ' + c.t);
+chEl.classList.remove('show');
+showNode(c.to);
+};
+chEl.appendChild(b);
+});
+chEl.classList.add('show');
+}
+function showEnding(){
+const s = state.stats;
+const total = s.e + s.v + s.n;
+const rank = total >= 10? '真の環境使い': total >= 6? '夜更かしの達人': total >= 3? '見習い彷徨い人': '最速で朝を迎えた人';
+const b=document.createElement('button');
+b.className='choice';
+b.textContent='結果を見る（称号：' + rank + ' / EMACS ' + s.e + '・VIM ' + s.v + '・NIX ' + s.n + '）→ タイトルへ';
+b.onclick=()=>{ beep(660,.07); setTimeout(()=>beep(880,.09),90); goTitle();};
+chEl.innerHTML=''; chEl.appendChild(b); chEl.classList.add('show');
+[523,659,784,1046].forEach((f,i)=>beep(f,.1,i*0.11));
+}
+function goTitle(){
+$('title').style.display='flex';
+const sv = loadSave();
+$('btnContinue').disabled =!(sv && sv.node &&!NODES[sv.node].ending);
+}
+function startGame(fromSave){
+$('title').style.display='none';
+if(fromSave){
+const sv = loadSave();
+if(sv && sv.node){ state = sv; showNode(state.node); return;}
+}
+state = { node:'start', stats:{e:0,v:0,n:0}, log:[]};
+showNode('start');
+}
+$('btnNew').onclick = ()=>{ beep(660,.06); startGame(false);};
+$('btnContinue').onclick = ()=>{ beep(660,.06); startGame(true);};
+$('btnTitle').onclick = ()=>{ chEl.classList.remove('show'); goTitle();};
+$('btnReset').onclick = ()=>{
+try{ localStorage.removeItem(SAVE_KEY);}catch(e){}
+state = { node:'start', stats:{e:0,v:0,n:0}, log:[]};
+renderParams(); goTitle();
+};
+$('btnSound').onclick = (e)=>{
+soundOn =!soundOn;
+e.target.textContent = soundOn? '🔊 音ON': '🔇 音OFF';
+if(soundOn) beep(700,.06);
+};
+$('btnLog').onclick = ()=>{
+$('logBox').textContent = state.log.length? state.log.join('\n\n'): '（まだログがありません）';
+$('logModal').classList.add('show');
+};
+$('logModal').onclick = ()=> $('logModal').classList.remove('show');
+renderParams();
+goTitle();
+</script>
+</body>
+</html>
