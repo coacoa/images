@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Doom Emacs 道場・別巻 ― 「：」とSPCの線引き</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{
+--ink:#dfe6ff; --dim:#8fa3d9; --blue:#3355ff; --panel:#0a0e24;
+--win:#101736; --accent:#ffd94a; --good:#7ee787; --bad:#ff7b72;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+body{margin:0;background:#05060f;color:var(--ink);
+font-family:"DotGothic16","Hiragino Kaku Gothic ProN","Noto Sans JP",monospace,sans-serif;
+-webkit-font-smoothing:none;font-smooth:never;
+display:flex;justify-content:center;padding:14px 10px 40px}
+.cab{width:100%;max-width:760px}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{font-weight:900;letter-spacing:2px;font-size:18px;color:#fff;
+text-shadow:2px 2px 0 var(--blue), 4px 4px 0 #101736}
+.logo small{display:block;font-size:11px;color:var(--dim);letter-spacing:1px;text-shadow:none}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer}
+.sbtn{background:var(--win);color:var(--ink);border:2px solid var(--dim);
+padding:4px 10px;font-size:12px;border-radius:4px}
+.sbtn:hover{border-color:#fff;color:#fff}
+.params{display:flex;gap:14px;background:var(--panel);border:2px solid var(--dim);
+padding:6px 12px;font-size:12px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.params b{color:var(--accent)}
+.bar{display:inline-block;width:120px;height:10px;background:#1a2148;vertical-align:middle;margin-left:4px;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--good);display:block}
+.screen{position:relative;border:6px solid var(--dim);border-radius:6px;overflow:hidden;
+aspect-ratio:16/10;background:#000;image-rendering:pixelated}
+.screen::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+background:repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 3px, transparent 3px 6px)}
+.bg{position:absolute;inset:0;transition:opacity.4s}
+.bg-room{background:linear-gradient(#0d1440 0 55%, #182257 55% 100%)}
+.bg-room::before{content:"";position:absolute;right:8%;top:8%;width:110px;height:130px;
+background:linear-gradient(#1b2a63,#0d1440);border:6px solid #05081a;
+box-shadow:0 0 0 4px #26398a, inset 0 0 0 3px #26398a}
+.bg-term{background:radial-gradient(ellipse at 50% 40%, #06280f 0%, #02140a 70%)}
+.bg-term::before{content:"$ emacs ❄ SPC f f ❄ SPC b b ❄ SPC g g ❄ doom sync ❄ SPC h k ❄";
+position:absolute;inset:6%;color:#2f9e44;font-size:13px;line-height:2.1;opacity:.55;
+font-family:ui-monospace,Menlo,monospace;word-break:break-all}
+.bg-way{background:linear-gradient(#1b1040 0%, #4a2a7a 55%, #c65b8f 82%, #ffb36b 100%)}
+.stars{position:absolute;inset:0;z-index:1;
+background-image:radial-gradient(2px 2px at 12% 18%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 32% 8%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 55% 22%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 74% 10%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 88% 26%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 44% 30%, #9fb4ff 50%, transparent 51%)}
+.char{position:absolute;bottom:29%;left:50%;transform:translateX(-50%);z-index:2;
+filter:drop-shadow(0 0 10px rgba(60,100,255,.75))}
+.char svg{display:block}
+.ground{position:absolute;left:0;right:0;bottom:0;height:29%;z-index:1;
+background:linear-gradient(transparent, rgba(3,5,16,.92) 30%)}
+.namebox{position:absolute;left:14px;bottom:calc(29% + 8px);z-index:8;color:#ffffff;
+background:var(--win);border:3px solid var(--dim);padding:2px 14px;font-weight:700;font-size:16px;
+letter-spacing:.06em;text-shadow:2px 2px 0 #000}
+.textbox{position:absolute;left:0;right:0;bottom:0;height:29%;z-index:7;color:#ffffff;
+background:rgba(4,6,20,.97);border-top:4px solid var(--dim);
+padding:12px 16px;font-size:18px;line-height:1.8;letter-spacing:.06em;
+text-shadow:2px 2px 0 #000;
+cursor:pointer;white-space:pre-wrap;overflow-y:auto;overflow-x:hidden;
+scrollbar-width:thin;scrollbar-color:#3355ff #0a0e24}
+.textbox::-webkit-scrollbar{width:10px}
+.textbox::-webkit-scrollbar-track{background:#0a0e24}
+.textbox::-webkit-scrollbar-thumb{background:#3355ff;border:2px solid #04061a}
+.textbox.next{position:absolute;right:12px;bottom:6px;color:var(--accent);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.choices{position:absolute;top:0;left:0;right:0;bottom:calc(29% + 46px);z-index:9;display:none;flex-direction:column;
+align-items:center;justify-content:center;gap:12px;background:rgba(3,5,16,.78);padding:16px;overflow-y:auto}
+.choices.show{display:flex}
+.choice{width:min(92%,520px);background:#05081f;color:#ffffff;font-weight:700;
+border:3px solid #d5ddff;padding:12px 16px;font-size:18px;letter-spacing:.08em;
+text-shadow:2px 2px 0 #000;text-align:left;border-radius:4px}
+.choice:hover{border-color:var(--accent);color:#fff;background:#1b2a6e}
+.choice::before{content:"▶ ";color:var(--accent)}
+.choice.done{border-color:var(--good)}
+.choice.done::before{content:"✔ ";color:var(--good)}
+.title{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
+justify-content:center;gap:14px;background:radial-gradient(ellipse at 50% 35%, #14205e 0%, #05060f 75%);text-align:center;padding:16px}
+.title h1{margin:0;font-size:clamp(26px,6vw,44px);letter-spacing:3px;color:#fff;
+text-shadow:3px 3px 0 var(--blue), 6px 6px 0 #101736}
+.title p{color:#d5ddff;font-size:14px;margin:0;line-height:1.9}
+.tbtn{background:#05081f;color:#fff;font-weight:700;border:3px solid #d5ddff;padding:10px 26px;font-size:17px;letter-spacing:.08em;border-radius:4px}
+.tbtn:hover{border-color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
+border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;opacity:0;transition:opacity.3s;z-index:50;pointer-events:none}
+.toast.show{opacity:1}
+footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
+kbd{display:inline-block;background:#21262d;border:1px solid var(--dim);border-bottom-width:2px;
+border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+@media (max-width:560px){.textbox{font-size:15px}.char{bottom:30%}}
+</style>
+</head>
+<body>
+<div class="cab">
+<header>
+<div class="logo">Doom Emacs 道場・別巻<small>― 「：」とSPCの線引き 全16課 ―</small></div>
+<div class="btns">
+<button class="sbtn" id="btnSound">🔊 音ON</button>
+<button class="sbtn" id="btnLevels">🏠 レベル選択</button>
+<button class="sbtn" id="btnReset">🗑 進捗リセット</button>
+</div>
+</header>
+
+<div class="params">
+<span>理解済み <b id="pDone">0</b> / 16 課<span class="bar"><i id="bDone" style="width:0%"></i></span></span>
+<span style="color:var(--dim)">現在：<span id="pNow">タイトル</span></span>
+<span style="margin-left:auto;color:var(--dim)">💾 進捗は自動保存（localStorage）</span>
+</div>
+
+<div class="screen" id="screen">
+<div class="bg bg-room" id="bg"></div>
+<div class="stars"></div>
+<div class="ground"></div>
+<div class="char" id="char"></div>
+<div class="namebox" id="namebox" style="display:none"></div>
+<div class="textbox" id="textbox"><span id="text"></span><span class="next" id="nextmark" style="display:none">▼</span></div>
+<div class="choices" id="choices"></div>
+<div class="title" id="title">
+<h1>Doom Emacs 道場・別巻</h1>
+<p>別巻のテーマは「Vimの：と、DoomのSPCの線引き」。<br>
+どこは手癖のまま使えて、どこはSPCを覚えるべきか、全16課で仕分ける道場。<br>
+「分かった！」で次へ、「分からない」で何度でもやり直し。</p>
+<button class="tbtn" id="btnEnter">▶ 道場に入る</button>
+<p>進捗（理解済み ✔）はブラウザに自動保存されます</p>
+</div>
+</div>
+
+<footer>
+遊び方：説明を読んだら「これは分かった！」か「分からない」を選ぶだけ。分かったら確認問題が1問出て、正解でその課は理解済み ✔。
+間違えてもペナルティなし、補足説明を読んで何度でも挑めます。本文クリックで文字送り、長い文は自動スクロール＋手動スクロール可。
+各課の冒頭に【：でOK】【SPC推奨】【SPC必須】の札が付きます。キーはすべて Doom Emacs の既定（evil-mode 前提）。実際に Doom を開いて、読みながら指を動かすと一番効きます。
+</footer>
+</div>
+
+<div class="toast" id="toast">💾 保存しました</div>
+
+<script>
+"use strict";
+/* ============ シルエット ============ */
+function sil(extra){
+return '<svg width="150" height="190" viewBox="0 0 120 150">'
++ '<circle cx="60" cy="34" r="17" fill="#141f52"/>'
++ '<path d="M22 150 C22 96 40 66 60 66 C80 66 98 96 98 150 Z" fill="#141f52"/>'
++ (extra || '') + '</svg>';
+}
+const CHARS = {
+sennin: sil('<path d="M28 26 L60 2 L92 26 L84 30 L60 14 L36 30 Z" fill="#141f52"/>'
++ '<path d="M48 44 L72 44 L66 92 L54 92 Z" fill="#141f52"/>'),
+ore: sil(''),
+none: ''
+};
+
+/* ============ カリキュラム ============ */
+/* teach: 説明ページ（クリックで送る） / retry: 補足説明 / quiz: 確認問題 */
+const LEVELS = [
+{ name:'入門編 ：の手癖が生きる', desc:'保存・終了・開く・分割・置換。Vimの手癖がそのまま通用する場所。', lessons:[
+{ id:'a1', title:'保存と終了', teach:[
+'【：でOK】保存と終了は、Vimの手癖のままでよい。\n:w 保存 ／ :q 閉じる ／ :wq 両方 ／ :x 保存して閉じる ／ :qa 全部閉じる。! を付けた強制も効くぞ。',
+'ただし1つだけ注意。:q の役目は「今のウィンドウ（やバッファ）を閉じる」寄りじゃ。\nDoom そのものを確実に終わらせるのは SPC q q。役目が少し違う、とだけ覚えておけ。'],
+retry:':w :q :wq は手癖でOK。\n「アプリ自体を終了」だけ SPC q q と使い分ける。',
+quiz:{ q:'Vimの手癖のまま、ファイルを保存するコマンドは？', choices:[
+{ t:':w', ok:true }, { t:'Alt+S', ok:false }, { t:':q', ok:false } ] } },
+{ id:'a2', title:'開くとバッファ', teach:[
+'【：でOK】ファイルとバッファの行き来も手癖でよい。\n:e ファイル名 で開く、:bn 次のバッファ、:bp 前、:bd 閉じる、:ls 一覧。Vim と寸分違わず使える。',
+'SPC側にも対応はある（SPC f f、SPC b b）が、パスが頭に入っているファイルなら :e の方が速いこともある。\n「：で困らない場所」は、無理にSPCへ寄せなくてよい。'],
+retry:':e 開く / :bn :bp 移動 / :bd 閉じる / :ls 一覧。全部手癖でOK。',
+quiz:{ q:'次のバッファへ移るコマンドは？', choices:[
+{ t:':tabnext', ok:false }, { t:':bn', ok:true }, { t:'SPC q q', ok:false } ] } },
+{ id:'a3', title:'ウィンドウ分割', teach:[
+'【：でOK】分割そのものは Vim と同じじゃ。\n:sp 横分割、:vs 縦分割、:close 閉じる、:only 他を全部閉じる。',
+'分割した後の移動は2通りある。\nVim通り Ctrl+w のあと h/j/k/l でもよいし、SPC w のあと h/j/k/l でもよい。\nどっちかに統一すれば十分じゃ。'],
+retry:':sp :vs が分割。移動は Ctrl+w+hjkl か SPC w+hjkl。',
+quiz:{ q:'縦に分割するコマンドは？', choices:[
+{ t:':sp', ok:false }, { t:'SPC b b', ok:false }, { t:':vs', ok:true } ] } },
+{ id:'a4', title:'置換と行操作', teach:[
+'【：でOK】置換は Ex の独壇場じゃ。\n:%s/old/new/g 全体置換、1,10s/… の範囲指定、ビジュアル選択して :s なら選択範囲だけ。\n:g/パターン/d の一括削除、:m 移動、:t コピーも使える。',
+'検索ハイライトを消す :noh も手癖でOK。\nこの分野はSPC側に強い対抗馬がない。：の領分のまま使ってよい場所じゃ。'],
+retry:':%s が置換、範囲指定と :g も可。ハイライト消しは :noh。',
+quiz:{ q:'ファイル全体を置換するコマンドは？', choices:[
+{ t:'SPC s s', ok:false }, { t:':%s/old/new/g', ok:true }, { t:':noh', ok:false } ] } },
+]},
+{ name:'初級編 ：でもできる、SPCが速い', desc:'：でも届くが、補完と一覧が付くSPC版の方が速い場所。', lessons:[
+{ id:'b1', title:'ファイル探し', teach:[
+'【SPC推奨】:e は「正確なパスを打つ」道具じゃ。場所がうろ覚えのファイルでは詰む。\n探して開くなら SPC f f。名前の一部を打つと候補が絞られる（補完つき）。',
+'線引きはこれ：\nパスが分かっている → :e\n探しながら開く → SPC f f\nこの使い分けだけで、日常のストレスが減るぞ。'],
+retry:'探す系はSPC。SPC f f は補完で候補を絞れる。',
+quiz:{ q:'名前の一部だけ分かっているファイルを開くなら？', choices:[
+{ t:'SPC f f', ok:true }, { t:':e で勘で打つ', ok:false }, { t:':ls', ok:false } ] } },
+{ id:'b2', title:'バッファ切替', teach:[
+'【SPC推奨】バッファが2〜3個なら :bn の連打で足りる。\nだが10個開くと連打は苦行じゃ。SPC b b なら一覧が出て、名前で絞って1発で飛べる。',
+'閉じるのも同じ発想で、今のバッファを閉じる :bd と SPC b d が両方ある。\n要は「数が増えたら、一覧のあるSPC」が合言葉じゃ。'],
+retry:'数が少ないうちは :bn、増えたら SPC b b の一覧選択。',
+quiz:{ q:'開いたバッファの一覧から選んで切り替えるのは？', choices:[
+{ t:':bn を連打', ok:false }, { t:'SPC b b', ok:true }, { t:':ls して眺める', ok:false } ] } },
+{ id:'b3', title:'プロジェクト検索', teach:[
+'【SPC推奨】Vim の :grep は一応あるが、結果一覧から気持ちよく飛ぶ体験は弱い。\nDoom では SPC s p：プロジェクト全体を ripgrep で検索し、結果からそのまま該当行へ飛べる。',
+'「あの関数、どのファイルだっけ」は日常で何度も起きる。\nここは：の手癖を捨てて、SPC s p に乗り換える価値が一番大きい場所の1つじゃ。'],
+retry:'全体検索は SPC s p。結果から直接ジャンプできるのが強い。',
+quiz:{ q:'プロジェクト全体を文字列検索するなら？', choices:[
+{ t:':!grep -r', ok:false }, { t:'SPC s p', ok:true }, { t:'SPC q q', ok:false } ] } },
+{ id:'b4', title:'GitはMagitへ', teach:[
+'【SPC推奨】:!git status と打てば一応は見られる。だがそれは「ターミナルに降りている」だけじゃ。\nDoom の Git は Magit：SPC g g で状態画面が開く。',
+'Magit の強さは、差分を見ながら「一部だけステージ」できることと、コミット・プッシュが画面の中で完結すること。\nGit は：の領分を離れて、SPC g g に任せるのが正解じゃ。'],
+retry:'Gitは Magit、SPC g g。:!git は応急処置どまり。',
+quiz:{ q:'Gitの状態画面を開くのは？', choices:[
+{ t:':!git status', ok:false }, { t:':w', ok:false }, { t:'SPC g g', ok:true } ] } },
+]},
+{ name:'中級編 ：では届かない', desc:'which-key、演算子、ヘルプ、M-x。SPC側にしかない世界。', lessons:[
+{ id:'c1', title:'which-keyという発見装置', teach:[
+'【SPC必須】SPC を押すと下にメニューが出る which-key。\nこれは：側には存在しない仕組みじゃ。コマンドを「暗記」ではなく「読んで発見」できる。',
+'だから線引きは単純：\n知っている操作は：の手癖でよい。\n知らない操作は、まずSPCを押して読む。\nこの発見の入口が、Doomを使い続ける力になる。'],
+retry:'迷ったらSPCを押して読む。：にはこの発見装置がない。',
+quiz:{ q:'知らない操作を探すとき、最初にすることは？', choices:[
+{ t:':help と打つ', ok:false }, { t:'SPCを押してメニューを読む', ok:true }, { t:'再起動する', ok:false } ] } },
+{ id:'c2', title:'コメントと演算子', teach:[
+'【第3の道】コメント切替 gcc は、：でもSPCでもない。evil の「演算子」の文化じゃ。\ngc＋移動、ciw、diw のような「動詞＋対象」は、Exコマンドの形をしていない。',
+'ここは線引きの例外地帯：\n：に置き換えを探すより、演算子そのものを指に覚えさせる方が速い。\nVim経験者なら、むしろ懐かしいはずじゃ。'],
+retry:'gcc や ciw は演算子。：でもSPCでもなく、指で覚える系。',
+quiz:{ q:'今の行のコメントを切り替えるのは？', choices:[
+{ t:'gcc', ok:true }, { t:':comment', ok:false }, { t:'SPC f s', ok:false } ] } },
+{ id:'c3', title:'ヘルプの引き方', teach:[
+'【SPC必須】Vim の :help は Doom にはない。\n代わりは SPC h 系：SPC h f 関数の説明、SPC h v 変数の説明、SPC h k キーの正体。',
+'特に SPC h k は、知らないキーに出会ったとき「押す前に正体が分かる」安全装置じゃ。\n：の世界に相当品はない。ここはSPC必須と覚える。'],
+retry:'ヘルプは SPC h。f=関数、v=変数、k=キー。',
+quiz:{ q:'あるキーが何をするか調べるのは？', choices:[
+{ t:':help', ok:false }, { t:':set', ok:false }, { t:'SPC h k', ok:true } ] } },
+{ id:'c4', title:'2つのコロン', teach:[
+'【SPC必須】一番の混乱ポイントを潰しておく。\nノーマルモードの「：」は evil の Ex（Vim互換）。\n「SPC :」は M-x で、Emacs本体のコマンドを名前で呼ぶ入口。別物じゃ。',
+'使い分け：\nファイル操作の手癖 → ：\nEmacsの機能を名前で呼びたい → SPC :\n姿は似ていても、行き先が違う2つの扉と覚えるのじゃ。'],
+retry:'「：」= Ex（Vim互換）。「SPC :」= M-x（Emacsのコマンド）。',
+quiz:{ q:'Emacsのコマンドを名前で実行する入口は？', choices:[
+{ t:'ただの :', ok:false }, { t:'SPC :', ok:true }, { t:':w', ok:false } ] } },
+]},
+{ name:'上級編 線引きを仕上げる', desc:':setの限界、ワークスペース、open系、そして最終原則。', lessons:[
+{ id:'d1', title:'設定の置き場', teach:[
+'【SPCの外】:set は evil が知っている一部のオプションにしか効かない。Vim の設定文化をそのまま持ち込む場所ではない。\nDoom の設定の置き場は ~/.config/doom/ の config.el じゃ。',
+'パッケージ追加は packages.el に (package! 名前)、反映は doom sync して再起動。\n「設定は：でもSPCでもなく、ファイルに書く」。これが線引きの最後の1本じゃ。'],
+retry:'設定は config.el、追加は packages.el、反映は doom sync。',
+quiz:{ q:'パッケージを足した後に叩くコマンドは？', choices:[
+{ t:':set', ok:false }, { t:':source', ok:false }, { t:'doom sync', ok:true } ] } },
+{ id:'d2', title:'ワークスペース', teach:[
+'【SPC必須】Vim の :tabnew 的な「タブで作業を分ける」文化は、Doom ではワークスペースが受け持つ。\n入口は SPC TAB 系。一覧メニューは SPC TAB . じゃ。',
+'前のワークスペースへ SPC TAB [ 、次へ SPC TAB ] 。\nタブの手癖は捨てて、作業空間ごと切り替える感覚に寄せるのが移行のコツじゃ。'],
+retry:'タブの代わりはワークスペース。SPC TAB . で一覧、[ ] で移動。',
+quiz:{ q:'ワークスペースの一覧メニューを開くのは？', choices:[
+{ t:'SPC TAB .', ok:true }, { t:':tabnew', ok:false }, { t:':ls', ok:false } ] } },
+{ id:'d3', title:'open系（SPC o）', teach:[
+'【SPC推奨】Vim ではプラグインが独自の :コマンド を持ち込んだ。Doom にその文化はない。\n代わりに「開く系」の機能は SPC o に集まっておる。',
+'例：SPC o t でターミナル、SPC o p でプロジェクトのサイドバー（Treemacs）。\n「機能はSPCのメニューから開く」が Doom の流儀じゃ。'],
+retry:'開く系は SPC o。端末は SPC o t、サイドバーは SPC o p。',
+quiz:{ q:'Doomでターミナルを開くのは？', choices:[
+{ t:':terminal', ok:false }, { t:'SPC o t', ok:true }, { t:':!bash', ok:false } ] } },
+{ id:'d4', title:'最終原則', teach:[
+'【線引き】卒業の前に、線引きを3本にまとめる。\n① 知っている手癖（保存・置換・分割）は：のまま\n② 探す・一覧・プロジェクト・GitはSPC\n③ 設定はconfig.elに書く',
+'そして迷ったら、SPCを押して読む。\nこの3本と発見の入口さえあれば、Doomは「Vimの延長＋α」として無理なく伸びていく。卒業じゃ。'],
+retry:'①手癖は： ②探す系はSPC ③設定はconfig.el。迷ったらSPC。',
+quiz:{ q:'プロジェクト内のファイルを探して開くのは、原則どれ？', choices:[
+{ t:':e で全パス暗記', ok:false }, { t:':tabnew', ok:false }, { t:'SPC p f', ok:true } ] } },
+]},
+];
+
+/* ============ エンジン ============ */
+const SAVE_KEY = 'doomColonDojoSaveV1';
+const TOTAL = LEVELS.reduce((a,l)=>a+l.lessons.length,0);
+let done = {};
+try{ const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); if(s && s.done) done = s.done;}catch(e){}
+let soundOn = true, typing = null, advanceFn = null;
+let cur = { level:0, lesson:0, pages:[], page:0};
+
+const $ = id => document.getElementById(id);
+const bgEl=$('bg'), charEl=$('char'), nameEl=$('namebox'), textEl=$('text'),
+boxEl=$('textbox'), chEl=$('choices'), nextEl=$('nextmark');
+
+function beep(freq, dur, delay, vol){
+if(!soundOn) return;
+try{
+const ctx = beep.ctx || (beep.ctx = new (window.AudioContext||window.webkitAudioContext)());
+if(ctx.state === 'suspended') ctx.resume();
+const o = ctx.createOscillator(), g = ctx.createGain();
+o.type='square'; o.frequency.value = freq || 660;
+g.gain.value = vol || 0.03;
+o.connect(g); g.connect(ctx.destination);
+const t = ctx.currentTime + (delay||0);
+o.start(t); o.stop(t + (dur||0.06));
+}catch(e){}
+}
+function save(){
+try{ localStorage.setItem(SAVE_KEY, JSON.stringify({done})); toast();}catch(e){}
+}
+function toast(){
+const t=$('toast'); t.classList.add('show');
+clearTimeout(toast.tm); toast.tm=setTimeout(()=>t.classList.remove('show'), 900);
+}
+function doneCount(){ return Object.keys(done).filter(k=>done[k]).length;}
+function renderProgress(now){
+$('pDone').textContent = doneCount();
+$('bDone').style.width = (doneCount()/TOTAL*100) + '%';
+if(now) $('pNow').textContent = now;
+}
+function setScene(bg, char, name){
+bgEl.className = 'bg ' + bg;
+charEl.innerHTML = CHARS[char] || '';
+charEl.style.display = char && char!== 'none'? '': 'none';
+if(name){ nameEl.textContent = name; nameEl.style.display='';} else nameEl.style.display='none';
+}
+function typeText(txt, onDoneTyping){
+clearInterval(typing);
+textEl.textContent=''; nextEl.style.display='none';
+boxEl.scrollTop = 0;
+advanceFn = null;
+let i=0;
+typing = setInterval(()=>{
+i++;
+textEl.textContent = txt.slice(0, i);
+boxEl.scrollTop = boxEl.scrollHeight;
+const ch = txt.charAt(i-1);
+if(ch && ch!== ' ' && ch!== '\n' && i % 2 === 1){
+beep(980 + Math.random()*520, 0.018, 0, 0.012);
+}
+if(i >= txt.length){
+clearInterval(typing); typing=null;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+}
+}, 26);
+boxEl.onclick = ()=>{
+if(typing){
+clearInterval(typing); typing=null;
+textEl.textContent = txt; boxEl.scrollTop = boxEl.scrollHeight;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+} else if(advanceFn){
+const f = advanceFn; advanceFn = null; f();
+}
+};
+}
+document.addEventListener('keydown', e=>{
+if(!typing && advanceFn && (e.key === ' ' || e.key === 'Enter')){
+e.preventDefault();
+const f = advanceFn; advanceFn = null; f();
+}
+});
+function showChoices(items){
+chEl.innerHTML='';
+items.forEach(it=>{
+const b=document.createElement('button');
+b.className='choice' + (it.done? ' done': '');
+b.textContent=it.t;
+b.onclick=()=>{ beep(520,.06); setTimeout(()=>beep(780,.07),70); chEl.classList.remove('show'); it.fn();};
+chEl.appendChild(b);
+});
+chEl.classList.add('show');
+}
+function hideChoices(){ chEl.classList.remove('show'); chEl.innerHTML='';}
+
+/* ============ 画面遷移 ============ */
+function goLevels(){
+hideChoices();
+setScene('bg-room','none','');
+renderProgress('レベル選択');
+const dc = doneCount();
+const intro = dc === 0
+? '「よく来た。わしがエマクス仙人、別巻の案内じゃ」\nテーマは「：とSPCの線引き」。全' + TOTAL + '課。\n好きな編からでよい。分かるまで、何度でも付き合うぞ。'
+: '「戻ったか。現在の理解済みは ' + dc + ' / ' + TOTAL + ' 課じゃ」\n続きをやるもよし、済んだ課を復習するもよし。';
+typeText(intro, ()=>{
+showChoices(LEVELS.map((lv, i)=>{
+const c = lv.lessons.filter(l=>done[l.id]).length;
+return { t: lv.name + '（' + c + '/' + lv.lessons.length + ' 済）', done: c === lv.lessons.length,
+fn: ()=>goLessons(i)};
+}));
+});
+}
+function goLessons(li){
+hideChoices();
+const lv = LEVELS[li];
+cur.level = li;
+setScene('bg-room','sennin','エマクス仙人');
+renderProgress(lv.name);
+typeText('\n' + lv.desc + '\n課を選ぶのじゃ。✔ は理解済み。復習は何度でもできるぞ。', ()=>{
+showChoices(
+lv.lessons.map((ls, i)=>({ t: ls.title, done:!!done[ls.id], fn: ()=>startLesson(li, i, false)}))
+.concat([{ t:'レベル選択に戻る', fn: goLevels}])
+);
+});
+}
+function startLesson(li, idx, withRetry){
+hideChoices();
+const ls = LEVELS[li].lessons[idx];
+cur.level = li; cur.lesson = idx;
+cur.pages = ls.teach.slice();
+if(withRetry) cur.pages.push('\n' + ls.retry);
+cur.page = 0;
+setScene('bg-term','sennin','エマクス仙人');
+renderProgress(LEVELS[li].name + '：' + ls.title);
+teachPage();
+}
+function teachPage(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+const isLast = cur.page >= cur.pages.length - 1;
+typeText('\n' + cur.pages[cur.page], ()=>{
+if(isLast){ showCheck();}
+else { advanceFn = ()=>{ cur.page++; teachPage();};}
+});
+}
+function showCheck(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+showChoices([
+{ t:'これは分かった！（確認問題へ）', fn: showQuiz},
+{ t:'分からない（もう一度聞く）', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'レッスン一覧に戻る', fn: ()=>goLessons(cur.level)}
+]);
+}
+function showQuiz(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+setScene('bg-term','sennin','エマクス仙人');
+typeText('\n' + ls.quiz.q, ()=>{
+showChoices(ls.quiz.choices.map(c=>({
+t: c.t,
+fn: ()=>{ if(c.ok) completeLesson(); else wrongAnswer();}
+})));
+});
+}
+function wrongAnswer(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+beep(220,.12); setTimeout(()=>beep(180,.14),120);
+typeText('「むむ、違うぞ。焦らなくてよい」\n' + ls.retry, ()=>{
+showChoices([
+{ t:'もう一度説明を聞く', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'もう一度問題に挑む', fn: showQuiz}
+]);
+});
+}
+function completeLesson(){
+const li = cur.level, idx = cur.lesson;
+const ls = LEVELS[li].lessons[idx];
+done[ls.id] = true; save();
+[523,659,784,1046].forEach((f,i)=>beep(f,.1,i*0.11));
+renderProgress(LEVELS[li].name + '：' + ls.title + ' ✔');
+const dc = doneCount();
+const levelDone = LEVELS[li].lessons.every(l=>done[l.id]);
+let msg = '「うむ、分かったようじゃな」\n理解済み ✔（合計 ' + dc + ' / ' + TOTAL + ' 課）';
+if(dc >= TOTAL){
+setScene('bg-way','sennin','エマクス仙人');
+msg += '\n\n――全課目、修了じゃ！\nここから先は実地あるのみ。Doom を開いて、指で覚えていくのじゃ。卒業おめでとう！';
+} else if(levelDone){
+msg += '\nは全課修了じゃ。よくやった。';
+}
+typeText(msg, ()=>{
+const items = [];
+if(dc < TOTAL){
+if(idx + 1 < LEVELS[li].lessons.length){
+items.push({ t:'次の例題へ（' + LEVELS[li].lessons[idx+1].title + '）', fn: ()=>startLesson(li, idx+1, false)});
+} else if(li + 1 < LEVELS.length){
+items.push({ t:'次の編へ（' + LEVELS[li+1].name + '）', fn: ()=>goLessons(li+1)});
+}
+}
+items.push({ t:'レッスン一覧に戻る', fn: ()=>goLessons(li)});
+items.push({ t:'レベル選択に戻る', fn: goLevels});
+showChoices(items);
+});
+}
+
+/* ============ ボタン類 ============ */
+$('btnEnter').onclick = ()=>{ beep(660,.06); $('title').style.display='none'; goLevels();};
+$('btnLevels').onclick = ()=>{ $('title').style.display='none'; goLevels();};
+$('btnReset').onclick = ()=>{
+done = {}; save(); renderProgress('タイトル');
+$('title').style.display='flex';
+};
+$('btnSound').onclick = (e)=>{
+soundOn =!soundOn;
+e.target.textContent = soundOn? '🔊 音ON': '🔇 音OFF';
+if(soundOn) beep(700,.06);
+};
+renderProgress('タイトル');
+</script>
+</body>
+</html>
