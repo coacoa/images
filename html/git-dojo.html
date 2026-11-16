@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Git道場 ― コンフリクト／rebase／PRを可視化する</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{
+--tb:29%;
+--ink:#dfe6ff; --dim:#8fa3d9; --blue:#3355ff; --panel:#0a0e24;
+--win:#101736; --accent:#ffd94a; --good:#7ee787; --bad:#ff7b72;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+body{margin:0;background:#05060f;color:var(--ink);
+font-family:"DotGothic16","Hiragino Kaku Gothic ProN","Noto Sans JP",monospace,sans-serif;
+-webkit-font-smoothing:none;font-smooth:never;
+display:flex;justify-content:center;padding:14px 10px 40px}
+.cab{width:100%;max-width:760px}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{font-weight:900;letter-spacing:2px;font-size:18px;color:#fff;
+text-shadow:2px 2px 0 var(--blue), 4px 4px 0 #101736}
+.logo small{display:block;font-size:11px;color:var(--dim);letter-spacing:1px;text-shadow:none}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer}
+.sbtn{background:var(--win);color:var(--ink);border:2px solid var(--dim);
+padding:4px 10px;font-size:12px;border-radius:4px}
+.sbtn:hover{border-color:#fff;color:#fff}
+.params{display:flex;gap:14px;background:var(--panel);border:2px solid var(--dim);
+padding:6px 12px;font-size:12px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.params b{color:var(--accent)}
+.bar{display:inline-block;width:120px;height:10px;background:#1a2148;vertical-align:middle;margin-left:4px;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--good);display:block}
+.screen{position:relative;border:6px solid var(--dim);border-radius:6px;overflow:hidden;
+aspect-ratio:16/10;background:#000;image-rendering:pixelated}
+.screen::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+background:repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 3px, transparent 3px 6px)}
+.bg{position:absolute;inset:0;transition:opacity.4s}
+.bg-room{background:linear-gradient(#0d1440 0 55%, #182257 55% 100%)}
+.bg-room::before{content:"";position:absolute;right:8%;top:8%;width:110px;height:130px;
+background:linear-gradient(#1b2a63,#0d1440);border:6px solid #05081a;
+box-shadow:0 0 0 4px #26398a, inset 0 0 0 3px #26398a}
+.bg-term{background:radial-gradient(ellipse at 50% 40%, #06280f 0%, #02140a 70%)}
+.bg-term::before{content:"$ git add ❄ git commit ❄ git pull --rebase ❄ git log --graph ❄ rebase --continue ❄ PR ❄";
+position:absolute;inset:6%;color:#2f9e44;font-size:13px;line-height:2.1;opacity:.55;
+font-family:ui-monospace,Menlo,monospace;word-break:break-all}
+.bg-way{background:linear-gradient(#1b1040 0%, #4a2a7a 55%, #c65b8f 82%, #ffb36b 100%)}
+.stars{position:absolute;inset:0;z-index:1;
+background-image:radial-gradient(2px 2px at 12% 18%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 32% 8%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 55% 22%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 74% 10%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 88% 26%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 44% 30%, #9fb4ff 50%, transparent 51%)}
+.char{position:absolute;bottom:var(--tb);left:50%;transform:translateX(-50%);z-index:2;
+filter:drop-shadow(0 0 10px rgba(60,100,255,.75))}
+.char svg{display:block}
+.ground{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:1;
+background:linear-gradient(transparent, rgba(3,5,16,.92) 30%)}
+.namebox{position:absolute;left:14px;bottom:calc(var(--tb) + 8px);z-index:8;color:#ffffff;
+background:var(--win);border:3px solid var(--dim);padding:2px 14px;font-weight:700;font-size:16px;
+letter-spacing:.06em;text-shadow:2px 2px 0 #000}
+.textbox{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:7;color:#ffffff;
+background:rgba(4,6,20,.97);border-top:4px solid var(--dim);
+padding:12px 16px;font-size:18px;line-height:1.8;letter-spacing:.06em;
+text-shadow:2px 2px 0 #000;
+cursor:pointer;white-space:pre-wrap;overflow-y:auto;overflow-x:hidden;
+scrollbar-width:thin;scrollbar-color:#3355ff #0a0e24}
+.textbox::-webkit-scrollbar{width:10px}
+.textbox::-webkit-scrollbar-track{background:#0a0e24}
+.textbox::-webkit-scrollbar-thumb{background:#3355ff;border:2px solid #04061a}
+.textbox.next{position:absolute;right:12px;bottom:6px;color:var(--accent);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.choices{position:absolute;top:0;left:0;right:0;bottom:calc(var(--tb) + 46px);z-index:9;display:none;flex-direction:column;
+align-items:center;justify-content:center;gap:12px;background:rgba(3,5,16,.78);padding:16px;overflow-y:auto}
+.choices.show{display:flex}
+.choice{width:min(92%,520px);background:#05081f;color:#ffffff;font-weight:700;
+border:3px solid #d5ddff;padding:12px 16px;font-size:18px;letter-spacing:.08em;
+text-shadow:2px 2px 0 #000;text-align:left;border-radius:4px}
+.choice:hover{border-color:var(--accent);color:#fff;background:#1b2a6e}
+.choice::before{content:"▶ ";color:var(--accent)}
+.choice.done{border-color:var(--good)}
+.choice.done::before{content:"✔ ";color:var(--good)}
+.title{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
+justify-content:center;gap:14px;background:radial-gradient(ellipse at 50% 35%, #14205e 0%, #05060f 75%);text-align:center;padding:16px}
+.title h1{margin:0;font-size:clamp(26px,6vw,44px);letter-spacing:3px;color:#fff;
+text-shadow:3px 3px 0 var(--blue), 6px 6px 0 #101736}
+.title p{color:#d5ddff;font-size:14px;margin:0;line-height:1.9}
+.tbtn{background:#05081f;color:#fff;font-weight:700;border:3px solid #d5ddff;padding:10px 26px;font-size:17px;letter-spacing:.08em;border-radius:4px}
+.tbtn:hover{border-color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
+border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;opacity:0;transition:opacity.3s;z-index:50;pointer-events:none}
+.toast.show{opacity:1}
+footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
+kbd{display:inline-block;background:#21262d;border:1px solid var(--dim);border-bottom-width:2px;
+border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+@media (max-width:560px){.textbox{font-size:15px}.char{bottom:var(--tb)}}
+
+/* ===== スマホ縦長対応：画面を縦に取り、本文ボックスの割合を広げる ===== */
+@media (orientation:portrait) and (max-width:760px){
+:root{--tb:46%}
+.screen{aspect-ratio:auto;height:80vh;height:80dvh}
+.textbox{font-size:16px;line-height:1.75}
+.char svg{width:100px;height:127px}
+.choice{font-size:16px;padding:10px 14px}
+.choices{overflow-y:auto}
+.title h1{font-size:25px}
+.title p{font-size:13px}
+.params{gap:8px;font-size:11px}
+.bar{width:80px}
+}
+
+/* ===== 選択肢が上に隠れる問題の修正：中央寄せのまま、溢れたら先頭からスクロール ===== */
+.choices{justify-content:flex-start;overflow-y:auto}
+.choice:first-child{margin-top:auto}
+.choice:last-child{margin-bottom:auto}
+</style>
+</head>
+<body>
+<div class="cab">
+<header>
+<div class="logo">Git道場<small>― コンフリクト／rebase／PR 全16課 ―</small></div>
+<div class="btns">
+<button class="sbtn" id="btnSound">🔊 音ON</button>
+<button class="sbtn" id="btnLevels">🏠 レベル選択</button>
+<button class="sbtn" id="btnReset">🗑 進捗リセット</button>
+</div>
+</header>
+
+<div class="params">
+<span>理解済み <b id="pDone">0</b> / 16 課<span class="bar"><i id="bDone" style="width:0%"></i></span></span>
+<span style="color:var(--dim)">現在：<span id="pNow">タイトル</span></span>
+<span style="margin-left:auto;color:var(--dim)">💾 進捗は自動保存（localStorage）</span>
+</div>
+
+<div class="screen" id="screen">
+<div class="bg bg-room" id="bg"></div>
+<div class="stars"></div>
+<div class="ground"></div>
+<div class="char" id="char"></div>
+<div class="namebox" id="namebox" style="display:none"></div>
+<div class="textbox" id="textbox"><span id="text"></span><span class="next" id="nextmark" style="display:none">▼</span></div>
+<div class="choices" id="choices"></div>
+<div class="title" id="title">
+<h1>Git道場</h1>
+<p>テーマは「GitとGitHubの仕組みの可視化」。<br>
+add/commitの先、コンフリクトとrebaseの正体から、Pull Requestまで全16課。<br>
+「分かった！」で次へ、「分からない」で何度でもやり直し。</p>
+<button class="tbtn" id="btnEnter">▶ 道場に入る</button>
+<p>進捗（理解済み ✔）はブラウザに自動保存されます</p>
+</div>
+</div>
+
+<footer>
+遊び方：説明を読んだら「これは分かった！」か「分からない」を選ぶだけ。分かったら確認問題が1問出て、正解でその課は理解済み ✔。
+間違えてもペナルティなし、補足説明を読んで何度でも挑めます。本文クリックで文字送り、長い文は自動スクロール＋手動スクロール可。
+各課ではコミットのつながりを図で描いて、仕組みを見える化します。コマンドは git 本体と GitHub の作法で書いてあります。実際に手元のリポジトリで git log --graph --oneline --all を眺めながら進めると一番効きます。
+</footer>
+</div>
+
+<div class="toast" id="toast">💾 保存しました</div>
+
+<script>
+"use strict";
+/* ============ シルエット ============ */
+function sil(extra){
+return '<svg width="150" height="190" viewBox="0 0 120 150">'
++ '<circle cx="60" cy="34" r="17" fill="#141f52"/>'
++ '<path d="M22 150 C22 96 40 66 60 66 C80 66 98 96 98 150 Z" fill="#141f52"/>'
++ (extra || '') + '</svg>';
+}
+const CHARS = {
+sennin: sil('<path d="M28 26 L60 2 L92 26 L84 30 L60 14 L36 30 Z" fill="#141f52"/>'
++ '<path d="M48 44 L72 44 L66 92 L54 92 Z" fill="#141f52"/>'),
+ore: sil(''),
+none: ''
+};
+
+/* ============ カリキュラム ============ */
+/* teach: 説明ページ（クリックで送る） / retry: 補足説明 / quiz: 確認問題 */
+const LEVELS = [
+{ name:'入門編 仕組みの可視化', desc:'コミット・3つの場所・ブランチ・リモート。図で見るGitの骨格。', lessons:[
+{ id:'g1', title:'コミットはスナップショット', teach:[
+'Gitのコミットは「差分」ではなく、その時点のファイル全体のスナップショット（写真）じゃ。\nしかも各コミットは「親はこれ」と、1つ前の写真を指している。',
+'つながりはこう見える：\nA → B → C\nA が最初の写真、B は A を親に持つ写真、という鎖じゃ。\nコミットの長い英数字（ハッシュ）が、その写真の名前になる。'],
+retry:'コミット＝写真、親への矢印つき。差分は「写真と写真を見比べて、後から出すもの」。',
+quiz:{ q:'Gitのコミットが表しているものは？', choices:[
+{ t:'ファイル全体のスナップショット', ok:true }, { t:'前回からの差分だけ', ok:false }, { t:'バックアップのZIPファイル', ok:false } ] } },
+{ id:'g2', title:'3つの場所（addの正体）', teach:[
+'ファイルは3つの場所を移動する：\n1. 作業場所（ワーキングツリー）＝今編集している実物\n2. ステージ＝「次の写真に入れる」と選んだ置き場\n3. リポジトリ＝写真の保管庫',
+'git add は「2に載せる」、git commit は「2の内容で写真を撮って3へ」。\nだから add せずに commit しても、新しい変更は写真に入らない。\n「add＝保存」ではない、が線引きじゃ。'],
+retry:'add は「次の写真のメンバー選び」。commit が撮影。',
+quiz:{ q:'git add の役割は？', choices:[
+{ t:'写真を撮ること', ok:false }, { t:'変更をステージに載せる（次のコミットの材料選び）', ok:true }, { t:'GitHubへ送ること', ok:false } ] } },
+{ id:'g3', title:'ブランチは付箋', teach:[
+'ブランチの実体は、コミットを指すただの付箋（ラベル）じゃ。重いコピーではない。\n「main」という付箋が、最新の写真を指しているだけ。',
+'新しいコミットを作ると、付箋が新しい写真へ勝手に進む。\nそして HEAD は「今自分がどの付箋の先にいるか」の目印。\ngit switch は、別の付箋の先へ自分が移動する操作じゃ。'],
+retry:'ブランチ＝コミットを指す付箋。HEAD＝今いる付箋。',
+quiz:{ q:'ブランチの実体は？', choices:[
+{ t:'フォルダの完全コピー', ok:false }, { t:'GitHub上のバックアップ', ok:false }, { t:'コミットを指す軽いラベル（ポインタ）', ok:true } ] } },
+{ id:'g4', title:'pullの正体（fetch＋merge）', teach:[
+'リモート（GitHub）は、もう1つの保管庫。手元とは別物じゃ。\ngit fetch ＝ 向こうの新しい写真を取り寄せて確認するだけ。自分の作業は変わらない。',
+'git pull の正体は fetch ＋ merge の一括版。\n「取り寄せて、自分の歴史に合流させる」まで一気にやる。\nコンフリクトが起きるのは、この合流の段だと分かる。'],
+retry:'pull ＝ fetch（取り寄せ）＋ merge（合流）。',
+quiz:{ q:'git pull がやっていることの組み合わせは？', choices:[
+{ t:'fetch ＋ merge', ok:true }, { t:'add ＋ commit', ok:false }, { t:'push ＋ clone', ok:false } ] } },
+]},
+{ name:'初級編 コンフリクトの正体', desc:'怖さの正体は「判断待ち」。マージの仕組みと直し方、安全な戻り方。', lessons:[
+{ id:'h1', title:'コンフリクト＝判断待ち', teach:[
+'pull でコンフリクト、と出ても壊れたわけではない。\n「同じ場所が、両方の歴史で別々に変わっている。どっちを採るか決めて」という、Git からの判断待ちじゃ。',
+'逆に言えば、片方だけが変えた場所は Git が自動で決められる。\n止まるのは「両方が触った場所」だけ。\nだから慌てず、止まった場所だけ見ればよい。'],
+retry:'コンフリクトは故障ではなく判断待ち。両方が触った場所だけ止まる。',
+quiz:{ q:'コンフリクトの正しい理解は？', choices:[
+{ t:'ファイルが壊れた状態', ok:false }, { t:'両方が変えた場所の、どっちを採るかの判断待ち', ok:true }, { t:'GitHub側の障害', ok:false } ] } },
+{ id:'h2', title:'三方向マージと共通の祖先', teach:[
+'合流のとき Git は3つを見比べる：\n1. 共通の祖先（分かれた時点の写真）\n2. 自分の最新\n3. 相手の最新',
+'祖先と比べて「片方だけ変わった」なら、その変更を採る。\n「両方が別々に変えた」ら決められないのでコンフリクト。\nこの祖先の存在が、賢い合流の秘密じゃ。'],
+retry:'見るのは祖先・自分・相手の3つ。両方変更だけが決められない。',
+quiz:{ q:'マージで Git が見比べる3つは？', choices:[
+{ t:'昨日・今日・明日', ok:false }, { t:'add・commit・push', ok:false }, { t:'共通の祖先・自分の最新・相手の最新', ok:true } ] } },
+{ id:'h3', title:'コンフリクトマーカーを読む', teach:[
+'止まったファイルには印が入る：\n<<<<<<< HEAD\n自分の側の内容\n=======\n相手の側の内容\n>>>>>>> 相手のブランチ名',
+'直し方は、印を全部消して「最終的に残したい形」に編集すること。\n直したら git add して git commit。これで合流完了の写真（マージコミット）ができる。'],
+retry:'<<<<<<< から >>>>>>> が判断区間。残したい形にして印を消し、add → commit。',
+quiz:{ q:'コンフリクトを直した後の手順は？', choices:[
+{ t:'印を消して編集 → git add → git commit', ok:true }, { t:'ファイルを削除する', ok:false }, { t:'git push で押し切る', ok:false } ] } },
+{ id:'h4', title:'安全弁：merge --abort', teach:[
+'合流の途中で「やっぱり今じゃない」と思ったら：\ngit merge --abort\nで、合流を始める前の状態に全部戻せる。',
+'条件は「合流をまだ commit していないこと」。\n途中で投げ出しても、写真の鎖は壊れない。\nこの安全弁があるから、コンフリクトは怖くない。'],
+retry:'やめるなら git merge --abort（commit前なら安全に戻れる）。',
+quiz:{ q:'マージをなかったことにするコマンドは？', choices:[
+{ t:'git reset --hard', ok:false }, { t:'git merge --abort', ok:true }, { t:'git push --force', ok:false } ] } },
+]},
+{ name:'中級編 rebaseと履歴の手入れ', desc:'付け直しの仕組み、黄金律、resetとreflogの安全網。', lessons:[
+{ id:'r1', title:'rebase＝土台の付け直し', teach:[
+'自分の作業が古い main から分かれたまま、main が先に進んだとする：\nmain： A → B → C → F → G\n自分： C から分かれて D → E',
+'rebase は D と E を、最新の G の上に載せ直す：\nA → B → C → F → G → D′ → E′\n中身は同じでも親が変わるので、D′ E′ は新しい写真（ハッシュも変わる）。履歴が一直線になるのが利点じゃ。'],
+retry:'rebase＝自分のコミットを新しい土台の上に載せ替え。ハッシュは変わる。',
+quiz:{ q:'rebase の説明として正しいのは？', choices:[
+{ t:'コミットを削除すること', ok:false }, { t:'リモートを上書きコピーすること', ok:false }, { t:'自分のコミットを新しい土台の上に付け直し、履歴を一直線にすること', ok:true } ] } },
+{ id:'r2', title:'黄金律：共有した歴史は触らない', teach:[
+'rebase は写真を作り直すので、ハッシュが変わる。\nだから「もう GitHub に push して、他人（や別のPCの自分）が持っているコミット」を rebase すると、歴史が食い違って大混乱になる。',
+'黄金律：共有していない自分のコミットだけ rebase する。\n共有済みの合流は merge で。\n判断に迷ったら merge が安全側じゃ。'],
+retry:'rebase は未共有の自分分だけ。共有済みは merge。',
+quiz:{ q:'rebase してはいけないのはどんなコミット？', choices:[
+{ t:'すでに push して共有されているコミット', ok:true }, { t:'今日作ったコミット', ok:false }, { t:'メッセージが短いコミット', ok:false } ] } },
+{ id:'r3', title:'pull --rebase と --continue', teach:[
+'pull の合流を merge でなく rebase でやるのが git pull --rebase。\n取り寄せた最新の上に、自分の未共有コミットを載せ直すので、履歴が汚れない。',
+'rebase 中にコンフリクトすると、コミットごとに止まる。\n直して git add → git rebase --continue で次へ。\nやめたくなったら git rebase --abort で開始前に戻れる。'],
+retry:'rebase の停止はコミットごと。直す→add→--continue、撤退は --abort。',
+quiz:{ q:'rebase中のコンフリクトを直した後に続けるコマンドは？', choices:[
+{ t:'git commit', ok:false }, { t:'git rebase --continue', ok:true }, { t:'git pull', ok:false } ] } },
+{ id:'r4', title:'resetの3種とreflog', teach:[
+'git reset は付箋（ブランチ）を後ろに戻す操作。戻した後の「変更の扱い」で3種ある：\n--soft：変更はステージに残る\n--mixed（既定）：作業場所に残る\n--hard：変更ごと消える',
+'そして最後の安全網が reflog。\n付箋が動いた履歴が残っているので、「消えたはずのコミット」もハッシュで辿って救出できることが多い。\nGit で完全に詰む場面は、思ったより少ない。'],
+retry:'reset は付箋を戻す。hard は変更も消す。困ったら reflog。',
+quiz:{ q:'変更ごと消してしまう reset は？', choices:[
+{ t:'git reset --soft', ok:false }, { t:'git reflog', ok:false }, { t:'git reset --hard', ok:true } ] } },
+]},
+{ name:'上級編 PRとGitHub', desc:'提案とレビューの場としてのPR、セルフレビュー、squash、Actions連携。', lessons:[
+{ id:'p1', title:'PRは「マージの提案」', teach:[
+'Pull Request は「このブランチの変更を、main に合流させてほしい」という提案じゃ。\n材料は push 済みのブランチ。GitHub 上に差分のページができて、そこで確認と議論ができる。',
+'大事なのは、PR はマージそのものではなく「マージ前の確認の場」だということ。\n押すボタンは最後。先に差分を見る文化が本体じゃ。'],
+retry:'PR＝マージの提案＋確認の場。材料は push 済みブランチ。',
+quiz:{ q:'Pull Request の本体は？', choices:[
+{ t:'マージの提案と、差分を確認・議論する場', ok:true }, { t:'ファイルを送る機能', ok:false }, { t:'自動でマージする仕組み', ok:false } ] } },
+{ id:'p2', title:'ひとりでもPRを使う意味', teach:[
+'チームがいなくても PR は効く。\n1. 差分を「レビューする目」で自分で見直せる（セルフレビュー）\n2. 自動チェック（Actions）を合流の関門にできる\n3. 「なぜ変えたか」が PR の文章として残る',
+'さらに main への直接 push を止める設定（ブランチ保護）を掛けると、全部の変更が PR を通る形になる。\nひとり運用でも、事故と「ついで直し」の混入が減る。'],
+retry:'ひとりPRの効用は、セルフレビュー・自動チェック・理由の記録。',
+quiz:{ q:'ひとりで PR を使う意味として正しいのは？', choices:[
+{ t:'フォロワーが増える', ok:false }, { t:'差分のセルフレビューと自動チェックを関門にできる', ok:true }, { t:'push が速くなる', ok:false } ] } },
+{ id:'p3', title:'PRの流れとsquash', teach:[
+'流れは5つ：\n1. ブランチを切る 2. commit して push\n3. GitHub で PR を作る 4. 差分を確認\n5. マージして、ブランチを消す',
+'マージ方法の1つ squash は、ブランチの細かいコミットを1つに潰してから main に載せる。\n試行錯誤の過程は PR に残し、main の歴史は綺麗に、という使い分けができる。'],
+retry:'流れは ブランチ→push→PR→確認→マージ。squash は潰して載せる。',
+quiz:{ q:'squash マージとは？', choices:[
+{ t:'ブランチを削除すること', ok:false }, { t:'コンフリクトを自動で消すこと', ok:false }, { t:'ブランチの複数コミットを1つに潰してから取り込むこと', ok:true } ] } },
+{ id:'p4', title:'Actions連携と卒業', teach:[
+'PR に GitHub Actions を結ぶと、PR を作るたびに自動チェックが走る。\n前に作った「make_index.sh の自動実行」もこの仲間で、チェックが赤（失敗）ならマージしない、が運用の型になる。',
+'卒業じゃ。最後に最強の可視化コマンドを渡す：\ngit log --graph --oneline --all\n歴史の鎖と付箋が、図として見える。\n困ったらまずこれで「今どこにいて、何が分かれているか」を見る。それが自力で処理できる力になる。'],
+retry:'困ったら git log --graph --oneline --all で図を見る。',
+quiz:{ q:'履歴の分岐を図で見るコマンドは？', choices:[
+{ t:'git status', ok:false }, { t:'git log --graph --oneline --all', ok:true }, { t:'git diff', ok:false } ] } },
+]},
+];
+
+/* ============ エンジン ============ */
+const SAVE_KEY = 'gitDojoSaveV1';
+const TOTAL = LEVELS.reduce((a,l)=>a+l.lessons.length,0);
+let done = {};
+try{ const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); if(s && s.done) done = s.done;}catch(e){}
+let soundOn = true, typing = null, advanceFn = null;
+let cur = { level:0, lesson:0, pages:[], page:0};
+
+const $ = id => document.getElementById(id);
+const bgEl=$('bg'), charEl=$('char'), nameEl=$('namebox'), textEl=$('text'),
+boxEl=$('textbox'), chEl=$('choices'), nextEl=$('nextmark');
+
+function beep(freq, dur, delay, vol){
+if(!soundOn) return;
+try{
+const ctx = beep.ctx || (beep.ctx = new (window.AudioContext||window.webkitAudioContext)());
+if(ctx.state === 'suspended') ctx.resume();
+const o = ctx.createOscillator(), g = ctx.createGain();
+o.type='square'; o.frequency.value = freq || 660;
+g.gain.value = vol || 0.03;
+o.connect(g); g.connect(ctx.destination);
+const t = ctx.currentTime + (delay||0);
+o.start(t); o.stop(t + (dur||0.06));
+}catch(e){}
+}
+function save(){
+try{ localStorage.setItem(SAVE_KEY, JSON.stringify({done})); toast();}catch(e){}
+}
+function toast(){
+const t=$('toast'); t.classList.add('show');
+clearTimeout(toast.tm); toast.tm=setTimeout(()=>t.classList.remove('show'), 900);
+}
+function doneCount(){ return Object.keys(done).filter(k=>done[k]).length;}
+function renderProgress(now){
+$('pDone').textContent = doneCount();
+$('bDone').style.width = (doneCount()/TOTAL*100) + '%';
+if(now) $('pNow').textContent = now;
+}
+function setScene(bg, char, name){
+bgEl.className = 'bg ' + bg;
+charEl.innerHTML = CHARS[char] || '';
+charEl.style.display = char && char!== 'none'? '': 'none';
+if(name){ nameEl.textContent = name; nameEl.style.display='';} else nameEl.style.display='none';
+}
+function typeText(txt, onDoneTyping){
+clearInterval(typing);
+textEl.textContent=''; nextEl.style.display='none';
+boxEl.scrollTop = 0;
+advanceFn = null;
+let i=0;
+typing = setInterval(()=>{
+i++;
+textEl.textContent = txt.slice(0, i);
+boxEl.scrollTop = boxEl.scrollHeight;
+const ch = txt.charAt(i-1);
+if(ch && ch!== ' ' && ch!== '\n' && i % 2 === 1){
+beep(980 + Math.random()*520, 0.018, 0, 0.012);
+}
+if(i >= txt.length){
+clearInterval(typing); typing=null;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+}
+}, 26);
+boxEl.onclick = ()=>{
+if(typing){
+clearInterval(typing); typing=null;
+textEl.textContent = txt; boxEl.scrollTop = boxEl.scrollHeight;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+} else if(advanceFn){
+const f = advanceFn; advanceFn = null; f();
+}
+};
+}
+document.addEventListener('keydown', e=>{
+if(!typing && advanceFn && (e.key === ' ' || e.key === 'Enter')){
+e.preventDefault();
+const f = advanceFn; advanceFn = null; f();
+}
+});
+function showChoices(items){
+chEl.innerHTML='';
+items.forEach(it=>{
+const b=document.createElement('button');
+b.className='choice' + (it.done? ' done': '');
+b.textContent=it.t;
+b.onclick=()=>{ beep(520,.06); setTimeout(()=>beep(780,.07),70); chEl.classList.remove('show'); it.fn();};
+chEl.appendChild(b);
+});
+chEl.classList.add('show');
+}
+function hideChoices(){ chEl.classList.remove('show'); chEl.innerHTML='';}
+
+/* ============ 画面遷移 ============ */
+function goLevels(){
+hideChoices();
+setScene('bg-room','none','');
+renderProgress('レベル選択');
+const dc = doneCount();
+const intro = dc === 0
+? '「よく来た。わしがギット仙人じゃ」\nテーマは「Gitの仕組みの可視化」。全' + TOTAL + '課。\n好きな編からでよい。分かるまで、何度でも付き合うぞ。'
+: '「戻ったか。現在の理解済みは ' + dc + ' / ' + TOTAL + ' 課じゃ」\n続きをやるもよし、済んだ課を復習するもよし。';
+typeText(intro, ()=>{
+showChoices(LEVELS.map((lv, i)=>{
+const c = lv.lessons.filter(l=>done[l.id]).length;
+return { t: lv.name + '（' + c + '/' + lv.lessons.length + ' 済）', done: c === lv.lessons.length,
+fn: ()=>goLessons(i)};
+}));
+});
+}
+function goLessons(li){
+hideChoices();
+const lv = LEVELS[li];
+cur.level = li;
+setScene('bg-room','sennin','ギット仙人');
+renderProgress(lv.name);
+typeText('\n' + lv.desc + '\n課を選ぶのじゃ。✔ は理解済み。復習は何度でもできるぞ。', ()=>{
+showChoices(
+lv.lessons.map((ls, i)=>({ t: ls.title, done:!!done[ls.id], fn: ()=>startLesson(li, i, false)}))
+.concat([{ t:'レベル選択に戻る', fn: goLevels}])
+);
+});
+}
+function startLesson(li, idx, withRetry){
+hideChoices();
+const ls = LEVELS[li].lessons[idx];
+cur.level = li; cur.lesson = idx;
+cur.pages = ls.teach.slice();
+if(withRetry) cur.pages.push('\n' + ls.retry);
+cur.page = 0;
+setScene('bg-term','sennin','ギット仙人');
+renderProgress(LEVELS[li].name + '：' + ls.title);
+teachPage();
+}
+function teachPage(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+const isLast = cur.page >= cur.pages.length - 1;
+typeText('\n' + cur.pages[cur.page], ()=>{
+if(isLast){ showCheck();}
+else { advanceFn = ()=>{ cur.page++; teachPage();};}
+});
+}
+function showCheck(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+showChoices([
+{ t:'これは分かった！（確認問題へ）', fn: showQuiz},
+{ t:'分からない（もう一度聞く）', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'レッスン一覧に戻る', fn: ()=>goLessons(cur.level)}
+]);
+}
+function showQuiz(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+setScene('bg-term','sennin','ギット仙人');
+typeText('\n' + ls.quiz.q, ()=>{
+showChoices(ls.quiz.choices.map(c=>({
+t: c.t,
+fn: ()=>{ if(c.ok) completeLesson(); else wrongAnswer();}
+})));
+});
+}
+function wrongAnswer(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+beep(220,.12); setTimeout(()=>beep(180,.14),120);
+typeText('「むむ、違うぞ。焦らなくてよい」\n' + ls.retry, ()=>{
+showChoices([
+{ t:'もう一度説明を聞く', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'もう一度問題に挑む', fn: showQuiz}
+]);
+});
+}
+function completeLesson(){
+const li = cur.level, idx = cur.lesson;
+const ls = LEVELS[li].lessons[idx];
+done[ls.id] = true; save();
+[523,659,784,1046].forEach((f,i)=>beep(f,.1,i*0.11));
+renderProgress(LEVELS[li].name + '：' + ls.title + ' ✔');
+const dc = doneCount();
+const levelDone = LEVELS[li].lessons.every(l=>done[l.id]);
+let msg = '「うむ、分かったようじゃな」\n理解済み ✔（合計 ' + dc + ' / ' + TOTAL + ' 課）';
+if(dc >= TOTAL){
+setScene('bg-way','sennin','ギット仙人');
+msg += '\n\n――全課目、修了じゃ！\nここから先は実地あるのみ。Doom を開いて、指で覚えていくのじゃ。卒業おめでとう！';
+} else if(levelDone){
+msg += '\nは全課修了じゃ。よくやった。';
+}
+typeText(msg, ()=>{
+const items = [];
+if(dc < TOTAL){
+if(idx + 1 < LEVELS[li].lessons.length){
+items.push({ t:'次の例題へ（' + LEVELS[li].lessons[idx+1].title + '）', fn: ()=>startLesson(li, idx+1, false)});
+} else if(li + 1 < LEVELS.length){
+items.push({ t:'次の編へ（' + LEVELS[li+1].name + '）', fn: ()=>goLessons(li+1)});
+}
+}
+items.push({ t:'レッスン一覧に戻る', fn: ()=>goLessons(li)});
+items.push({ t:'レベル選択に戻る', fn: goLevels});
+showChoices(items);
+});
+}
+
+/* ============ ボタン類 ============ */
+$('btnEnter').onclick = ()=>{ beep(660,.06); $('title').style.display='none'; goLevels();};
+$('btnLevels').onclick = ()=>{ $('title').style.display='none'; goLevels();};
+$('btnReset').onclick = ()=>{
+done = {}; save(); renderProgress('タイトル');
+$('title').style.display='flex';
+};
+$('btnSound').onclick = (e)=>{
+soundOn =!soundOn;
+e.target.textContent = soundOn? '🔊 音ON': '🔇 音OFF';
+if(soundOn) beep(700,.06);
+};
+renderProgress('タイトル');
+</script>
+</body>
+</html>
