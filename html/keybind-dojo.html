@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>キーバインド道場 ― i3×Tatami 8bit風ADV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{
+--tb:29%;
+--ink:#dfe6ff; --dim:#8fa3d9; --blue:#3355ff; --panel:#0a0e24;
+--win:#101736; --accent:#ffd94a; --good:#7ee787; --bad:#ff7b72;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+body{margin:0;background:#05060f;color:var(--ink);
+font-family:"DotGothic16","Hiragino Kaku Gothic ProN","Noto Sans JP",monospace,sans-serif;
+-webkit-font-smoothing:none;font-smooth:never;
+display:flex;justify-content:center;padding:14px 10px 40px}
+.cab{width:100%;max-width:760px}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{font-weight:900;letter-spacing:2px;font-size:18px;color:#fff;
+text-shadow:2px 2px 0 var(--blue), 4px 4px 0 #101736}
+.logo small{display:block;font-size:11px;color:var(--dim);letter-spacing:1px;text-shadow:none}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer}
+.sbtn{background:var(--win);color:var(--ink);border:2px solid var(--dim);
+padding:4px 10px;font-size:12px;border-radius:4px}
+.sbtn:hover{border-color:#fff;color:#fff}
+.params{display:flex;gap:14px;background:var(--panel);border:2px solid var(--dim);
+padding:6px 12px;font-size:12px;margin-bottom:10px;flex-wrap:wrap}
+.params b{color:var(--accent)}
+.bar{display:inline-block;width:74px;height:10px;background:#1a2148;vertical-align:middle;margin-left:4px;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--good);display:block}
+.screen{position:relative;border:6px solid var(--dim);border-radius:6px;overflow:hidden;
+aspect-ratio:16/10;background:#000;image-rendering:pixelated}
+.screen::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+background:repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 3px, transparent 3px 6px)}
+.bg{position:absolute;inset:0;transition:opacity.4s}
+.bg-room{background:linear-gradient(#0d1440 0 55%, #182257 55% 100%)}
+.bg-room::before{content:"";position:absolute;right:8%;top:8%;width:110px;height:130px;
+background:linear-gradient(#1b2a63,#0d1440);border:6px solid #05081a;
+box-shadow:0 0 0 4px #26398a, inset 0 0 0 3px #26398a}
+.bg-term{background:radial-gradient(ellipse at 50% 40%, #06280f 0%, #02140a 70%)}
+.bg-term::before{content:"$ nixos-rebuild switch --flake.#endeavor ❄ building... ❄ $ doom sync ❄ $ nvim init.lua ❄";
+position:absolute;inset:6%;color:#2f9e44;font-size:13px;line-height:2.1;opacity:.55;
+font-family:ui-monospace,Menlo,monospace;word-break:break-all}
+.bg-router{background:linear-gradient(#070b1e,#0a1030)}
+.bg-router::before{content:"● ● ●";position:absolute;left:10%;bottom:24%;color:#51ff7a;
+font-size:22px;letter-spacing:26px;text-shadow:0 0 12px #51ff7a}
+.bg-router::after{content:"";position:absolute;left:6%;bottom:16%;width:280px;height:56px;
+background:#0d1440;border:4px solid #26398a}
+.bg-way{background:linear-gradient(#1b1040 0%, #4a2a7a 55%, #c65b8f 82%, #ffb36b 100%)}
+.bg-way::before{content:"";position:absolute;left:0;right:0;bottom:0;height:26%;
+background:linear-gradient(transparent,#0a0618)}
+.stars{position:absolute;inset:0;z-index:1;
+background-image:radial-gradient(2px 2px at 12% 18%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 32% 8%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 55% 22%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 74% 10%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 88% 26%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 44% 30%, #9fb4ff 50%, transparent 51%)}
+.char{position:absolute;bottom:var(--tb);left:50%;transform:translateX(-50%);z-index:2;
+filter:drop-shadow(0 0 10px rgba(60,100,255,.75))}
+.char svg{display:block}
+.ground{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:1;
+background:linear-gradient(transparent, rgba(3,5,16,.92) 30%)}
+.namebox{position:absolute;left:14px;bottom:calc(var(--tb) + 8px);z-index:8;color:#ffffff;
+background:var(--win);border:3px solid var(--dim);padding:2px 14px;font-weight:700;font-size:16px;
+letter-spacing:.06em;text-shadow:2px 2px 0 #000}
+.textbox{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:7;color:#ffffff;
+background:rgba(4,6,20,.97);border-top:4px solid var(--dim);
+padding:12px 16px;font-size:18px;line-height:1.8;letter-spacing:.06em;
+text-shadow:2px 2px 0 #000;
+cursor:pointer;white-space:pre-wrap;overflow-y:auto;overflow-x:hidden;
+scrollbar-width:thin;scrollbar-color:#3355ff #0a0e24}
+.textbox::-webkit-scrollbar{width:10px}
+.textbox::-webkit-scrollbar-track{background:#0a0e24}
+.textbox::-webkit-scrollbar-thumb{background:#3355ff;border:2px solid #04061a}
+.textbox.next{position:absolute;right:12px;bottom:6px;color:var(--accent);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.choices{position:absolute;top:0;left:0;right:0;bottom:calc(var(--tb) + 46px);z-index:9;display:none;flex-direction:column;
+align-items:center;justify-content:center;gap:12px;background:rgba(3,5,16,.78);padding:16px}
+.choices.show{display:flex}
+.choice{width:min(92%,520px);background:#05081f;color:#ffffff;font-weight:700;
+border:3px solid #d5ddff;padding:12px 16px;font-size:18px;letter-spacing:.08em;
+text-shadow:2px 2px 0 #000;text-align:left;border-radius:4px}
+.choice:hover{border-color:var(--accent);color:#fff;background:#1b2a6e}
+.choice::before{content:"▶ ";color:var(--accent)}
+.title{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
+justify-content:center;gap:14px;background:radial-gradient(ellipse at 50% 35%, #14205e 0%, #05060f 75%);text-align:center;padding:16px}
+.title h1{margin:0;font-size:clamp(26px,6vw,44px);letter-spacing:3px;color:#fff;
+text-shadow:3px 3px 0 var(--blue), 6px 6px 0 #101736}
+.title p{color:#d5ddff;font-size:14px;margin:0;line-height:1.9}
+.tbtn{background:#05081f;color:#fff;font-weight:700;border:3px solid #d5ddff;padding:10px 26px;font-size:17px;letter-spacing:.08em;border-radius:4px}
+.tbtn:hover{border-color:var(--accent)}
+.tbtn:disabled{opacity:.35;cursor:default}
+.endmark{position:absolute;top:12px;right:12px;z-index:8;background:#000a;border:2px solid var(--accent);
+color:var(--accent);padding:2px 10px;font-size:12px;display:none}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
+border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;opacity:0;transition:opacity.3s;z-index:50;pointer-events:none}
+.toast.show{opacity:1}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;z-index:40;align-items:center;justify-content:center;padding:16px}
+.modal.show{display:flex}
+.modal.box{background:var(--panel);border:3px solid var(--dim);max-width:640px;width:100%;
+max-height:78vh;overflow:auto;padding:16px 20px;font-size:13px;line-height:1.9;white-space:pre-wrap}
+footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
+@media (max-width:560px){.textbox{font-size:15px}.char{bottom:var(--tb)}}
+
+/* ===== スマホ縦長対応：画面を縦に取り、本文ボックスの割合を広げる ===== */
+@media (orientation:portrait) and (max-width:760px){
+:root{--tb:46%}
+.screen{aspect-ratio:auto;height:80vh;height:80dvh}
+.textbox{font-size:16px;line-height:1.75}
+.char svg{width:100px;height:127px}
+.choice{font-size:16px;padding:10px 14px}
+.choices{overflow-y:auto}
+.title h1{font-size:25px}
+.title p{font-size:13px}
+.params{gap:8px;font-size:11px}
+.bar{width:80px}
+}
+
+/* ===== 選択肢が上に隠れる問題の修正：中央寄せのまま、溢れたら先頭からスクロール ===== */
+.choices{justify-content:flex-start;overflow-y:auto}
+.choice:first-child{margin-top:auto}
+.choice:last-child{margin-bottom:auto}
+</style>
+</head>
+<body>
+<div class="cab">
+<header>
+<div class="logo">キーバインド道場<small>― 8bit風ADV：i3×Tatami の試問 ―</small></div>
+<div class="btns">
+<button class="sbtn" id="btnLog">📜 ログ</button>
+<button class="sbtn" id="btnSound">🔊 音ON</button>
+<button class="sbtn" id="btnTitle">🏠 タイトル</button>
+<button class="sbtn" id="btnReset">🗑 セーブ消去</button>
+</div>
+</header>
+
+<div class="params">
+<span>i3力 <b id="pEmacs">0</b><span class="bar"><i id="bEmacs" style="width:0%"></i></span></span>
+<span>Tatami力 <b id="pVim">0</b><span class="bar"><i id="bVim" style="width:0%"></i></span></span>
+<span>移行力 <b id="pNix">0</b><span class="bar"><i id="bNix" style="width:0%"></i></span></span>
+<span style="margin-left:auto;color:var(--dim)">💾 自動セーブ：localStorage</span>
+</div>
+
+<div class="screen" id="screen">
+<div class="bg bg-room" id="bg"></div>
+<div class="stars"></div>
+<div class="ground"></div>
+<div class="char" id="char"></div>
+<div class="endmark" id="endmark">END</div>
+<div class="namebox" id="namebox" style="display:none"></div>
+<div class="textbox" id="textbox"><span id="text"></span><span class="next" id="nextmark" style="display:none">▼</span></div>
+<div class="choices" id="choices"></div>
+<div class="title" id="title">
+<h1>キーバインド道場</h1>
+<p>i3 の指と、Tatami の指。同じ Alt なのに、違う動作。<br>
+14の試問に答えて、移行初日の罠を<br>
+ゲームの中で踏んでおこう。</p>
+<button class="tbtn" id="btnNew">▶ はじめから</button>
+<button class="tbtn" id="btnContinue">▶ つづきから</button>
+<p>所要時間：約5分 ／ 全14問 ／ セーブはブラウザ内（localStorage）</p>
+</div>
+</div>
+
+<footer>
+遊び方：本文をクリックすると文字表示を一気に進められます。選択肢で物語とパラメータが変わり、結末も変わります（エンディング複数）。
+セーブは Cookie ではなく localStorage を使っています（容量が大きく、GitHub Pages に置いてもそのまま動くため）。進捗はシーンごとに自動保存。
+キーバインド道場 v1.0：出典は i3-vs-tatami-keybinds.html（2026-11-16整理）。エンジンは「まよなかターミナル」と同じ（DotGothic16＋ピピピ音＋localStorageセーブ）。
+</footer>
+</div>
+
+<div class="modal" id="logModal"><div class="box" id="logBox"></div></div>
+<div class="toast" id="toast">💾 セーブしました</div>
+
+<script>
+"use strict";
+/* ============ キャラのシルエット（SVG） ============ */
+function sil(body, extra){
+return '<svg width="150" height="190" viewBox="0 0 120 150">'
++ '<circle cx="60" cy="34" r="17" fill="#141f52"/>'
++ '<path d="M22 150 C22 96 40 66 60 66 C80 66 98 96 98 150 Z" fill="#141f52"/>'
++ (extra || '') + (body || '') + '</svg>';
+}
+const CHARS = {
+ore: sil('', ''),
+sennin: sil('', '<path d="M28 26 L60 2 L92 26 L84 30 L60 14 L36 30 Z" fill="#141f52"/>'
++ '<path d="M48 44 L72 44 L66 92 L54 92 Z" fill="#141f52"/>'),
+ninja: sil('', '<rect x="41" y="26" width="38" height="8" fill="#141f52"/>'
++ '<path d="M79 28 L104 20 L100 30 L79 34 Z" fill="#141f52"/>'
++ '<path d="M79 32 L102 38 L96 46 L79 38 Z" fill="#141f52"/>'),
+seirei: sil('', '<path d="M44 20 L52 4 L60 18 L68 4 L76 20 L68 26 L52 26 Z" fill="#141f52"/>'
++ '<rect x="96" y="70" width="5" height="62" fill="#141f52"/>'
++ '<circle cx="98" cy="64" r="8" fill="#141f52"/>'),
+none: ''
+};
+
+/* ============ シナリオ ============ */
+/* fx: パラメータ加算 {e:Emacs, v:Vim, n:Nix} */
+const NODES = {
+start: { bg:'bg-room', char:'seirei', name:'タタミの精霊',
+text:'ようこそ、キーバインド道場へ。\nここは i3 と Tatami のキーを「試問」で覚える道場だよ。\n間違えても大丈夫。間違えた分だけ、罠が体に刻まれるからね。',
+choices:[
+{ t:'第1課：i3 の復習から始める', to:'l1'},
+{ t:'第3課：罠と移行の話から先に聞く', to:'l3'}
+]},
+l1: { bg:'bg-term', char:'ore', name:'俺',
+text:'第1課：i3 の復習。\nmod は Alt。h/j/k/l × 修飾キーが基本だ。\n「なし＝フォーカス、+Shift＝ウィンドウ移動、+Ctrl＝リサイズ」\nこの3つの法則を、指で答えてみて。',
+choices:[ { t:'問1へ', to:'q1'}]},
+q1: { bg:'bg-term', char:'ore', name:'俺',
+text:'問1：i3 でフォーカスを「下」へ移すキーは？',
+choices:[
+{ t:'Alt+J', to:'q2', fx:{e:2}},
+{ t:'Alt+K', to:'g1a'},
+{ t:'Alt+Down（矢印キー）', to:'g1b'}
+]},
+g1a: { bg:'bg-term', char:'ore', name:'俺',
+text:'Alt+K はフォーカス「上」だ。\nh/j/k/l は Vim と同じ並び：下が J、上が K。\nもう一度。',
+choices:[ { t:'出直す', to:'q1'}]},
+g1b: { bg:'bg-term', char:'ore', name:'俺',
+text:'矢印キーは Tatami の既定だ。i3 では h/j/k/l が主役。\nTatami と混ざってるね。もう一度。',
+choices:[ { t:'出直す', to:'q1'}]},
+q2: { bg:'bg-term', char:'ore', name:'俺',
+text:'問2：i3 でウィンドウ自体を「下」へ移動させるキーは？',
+choices:[
+{ t:'Alt+Shift+J', to:'q3', fx:{e:2}},
+{ t:'Alt+J', to:'g2a'},
+{ t:'Alt+Ctrl+J', to:'g2b'}
+]},
+g2a: { bg:'bg-term', char:'ore', name:'俺',
+text:'Alt+J はフォーカス移動だけ。窓を動かすには Shift を足す。\n「なし＝フォーカス、+Shift＝移動」だよ。',
+choices:[ { t:'出直す', to:'q2'}]},
+g2b: { bg:'bg-term', char:'ore', name:'俺',
+text:'Alt+Ctrl+J はリサイズ（高さを伸ばす）だ。\n移動は +Shift、リサイズは +Ctrl。',
+choices:[ { t:'出直す', to:'q2'}]},
+q3: { bg:'bg-term', char:'ore', name:'俺',
+text:'問3：i3 でウィンドウの高さを「伸ばす」リサイズキーは？',
+choices:[
+{ t:'Alt+Ctrl+J', to:'q4', fx:{e:2}},
+{ t:'Alt+-（マイナスキー）', to:'g3a'},
+{ t:'Alt+Shift+J', to:'g3b'}
+]},
+g3a: { bg:'bg-term', char:'ore', name:'俺',
+text:'-/= キーのリサイズは Tatami 方式だ。\ni3 のリサイズは Ctrl+h/j/k/l の層。',
+choices:[ { t:'出直す', to:'q3'}]},
+g3b: { bg:'bg-term', char:'ore', name:'俺',
+text:'Alt+Shift+J はウィンドウ移動だ。\nリサイズは +Ctrl の層だよ。',
+choices:[ { t:'出直す', to:'q3'}]},
+q4: { bg:'bg-term', char:'ore', name:'俺',
+text:'問4：i3 でワークスペース 15 へ行くキーは？（1〜10 は Alt+数字）',
+choices:[
+{ t:'Alt+Ctrl+5', to:'q5', fx:{e:2}},
+{ t:'Alt+Shift+5', to:'g4a'},
+{ t:'Alt+15（そんなキーはない）', to:'g4b'}
+]},
+g4a: { bg:'bg-term', char:'ore', name:'俺',
+text:'Alt+Shift+5 は「窓を WS 5 へ送る」だ。\n+10 番へ行くのは +Ctrl。Alt+Ctrl+5 で 15 になる。',
+choices:[ { t:'出直す', to:'q4'}]},
+g4b: { bg:'bg-term', char:'ore', name:'俺',
+text:'数字キーに Ctrl を足すと +10 番。\nAlt+Ctrl+1〜0 で WS 11〜20 だよ。',
+choices:[ { t:'出直す', to:'q4'}]},
+q5: { bg:'bg-term', char:'ore', name:'俺',
+text:'問5：i3 の Alt+Tab は何をするキー？',
+choices:[
+{ t:'次のワークスペースへ', to:'l2', fx:{e:2}},
+{ t:'次のウィンドウへ切り替え', to:'g5a'}
+]},
+g5a: { bg:'bg-term', char:'ore', name:'俺',
+text:'それが一番の誤解ポイント。\nAlt+Tab は窓切り替えじゃなく「次のワークスペース」だ。\n窓切り替えは bindcode の Mod1+49（` の位置）側にある。',
+choices:[ { t:'出直す', to:'q5'}]},
+l2: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'第2課：Tatami の既定。\n主キーは i3 と同じ Alt。でも中身は別物だよ。\nフォーカスは h/j/k/l じゃなく矢印キー。\nAlt+J/K/L には、もう先客がいるんだ。',
+choices:[ { t:'問6へ', to:'q6'}]},
+q6: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'問6：Tatami の既定でフォーカスを「左」へ移すキーは？',
+choices:[
+{ t:'Alt+Left（矢印キー）', to:'q7', fx:{v:2}},
+{ t:'Alt+H', to:'g6a'},
+{ t:'Alt+J', to:'g6b'}
+]},
+g6a: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'Alt+H は Tatami では「空き」だ。\nだからこそ、h/j/k/l を足すときの入り口になる。\nでも既定のフォーカスは矢印キーだよ。',
+choices:[ { t:'出直す', to:'q6'}]},
+g6b: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'Alt+J は i3 のフォーカス下。\nTatami では分割トグルだ。フォーカスは矢印キー側。',
+choices:[ { t:'出直す', to:'q6'}]},
+q7: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'問7：Tatami で Alt+J は何をするキー？',
+choices:[
+{ t:'分割トグル（toggle-split）', to:'q8', fx:{v:2}},
+{ t:'フォーカスを下へ', to:'g7a'},
+{ t:'キーバインド一覧', to:'g7b'}
+]},
+g7a: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'それは i3 の答え。\nこっちの Alt+J は分割トグルだよ。',
+choices:[ { t:'出直す', to:'q7'}]},
+g7b: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'一覧は Alt+K の方だよ。\nAlt+J は分割トグル、Alt+K は一覧、Alt+L はレイアウト切替。',
+choices:[ { t:'出直す', to:'q7'}]},
+q8: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'問8：Tatami でキーバインド一覧を出すコマンドは？',
+choices:[
+{ t:'tatami keybindings（Alt+K）', to:'q9', fx:{v:2}},
+{ t:'omarchy-menu-keybindings', to:'g8a'},
+{ t:'tatami menu', to:'g8b'}
+]},
+g8a: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'それは上流 Omarchy の名前で、実物とは違ったんだ。\nTatami では tatami keybindings（Alt+K）で確定。\n前に伝えた案内の訂正ポイントだよ。',
+choices:[ { t:'出直す', to:'q8'}]},
+g8b: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'tatami menu は Alt+Space のメニューだ。\n一覧は tatami keybindings、Alt+K の方。',
+choices:[ { t:'出直す', to:'q8'}]},
+q9: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'問9：Tatami でウィンドウの幅を変えるリサイズキーは？',
+choices:[
+{ t:'Alt+- / Alt+=（code:20/21）', to:'q10', fx:{v:2}},
+{ t:'Alt+Ctrl+H / L', to:'g9a'},
+{ t:'Alt+Shift+H / L', to:'g9b'}
+]},
+g9a: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'Alt+Ctrl+h/j/k/l は i3 のリサイズだ。\nTatami は -/= のキー×修飾キーで ±100 / ±25 / ±300 を切り替える。',
+choices:[ { t:'出直す', to:'q9'}]},
+g9b: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'Alt+Shift+矢印はウィンドウのスワップ（入れ替え）だ。\nリサイズは -/= の方だよ。',
+choices:[ { t:'出直す', to:'q9'}]},
+q10: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'問10：Tatami のワークスペースは何番まである？',
+choices:[
+{ t:'10 まで。11〜20 はない', to:'l3', fx:{v:2}},
+{ t:'20 まで（i3 と同じ）', to:'g10a'},
+{ t:'5 まで', to:'g10b'}
+]},
+g10a: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'11〜20 は i3 だけの世界。\nTatami は 10 までで、代わりにスクラッチパッド（Alt+S）とグループがある。',
+choices:[ { t:'出直す', to:'q10'}]},
+g10b: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'10 までだよ。Alt+1〜0 で 1〜10、Alt+Shift+1〜0 で窓を送る。',
+choices:[ { t:'出直す', to:'q10'}]},
+l3: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'第3課：罠と移行。\n同じキー・違う動作が4つある。\nここを知らずに移行すると、初日に必ず踏む。\nそして「足す前に外す」という、たった1つの鉄則。',
+choices:[ { t:'問11へ', to:'q11'}]},
+q11: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'問11：Tatami で Alt+T は何をするキー？（i3 では ghostty 起動）',
+choices:[
+{ t:'フローティング切替', to:'q12', fx:{n:2}},
+{ t:'ターミナル起動', to:'g11a'},
+{ t:'タブ化（グループ）', to:'g11b'}
+]},
+g11a: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'ターミナルは Alt+Enter の方。\nAlt+T を押すと窓がフロートして「あれ？」ってなる罠だよ。',
+choices:[ { t:'出直す', to:'q11'}]},
+g11b: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'グループ化は Alt+G だ。\nAlt+T はフローティング切替。',
+choices:[ { t:'出直す', to:'q11'}]},
+q12: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'問12：Tatami で Alt+R は何をするキー？（i3 では自作ローテーション）',
+choices:[
+{ t:'Tatami リロード', to:'q13', fx:{n:2}},
+{ t:'ウィンドウ・ローテーション', to:'g12a'},
+{ t:'画面録画メニュー', to:'g12b'}
+]},
+g12a: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'ローテーションは i3-msg 前提の自作スクリプト。\nTatami の Alt+R はリロード（ログアウトなしで再読込）だよ。',
+choices:[ { t:'出直す', to:'q12'}]},
+g12b: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'録画メニューは Super+Print の方。\nAlt+R は Tatami リロード。',
+choices:[ { t:'出直す', to:'q12'}]},
+q13: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'問13：Tatami で Alt+Shift+B は何をするキー？（i3 では輝度スライダー）',
+choices:[
+{ t:'ブラウザ起動', to:'q14', fx:{n:2}},
+{ t:'輝度スライダー', to:'g13a'},
+{ t:'Bluetooth 設定', to:'g13b'}
+]},
+g13a: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'輝度スライダーは i3 の yad 製。\nTatami の Alt+Shift+B はブラウザ起動。輝度はメディアキー側にあるよ。',
+choices:[ { t:'出直す', to:'q13'}]},
+g13b: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'Bluetooth 設定は Alt+Ctrl+B の方。\nAlt+Shift+B はブラウザ起動だよ。',
+choices:[ { t:'出直す', to:'q13'}]},
+q14: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'最終問：i3 の Alt+J（フォーカス下）を Tatami に足すとき、正しい手順は？',
+choices:[
+{ t:'hl.unbind("ALT + J") で外してから bind し、hyprctl binds で1件か確認', to:'final_gate', fx:{n:2}},
+{ t:'そのまま hl.bind で上書きすれば古い方は消える', to:'g14a'},
+{ t:'Alt+J は諦めて Super+J に逃がす', to:'g14b'}
+]},
+g14a: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'それが前に間違えて伝えた点だよ。\n同じキーのバインドは書かれた順に全部実行される。\n付け足すだけだと toggle-split と両方走る。先に unbind だよ。',
+choices:[ { t:'出直す', to:'q14'}]},
+g14b: { bg:'bg-way', char:'seirei', name:'タタミの精霊',
+text:'Super+J も Tatami の既定ではないけど、逃がす必要はない。\nAlt+J は unbind してから付け直せば、そのまま使えるよ。',
+choices:[ { t:'出直す', to:'q14'}]},
+final_gate: { bg:'bg-way', char:'ore', name:'俺',
+text:'14問、終わり。\n罠の場所も、足し方も、頭に入った。\nさて、移行の方針は――',
+choices:[
+{ t:'Alt+h/j/k/l を unbind して足す（指の記憶を残す）', to:'end_hjkl'},
+{ t:'Tatami 既定の矢印キーに慣れる', to:'end_arrows'},
+{ t:'いったん i3 に留まる', to:'end_i3'}
+]},
+end_hjkl: { bg:'bg-way', char:'seirei', name:'タタミの精霊', ending:true,
+text:'「決めたね。Alt+H は空き、J/K/L は unbind してから付け直す。\n一覧（Alt+K）の逃がし先だけ先に決めておいてね。候補は Alt+Shift+/。\nあとは ~/.config/tatami/hyprland.lua に書いて、ログアウト→ログインだよ」\n',
+choices:[]},
+end_arrows: { bg:'bg-way', char:'seirei', name:'タタミの精霊', ending:true,
+text:'「矢印キーに慣れるのも立派な選択だよ。\nリサイズは -/=、WS は 10 個＋スクラッチパッドとグループ。\n新しい指の記憶は、1週間もあれば育つよ」\n',
+choices:[]},
+end_i3: { bg:'bg-way', char:'ore', name:'俺', ending:true,
+text:'俺は静かに扉を閉めた。\nAlt+Tab でワークスペースを巡り、Ctrl+数字で 20 番まで行けるこの環境は、伊達に育ててきたわけじゃない。\nTatami の朝はいつでも逃げない。まずはこの城を、極めるまで使う。\n',
+choices:[]}
+};
+
+/* ============ エンジン ============ */
+const SAVE_KEY = 'keybindDojoSaveV1';
+let state = { node:'start', stats:{e:0,v:0,n:0}, log:[]};
+let typing = null, fullText = '', soundOn = true;
+
+const $ = id => document.getElementById(id);
+const bgEl=$('bg'), charEl=$('char'), nameEl=$('namebox'), textEl=$('text'),
+boxEl=$('textbox'), chEl=$('choices'), nextEl=$('nextmark'), endEl=$('endmark');
+
+function beep(freq, dur, delay, vol){
+if(!soundOn) return;
+try{
+const ctx = beep.ctx || (beep.ctx = new (window.AudioContext||window.webkitAudioContext)());
+if(ctx.state === 'suspended') ctx.resume();
+const o = ctx.createOscillator(), g = ctx.createGain();
+o.type='square'; o.frequency.value = freq || 660;
+g.gain.value = vol || 0.03;
+o.connect(g); g.connect(ctx.destination);
+const t = ctx.currentTime + (delay||0);
+o.start(t); o.stop(t + (dur||0.06));
+}catch(e){}
+}
+function save(){
+try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); toast();}catch(e){}
+}
+function loadSave(){
+try{ const s = localStorage.getItem(SAVE_KEY); return s? JSON.parse(s): null;}catch(e){ return null;}
+}
+function toast(){
+const t=$('toast'); t.classList.add('show');
+clearTimeout(toast.tm); toast.tm=setTimeout(()=>t.classList.remove('show'), 900);
+}
+function renderParams(){
+$('pEmacs').textContent = state.stats.e;
+$('pVim').textContent = state.stats.v;
+$('pNix').textContent = state.stats.n;
+$('bEmacs').style.width = Math.min(100, state.stats.e*16) + '%';
+$('bVim').style.width = Math.min(100, state.stats.v*16) + '%';
+$('bNix').style.width = Math.min(100, state.stats.n*14) + '%';
+}
+function typeText(txt, done){
+clearInterval(typing);
+fullText = txt; textEl.textContent=''; nextEl.style.display='none';
+boxEl.scrollTop = 0;
+let i=0;
+typing = setInterval(()=>{
+i++;
+textEl.textContent = txt.slice(0, i);
+boxEl.scrollTop = boxEl.scrollHeight;
+const ch = txt.charAt(i-1);
+if(ch && ch !== ' ' && ch !== '\n' && i % 2 === 1){
+beep(980 + Math.random()*520, 0.018, 0, 0.012);
+}
+if(i >= txt.length){ clearInterval(typing); typing=null; nextEl.style.display=''; if(done) done();}
+}, 26);
+boxEl.onclick = ()=>{
+if(typing){ clearInterval(typing); typing=null; textEl.textContent=txt; boxEl.scrollTop = boxEl.scrollHeight; nextEl.style.display=''; if(done) done();}
+};
+}
+function showNode(id){
+const n = NODES[id];
+if(!n) return;
+state.node = id;
+bgEl.className = 'bg ' + n.bg;
+charEl.innerHTML = CHARS[n.char] || '';
+charEl.style.display = n.char && n.char!== 'none'? '': 'none';
+if(n.name){ nameEl.textContent = n.name; nameEl.style.display='';} else nameEl.style.display='none';
+endEl.style.display = n.ending? '': 'none';
+chEl.classList.remove('show'); chEl.innerHTML='';
+state.log.push((n.name? '': '') + n.text);
+renderParams();
+typeText(n.text, ()=>{
+if(n.ending){ showEnding();}
+else if(n.choices && n.choices.length){ showChoices(n.choices);}
+});
+save();
+}
+function showChoices(choices){
+chEl.innerHTML='';
+choices.forEach(c=>{
+const b=document.createElement('button');
+b.className='choice'; b.textContent=c.t;
+b.onclick=()=>{
+beep(520,.06); setTimeout(()=>beep(780,.07), 70);
+if(c.fx){
+state.stats.e += c.fx.e||0; state.stats.v += c.fx.v||0; state.stats.n += c.fx.n||0;
+}
+state.log.push('▶ ' + c.t);
+chEl.classList.remove('show');
+showNode(c.to);
+};
+chEl.appendChild(b);
+});
+chEl.classList.add('show');
+}
+function showEnding(){
+const s = state.stats;
+const total = s.e + s.v + s.n;
+const rank = total >= 22? 'キーバインド道場主': total >= 14? '移行準備完了': total >= 7? '見習い道場生': 'まずは比較表から';
+const b=document.createElement('button');
+b.className='choice';
+b.textContent='結果を見る（称号：' + rank + ' / i3 ' + s.e + '・Tatami ' + s.v + '・移行 ' + s.n + '）→ タイトルへ';
+b.onclick=()=>{ beep(660,.07); setTimeout(()=>beep(880,.09),90); goTitle();};
+chEl.innerHTML=''; chEl.appendChild(b); chEl.classList.add('show');
+[523,659,784,1046].forEach((f,i)=>beep(f,.1,i*0.11));
+}
+function goTitle(){
+$('title').style.display='flex';
+const sv = loadSave();
+$('btnContinue').disabled =!(sv && sv.node &&!NODES[sv.node].ending);
+}
+function startGame(fromSave){
+$('title').style.display='none';
+if(fromSave){
+const sv = loadSave();
+if(sv && sv.node){ state = sv; showNode(state.node); return;}
+}
+state = { node:'start', stats:{e:0,v:0,n:0}, log:[]};
+showNode('start');
+}
+$('btnNew').onclick = ()=>{ beep(660,.06); startGame(false);};
+$('btnContinue').onclick = ()=>{ beep(660,.06); startGame(true);};
+$('btnTitle').onclick = ()=>{ chEl.classList.remove('show'); goTitle();};
+$('btnReset').onclick = ()=>{
+try{ localStorage.removeItem(SAVE_KEY);}catch(e){}
+state = { node:'start', stats:{e:0,v:0,n:0}, log:[]};
+renderParams(); goTitle();
+};
+$('btnSound').onclick = (e)=>{
+soundOn =!soundOn;
+e.target.textContent = soundOn? '🔊 音ON': '🔇 音OFF';
+if(soundOn) beep(700,.06);
+};
+$('btnLog').onclick = ()=>{
+$('logBox').textContent = state.log.length? state.log.join('\n\n'): '（まだログがありません）';
+$('logModal').classList.add('show');
+};
+$('logModal').onclick = ()=> $('logModal').classList.remove('show');
+renderParams();
+goTitle();
+</script>
+</body>
+</html>

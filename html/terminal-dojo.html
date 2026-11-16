@@ -110,6 +110,11 @@ border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-si
 .params{gap:8px;font-size:11px}
 .bar{width:80px}
 }
+
+/* ===== 選択肢が上に隠れる問題の修正：中央寄せのまま、溢れたら先頭からスクロール ===== */
+.choices{justify-content:flex-start;overflow-y:auto}
+.choice:first-child{margin-top:auto}
+.choice:last-child{margin-bottom:auto}
 </style>
 </head>
 <body>

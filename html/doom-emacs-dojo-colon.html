@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
 <style>
 :root{
+--tb:29%;
 --ink:#dfe6ff; --dim:#8fa3d9; --blue:#3355ff; --panel:#0a0e24;
 --win:#101736; --accent:#ffd94a; --good:#7ee787; --bad:#ff7b72;
 }
@@ -52,15 +53,15 @@ radial-gradient(2px 2px at 55% 22%, #fff 50%, transparent 51%),
 radial-gradient(2px 2px at 74% 10%, #cdd8ff 50%, transparent 51%),
 radial-gradient(2px 2px at 88% 26%, #fff 50%, transparent 51%),
 radial-gradient(2px 2px at 44% 30%, #9fb4ff 50%, transparent 51%)}
-.char{position:absolute;bottom:29%;left:50%;transform:translateX(-50%);z-index:2;
+.char{position:absolute;bottom:var(--tb);left:50%;transform:translateX(-50%);z-index:2;
 filter:drop-shadow(0 0 10px rgba(60,100,255,.75))}
 .char svg{display:block}
-.ground{position:absolute;left:0;right:0;bottom:0;height:29%;z-index:1;
+.ground{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:1;
 background:linear-gradient(transparent, rgba(3,5,16,.92) 30%)}
-.namebox{position:absolute;left:14px;bottom:calc(29% + 8px);z-index:8;color:#ffffff;
+.namebox{position:absolute;left:14px;bottom:calc(var(--tb) + 8px);z-index:8;color:#ffffff;
 background:var(--win);border:3px solid var(--dim);padding:2px 14px;font-weight:700;font-size:16px;
 letter-spacing:.06em;text-shadow:2px 2px 0 #000}
-.textbox{position:absolute;left:0;right:0;bottom:0;height:29%;z-index:7;color:#ffffff;
+.textbox{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:7;color:#ffffff;
 background:rgba(4,6,20,.97);border-top:4px solid var(--dim);
 padding:12px 16px;font-size:18px;line-height:1.8;letter-spacing:.06em;
 text-shadow:2px 2px 0 #000;
@@ -71,7 +72,7 @@ scrollbar-width:thin;scrollbar-color:#3355ff #0a0e24}
 .textbox::-webkit-scrollbar-thumb{background:#3355ff;border:2px solid #04061a}
 .textbox.next{position:absolute;right:12px;bottom:6px;color:var(--accent);animation:blink 1s steps(2) infinite}
 @keyframes blink{50%{opacity:0}}
-.choices{position:absolute;top:0;left:0;right:0;bottom:calc(29% + 46px);z-index:9;display:none;flex-direction:column;
+.choices{position:absolute;top:0;left:0;right:0;bottom:calc(var(--tb) + 46px);z-index:9;display:none;flex-direction:column;
 align-items:center;justify-content:center;gap:12px;background:rgba(3,5,16,.78);padding:16px;overflow-y:auto}
 .choices.show{display:flex}
 .choice{width:min(92%,520px);background:#05081f;color:#ffffff;font-weight:700;
@@ -94,7 +95,26 @@ border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;op
 footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
 kbd{display:inline-block;background:#21262d;border:1px solid var(--dim);border-bottom-width:2px;
 border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
-@media (max-width:560px){.textbox{font-size:15px}.char{bottom:30%}}
+@media (max-width:560px){.textbox{font-size:15px}.char{bottom:var(--tb)}}
+
+/* ===== スマホ縦長対応：画面を縦に取り、本文ボックスの割合を広げる ===== */
+@media (orientation:portrait) and (max-width:760px){
+:root{--tb:46%}
+.screen{aspect-ratio:auto;height:80vh;height:80dvh}
+.textbox{font-size:16px;line-height:1.75}
+.char svg{width:100px;height:127px}
+.choice{font-size:16px;padding:10px 14px}
+.choices{overflow-y:auto}
+.title h1{font-size:25px}
+.title p{font-size:13px}
+.params{gap:8px;font-size:11px}
+.bar{width:80px}
+}
+
+/* ===== 選択肢が上に隠れる問題の修正：中央寄せのまま、溢れたら先頭からスクロール ===== */
+.choices{justify-content:flex-start;overflow-y:auto}
+.choice:first-child{margin-top:auto}
+.choice:last-child{margin-bottom:auto}
 </style>
 </head>
 <body>
