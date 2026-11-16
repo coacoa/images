@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>キーボードピアノ練習 ― PCキーが鍵盤になる</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{
+--ink:#dfe6ff; --dim:#8fa3d9; --blue:#3355ff; --panel:#0a0e24;
+--win:#101736; --accent:#ffd94a; --good:#7ee787; --bad:#ff7b72;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+body{margin:0;background:#05060f;color:var(--ink);
+font-family:"DotGothic16","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+display:flex;justify-content:center;padding:14px 10px 40px}
+.cab{width:100%;max-width:820px}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{font-weight:900;letter-spacing:2px;font-size:19px;color:#fff;
+text-shadow:2px 2px 0 var(--blue), 4px 4px 0 #101736}
+.logo small{display:block;font-size:11px;color:var(--dim);letter-spacing:1px;text-shadow:none}
+button{font:inherit;cursor:pointer}
+.sbtn{background:var(--win);color:var(--ink);border:2px solid var(--dim);
+padding:5px 12px;font-size:13px;border-radius:4px}
+.sbtn:hover{border-color:#fff;color:#fff}
+.sbtn.on{border-color:var(--accent);color:var(--accent)}
+.panel{background:var(--panel);border:2px solid var(--dim);padding:10px 12px;margin-bottom:10px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.row + .row{margin-top:8px}
+.songbtn{background:#05081f;color:#fff;border:2px solid #d5ddff;padding:6px 12px;
+font-size:14px;border-radius:4px;letter-spacing:.04em}
+.songbtn:hover{border-color:var(--accent)}
+.songbtn.on{border-color:var(--accent);background:#1b2a6e}
+.songbtn .clr{color:var(--good);font-size:12px}
+.songbtn .bst{color:var(--dim);font-size:11px}
+.status{display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:14px}
+#nowNote{font-size:30px;color:#fff;min-width:120px;text-shadow:2px 2px 0 var(--blue)}
+#msg{color:var(--accent);min-height:1.4em}
+.bar{flex:1;min-width:120px;height:12px;background:#1a2148;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--good);display:block;width:0%}
+.piano{position:relative;height:250px;border:6px solid var(--dim);border-radius:6px;
+background:#000;overflow:hidden;user-select:none;touch-action:none}
+.whites{position:absolute;inset:0;display:flex}
+.key{position:relative;cursor:pointer}
+.key.white{flex:1;background:linear-gradient(#fdfdf8,#dcdccf);border-right:1px solid #9a9a8c;
+display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding-bottom:8px;gap:2px}
+.key.white:last-child{border-right:none}
+.key.black{position:absolute;top:0;height:60%;background:linear-gradient(#3a3a44,#0a0a10);
+border:2px solid #000;border-top:none;border-radius:0 0 4px 4px;z-index:2;
+display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding-bottom:6px}
+.sol{font-size:13px;color:#334;font-weight:700}
+.key.black .sol{color:#aab;font-size:10px}
+.pck{font-size:11px;color:#fff;background:#3355ff;border-radius:3px;padding:0 5px;font-weight:700}
+.key.black .pck{font-size:9px;background:#7a4ae0;padding:0 3px}
+body.hide-sol .sol{display:none}
+body.hide-key .pck{display:none}
+.key.white.active{background:linear-gradient(var(--accent),#e8b93a)}
+.key.black.active{background:linear-gradient(#e8b93a,#8a6d1a)}
+.key.target{box-shadow:inset 0 0 0 4px var(--blue), inset 0 -26px 0 rgba(51,85,255,.45);
+animation:pulse 0.9s ease-in-out infinite}
+.key.black.target{box-shadow:inset 0 0 0 4px var(--blue), inset 0 -20px 0 rgba(51,85,255,.6)}
+@keyframes pulse{50%{box-shadow:inset 0 0 0 4px #7aa2ff, inset 0 -26px 0 rgba(122,162,255,.55)}}
+.key.good{background:linear-gradient(var(--good),#4a9e5f) !important}
+.key.bad{background:linear-gradient(var(--bad),#a03a32) !important}
+footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
+label.chk{font-size:13px;display:inline-flex;gap:4px;align-items:center;cursor:pointer}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
+border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;opacity:0;transition:opacity .3s;z-index:50;pointer-events:none}
+.toast.show{opacity:1}
+@media (orientation:portrait) and (max-width:760px){
+.piano{height:210px}
+.sol{font-size:10px}
+.pck{font-size:8px;padding:0 3px}
+.key.black .pck{display:none}
+#nowNote{font-size:24px;min-width:90px}
+.logo{font-size:16px}
+}
+</style>
+</head>
+<body>
+<div class="cab">
+<header>
+<div class="logo">キーボードピアノ練習<small>― PCのキーが、そのまま電子ピアノの鍵盤になる ―</small></div>
+<div class="row">
+<button class="sbtn" id="octDown">◀ オクターブ</button>
+<span id="octLabel" style="font-size:13px;color:var(--dim)">左端＝ド（C4）</span>
+<button class="sbtn" id="octUp">オクターブ ▶</button>
+</div>
+</header>
+
+<div class="panel">
+<div class="row">
+<button class="sbtn on" id="modeFree">🎹 自由演奏</button>
+<button class="sbtn" id="modePractice">🎯 お手本練習</button>
+<span style="flex:1"></span>
+<label class="chk"><input type="checkbox" id="chkSol" checked> ドレミ表示</label>
+<label class="chk"><input type="checkbox" id="chkKey" checked> キー表示</label>
+</div>
+<div class="row" id="songRow" style="display:none"></div>
+<div class="row" id="pracCtl" style="display:none">
+<button class="sbtn" id="btnDemo">▶ お手本を聴く</button>
+<button class="sbtn" id="btnRestart">↺ 最初から</button>
+<span class="bar"><i id="prog"></i></span>
+<span id="progText" style="font-size:13px;color:var(--dim)">0 / 0</span>
+</div>
+</div>
+
+<div class="panel status">
+<span id="nowNote">―</span>
+<span id="msg">キーを押すか、鍵盤をクリック／タップして弾いてみて。</span>
+</div>
+
+<div class="piano" id="piano"><div class="whites" id="whites"></div></div>
+
+<footer>
+弾き方：下段 Z X C V B N M が下のオクターブの白鍵（S D・G H J が黒鍵）、上段 Q W E R T Y U が上のオクターブ（2 3・5 6 7 が黒鍵）。
+オクターブは ◀ ▶ ボタンか矢印キーで移動。お手本練習は「次の音が青く光る → 押すと進む」方式で、間違えても止まりません（正解率だけ記録）。
+クリア記録とベスト正解率はブラウザに自動保存されます。音は Web Audio の合成音なので、音源ファイル不要・単一HTMLで動きます。
+</footer>
+</div>
+<div class="toast" id="toast">💾 記録を保存しました</div>
+
+<script>
+"use strict";
+/* ===== キー割り当て（e.code → 半音オフセット） ===== */
+const KEYMAP = { KeyZ:0, KeyS:1, KeyX:2, KeyD:3, KeyC:4, KeyV:5, KeyG:6, KeyB:7,
+KeyH:8, KeyN:9, KeyJ:10, KeyM:11, Comma:12,
+KeyQ:12, Digit2:13, KeyW:14, Digit3:15, KeyE:16, KeyR:17, Digit5:18, KeyT:19,
+Digit6:20, KeyY:21, Digit7:22, KeyU:23, KeyI:24 };
+const OFFSET_LABEL = { 0:'Z',1:'S',2:'X',3:'D',4:'C',5:'V',6:'G',7:'B',8:'H',9:'N',
+10:'J',11:'M',12:'Q',13:'2',14:'W',15:'3',16:'E',17:'R',18:'5',19:'T',20:'6',
+21:'Y',22:'7',23:'U',24:'I' };
+const NOTE_NAME = { 0:'ド',1:'ド♯',2:'レ',3:'レ♯',4:'ミ',5:'ファ',6:'ファ♯',
+7:'ソ',8:'ソ♯',9:'ラ',10:'ラ♯',11:'シ' };
+const WHITE_PC = [0,2,4,5,7,9,11];
+function isWhite(midi){ return WHITE_PC.includes(midi % 12); }
+function noteLabel(midi){ return NOTE_NAME[midi % 12] + (Math.floor(midi / 12) - 1); }
+
+/* ===== 課題（スケール＋童謡） ===== */
+const SONGS = [
+{ id:'scale_c', title:'スケール：ドレミ往復', tag:'白鍵だけ', notes:[60,62,64,65,67,69,71,72,71,69,67,65,64,62,60] },
+{ id:'chocho', title:'ちょうちょう', tag:'白鍵だけ', notes:[67,64,64,65,62,62,60,62,64,65,67,64,64,67,64,64,65,62,62,60,62,64,65,62,60,60] },
+{ id:'kirakira', title:'きらきら星', tag:'白鍵だけ', notes:[72,72,79,79,81,81,79,77,77,76,76,74,74,72,79,79,77,77,76,76,74,79,79,77,77,76,76,74,72,72,79,79,81,81,79,77,77,76,76,74,74,72] },
+{ id:'tulip', title:'チューリップ', tag:'白鍵だけ', notes:[72,74,76,72,74,76,79,76,74,72,74,76,74,72,74,76,72,74,76,79,76,74,72,74,76,72] },
+{ id:'kaeru', title:'かえるの合唱', tag:'白鍵だけ', notes:[72,74,76,77,76,74,72,76,77,79,81,79,77,76,72,72,72,72,72,72,74,74,76,76,77,77,76,74,72] },
+{ id:'mary', title:'メリーさんの羊', tag:'白鍵だけ', notes:[76,74,72,74,76,76,76,74,74,74,76,79,79,76,74,72,74,76,76,76,76,74,74,76,74,72] },
+{ id:'scale_g', title:'スケール：ソから（ファ♯入り）', tag:'黒鍵入門', notes:[67,69,71,72,74,76,78,79,78,76,74,72,71,69,67] },
+];
+
+/* ===== 状態 ===== */
+const SAVE_KEY = 'pianoPracticeSaveV1';
+let best = {};
+try{ const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); if(s && s.best) best = s.best; }catch(e){}
+let baseMidi = 60;
+let mode = 'free';
+let song = null, idx = 0, presses = 0, mistakes = 0, finished = false;
+let demoTimers = [];
+const activeVoices = {};
+const keyEls = {};
+const $ = id => document.getElementById(id);
+
+/* ===== 音（Web Audio 合成） ===== */
+let actx = null, master = null;
+function audio(){
+if(!actx){
+actx = new (window.AudioContext || window.webkitAudioContext)();
+master = actx.createGain(); master.gain.value = 0.5; master.connect(actx.destination);
+}
+if(actx.state === 'suspended') actx.resume();
+return actx;
+}
+function freq(midi){ return 440 * Math.pow(2, (midi - 69) / 12); }
+function soundOn(midi){
+audio();
+if(activeVoices[midi]) return;
+const t = actx.currentTime;
+const g = actx.createGain();
+g.gain.setValueAtTime(0.0001, t);
+g.gain.exponentialRampToValueAtTime(0.85, t + 0.008);
+g.gain.exponentialRampToValueAtTime(0.16, t + 1.1);
+const o1 = actx.createOscillator(); o1.type = 'triangle'; o1.frequency.value = freq(midi);
+const o2 = actx.createOscillator(); o2.type = 'sine'; o2.frequency.value = freq(midi) * 2;
+const g2 = actx.createGain(); g2.gain.value = 0.25;
+o1.connect(g); o2.connect(g2); g2.connect(g); g.connect(master);
+o1.start(t); o2.start(t);
+activeVoices[midi] = { o1, o2, g };
+}
+function soundOff(midi){
+const v = activeVoices[midi]; if(!v) return;
+delete activeVoices[midi];
+const t = actx.currentTime;
+try{
+v.g.gain.cancelScheduledValues(t);
+v.g.gain.setValueAtTime(Math.max(v.g.gain.value, 0.0001), t);
+v.g.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
+v.o1.stop(t + 0.16); v.o2.stop(t + 0.16);
+}catch(e){}
+}
+
+/* ===== 鍵盤描画 ===== */
+function renderPiano(){
+const w = $('whites'); w.innerHTML = '';
+const piano = $('piano');
+piano.querySelectorAll('.key.black').forEach(el => el.remove());
+for(const k in keyEls) delete keyEls[k];
+let whiteCount = 0;
+const totalWhites = 15;
+for(let off = 0; off <= 24; off++){
+const midi = baseMidi + off;
+if(isWhite(midi)){
+const d = document.createElement('div');
+d.className = 'key white'; d.dataset.midi = midi;
+d.innerHTML = '<span class="sol">' + NOTE_NAME[midi % 12] + '</span>' +
+'<span class="pck">' + (OFFSET_LABEL[off] || '') + '</span>';
+w.appendChild(d); keyEls[midi] = d;
+whiteCount++;
+} else {
+const d = document.createElement('div');
+d.className = 'key black'; d.dataset.midi = midi;
+d.style.left = (whiteCount / totalWhites * 100) + '%';
+d.style.width = (100 / totalWhites * 0.64) + '%';
+d.style.transform = 'translateX(-50%)';
+d.innerHTML = '<span class="sol">' + NOTE_NAME[midi % 12] + '</span>' +
+'<span class="pck">' + (OFFSET_LABEL[off] || '') + '</span>';
+piano.appendChild(d); keyEls[midi] = d;
+}
+}
+piano.querySelectorAll('.key').forEach(el => {
+const midi = +el.dataset.midi;
+el.addEventListener('pointerdown', e => { e.preventDefault(); stopDemo(); noteOn(midi); });
+el.addEventListener('pointerup', () => noteOff(midi));
+el.addEventListener('pointerleave', () => noteOff(midi));
+el.addEventListener('pointercancel', () => noteOff(midi));
+});
+$('octLabel').textContent = '左端＝ド（C' + (baseMidi / 12 - 1) + '）';
+updateTarget();
+}
+
+/* ===== 演奏 ===== */
+function noteOn(midi){
+soundOn(midi);
+const el = keyEls[midi]; if(el) el.classList.add('active');
+$('nowNote').textContent = noteLabel(midi);
+if(mode === 'practice' && song && !finished) practiceHit(midi);
+}
+function noteOff(midi){
+soundOff(midi);
+const el = keyEls[midi]; if(el) el.classList.remove('active');
+}
+window.addEventListener('pointerup', () => {
+for(const m in activeVoices) noteOff(+m);
+});
+window.addEventListener('keydown', e => {
+if(e.repeat) return;
+if(e.code === 'ArrowLeft'){ e.preventDefault(); shiftOctave(-12); return; }
+if(e.code === 'ArrowRight'){ e.preventDefault(); shiftOctave(12); return; }
+if(e.code in KEYMAP){ stopDemo(); noteOn(baseMidi + KEYMAP[e.code]); }
+});
+window.addEventListener('keyup', e => {
+if(e.code in KEYMAP) noteOff(baseMidi + KEYMAP[e.code]);
+});
+function shiftOctave(d){
+const nb = Math.min(72, Math.max(48, baseMidi + d));
+if(nb === baseMidi) return;
+for(const m in activeVoices) noteOff(+m);
+baseMidi = nb; renderPiano();
+}
+
+/* ===== お手本練習 ===== */
+function renderSongs(){
+const row = $('songRow'); row.innerHTML = '';
+SONGS.forEach(s => {
+const b = document.createElement('button');
+b.className = 'songbtn' + (song && song.id === s.id ? ' on' : '');
+let html = s.title + ' <span class="bst">' + s.tag + '・' + s.notes.length + '音</span>';
+if(best[s.id] != null) html += ' <span class="clr">✔ベスト' + best[s.id] + '%</span>';
+b.innerHTML = html;
+b.onclick = () => selectSong(s.id);
+row.appendChild(b);
+});
+}
+function selectSong(id){
+stopDemo();
+song = SONGS.find(s => s.id === id) || null;
+idx = 0; presses = 0; mistakes = 0; finished = false;
+renderSongs(); updateTarget();
+if(song) $('msg').textContent = '「' + song.title + '」青く光ったキーを押して進んでね。';
+}
+function updateTarget(){
+for(const m in keyEls) keyEls[m].classList.remove('target');
+if(mode === 'practice' && song && !finished && idx < song.notes.length){
+const el = keyEls[song.notes[idx]];
+if(el) el.classList.add('target');
+}
+const total = song ? song.notes.length : 0;
+$('prog').style.width = total ? (idx / total * 100) + '%' : '0%';
+$('progText').textContent = idx + ' / ' + total;
+}
+function flash(midi, cls){
+const el = keyEls[midi]; if(!el) return;
+el.classList.add(cls);
+setTimeout(() => el.classList.remove(cls), 220);
+}
+function practiceHit(midi){
+presses++;
+if(midi === song.notes[idx]){
+flash(midi, 'good');
+idx++;
+if(idx >= song.notes.length){ finishSong(); return; }
+updateTarget();
+} else {
+mistakes++;
+flash(midi, 'bad');
+$('msg').textContent = 'ちがうよ。光っているのは ' + noteLabel(song.notes[idx]) + ' のキー。';
+}
+}
+function finishSong(){
+finished = true;
+const acc = Math.round(song.notes.length / presses * 100);
+if(best[song.id] == null || acc > best[song.id]){
+best[song.id] = acc;
+try{ localStorage.setItem(SAVE_KEY, JSON.stringify({ best })); toast(); }catch(e){}
+}
+$('msg').textContent = '🎉 「' + song.title + '」クリア！ 正解率 ' + acc + '%（ミス ' + mistakes + ' 回）';
+[72,76,79,84].forEach((m, i) => {
+setTimeout(() => { soundOn(m); setTimeout(() => soundOff(m), 350); }, i * 130);
+});
+renderSongs(); updateTarget();
+}
+function stopDemo(){
+demoTimers.forEach(t => clearTimeout(t));
+demoTimers = [];
+}
+function playDemo(){
+if(!song) return;
+stopDemo();
+song.notes.forEach((m, i) => {
+demoTimers.push(setTimeout(() => {
+soundOn(m);
+const el = keyEls[m]; if(el) el.classList.add('active');
+$('nowNote').textContent = noteLabel(m);
+setTimeout(() => { soundOff(m); if(el) el.classList.remove('active'); }, 380);
+}, i * 430));
+});
+$('msg').textContent = 'お手本を再生中… 聴き終わったら、光るキーを自分で押してね。';
+}
+function toast(){
+const t = $('toast'); t.classList.add('show');
+clearTimeout(toast.tm); toast.tm = setTimeout(() => t.classList.remove('show'), 900);
+}
+
+/* ===== モード・ボタン ===== */
+function setMode(m){
+mode = m; stopDemo();
+$('modeFree').classList.toggle('on', m === 'free');
+$('modePractice').classList.toggle('on', m === 'practice');
+$('songRow').style.display = m === 'practice' ? '' : 'none';
+$('pracCtl').style.display = m === 'practice' ? '' : 'none';
+if(m === 'practice' && !song) selectSong(SONGS[0].id);
+if(m === 'free') $('msg').textContent = '自由演奏モード。好きに弾いてね。';
+updateTarget();
+}
+$('modeFree').onclick = () => setMode('free');
+$('modePractice').onclick = () => setMode('practice');
+$('btnDemo').onclick = playDemo;
+$('btnRestart').onclick = () => { if(song) selectSong(song.id); };
+$('octDown').onclick = () => shiftOctave(-12);
+$('octUp').onclick = () => shiftOctave(12);
+$('chkSol').onchange = e => document.body.classList.toggle('hide-sol', !e.target.checked);
+$('chkKey').onchange = e => document.body.classList.toggle('hide-key', !e.target.checked);
+
+renderPiano();
+renderSongs();
+</script>
+</body>
+</html>
