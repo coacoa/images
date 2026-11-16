@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Doom Emacs 道場 ― 8bit風ADVで覚える</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{
+--ink:#dfe6ff; --dim:#8fa3d9; --blue:#3355ff; --panel:#0a0e24;
+--win:#101736; --accent:#ffd94a; --good:#7ee787; --bad:#ff7b72;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+body{margin:0;background:#05060f;color:var(--ink);
+font-family:"DotGothic16","Hiragino Kaku Gothic ProN","Noto Sans JP",monospace,sans-serif;
+-webkit-font-smoothing:none;font-smooth:never;
+display:flex;justify-content:center;padding:14px 10px 40px}
+.cab{width:100%;max-width:760px}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{font-weight:900;letter-spacing:2px;font-size:18px;color:#fff;
+text-shadow:2px 2px 0 var(--blue), 4px 4px 0 #101736}
+.logo small{display:block;font-size:11px;color:var(--dim);letter-spacing:1px;text-shadow:none}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer}
+.sbtn{background:var(--win);color:var(--ink);border:2px solid var(--dim);
+padding:4px 10px;font-size:12px;border-radius:4px}
+.sbtn:hover{border-color:#fff;color:#fff}
+.params{display:flex;gap:14px;background:var(--panel);border:2px solid var(--dim);
+padding:6px 12px;font-size:12px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.params b{color:var(--accent)}
+.bar{display:inline-block;width:120px;height:10px;background:#1a2148;vertical-align:middle;margin-left:4px;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--good);display:block}
+.screen{position:relative;border:6px solid var(--dim);border-radius:6px;overflow:hidden;
+aspect-ratio:16/10;background:#000;image-rendering:pixelated}
+.screen::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+background:repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 3px, transparent 3px 6px)}
+.bg{position:absolute;inset:0;transition:opacity.4s}
+.bg-room{background:linear-gradient(#0d1440 0 55%, #182257 55% 100%)}
+.bg-room::before{content:"";position:absolute;right:8%;top:8%;width:110px;height:130px;
+background:linear-gradient(#1b2a63,#0d1440);border:6px solid #05081a;
+box-shadow:0 0 0 4px #26398a, inset 0 0 0 3px #26398a}
+.bg-term{background:radial-gradient(ellipse at 50% 40%, #06280f 0%, #02140a 70%)}
+.bg-term::before{content:"$ emacs ❄ SPC f f ❄ SPC b b ❄ SPC g g ❄ doom sync ❄ SPC h k ❄";
+position:absolute;inset:6%;color:#2f9e44;font-size:13px;line-height:2.1;opacity:.55;
+font-family:ui-monospace,Menlo,monospace;word-break:break-all}
+.bg-way{background:linear-gradient(#1b1040 0%, #4a2a7a 55%, #c65b8f 82%, #ffb36b 100%)}
+.stars{position:absolute;inset:0;z-index:1;
+background-image:radial-gradient(2px 2px at 12% 18%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 32% 8%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 55% 22%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 74% 10%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 88% 26%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 44% 30%, #9fb4ff 50%, transparent 51%)}
+.char{position:absolute;bottom:29%;left:50%;transform:translateX(-50%);z-index:2;
+filter:drop-shadow(0 0 10px rgba(60,100,255,.75))}
+.char svg{display:block}
+.ground{position:absolute;left:0;right:0;bottom:0;height:29%;z-index:1;
+background:linear-gradient(transparent, rgba(3,5,16,.92) 30%)}
+.namebox{position:absolute;left:14px;bottom:calc(29% + 8px);z-index:8;color:#ffffff;
+background:var(--win);border:3px solid var(--dim);padding:2px 14px;font-weight:700;font-size:16px;
+letter-spacing:.06em;text-shadow:2px 2px 0 #000}
+.textbox{position:absolute;left:0;right:0;bottom:0;height:29%;z-index:7;color:#ffffff;
+background:rgba(4,6,20,.97);border-top:4px solid var(--dim);
+padding:12px 16px;font-size:18px;line-height:1.8;letter-spacing:.06em;
+text-shadow:2px 2px 0 #000;
+cursor:pointer;white-space:pre-wrap;overflow-y:auto;overflow-x:hidden;
+scrollbar-width:thin;scrollbar-color:#3355ff #0a0e24}
+.textbox::-webkit-scrollbar{width:10px}
+.textbox::-webkit-scrollbar-track{background:#0a0e24}
+.textbox::-webkit-scrollbar-thumb{background:#3355ff;border:2px solid #04061a}
+.textbox.next{position:absolute;right:12px;bottom:6px;color:var(--accent);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.choices{position:absolute;top:0;left:0;right:0;bottom:calc(29% + 46px);z-index:9;display:none;flex-direction:column;
+align-items:center;justify-content:center;gap:12px;background:rgba(3,5,16,.78);padding:16px;overflow-y:auto}
+.choices.show{display:flex}
+.choice{width:min(92%,520px);background:#05081f;color:#ffffff;font-weight:700;
+border:3px solid #d5ddff;padding:12px 16px;font-size:18px;letter-spacing:.08em;
+text-shadow:2px 2px 0 #000;text-align:left;border-radius:4px}
+.choice:hover{border-color:var(--accent);color:#fff;background:#1b2a6e}
+.choice::before{content:"▶ ";color:var(--accent)}
+.choice.done{border-color:var(--good)}
+.choice.done::before{content:"✔ ";color:var(--good)}
+.title{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
+justify-content:center;gap:14px;background:radial-gradient(ellipse at 50% 35%, #14205e 0%, #05060f 75%);text-align:center;padding:16px}
+.title h1{margin:0;font-size:clamp(26px,6vw,44px);letter-spacing:3px;color:#fff;
+text-shadow:3px 3px 0 var(--blue), 6px 6px 0 #101736}
+.title p{color:#d5ddff;font-size:14px;margin:0;line-height:1.9}
+.tbtn{background:#05081f;color:#fff;font-weight:700;border:3px solid #d5ddff;padding:10px 26px;font-size:17px;letter-spacing:.08em;border-radius:4px}
+.tbtn:hover{border-color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
+border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;opacity:0;transition:opacity.3s;z-index:50;pointer-events:none}
+.toast.show{opacity:1}
+footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
+kbd{display:inline-block;background:#21262d;border:1px solid var(--dim);border-bottom-width:2px;
+border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+@media (max-width:560px){.textbox{font-size:15px}.char{bottom:30%}}
+</style>
+</head>
+<body>
+<div class="cab">
+<header>
+<div class="logo">Doom Emacs 道場<small>― 8bit風ADVで覚える：入門〜上級 全16課 ―</small></div>
+<div class="btns">
+<button class="sbtn" id="btnSound">🔊 音ON</button>
+<button class="sbtn" id="btnLevels">🏠 レベル選択</button>
+<button class="sbtn" id="btnReset">🗑 進捗リセット</button>
+</div>
+</header>
+
+<div class="params">
+<span>理解済み <b id="pDone">0</b> / 16 課<span class="bar"><i id="bDone" style="width:0%"></i></span></span>
+<span style="color:var(--dim)">現在：<span id="pNow">タイトル</span></span>
+<span style="margin-left:auto;color:var(--dim)">💾 進捗は自動保存（localStorage）</span>
+</div>
+
+<div class="screen" id="screen">
+<div class="bg bg-room" id="bg"></div>
+<div class="stars"></div>
+<div class="ground"></div>
+<div class="char" id="char"></div>
+<div class="namebox" id="namebox" style="display:none"></div>
+<div class="textbox" id="textbox"><span id="text"></span><span class="next" id="nextmark" style="display:none">▼</span></div>
+<div class="choices" id="choices"></div>
+<div class="title" id="title">
+<h1>Doom Emacs 道場</h1>
+<p>エマクス仙人のもとで、Doom Emacs をゼロから修行する道場。<br>
+入門編・初級編・中級編・上級編、各4課ずつ全16課。<br>
+「分かった！」で次へ、「分からない」で何度でもやり直し。</p>
+<button class="tbtn" id="btnEnter">▶ 道場に入る</button>
+<p>進捗（理解済み ✔）はブラウザに自動保存されます</p>
+</div>
+</div>
+
+<footer>
+遊び方：説明を読んだら「これは分かった！」か「分からない」を選ぶだけ。分かったら確認問題が1問出て、正解でその課は理解済み ✔。
+間違えてもペナルティなし、補足説明を読んで何度でも挑めます。本文クリックで文字送り、長い文は自動スクロール＋手動スクロール可。
+キーはすべて Doom Emacs の既定（evil-mode 前提）。実際に Doom を開いて、読みながら指を動かすと一番効きます。
+</footer>
+</div>
+
+<div class="toast" id="toast">💾 保存しました</div>
+
+<script>
+"use strict";
+/* ============ シルエット ============ */
+function sil(extra){
+return '<svg width="150" height="190" viewBox="0 0 120 150">'
++ '<circle cx="60" cy="34" r="17" fill="#141f52"/>'
++ '<path d="M22 150 C22 96 40 66 60 66 C80 66 98 96 98 150 Z" fill="#141f52"/>'
++ (extra || '') + '</svg>';
+}
+const CHARS = {
+sennin: sil('<path d="M28 26 L60 2 L92 26 L84 30 L60 14 L36 30 Z" fill="#141f52"/>'
++ '<path d="M48 44 L72 44 L66 92 L54 92 Z" fill="#141f52"/>'),
+ore: sil(''),
+none: ''
+};
+
+/* ============ カリキュラム ============ */
+/* teach: 説明ページ（クリックで送る） / retry: 補足説明 / quiz: 確認問題 */
+const LEVELS = [
+{ name:'入門編', desc:'まずは起動して、ファイルを開いて、閉じられるようになる編。', lessons:[
+{ id:'n1', title:'起動と終了', teach:[
+'ようこそ道場へ。Doom Emacs は「Emacs に Vim の操作系（evil-mode）と、便利な初期設定を詰め込んだ配布形」じゃ。\nまずは出入りから覚えよう。',
+'起動：ターミナルで emacs と打つ。\n終了：SPC q q\n（SPC はスペースキー。q は quit の q じゃ）'],
+retry:'SPC は「スペースキー」のこと。キーボードの文字キーではないぞ。\n終了は SPC を押して、q を2回。焦ったらまずこれを思い出すのじゃ。',
+quiz:{ q:'Doom Emacs を終了するキーは？', choices:[
+{ t:'SPC q q', ok:true}, { t:'Alt+W', ok:false}, { t:'Ctrl+Alt+Del', ok:false}]}},
+{ id:'n2', title:'evil-mode とモード', teach:[
+'Doom の画面には「モード」がある。起動直後はノーマルモード＝移動・命令のモード。ここは Vim と同じじゃ。',
+'文字を打つ：i（インサートモードに入る）\n戻る：Esc（ノーマルモードへ）\nhjkl の移動は、そのまま使える。お主の Vim の指はここでも生きるぞ。'],
+retry:'i = insert（入力開始）、Esc = 戻る。\n「打てない！」と思ったら大抵ノーマルモードにいるだけじゃ。i を押せば打てる。',
+quiz:{ q:'文字を入力するモードに入るキーは？', choices:[
+{ t:'SPC', ok:false}, { t:'i', ok:true}, { t:':wq と打つ', ok:false}]}},
+{ id:'n3', title:'SPCリーダーと which-key', teach:[
+'Doom の心臓部が SPC（スペース）キーじゃ。\nノーマルモードで SPC を押すと、画面の下に「次に押せるキー」のメニューが出る。これが which-key。',
+'大事な心得：全部覚えなくてよい。\n迷ったら SPC を押して、メニューを読む。それが Doom の歩き方じゃ。'],
+retry:'SPC を押す → 下にメニューが出る → 読んで選ぶ。\nこの繰り返しで、指が勝手に覚えていく。暗記ではなく「引き方」を覚えるのじゃ。',
+quiz:{ q:'操作に迷ったとき、最初に押すキーは？', choices:[
+{ t:'Esc を連打', ok:false}, { t:'電源ボタン', ok:false}, { t:'SPC（メニューが出る）', ok:true}]}},
+{ id:'n4', title:'ファイルを開く・保存・閉じる', teach:[
+'日常の3点セットじゃ。\n開く：SPC f f\n保存：SPC f s（Vim 風に:w でもよい）\n閉じる：SPC b d（バッファを閉じる）',
+'「f」は file、「b」は buffer の頭文字。\nSPC の後の文字は、だいたい英単語の頭文字になっておる。そこに気づくと一気に楽になるぞ。'],
+retry:'開く SPC f f / 保存 SPC f s / 閉じる SPC b d。\nf = file、b = buffer。頭文字で思い出すのじゃ。',
+quiz:{ q:'ファイルを開くキーは？', choices:[
+{ t:'SPC q q', ok:false}, { t:'SPC f f', ok:true}, { t:'Alt+Enter', ok:false}]}},
+]},
+{ name:'初級編', desc:'バッファとウィンドウを使いこなし、検索まで届く編。', lessons:[
+{ id:'s1', title:'バッファの切り替え', teach:[
+'開いたファイルは「バッファ」として溜まっていく。\n切り替え：SPC b b（一覧から選ぶ）\n次へ：SPC b n ／ 前へ：SPC b p',
+'タブを切り替える感覚に近い。\nファイルを開きっぱなしにしても、SPC b b でいつでも戻れるぞ。'],
+retry:'b = buffer。SPC b b で一覧、n = next、p = previous。\n英語の頭文字そのままじゃ。',
+quiz:{ q:'バッファを一覧から切り替えるキーは？', choices:[
+{ t:'SPC b b', ok:true}, { t:'SPC f f', ok:false}, { t:'SPC w v', ok:false}]}},
+{ id:'s2', title:'ウィンドウ分割', teach:[
+'画面分割も SPC からじゃ。\n縦に割る：SPC w v\n横に割る：SPC w s\n移動：SPC w h / j / k / l\n閉じる：SPC w c',
+'「w」は window。移動が hjkl なのは Vim の血統じゃな。\n並べて見比べる作業は、これで一気に捗る。'],
+retry:'w = window。v = vertical（縦）、s = split（横）。\n移動は SPC w のあと hjkl。',
+quiz:{ q:'ウィンドウを縦に分割するキーは？', choices:[
+{ t:'SPC w s', ok:false}, { t:'SPC b n', ok:false}, { t:'SPC w v', ok:true}]}},
+{ id:'s3', title:'検索（バッファ内・プロジェクト）', teach:[
+'探し物は2種類ある。\n今開いているファイルの中：SPC s s\nプロジェクト全体：SPC s p',
+'「s」は search。\nプロジェクト全体検索は中身の文字列で探せるので、「あの関数どこだっけ」が一瞬で終わる。'],
+retry:'s = search。s s は「自分のバッファ」、s p は「プロジェクト全体」。\n範囲の違いだけ押さえればよい。',
+quiz:{ q:'プロジェクト全体を文字列検索するキーは？', choices:[
+{ t:'SPC s s', ok:false}, { t:'SPC s p', ok:true}, { t:'SPC p p', ok:false}]}},
+{ id:'s4', title:'単語移動とコメント', teach:[
+'Vim と同じ単語移動が使える。\nw：次の単語へ ／ b：前の単語へ ／ e：単語の終わりへ',
+'コメントの付け外しはこれじゃ。\ngcc：今の行をコメント化／解除\ngc＋移動（例：gcj で下の行まで）でも範囲指定できる。'],
+retry:'gcc は「gc（コメント命令）＋ c（今の行）」の組み合わせ。\nVim の「動詞＋対象」の考え方と同じじゃ。',
+quiz:{ q:'今いる行をコメント化／解除するキーは？', choices:[
+{ t:'SPC f s', ok:false}, { t:'gcc', ok:true}, { t:'SPC w c', ok:false}]}},
+]},
+{ name:'中級編', desc:'テキストオブジェクト、Magit、プロジェクト、マクロ。手が速くなる編。', lessons:[
+{ id:'c1', title:'テキストオブジェクト', teach:[
+'evil の真骨頂、「動詞＋範囲」じゃ。\ndiw：カーソルの単語を消す\nd = delete、i = inner（中身）、w = word の組み合わせ。',
+'応用が効くぞ。\nciw：単語を消してそのまま書き換え\nci"：ダブルクォートの中身だけ書き換え\nyiw：単語をコピー\n組み合わせを覚えるだけで、操作が掛け算で増える。'],
+retry:'形は「動詞（d/c/y）＋ i か a ＋ 対象（w、"、( など）」。\ni は中身だけ、a は囲みも含む。まずは diw と ciw から。',
+quiz:{ q:'ダブルクォートの中身だけを書き換えるキーは？', choices:[
+{ t:'diw', ok:false}, { t:'ci"', ok:true}, { t:'gcc', ok:false}]}},
+{ id:'c2', title:'Magit 入門（Git）', teach:[
+'Git は Magit という画面で扱う。\n開く：SPC g g\n状態画面で、変更ファイルの一覧が見える。',
+'基本の3つだけ覚えればよい。\ns：その行をステージ\nc c：コミット（メッセージを書いて C-c C-c で確定）\nP p：プッシュ'],
+retry:'g = git。SPC g g で状態画面。\n中では s（stage）→ c c（commit）→ P p（push）。流れで覚えるのじゃ。',
+quiz:{ q:'Magit の状態画面を開くキーは？', choices:[
+{ t:'SPC p p', ok:false}, { t:'SPC s p', ok:false}, { t:'SPC g g', ok:true}]}},
+{ id:'c3', title:'プロジェクト操作', teach:[
+'Doom は「プロジェクト」（だいたい Git リポジトリ単位）でフォルダを覚えてくれる。\n切り替え：SPC p p\n追加：SPC p a（フォルダを指定）',
+'プロジェクト内では：\nSPC p f：プロジェクト内のファイルを検索して開く\nSPC s p（初級編）の全体検索も、この単位で効く。'],
+retry:'p = project。p p で切り替え、p a で追加、p f で中を探す。\n作業フォルダを行き来する人は、これが一番効く。',
+quiz:{ q:'プロジェクトを切り替えるキーは？', choices:[
+{ t:'SPC p p', ok:true}, { t:'SPC b b', ok:false}, { t:'SPC g g', ok:false}]}},
+{ id:'c4', title:'マクロとレジスタ', teach:[
+'繰り返し作業はマクロに任せよう。\n記録：q a（a という名前で記録開始）→ 操作 → q（終了）\n再生：@a\n10@a とすれば10回繰り返す。',
+'コピーにも名前が付けられる。\n"ayy：a レジスタに行コピー\n"ap：a レジスタから貼り付け\n上書きされたくないコピーは、名前付きで守るのじゃ。'],
+retry:'q の後に名前（a〜z）を付けて記録、@名前 で再生。\n数字を前に付けると回数指定。Vim とほぼ同じ作法じゃ。',
+quiz:{ q:'マクロを再生するキーは？', choices:[
+{ t:'SPC m', ok:false}, { t:'@a（記録した名前）', ok:true}, { t:'q q', ok:false}]}},
+]},
+{ name:'上級編', desc:'自分の設定を持ち、困ったときに自力で調べられるようになる編。', lessons:[
+{ id:'j1', title:'config.el と doom sync', teach:[
+'自分の設定は ~/.config/doom/ にある。\nconfig.el：設定本体\npackages.el：追加パッケージの宣言\ninit.el：使うモジュールの選択',
+'パッケージを足すときは packages.el に\n(package! パッケージ名)\nと書き、ターミナルで doom sync を実行してから Emacs を再起動する。これが作法じゃ。'],
+retry:'足す場所は packages.el、反映コマンドは doom sync。\n設定を書いただけでは効かない。「sync して再起動」までが1セットじゃ。',
+quiz:{ q:'packages.el にパッケージを書いた後、叩くコマンドは？', choices:[
+{ t:'nixos-rebuild switch', ok:false}, { t:'doom sync', ok:true}, { t:'SPC q q', ok:false}]}},
+{ id:'j2', title:'map! でキーを足す', teach:[
+'自分のキーは config.el に map! で書く。形はこれじゃ。\n(map!:leader\n:desc "説明文"\n "x y" #\'コマンド名)',
+':leader は「SPC の下に置く」という意味。\n:desc の説明は which-key に出るので、未来の自分へのメモになる。'],
+retry:'書く場所は config.el、道具は map!。\n:leader で SPC 配下、:desc で説明、キーの文字列とコマンド名、の4点セットじゃ。',
+quiz:{ q:'自分用のキーバインドを書く場所は？', choices:[
+{ t:'packages.el', ok:false}, { t:'init.el の中身全部', ok:false}, { t:'config.el（map! を使う）', ok:true}]}},
+{ id:'j3', title:'ヘルプの引き方', teach:[
+'上級者の条件は「全部覚えている」ことではない。「引き方を知っている」ことじゃ。\nSPC h f：関数の説明\nSPC h v：変数の説明\nSPC h k：そのキーが何をするか',
+'特に SPC h k が強い。\n知らないキーに出会ったら、押す前にこれで正体を調べられる。'],
+retry:'h = help。f = function、v = variable、k = key。\n困ったら SPC h、が合言葉じゃ。',
+quiz:{ q:'あるキーが何をするか調べるキーは？', choices:[
+{ t:'SPC h k', ok:true}, { t:'SPC s s', ok:false}, { t:'SPC b d', ok:false}]}},
+{ id:'j4', title:'M-x と補完、そして卒業', teach:[
+'最後はこれじゃ。\nSPC: で M-x（コマンドを名前で実行）が開く。\n名前の一部を打つと、Vertico が候補を絞り込んでくれる。',
+'コマンド名を全部覚える必要はない。「だいたいの名前」で呼べるのが Emacs の流儀じゃ。\n――これで道場の全課目は終わり。あとは実地で指を動かすのみ。卒業おめでとう！'],
+retry:'SPC: = M-x。名前でコマンドを呼ぶ入口。\n補完が効くので、部分一致で十分じゃ。',
+quiz:{ q:'M-x（コマンド名で実行）を開くキーは？', choices:[
+{ t:'SPC.', ok:false}, { t:'SPC:', ok:true}, { t:'Alt+Enter', ok:false}]}},
+]},
+];
+
+/* ============ エンジン ============ */
+const SAVE_KEY = 'doomDojoSaveV1';
+const TOTAL = LEVELS.reduce((a,l)=>a+l.lessons.length,0);
+let done = {};
+try{ const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); if(s && s.done) done = s.done;}catch(e){}
+let soundOn = true, typing = null, advanceFn = null;
+let cur = { level:0, lesson:0, pages:[], page:0};
+
+const $ = id => document.getElementById(id);
+const bgEl=$('bg'), charEl=$('char'), nameEl=$('namebox'), textEl=$('text'),
+boxEl=$('textbox'), chEl=$('choices'), nextEl=$('nextmark');
+
+function beep(freq, dur, delay, vol){
+if(!soundOn) return;
+try{
+const ctx = beep.ctx || (beep.ctx = new (window.AudioContext||window.webkitAudioContext)());
+if(ctx.state === 'suspended') ctx.resume();
+const o = ctx.createOscillator(), g = ctx.createGain();
+o.type='square'; o.frequency.value = freq || 660;
+g.gain.value = vol || 0.03;
+o.connect(g); g.connect(ctx.destination);
+const t = ctx.currentTime + (delay||0);
+o.start(t); o.stop(t + (dur||0.06));
+}catch(e){}
+}
+function save(){
+try{ localStorage.setItem(SAVE_KEY, JSON.stringify({done})); toast();}catch(e){}
+}
+function toast(){
+const t=$('toast'); t.classList.add('show');
+clearTimeout(toast.tm); toast.tm=setTimeout(()=>t.classList.remove('show'), 900);
+}
+function doneCount(){ return Object.keys(done).filter(k=>done[k]).length;}
+function renderProgress(now){
+$('pDone').textContent = doneCount();
+$('bDone').style.width = (doneCount()/TOTAL*100) + '%';
+if(now) $('pNow').textContent = now;
+}
+function setScene(bg, char, name){
+bgEl.className = 'bg ' + bg;
+charEl.innerHTML = CHARS[char] || '';
+charEl.style.display = char && char!== 'none'? '': 'none';
+if(name){ nameEl.textContent = name; nameEl.style.display='';} else nameEl.style.display='none';
+}
+function typeText(txt, onDoneTyping){
+clearInterval(typing);
+textEl.textContent=''; nextEl.style.display='none';
+boxEl.scrollTop = 0;
+advanceFn = null;
+let i=0;
+typing = setInterval(()=>{
+i++;
+textEl.textContent = txt.slice(0, i);
+boxEl.scrollTop = boxEl.scrollHeight;
+const ch = txt.charAt(i-1);
+if(ch && ch!== ' ' && ch!== '\n' && i % 2 === 1){
+beep(980 + Math.random()*520, 0.018, 0, 0.012);
+}
+if(i >= txt.length){
+clearInterval(typing); typing=null;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+}
+}, 26);
+boxEl.onclick = ()=>{
+if(typing){
+clearInterval(typing); typing=null;
+textEl.textContent = txt; boxEl.scrollTop = boxEl.scrollHeight;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+} else if(advanceFn){
+const f = advanceFn; advanceFn = null; f();
+}
+};
+}
+document.addEventListener('keydown', e=>{
+if(!typing && advanceFn && (e.key === ' ' || e.key === 'Enter')){
+e.preventDefault();
+const f = advanceFn; advanceFn = null; f();
+}
+});
+function showChoices(items){
+chEl.innerHTML='';
+items.forEach(it=>{
+const b=document.createElement('button');
+b.className='choice' + (it.done? ' done': '');
+b.textContent=it.t;
+b.onclick=()=>{ beep(520,.06); setTimeout(()=>beep(780,.07),70); chEl.classList.remove('show'); it.fn();};
+chEl.appendChild(b);
+});
+chEl.classList.add('show');
+}
+function hideChoices(){ chEl.classList.remove('show'); chEl.innerHTML='';}
+
+/* ============ 画面遷移 ============ */
+function goLevels(){
+hideChoices();
+setScene('bg-room','none','');
+renderProgress('レベル選択');
+const dc = doneCount();
+const intro = dc === 0
+? '「よく来た。わしがエマクス仙人じゃ」\nDoom Emacs の修行は4つの編、全' + TOTAL + '課。\n好きな編からでよい。分かるまで、何度でも付き合うぞ。'
+: '「戻ったか。現在の理解済みは ' + dc + ' / ' + TOTAL + ' 課じゃ」\n続きをやるもよし、済んだ課を復習するもよし。';
+typeText(intro, ()=>{
+showChoices(LEVELS.map((lv, i)=>{
+const c = lv.lessons.filter(l=>done[l.id]).length;
+return { t: lv.name + '（' + c + '/' + lv.lessons.length + ' 済）', done: c === lv.lessons.length,
+fn: ()=>goLessons(i)};
+}));
+});
+}
+function goLessons(li){
+hideChoices();
+const lv = LEVELS[li];
+cur.level = li;
+setScene('bg-room','sennin','エマクス仙人');
+renderProgress(lv.name);
+typeText('\n' + lv.desc + '\n課を選ぶのじゃ。✔ は理解済み。復習は何度でもできるぞ。', ()=>{
+showChoices(
+lv.lessons.map((ls, i)=>({ t: ls.title, done:!!done[ls.id], fn: ()=>startLesson(li, i, false)}))
+.concat([{ t:'レベル選択に戻る', fn: goLevels}])
+);
+});
+}
+function startLesson(li, idx, withRetry){
+hideChoices();
+const ls = LEVELS[li].lessons[idx];
+cur.level = li; cur.lesson = idx;
+cur.pages = ls.teach.slice();
+if(withRetry) cur.pages.push('\n' + ls.retry);
+cur.page = 0;
+setScene('bg-term','sennin','エマクス仙人');
+renderProgress(LEVELS[li].name + '：' + ls.title);
+teachPage();
+}
+function teachPage(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+const isLast = cur.page >= cur.pages.length - 1;
+typeText('\n' + cur.pages[cur.page], ()=>{
+if(isLast){ showCheck();}
+else { advanceFn = ()=>{ cur.page++; teachPage();};}
+});
+}
+function showCheck(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+showChoices([
+{ t:'これは分かった！（確認問題へ）', fn: showQuiz},
+{ t:'分からない（もう一度聞く）', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'レッスン一覧に戻る', fn: ()=>goLessons(cur.level)}
+]);
+}
+function showQuiz(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+setScene('bg-term','sennin','エマクス仙人');
+typeText('\n' + ls.quiz.q, ()=>{
+showChoices(ls.quiz.choices.map(c=>({
+t: c.t,
+fn: ()=>{ if(c.ok) completeLesson(); else wrongAnswer();}
+})));
+});
+}
+function wrongAnswer(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+beep(220,.12); setTimeout(()=>beep(180,.14),120);
+typeText('「むむ、違うぞ。焦らなくてよい」\n' + ls.retry, ()=>{
+showChoices([
+{ t:'もう一度説明を聞く', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'もう一度問題に挑む', fn: showQuiz}
+]);
+});
+}
+function completeLesson(){
+const li = cur.level, idx = cur.lesson;
+const ls = LEVELS[li].lessons[idx];
+done[ls.id] = true; save();
+[523,659,784,1046].forEach((f,i)=>beep(f,.1,i*0.11));
+renderProgress(LEVELS[li].name + '：' + ls.title + ' ✔');
+const dc = doneCount();
+const levelDone = LEVELS[li].lessons.every(l=>done[l.id]);
+let msg = '「うむ、分かったようじゃな」\n理解済み ✔（合計 ' + dc + ' / ' + TOTAL + ' 課）';
+if(dc >= TOTAL){
+setScene('bg-way','sennin','エマクス仙人');
+msg += '\n\n――全課目、修了じゃ！\nここから先は実地あるのみ。Doom を開いて、指で覚えていくのじゃ。卒業おめでとう！';
+} else if(levelDone){
+msg += '\nは全課修了じゃ。よくやった。';
+}
+typeText(msg, ()=>{
+const items = [];
+if(dc < TOTAL){
+if(idx + 1 < LEVELS[li].lessons.length){
+items.push({ t:'次の例題へ（' + LEVELS[li].lessons[idx+1].title + '）', fn: ()=>startLesson(li, idx+1, false)});
+} else if(li + 1 < LEVELS.length){
+items.push({ t:'次の編へ（' + LEVELS[li+1].name + '）', fn: ()=>goLessons(li+1)});
+}
+}
+items.push({ t:'レッスン一覧に戻る', fn: ()=>goLessons(li)});
+items.push({ t:'レベル選択に戻る', fn: goLevels});
+showChoices(items);
+});
+}
+
+/* ============ ボタン類 ============ */
+$('btnEnter').onclick = ()=>{ beep(660,.06); $('title').style.display='none'; goLevels();};
+$('btnLevels').onclick = ()=>{ $('title').style.display='none'; goLevels();};
+$('btnReset').onclick = ()=>{
+done = {}; save(); renderProgress('タイトル');
+$('title').style.display='flex';
+};
+$('btnSound').onclick = (e)=>{
+soundOn =!soundOn;
+e.target.textContent = soundOn? '🔊 音ON': '🔇 音OFF';
+if(soundOn) beep(700,.06);
+};
+renderProgress('タイトル');
+</script>
+</body>
+</html>
