@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>i3 × Tatami(Hyprland) キーバインド比較・全表</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --line:#2d3646;
+    --text:#e6edf3; --sub:#9aa7b4; --accent:#58a6ff; --accent2:#7ee787;
+    --warn:#f0b429; --danger:#ff7b72; --chip:#21262d;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:"Hiragino Kaku Gothic ProN","Noto Sans JP",system-ui,sans-serif;
+    line-height:1.65;font-size:15px}
+  .wrap{max-width:920px;margin:0 auto;padding:20px 16px 64px}
+  header{padding:24px 0 8px}
+  h1{font-size:24px;margin:0 0 6px}
+  h2{font-size:18px;margin:34px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--line)}
+  h3{font-size:15px;margin:20px 0 6px;color:var(--accent)}
+  p{margin:6px 0}
+  .sub{color:var(--sub);font-size:13px}
+  kbd{display:inline-block;background:var(--chip);border:1px solid var(--line);
+    border-bottom-width:2px;border-radius:6px;padding:0 7px;margin:0 1px;
+    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;white-space:nowrap}
+  .badge{display:inline-block;border-radius:999px;padding:0 9px;font-size:11px;vertical-align:middle;margin-left:6px}
+  .b-same{background:#0f2f1a;color:var(--accent2);border:1px solid var(--accent2)}
+  .b-diff{background:#33151a;color:var(--danger);border:1px solid var(--danger)}
+  .b-new{background:#12283d;color:var(--accent);border:1px solid var(--accent)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:14px 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .card .big{font-size:17px;font-weight:700;margin-bottom:4px}
+  table{width:100%;border-collapse:collapse;background:var(--panel);
+    border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:8px 0 4px}
+  th,td{padding:8px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line);font-size:14px}
+  th{background:var(--panel2);font-size:13px;color:var(--sub)}
+  tr:last-child td,tr:last-child th{border-bottom:none}
+  table.cmp th:first-child{width:26%}
+  table.binds th{width:40%}
+  .note{background:var(--panel);border-left:4px solid var(--accent);
+    border-radius:0 10px 10px 0;padding:10px 14px;margin:12px 0}
+  .note.warn{border-left-color:var(--warn)}
+  .note.danger{border-left-color:var(--danger)}
+  .search{position:sticky;top:0;background:var(--bg);padding:12px 0 8px;z-index:5}
+  .search input{width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--line);
+    background:var(--panel);color:var(--text);font-size:16px}
+  .count{font-size:12px;color:var(--sub);margin-top:4px}
+  ul{margin:6px 0 6px 18px;padding:0}
+  li{margin:3px 0}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;
+    background:var(--chip);padding:0 5px;border-radius:5px}
+  .hidden{display:none}
+  footer{margin-top:40px;color:var(--sub);font-size:12px}
+  @media (max-width:560px){ h1{font-size:20px} table.binds th{width:48%} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>i3 × Tatami（Hyprland）キーバインド比較・全表</h1>
+  <p class="sub">出典：i3 = <code>home.i3.nix</code>（keybindings 69件）／ Tatami = 実物の <code>hyprland.lua</code>（Omarchy 4 "Quattro" v4.0.4 由来、<code>hl.bind</code> 177件）／ 2026-11-16 整理</p>
+</header>
+
+<h2>結論：思ったより「同じ」。ただし罠が数個</h2>
+<div class="cards">
+  <div class="card">
+    <div class="big">① 主キーは両方とも <kbd>Alt</kbd></div>
+    <p>Tatami の既定も Super ではなく <b>Alt が主キー</b>。Super は補助（ウィンドウ巡回、サイレント移動、グループ、メディアの微調整）だけ。指の記憶はかなり残せる。</p>
+  </div>
+  <div class="card">
+    <div class="big">② 量は Tatami が約2.5倍</div>
+    <p>i3 の 69件に対し Tatami は <b>177件</b>。メディアキー、クリップボード、グループ、各種メニューなど、i3 側に無かった機能ごと増えている。</p>
+  </div>
+  <div class="card">
+    <div class="big">③ 「同じキー・違う動作」が数個ある</div>
+    <p><kbd>Alt</kbd>+<kbd>T</kbd>、<kbd>Alt</kbd>+<kbd>P</kbd>、<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> など。ここだけ先に知っておけば移行初日の混乱はほぼ防げる（下の表）。</p>
+  </div>
+</div>
+<div class="note warn">
+  <b>これまでの案内の訂正：</b> 以前「Tatami の既定は Super 前提」「キーバインド一覧は <code>omarchy-menu-keybindings</code> が候補」と伝えていたけど、実物は違いました。
+  一覧は <b><code>tatami keybindings</code>（<kbd>Alt</kbd>+<kbd>K</kbd>）</b> で確定。衝突相手も Super 側ではなく <kbd>Alt</kbd>+<kbd>J</kbd>/<kbd>K</kbd>/<kbd>L</kbd> です。ガイドにも訂正を追記済み。
+</div>
+
+<div class="search">
+  <input id="q" type="search" placeholder="🔍 検索（例：閉じる、輝度、グループ、screenshot…）">
+  <div class="count" id="count"></div>
+</div>
+
+<h2>1. 同じもの（キーも動作もほぼ一致）</h2>
+<table class="cmp binds">
+  <tr><th>キー</th><th>i3</th><th>Tatami</th></tr>
+  <tr><td><kbd>Alt</kbd>+<kbd>Enter</kbd></td><td>ターミナル（ghostty 直接）</td><td>ターミナル（<code>tatami terminal</code> 経由）<span class="badge b-same">同じ</span></td></tr>
+  <tr><td><kbd>Alt</kbd>+<kbd>W</kbd></td><td>ウィンドウを閉じる</td><td>ウィンドウを閉じる<span class="badge b-same">同じ</span></td></tr>
+  <tr><td><kbd>Alt</kbd>+<kbd>F</kbd></td><td>フルスクリーン切替</td><td>フルスクリーン（他に <kbd>Alt</kbd>+<kbd>Super</kbd>+<kbd>F</kbd> 最大化、<kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>F</kbd> タイル型フルスクリーン）<span class="badge b-same">同じ</span></td></tr>
+  <tr><td><kbd>Alt</kbd>+<kbd>Tab</kbd> / <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>Tab</kbd></td><td>次 / 前のワークスペース</td><td>次 / 前のワークスペース（他に <kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>Tab</kbd> 直前のWS）<span class="badge b-same">同じ</span></td></tr>
+  <tr><td><kbd>Alt</kbd>+<kbd>1</kbd>〜<kbd>0</kbd></td><td>WS 1〜10 へ移動</td><td>WS 1〜10 へ移動（<code>code:10〜19</code> で配列非依存）<span class="badge b-same">同じ</span></td></tr>
+  <tr><td><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>1</kbd>〜<kbd>0</kbd></td><td>窓を WS 1〜10 へ送る</td><td>窓を WS 1〜10 へ送る（他に <kbd>+Super</kbd> で「送るだけ・自分は移動しない」サイレント版）<span class="badge b-same">同じ</span></td></tr>
+  <tr><td><kbd>Alt</kbd>+<kbd>Space</kbd></td><td>rofi ランチャー</td><td>Tatami メニュー（役割は近い。出すものが違う）<span class="badge b-same">役割同じ</span></td></tr>
+  <tr><td><kbd>Alt</kbd>+ホイール</td><td>バー上スクロールで WS 移動</td><td>どこでも <kbd>Alt</kbd>+スクロールで WS 移動<span class="badge b-same">近い</span></td></tr>
+</table>
+
+<h2>2. 同じキー・違う動作 ⚠（移行初日に踏むやつ）</h2>
+<table class="cmp binds">
+  <tr><th>キー</th><th>i3 での動作</th><th>Tatami での動作</th></tr>
+  <tr><td><kbd>Alt</kbd>+<kbd>T</kbd></td><td>ターミナル ghostty</td><td>フローティング切替 <span class="badge b-diff">違う</span></td></tr>
+  <tr><td><kbd>Alt</kbd>+<kbd>P</kbd></td><td>rofi ランチャー</td><td>擬似タイリング（pseudo） <span class="badge b-diff">違う</span></td></tr>
+  <tr><td><kbd>Alt</kbd>+<kbd>J</kbd></td><td>フォーカス下</td><td>分割トグル（toggle-split） <span class="badge b-diff">違う</span></td></tr>
+  <tr><td><kbd>Alt</kbd>+<kbd>K</kbd></td><td>フォーカス上</td><td>キーバインド一覧 <span class="badge b-diff">違う</span></td></tr>
+  <tr><td><kbd>Alt</kbd>+<kbd>L</kbd></td><td>フォーカス右</td><td>レイアウト切替（dwindle 等） <span class="badge b-diff">違う</span></td></tr>
+  <tr><td><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd></td><td>輝度スライダー</td><td>ブラウザ起動 <span class="badge b-diff">違う</span></td></tr>
+  <tr><td><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>Space</kbd></td><td>フローティング切替</td><td>トップバーの表示切替 <span class="badge b-diff">違う</span></td></tr>
+  <tr><td><kbd>Alt</kbd>+<kbd>R</kbd></td><td>ウィンドウ・ローテーション（自作）</td><td>Tatami リロード <span class="badge b-diff">違う</span></td></tr>
+  <tr><td><kbd>Alt</kbd>+<kbd>/</kbd> 系</td><td><kbd>Shift</kbd>+<kbd>/</kbd> でヘルプ表示</td><td><kbd>Alt</kbd>+<kbd>/</kbd> はモニター拡大率アップ（ヘルプは <kbd>Alt</kbd>+<kbd>K</kbd>） <span class="badge b-diff">違う</span></td></tr>
+  <tr><td><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd></td><td>System モード（電源メニュー）</td><td>なし。電源系は <kbd>Alt</kbd>+<kbd>Esc</kbd> の System メニュー、ロックは <kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>L</kbd> <span class="badge b-diff">違う</span></td></tr>
+</table>
+<p class="sub">逆に <kbd>Alt</kbd>+<kbd>H</kbd> は Tatami 側が空き（フォーカス左にそのまま使える）。</p>
+
+<h2>3. Tatami の全バインド</h2>
+
+<h3>3.1 アプリ起動（7件）</h3>
+<table class="binds">
+  <tr><th><kbd>Alt</kbd>+<kbd>Enter</kbd></th><td>ターミナル</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>Enter</kbd></th><td>ブラウザ</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> ／ <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>Super</kbd>+<kbd>B</kbd></th><td>ブラウザ ／ プライベートブラウザ</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> ／ <kbd>Alt</kbd>+<kbd>Super</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd></th><td>ファイルマネージャ ／ カレントディレクトリで開く</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>N</kbd></th><td>エディタ</td></tr>
+</table>
+
+<h3>3.2 メディアキー（25件）— i3 側には無かった層</h3>
+<table class="binds">
+  <tr><th>音量 ↑↓ / ミュート / マイクミュート</th><td><code>XF86Audio*</code>（ロック中も可・長押し連続）。<kbd>Super</kbd> 同時押しで ±1 の精密版</td></tr>
+  <tr><th>輝度 ↑↓</th><td><code>XF86MonBrightness*</code> で ±5%。<kbd>Shift</kbd> 同時押しで最大 / 最小、<kbd>Super</kbd> 同時押しで ±1%</td></tr>
+  <tr><th>キーボードバックライト</th><td><code>XF86KbdBrightness*</code> と <code>XF86KbdLightOnOff</code>（サイクル）</td></tr>
+  <tr><th>タッチパッド</th><td><code>XF86TouchpadToggle / On / Off</code></td></tr>
+  <tr><th>再生・次・前</th><td><code>XF86AudioPlay / Pause / Next / Prev</code>、イジェクト</td></tr>
+</table>
+
+<h3>3.3 クリップボード（4件）— i3 側には無かった層</h3>
+<table class="binds">
+  <tr><th><kbd>Alt</kbd>+<kbd>C</kbd> / <kbd>V</kbd> / <kbd>X</kbd></th><td>ユニバーサル コピー / 貼り付け / 切り取り（アプリをまたぐ統一操作）</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>V</kbd></th><td>クリップボード履歴マネージャ</td></tr>
+</table>
+
+<h3>3.4 タイリング基礎</h3>
+<table class="binds">
+  <tr><th><kbd>Alt</kbd>+<kbd>W</kbd> ／ <kbd>Ctrl</kbd>+<kbd>Super</kbd>+<kbd>Del</kbd></th><td>ウィンドウを閉じる ／ 全ウィンドウを閉じる</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>J</kbd></th><td>分割トグル（toggle-split）</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>P</kbd></th><td>擬似タイリング（pseudo）</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>T</kbd></th><td>フローティング切替</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>F</kbd> ／ <kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>F</kbd> ／ <kbd>Alt</kbd>+<kbd>Super</kbd>+<kbd>F</kbd></th><td>フルスクリーン ／ タイル型フルスクリーン ／ 最大化</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>O</kbd></th><td>ウィンドウをポップアウト（フロート＋ピン留め）</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>L</kbd></th><td>ワークスペースのレイアウト切替（既定レイアウトは dwindle）</td></tr>
+</table>
+
+<h3>3.5 フォーカス・スワップ（矢印キー方式 ← i3 の h/j/k/l と一番違う所）</h3>
+<table class="binds">
+  <tr><th><kbd>Alt</kbd>+<kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd></th><td>フォーカス移動</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd></th><td>ウィンドウをスワップ（入れ替え）※ i3 の「move」と違い、移動先の窓と交換する意味合い</td></tr>
+  <tr><th><kbd>Super</kbd>+<kbd>Tab</kbd> ／ <kbd>Super</kbd>+<kbd>Shift</kbd>+<kbd>Tab</kbd></th><td>次 / 前のウィンドウへフォーカス＋最前面化（2つのバインドの組み合わせで1動作）</td></tr>
+  <tr><th><kbd>Ctrl</kbd>+<kbd>Super</kbd>+<kbd>Tab</kbd> 系</th><td>次 / 前のモニターへフォーカス</td></tr>
+</table>
+
+<h3>3.6 ワークスペース</h3>
+<table class="binds">
+  <tr><th><kbd>Alt</kbd>+<kbd>1</kbd>〜<kbd>0</kbd> ／ <kbd>+Shift</kbd></th><td>WS 1〜10 へ移動 ／ 窓を送る。<b>11〜20 は存在しない</b></td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>Super</kbd>+<kbd>1</kbd>〜<kbd>0</kbd></th><td>サイレント移動（窓だけ送って自分は残る）</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>Tab</kbd> 系</th><td>次 / 前 / 直前のワークスペース</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>S</kbd> ／ <kbd>Alt</kbd>+<kbd>Super</kbd>+<kbd>S</kbd></th><td>スクラッチパッド表示切替 ／ 窓をスクラッチパッドへ</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>Super</kbd>+<kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd></th><td>ワークスペースごとモニター間を移動</td></tr>
+</table>
+
+<h3>3.7 リサイズ（-/= の位置のキー、code:20 / 21）</h3>
+<table class="binds">
+  <tr><th><kbd>Alt</kbd>+<kbd>-</kbd> / <kbd>=</kbd></th><td>幅を ∓100 / ±100（横方向）</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>-</kbd> / <kbd>=</kbd></th><td>高さを ∓100 / ±100（縦方向）</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>Super</kbd>（+<kbd>Shift</kbd>）+<kbd>-</kbd> / <kbd>=</kbd></th><td>同じことを ±25 の小刻みで</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>Ctrl</kbd>（+<kbd>Shift</kbd>）+<kbd>-</kbd> / <kbd>=</kbd></th><td>同じことを ±300 の大刻みで</td></tr>
+</table>
+<p class="sub">キーコード指定なので配列に依らず「数字段の右端2つ」の位置で効く。i3 の <kbd>Ctrl</kbd>+h/j/k/l 方式とは完全に別系統。</p>
+
+<h3>3.8 グループ（タブ化）— i3 側には無かった機能</h3>
+<table class="binds">
+  <tr><th><kbd>Alt</kbd>+<kbd>G</kbd> ／ <kbd>Alt</kbd>+<kbd>Super</kbd>+<kbd>G</kbd></th><td>グループ化切替 ／ グループから出す</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>Super</kbd>+<kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd></th><td>隣のグループへ窓を入れる</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>Super</kbd>+<kbd>Tab</kbd> 系 ／ <kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>←</kbd><kbd>→</kbd></th><td>グループ内の次 / 前の窓</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>Super</kbd>+<kbd>1</kbd>〜<kbd>5</kbd></th><td>グループ内の n 番目の窓へ</td></tr>
+</table>
+
+<h3>3.9 マウス</h3>
+<table class="binds">
+  <tr><th><kbd>Alt</kbd>+左ドラッグ ／ <kbd>Alt</kbd>+右ドラッグ</th><td>ウィンドウ移動 ／ リサイズ</td></tr>
+  <tr><th><kbd>Alt</kbd>+ホイール ／ <kbd>Alt</kbd>+<kbd>Super</kbd>+ホイール</th><td>WS 前後 ／ グループ内の前後</td></tr>
+</table>
+
+<h3>3.10 メニュー・ユーティリティ（Utilities）</h3>
+<table class="binds">
+  <tr><th><kbd>Alt</kbd>+<kbd>Space</kbd> ／ <kbd>Alt</kbd>+<kbd>Super</kbd>+<kbd>Space</kbd></th><td>Tatami メニュー ／ アプリメニュー（他に <kbd>Alt</kbd>+<kbd>Shift</kbd>+<code>code:201</code> も同じメニュー）</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>K</kbd></th><td>キーバインド一覧（<code>tatami keybindings</code>）</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>Esc</kbd> ／ 電源キー</th><td>System メニュー</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>R</kbd></th><td>Tatami リロード（ログアウトなしで再読込）</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>E</kbd> / <kbd>C</kbd> / <kbd>O</kbd> / <kbd>H</kbd></th><td>絵文字 ／ キャプチャメニュー ／ トグルメニュー ／ ハードウェアメニュー</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>Space</kbd> ／ <kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>Q</kbd></th><td>背景切替 ／ 電卓（<code>XF86Calculator</code> も）</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>Space</kbd> ほか</th><td>バー表示切替、<kbd>Alt</kbd>+<kbd>Backspace</kbd> 透明度切替、<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>Backspace</kbd> ギャップ切替、<kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>Backspace</kbd> 正方形アスペクト切替</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>I</kbd> / <kbd>N</kbd> / <kbd>Del</kbd></th><td>Keep Awake 切替 ／ ナイトライト切替 ／ 内蔵ディスプレイ切替</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>L</kbd></th><td>ロック</td></tr>
+  <tr><th>蓋（Lid Switch）開閉</th><td>外部モニター接続時は内蔵ディスプレイ自動オフ / オン（キーではなくスイッチイベント）</td></tr>
+</table>
+
+<h3>3.11 通知・キャプチャ・パネル</h3>
+<table class="binds">
+  <tr><th><kbd>Alt</kbd>+<kbd>,</kbd> 系（5種）</th><td>最後の通知を消す ／ 全消し（+Shift）／ 通知のサイレント切替（+Ctrl）／ 通知のアクション実行（+Super）／ 消した通知を戻す（+Shift+Super）。makoctl 使用</td></tr>
+  <tr><th><kbd>Print</kbd> ／ <kbd>Super</kbd>+<kbd>Print</kbd> ／ <kbd>Alt</kbd>+<kbd>Print</kbd> ／ <kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>Print</kbd></th><td>スクリーンショット ／ 画面録画メニュー ／ カラーピッカー ／ スクショから文字抽出（OCR）</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>A</kbd> / <kbd>B</kbd> / <kbd>D</kbd> / <kbd>W</kbd> / <kbd>P</kbd> / <kbd>T</kbd></th><td>オーディオ ／ Bluetooth ／ ディスプレイ設定 ／ Wi-Fi ／ 電源プロファイル ／ アクティビティ</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>/</kbd> ／ <kbd>Alt</kbd>+<kbd>Super</kbd>+<kbd>/</kbd></th><td>モニター拡大率 上げ / 下げ</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>Z</kbd> ／ <kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>Super</kbd>+<kbd>Z</kbd></th><td>カーソルズーム イン ／ リセット</td></tr>
+  <tr><th><kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>Super</kbd>+<kbd>T</kbd> / <kbd>B</kbd></th><td>現在時刻を通知 ／ バッテリー残量を通知</td></tr>
+</table>
+
+<h2>4. i3 にあって Tatami に無いもの</h2>
+<ul>
+  <li><b>h/j/k/l のフォーカス＆移動</b>（Tatami は矢印キー方式。ここが移行作業の中心）</li>
+  <li><b>Ctrl+h/j/k/l のリサイズ層</b>（Tatami は -/= 方式に置き換わっている）</li>
+  <li><b>ワークスペース 11〜20</b>（Tatami は 10 まで。代わりにスクラッチパッドとグループがある）</li>
+  <li>マーク＆スワップ（Alt+M 系）※ Tatami のスワップは矢印キー側にあるが、マーク指定ではない</li>
+  <li>ウィンドウ・ローテーション（自作スクリプト。<code>i3-msg</code> 前提なので移植は作り直し）</li>
+  <li>輝度スライダー（yad）。ただし Tatami はメディアキーの輝度調整が最初からある</li>
+  <li>Menu キーの warpd（キーボードマウス）。Wayland 側の代替は別途確認が要る</li>
+  <li>キーコード 49（<kbd>`</kbd> の位置）での次 / 前ウィンドウ移動 ※ Tatami の相当品は <kbd>Super</kbd>+<kbd>Tab</kbd></li>
+</ul>
+
+<h2>5. Tatami にあって i3 に無いもの（まとめ）</h2>
+<ul>
+  <li>メディアキー一式（音量・輝度・再生・タッチパッド・キーボードライト）</li>
+  <li>ユニバーサルなコピー / 貼り付け / 切り取り＋クリップボード履歴</li>
+  <li>グループ（ウィンドウのタブ化）、スクラッチパッド、ポップアウト</li>
+  <li>サイレント移動（窓だけ送る）、WS のモニター間移動、モニター間フォーカス</li>
+  <li>スクリーンショット / 録画 / カラーピッカー / OCR、通知操作（mako）</li>
+  <li>各種設定パネル（音・Bluetooth・画面・Wi-Fi・電源）とメニュー群、ズーム、時刻・電池の通知</li>
+  <li>蓋の開閉に連動した内蔵ディスプレイ制御</li>
+</ul>
+
+<h2>6. 移行の判断ポイント（この比較から見える作業）</h2>
+<div class="note">
+  <b>h/j/k/l を足すなら：</b> <kbd>Alt</kbd>+<kbd>H</kbd> は空き。でも <kbd>Alt</kbd>+<kbd>J</kbd>（分割トグル）、<kbd>Alt</kbd>+<kbd>K</kbd>（一覧）、<kbd>Alt</kbd>+<kbd>L</kbd>（レイアウト切替）が埋まっているので、
+  先に <code>hl.unbind("ALT + J")</code> などで外してから bind する。一覧（Alt+K）の逃がし先候補は、i3 のヘルプと同じ <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>/</kbd>（Tatami 側は空き）。
+  スワップは <kbd>Alt</kbd>+<kbd>Shift</kbd>+h/j/k/l で i3 の move に近い並びにできる。
+</div>
+<ul>
+  <li><b>リサイズ：</b> Tatami の -/= 方式を受け入れるか、i3 の Ctrl+h/j/k/l を追加するか。追加自体は簡単な部類。</li>
+  <li><b>危険キーの処遇：</b> <kbd>Alt</kbd>+<kbd>T</kbd>（ターミナル→フロート）、<kbd>Alt</kbd>+<kbd>P</kbd>（rofi→pseudo）、<kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd>（輝度→ブラウザ）、<kbd>Alt</kbd>+<kbd>R</kbd>（回転→リロード）。体が覚えている分だけ、戻すか慣れるか決めておくと楽。</li>
+  <li><b>WS 11〜20：</b> 捨てて 10 個＋スクラッチパッド＋グループで運用するか、Hyprland 側に追加するか。</li>
+  <li><b>キーボード設定メモ：</b> このファイルの末尾に NixOS が追記する部分で <code>kb_layout = "jp"</code>、Caps は compose キー、両 Shift 同時押しで Caps Lock、Ctrl+Alt+Backspace で X 終了相当（terminate）が入っている。</li>
+</ul>
+
+<footer>
+  生成：2026-11-16 ／ i3 側の全表は別ファイル <code>i3-keybinds.html</code> にあり。Tatami 側のレイアウト既定は dwindle（preserve_split、force_split=2）、マウス追随 follow_mouse=1、リピート 40/250ms、NumLock 既定オン、タッチパッドは clickfinger 方式。
+</footer>
+
+</div>
+<script>
+  const q = document.getElementById('q');
+  const count = document.getElementById('count');
+  const rows = Array.from(document.querySelectorAll('table.binds tr'));
+  function apply(){
+    const v = q.value.trim().toLowerCase();
+    let shown = 0;
+    rows.forEach(r=>{
+      const hit = !v || r.textContent.toLowerCase().includes(v);
+      r.classList.toggle('hidden', !hit);
+      if(hit) shown++;
+    });
+    document.querySelectorAll('table.binds').forEach(t=>{
+      const any = Array.from(t.querySelectorAll('tr')).some(r=>!r.classList.contains('hidden'));
+      t.classList.toggle('hidden', !any);
+    });
+    count.textContent = v ? ('該当 ' + shown + ' 件') : ('全 ' + rows.length + ' 行');
+  }
+  q.addEventListener('input', apply);
+  apply();
+</script>
+</body>
+</html>
