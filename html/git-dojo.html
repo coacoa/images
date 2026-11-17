@@ -92,6 +92,10 @@ text-shadow:3px 3px 0 var(--blue), 6px 6px 0 #101736}
 .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
 border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;opacity:0;transition:opacity.3s;z-index:50;pointer-events:none}
 .toast.show{opacity:1}
+#diagram{transition:width .25s}
+.screen.diagmenu #diagram{width:min(460px,78%)}
+.screen.diagmenu .choices{bottom:calc(var(--tb) + 8px)}
+
 #diagram{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:min(560px,94%);z-index:5;background:rgba(3,4,16,.88);border:2px solid var(--dim);padding:6px;display:none}
 #diagram svg{width:100%;height:auto;display:block}
 
@@ -381,8 +385,17 @@ b.onclick=()=>{ beep(520,.06); setTimeout(()=>beep(780,.07),70); chEl.classList.
 chEl.appendChild(b);
 });
 chEl.classList.add('show');
+const dg = $('diagram');
+if(dg && dg.style.display === 'block'){
+$('screen').classList.add('diagmenu');
+requestAnimationFrame(()=>{
+const sr = $('screen').getBoundingClientRect();
+const dr = dg.getBoundingClientRect();
+chEl.style.top = Math.max(0, Math.round(dr.bottom - sr.top + 8)) + 'px';
+});
+} else { $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
 }
-function hideChoices(){ chEl.classList.remove('show'); chEl.innerHTML='';}
+function hideChoices(){ chEl.classList.remove('show'); chEl.innerHTML=''; chEl.style.top=''; $('screen').classList.remove('diagmenu'); }
 
 
 /* ============ 図解（8bit風SVG・黒板） ============ */
@@ -476,7 +489,7 @@ const d = $('diagram');
 if(DIAG[id]){ d.innerHTML = DIAG[id]; d.style.display = 'block'; }
 else d.style.display = 'none';
 }
-function hideDiag(){ $('diagram').style.display = 'none'; }
+function hideDiag(){ $('diagram').style.display = 'none'; $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
 
 /* ============ 画面遷移 ============ */
 function goLevels(){
