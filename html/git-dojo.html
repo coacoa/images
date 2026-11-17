@@ -92,6 +92,9 @@ text-shadow:3px 3px 0 var(--blue), 6px 6px 0 #101736}
 .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
 border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;opacity:0;transition:opacity.3s;z-index:50;pointer-events:none}
 .toast.show{opacity:1}
+#diagram{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:min(560px,94%);z-index:5;background:rgba(3,4,16,.88);border:2px solid var(--dim);padding:6px;display:none}
+#diagram svg{width:100%;height:auto;display:block}
+
 footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
 kbd{display:inline-block;background:#21262d;border:1px solid var(--dim);border-bottom-width:2px;
 border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
@@ -139,6 +142,7 @@ border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-si
 <div class="stars"></div>
 <div class="ground"></div>
 <div class="char" id="char"></div>
+<div id="diagram"></div>
 <div class="namebox" id="namebox" style="display:none"></div>
 <div class="textbox" id="textbox"><span id="text"></span><span class="next" id="nextmark" style="display:none">▼</span></div>
 <div class="choices" id="choices"></div>
@@ -380,9 +384,104 @@ chEl.classList.add('show');
 }
 function hideChoices(){ chEl.classList.remove('show'); chEl.innerHTML='';}
 
+
+/* ============ 図解（8bit風SVG・黒板） ============ */
+function _cm(x,y,ch,fill){ return '<rect x="'+(x+3)+'" y="'+(y+3)+'" width="30" height="30" fill="#000" opacity=".45"/><rect x="'+x+'" y="'+y+'" width="30" height="30" fill="'+fill+'" stroke="#dfe6ff" stroke-width="2"/><text x="'+(x+15)+'" y="'+(y+21)+'" font-size="14" fill="#05060f" text-anchor="middle" font-weight="bold">'+ch+'</text>'; }
+function _ar(x1,y1,x2,y2,col){ col=col||'#8fa3d9'; var pts; if(Math.abs(x2-x1)>=Math.abs(y2-y1)){ pts = x2>x1 ? [[x2,y2],[x2-10,y2-6],[x2-10,y2+6]] : [[x2,y2],[x2+10,y2-6],[x2+10,y2+6]]; } else { pts = y2>y1 ? [[x2,y2],[x2-6,y2-10],[x2+6,y2-10]] : [[x2,y2],[x2-6,y2+10],[x2+6,y2+10]]; } return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+col+'" stroke-width="4"/><polygon points="'+pts.map(function(p){return p.join(',');}).join(' ')+'" fill="'+col+'"/>'; }
+function _ln(x1,y1,x2,y2,col){ return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+(col||'#8fa3d9')+'" stroke-width="3"/>'; }
+function _tx(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'" text-anchor="middle">'+str+'</text>'; }
+function _txl(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'">'+str+'</text>'; }
+function _bx(x,y,w,h,label,fill){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'" stroke="#8fa3d9" stroke-width="2"/><text x="'+(x+w/2)+'" y="'+(y+h/2+5)+'" font-size="12" fill="#fff" text-anchor="middle">'+label+'</text>'; }
+function _tag(x,y,str,col){ var w=str.length*12+12; return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="20" fill="'+col+'"/><text x="'+(x+w/2)+'" y="'+(y+14)+'" font-size="11" fill="#05060f" text-anchor="middle" font-weight="bold">'+str+'</text>'; }
+function _svg(inner){ return '<svg viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'+inner+'</svg>'; }
+var BL='#4a6bff', YL='#ffd94a', GN='#7ee787', RD='#ff7b72', PU='#b18cff', GY='#5a6b9e', DM='#8fa3d9';
+const DIAG = {
+g1: _svg(_tx(180,18,'コミット＝写真（スナップショット）の鎖',DM,12)
+ + _cm(55,45,'A',BL) + _cm(160,45,'B',BL) + _cm(265,45,'C',BL)
+ + _ar(88,60,157,60) + _ar(193,60,262,60)
+ + _tx(180,105,'B の親は A、C の親は B',DM,12)),
+g2: _svg(_bx(8,48,104,44,'作業場所','#1b2a6e') + _bx(128,48,104,44,'ステージ','#1b2a6e') + _bx(248,48,104,44,'リポジトリ','#1b2a6e')
+ + _ar(112,70,128,70,YL) + _ar(232,70,248,70,GN)
+ + _tx(120,40,'add',YL,12) + _tx(240,40,'commit',GN,12)
+ + _tx(180,118,'add＝材料選び、commit＝撮影',DM,12)),
+g3: _svg(_txl(8,22,'ブランチ＝コミットを指す付箋',DM,12)
+ + _cm(50,50,'A',BL) + _cm(150,50,'B',BL) + _cm(250,50,'C',BL)
+ + _ar(83,65,147,65) + _ar(183,65,247,65)
+ + _tag(252,14,'main',YL) + _ln(267,34,267,50,YL)
+ + _tag(110,102,'HEAD',GN) + _ln(172,106,252,84,GN)),
+g4: _svg(_txl(8,20,'GitHub（リモート）',DM,12)
+ + _cm(30,26,'A',PU) + _cm(80,26,'B',PU) + _cm(130,26,'C',PU)
+ + _txl(8,82,'手元（ローカル）',DM,12)
+ + _cm(30,90,'A',BL) + _cm(80,90,'B',BL)
+ + _ar(145,56,145,90,YL) + _tx(178,78,'fetch',YL,12)
+ + _tx(268,40,'pull ＝ fetch ＋ merge',YL,13) + _tx(268,112,'合流は手元で起きる',DM,12)),
+h1: _svg(_txl(8,20,'自分の歴史',DM,12)
+ + _cm(40,26,'A',BL) + _cm(120,26,'B',RD) + _ar(73,41,117,41)
+ + _txl(8,78,'相手の歴史',DM,12)
+ + _cm(40,84,'A',BL) + _cm(120,84,'C',RD) + _ar(73,99,117,99)
+ + _tx(258,52,'同じ場所を',RD,13) + _tx(258,72,'両方が変更',RD,13) + _tx(258,100,'→ 判断待ち',YL,13)),
+h2: _svg(_cm(165,8,'祖',GY) + _tx(180,54,'共通の祖先',DM,11)
+ + _ln(172,38,85,88) + _ln(188,38,290,88)
+ + _cm(55,88,'自',BL) + _cm(275,88,'相',PU)
+ + _tx(268,24,'片方だけ変更＝自動',GN,12) + _tx(268,46,'両方変更＝停止',RD,12)),
+h3: _svg('<rect x="55" y="8" width="250" height="112" fill="#0a0e24" stroke="#8fa3d9" stroke-width="2"/>'
+ + '<rect x="55" y="8" width="250" height="34" fill="#5a2320"/>' + _txl(65,30,'<<<<<<< HEAD（自分の内容）',RD,12)
+ + '<rect x="55" y="42" width="250" height="34" fill="#222a4a"/>' + _txl(65,64,'=======','#dfe6ff',12)
+ + '<rect x="55" y="76" width="250" height="44" fill="#2a2050"/>' + _txl(65,98,'>>>>>>> 相手（相手の内容）',PU,12)
+ + _txl(65,114,'印を消して、残したい形に直す',YL,11)),
+h4: _svg(_cm(35,45,'A',BL) + _cm(115,45,'B',BL) + _ar(68,60,112,60)
+ + _bx(185,42,130,40,'合流の途中…','#3a2a6e')
+ + _ar(250,102,60,102,GN) + _tx(155,92,'git merge --abort',GN,13)
+ + _tx(155,124,'commit前なら開始前に戻れる',DM,12)),
+r1: _svg(_txl(4,22,'前',YL,12)
+ + _cm(30,8,'A',GY) + _cm(72,8,'B',GY) + _cm(114,8,'C',GY) + _cm(156,8,'F',GY) + _cm(198,8,'G',GY)
+ + _tx(310,26,'main',DM,11)
+ + _ln(129,38,171,58) + _cm(156,58,'D',YL) + _cm(198,58,'E',YL) + _ln(186,73,198,73) + _tx(310,76,'自分',DM,11)
+ + _txl(4,114,'後',GN,12)
+ + _cm(30,98,'A',GY) + _cm(68,98,'B',GY) + _cm(106,98,'C',GY) + _cm(144,98,'F',GY) + _cm(182,98,'G',GY) + _cm(220,98,'D′',GN) + _cm(258,98,'E′',GN)),
+r2: _svg(_tx(180,20,'黄金律',YL,13)
+ + _bx(15,35,155,50,'自分のPCだけ','#1b2a6e') + _tx(92,108,'rebase OK',GN,14)
+ + _bx(190,35,155,50,'GitHubに共有済','#3a2a6e') + _tx(267,108,'rebase NG',RD,14)),
+r3: _svg(_tx(180,25,'コンフリクトで止まる（コミットごと）',RD,12)
+ + _bx(8,50,104,38,'直す','#1b2a6e') + _ar(112,69,128,69,YL) + _bx(128,50,104,38,'git add','#1b2a6e')
+ + _ar(232,69,248,69,YL) + _bx(248,50,104,38,'--continue','#1b2a6e')
+ + _tx(180,115,'やめるなら git rebase --abort',DM,12)),
+r4: _svg(_cm(40,26,'A',BL) + _cm(110,26,'B',BL) + _cm(180,26,'C',BL) + _cm(250,26,'D',BL)
+ + _ar(73,41,107,41) + _ar(143,41,177,41) + _ar(213,41,247,41)
+ + _tag(248,64,'main',YL) + _ln(265,56,265,64,YL)
+ + _ar(250,94,140,94,RD) + _tx(195,86,'reset --hard は変更も消去',RD,11)
+ + _bx(90,104,190,24,'reflog＝付箋の移動履歴','#1b2a6e')),
+p1: _svg(_tx(180,28,'PR＝マージの提案＋確認の場',YL,13)
+ + _bx(8,55,104,40,'作業ブランチ','#1b2a6e') + _ar(112,75,128,75) + _bx(128,55,84,40,'PR','#3a2a6e')
+ + _ar(212,75,228,75) + _bx(228,55,104,40,'main','#1b2a6e')
+ + _tx(180,118,'差分を見てから合流ボタンを押す',DM,12)),
+p2: _svg(_tx(180,25,'main への直pushは保護で禁止',RD,12)
+ + _bx(4,55,64,36,'変更','#1b2a6e') + _ar(68,73,80,73) + _bx(80,55,104,36,'セルフレビュー','#1b2a6e')
+ + _ar(184,73,196,73) + _bx(196,55,84,36,'Actions','#1b2a6e') + _ar(280,73,292,73) + _bx(292,55,64,36,'main','#1b2a6e')
+ + _tx(180,115,'関門を通った変更だけが main へ',DM,12)),
+p3: _svg(_txl(8,25,'試行錯誤の3コミット',DM,12)
+ + _cm(20,40,'1',YL) + _cm(62,40,'2',YL) + _cm(104,40,'3',YL)
+ + _ar(140,55,190,55,GN)
+ + '<rect x="196" y="33" width="44" height="44" fill="#7ee787" stroke="#dfe6ff" stroke-width="2"/><text x="218" y="61" font-size="14" fill="#05060f" text-anchor="middle" font-weight="bold">1つ</text>'
+ + _tx(218,95,'main に載る',DM,11)
+ + _tx(180,120,'squash：過程はPRに残し、mainは綺麗に',DM,12)),
+p4: _svg(_tx(180,18,'git log --graph で見る歴史',YL,12)
+ + _cm(25,88,'A',BL) + _cm(85,88,'B',BL) + _cm(145,88,'C',BL) + _cm(255,88,'F',BL)
+ + _ar(58,103,82,103) + _ar(118,103,142,103) + _ar(178,103,252,103)
+ + _ln(160,88,185,58) + _cm(185,28,'D',PU) + _cm(240,28,'E',PU) + _ar(218,43,237,43) + _ln(270,58,270,88)
+ + _tx(60,43,'feature',PU,11)),
+};
+function showDiagFor(id){
+const d = $('diagram');
+if(DIAG[id]){ d.innerHTML = DIAG[id]; d.style.display = 'block'; }
+else d.style.display = 'none';
+}
+function hideDiag(){ $('diagram').style.display = 'none'; }
+
 /* ============ 画面遷移 ============ */
 function goLevels(){
 hideChoices();
+hideDiag();
 setScene('bg-room','none','');
 renderProgress('レベル選択');
 const dc = doneCount();
@@ -399,6 +498,7 @@ fn: ()=>goLessons(i)};
 }
 function goLessons(li){
 hideChoices();
+hideDiag();
 const lv = LEVELS[li];
 cur.level = li;
 setScene('bg-room','sennin','ギット仙人');
@@ -419,6 +519,7 @@ if(withRetry) cur.pages.push('\n' + ls.retry);
 cur.page = 0;
 setScene('bg-term','sennin','ギット仙人');
 renderProgress(LEVELS[li].name + '：' + ls.title);
+showDiagFor(ls.id);
 teachPage();
 }
 function teachPage(){
@@ -460,6 +561,7 @@ showChoices([
 });
 }
 function completeLesson(){
+hideDiag();
 const li = cur.level, idx = cur.lesson;
 const ls = LEVELS[li].lessons[idx];
 done[ls.id] = true; save();
