@@ -92,6 +92,13 @@ text-shadow:3px 3px 0 var(--blue), 6px 6px 0 #101736}
 .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
 border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;opacity:0;transition:opacity.3s;z-index:50;pointer-events:none}
 .toast.show{opacity:1}
+#diagram{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:min(560px,94%);z-index:5;background:rgba(3,4,16,.88);border:2px solid var(--dim);padding:6px;display:none}
+#diagram svg{width:100%;height:auto;display:block}
+#diagram{transition:width .25s}
+.screen.diagmenu #diagram{width:min(430px,74%)}
+.screen.diagmenu .choices{bottom:calc(var(--tb) + 8px);flex-direction:row;flex-wrap:wrap;align-content:flex-start;justify-content:center;gap:8px}
+.screen.diagmenu .choice{flex:1 1 28%;width:auto;margin:0;text-align:center;font-size:14px;padding:10px 8px;line-height:1.5}
+
 footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
 kbd{display:inline-block;background:#21262d;border:1px solid var(--dim);border-bottom-width:2px;
 border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
@@ -139,6 +146,7 @@ border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-si
 <div class="stars"></div>
 <div class="ground"></div>
 <div class="char" id="char"></div>
+<div id="diagram"></div>
 <div class="namebox" id="namebox" style="display:none"></div>
 <div class="textbox" id="textbox"><span id="text"></span><span class="next" id="nextmark" style="display:none">▼</span></div>
 <div class="choices" id="choices"></div>
@@ -377,12 +385,94 @@ b.onclick=()=>{ beep(520,.06); setTimeout(()=>beep(780,.07),70); chEl.classList.
 chEl.appendChild(b);
 });
 chEl.classList.add('show');
+const dg = $('diagram');
+if(dg && dg.style.display === 'block'){
+$('screen').classList.add('diagmenu');
+requestAnimationFrame(()=>{
+const sr = $('screen').getBoundingClientRect();
+const dr = dg.getBoundingClientRect();
+chEl.style.top = Math.max(0, Math.round(dr.bottom - sr.top + 8)) + 'px';
+});
+} else { $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
 }
-function hideChoices(){ chEl.classList.remove('show'); chEl.innerHTML='';}
+function hideChoices(){ chEl.classList.remove('show'); chEl.innerHTML=''; chEl.style.top=''; $('screen').classList.remove('diagmenu'); }
+
+
+/* ============ 図解（8bit風SVG・黒板） ============ */
+function _cm(x,y,ch,fill){ return '<rect x="'+(x+3)+'" y="'+(y+3)+'" width="30" height="30" fill="#000" opacity=".45"/><rect x="'+x+'" y="'+y+'" width="30" height="30" fill="'+fill+'" stroke="#dfe6ff" stroke-width="2"/><text x="'+(x+15)+'" y="'+(y+21)+'" font-size="14" fill="#05060f" text-anchor="middle" font-weight="bold">'+ch+'</text>'; }
+function _ar(x1,y1,x2,y2,col){ col=col||'#8fa3d9'; var pts; if(Math.abs(x2-x1)>=Math.abs(y2-y1)){ pts = x2>x1 ? [[x2,y2],[x2-10,y2-6],[x2-10,y2+6]] : [[x2,y2],[x2+10,y2-6],[x2+10,y2+6]]; } else { pts = y2>y1 ? [[x2,y2],[x2-6,y2-10],[x2+6,y2-10]] : [[x2,y2],[x2-6,y2+10],[x2+6,y2+10]]; } return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+col+'" stroke-width="4"/><polygon points="'+pts.map(function(p){return p.join(',');}).join(' ')+'" fill="'+col+'"/>'; }
+function _ln(x1,y1,x2,y2,col){ return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+(col||'#8fa3d9')+'" stroke-width="3"/>'; }
+function _tx(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'" text-anchor="middle">'+str+'</text>'; }
+function _txl(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'">'+str+'</text>'; }
+function _bx(x,y,w,h,label,fill){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'" stroke="#8fa3d9" stroke-width="2"/><text x="'+(x+w/2)+'" y="'+(y+h/2+5)+'" font-size="12" fill="#fff" text-anchor="middle">'+label+'</text>'; }
+function _tag(x,y,str,col){ var w=str.length*12+12; return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="20" fill="'+col+'"/><text x="'+(x+w/2)+'" y="'+(y+14)+'" font-size="11" fill="#05060f" text-anchor="middle" font-weight="bold">'+str+'</text>'; }
+function _svg(inner){ return '<svg viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'+inner+'</svg>'; }
+function _key(x,y,w,label,fill){ var tc = (fill===YL||fill===GN)? '#05060f':'#fff'; return '<rect x="'+(x+3)+'" y="'+(y+3)+'" width="'+w+'" height="34" fill="#000" opacity=".45"/><rect x="'+x+'" y="'+y+'" width="'+w+'" height="34" fill="'+fill+'" stroke="#dfe6ff" stroke-width="2"/><text x="'+(x+w/2)+'" y="'+(y+22)+'" font-size="13" fill="'+tc+'" text-anchor="middle" font-weight="bold">'+label+'</text>'; }
+function _keysRow(items, capTop, capBot, y){
+y = y || 48;
+var ws = items.map(function(it){ return Math.max(40, it[0].length*10 + 22); });
+var total = ws.reduce(function(a,b){return a+b;},0) + (items.length-1)*22;
+var x = (360-total)/2, s = '';
+if(capTop) s += _tx(180, 26, capTop, DM, 12);
+items.forEach(function(it, i){ s += _key(x, y, ws[i], it[0], it[1]); if(i < items.length-1) s += _ar(x+ws[i]+3, y+17, x+ws[i]+19, y+17, DM); x += ws[i] + 22; });
+if(capBot) s += _tx(180, y+76, capBot, DM, 12);
+return _svg(s);
+}
+function _cross(cap, fill){
+return _svg(_key(163,6,34,'K',fill) + _key(113,46,34,'H',fill) + _key(163,46,34,'J',fill) + _key(213,46,34,'L',fill)
++ _tx(180,112,cap,DM,12));
+}
+function _crossA(cap){
+return _svg(_key(163,6,34,'↑',GY) + _key(113,46,34,'←',GY) + _key(163,46,34,'↓',GY) + _key(213,46,34,'→',GY)
++ _tx(180,112,cap,DM,12));
+}
+var BL='#4a6bff', YL='#ffd94a', GN='#7ee787', RD='#ff7b72', PU='#b18cff', GY='#5a6b9e', DM='#8fa3d9';
+
+const DIAG = {
+t1: _keysRow([['Ctrl',GY],['R',BL]], 'Ctrl+R：履歴を遡って検索', '打ちかけの文字からでも探せる'),
+t2: _keysRow([['Tab',GY]], 'Tab：補完候補を出す', '2回押しで候補一覧'),
+t3: _svg(_tx(180,24,'パイプ ｜ でつなぐ',DM,12)
+ + _bx(8,48,80,38,'ls','#1b2a6e') + _tx(101,72,'|',YL,16) + _bx(114,48,90,38,'grep','#1b2a6e')
+ + _tx(217,72,'|',YL,16) + _bx(230,48,80,38,'less','#1b2a6e')
+ + _tx(180,112,'出力が次の入力になる',DM,12)),
+t4: _svg(_bx(8,50,104,38,'Ctrl+Z 停止','#1b2a6e') + _bx(128,50,104,38,'bg 背景へ','#1b2a6e') + _bx(248,50,104,38,'fg 前に戻す','#1b2a6e')
+ + _tx(180,112,'jobs で一覧',DM,11)),
+f1: _svg('<rect x="30" y="28" width="300" height="56" fill="#0a0e24" stroke="#8fa3d9" stroke-width="2"/>'
+ + _txl(45,62,'$ git pu','#ffffff',14) + _txl(122,62,'sh origin main','#5a6b9e',14)
+ + _tx(180,108,'灰色の予測は → で採用',DM,11)),
+f2: _svg(_bx(30,45,90,38,'gco','#1b2a6e') + _ar(120,64,160,64,YL) + _bx(160,45,170,38,'git checkout','#1b2a6e')
+ + _tx(180,108,'abbr：短い名が展開される',DM,11)),
+f3: _svg(_bx(15,28,155,40,'bash: export A=B','#3a2320') + _bx(190,28,155,40,'fish: set -x A B','#1b2a6e')
+ + _tx(180,92,'環境変数の書き方だけ違う',DM,12) + _tx(180,114,'スクリプトは bash のまま',DM,11)),
+f4: _svg(_bx(8,50,104,38,'programs.fish','#1b2a6e') + _ar(112,69,128,69,YL) + _bx(128,50,104,38,'rebuild','#3a2a6e')
+ + _ar(232,69,248,69,YL) + _bx(248,50,104,38,'fish が既定に','#1b2a6e')
+ + _tx(180,112,'home-manager で切り替える',DM,11)),
+m1: _svg('<rect x="60" y="14" width="240" height="88" fill="#0a0e24" stroke="#8fa3d9" stroke-width="2"/><line x1="60" y1="36" x2="300" y2="36" stroke="#8fa3d9" stroke-width="2"/><line x1="140" y1="14" x2="140" y2="36" stroke="#8fa3d9" stroke-width="2"/><line x1="220" y1="14" x2="220" y2="36" stroke="#8fa3d9" stroke-width="2"/><line x1="180" y1="36" x2="180" y2="102" stroke="#8fa3d9" stroke-width="2"/>'
+ + _tx(180,120,'タブ＝文脈 ／ 分割＝見比べ',DM,11)),
+m2: _keysRow([['SPC',YL],['o',BL],['t',BL]], 'SPC o t：Doom の中にターミナル', '編集の相方として使う'),
+m3: _svg(_bx(45,40,270,44,'eshell ＝ Emacs の中のシェル','#1b2a6e') + _tx(180,106,'存在だけ知れば今はOK',DM,12)),
+m4: _svg(_bx(8,50,104,38,'普段：ghostty','#1b2a6e') + _bx(128,50,104,38,'相方：vterm','#1b2a6e') + _bx(248,50,104,38,'遠隔：tmux','#1b2a6e')
+ + _tx(180,112,'場所の線引き',DM,11)),
+x1: _svg(_bx(15,45,150,38,'tmux new -s work','#1b2a6e') + _ar(165,64,195,64,YL) + _bx(195,45,150,38,'Ctrl+b d で離脱','#3a2a6e')
+ + _tx(180,106,'離れても仕事は続く',DM,12)),
+x2: _svg(_bx(15,45,150,38,'tmux ls','#1b2a6e') + _ar(165,64,195,64,YL) + _bx(195,45,150,38,'attach -t work','#1b2a6e')
+ + _tx(180,106,'戻るときは attach',DM,12)),
+x3: _svg(_bx(15,28,155,40,'対話：fish','#1b2a6e') + _bx(190,28,155,40,'スクリプト：bash','#3a2a6e')
+ + _tx(180,92,'先頭行 #!/usr/bin/env bash',DM,12) + _tx(180,114,'二刀流が正解',DM,11)),
+x4: _svg(_bx(4,50,84,38,'ghostty','#1b2a6e') + _bx(92,50,84,38,'fish','#1b2a6e') + _bx(180,50,84,38,'vterm','#1b2a6e') + _bx(268,50,84,38,'tmux','#1b2a6e')
+ + _tx(180,112,'卒業：4点セット',YL,12)),
+};
+function showDiagFor(id){
+const d = $('diagram');
+if(DIAG[id]){ d.innerHTML = DIAG[id]; d.style.display = 'block'; }
+else d.style.display = 'none';
+}
+function hideDiag(){ $('diagram').style.display = 'none'; $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
 
 /* ============ 画面遷移 ============ */
 function goLevels(){
 hideChoices();
+hideDiag();
 setScene('bg-room','none','');
 renderProgress('レベル選択');
 const dc = doneCount();
@@ -399,6 +489,7 @@ fn: ()=>goLessons(i)};
 }
 function goLessons(li){
 hideChoices();
+hideDiag();
 const lv = LEVELS[li];
 cur.level = li;
 setScene('bg-room','sennin','ターミナル仙人');
@@ -419,6 +510,7 @@ if(withRetry) cur.pages.push('\n' + ls.retry);
 cur.page = 0;
 setScene('bg-term','sennin','ターミナル仙人');
 renderProgress(LEVELS[li].name + '：' + ls.title);
+showDiagFor(ls.id);
 teachPage();
 }
 function teachPage(){
@@ -460,6 +552,7 @@ showChoices([
 });
 }
 function completeLesson(){
+hideDiag();
 const li = cur.level, idx = cur.lesson;
 const ls = LEVELS[li].lessons[idx];
 done[ls.id] = true; save();
