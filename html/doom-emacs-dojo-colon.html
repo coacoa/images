@@ -92,6 +92,13 @@ text-shadow:3px 3px 0 var(--blue), 6px 6px 0 #101736}
 .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
 border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;opacity:0;transition:opacity.3s;z-index:50;pointer-events:none}
 .toast.show{opacity:1}
+#diagram{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:min(560px,94%);z-index:5;background:rgba(3,4,16,.88);border:2px solid var(--dim);padding:6px;display:none}
+#diagram svg{width:100%;height:auto;display:block}
+#diagram{transition:width .25s}
+.screen.diagmenu #diagram{width:min(430px,74%)}
+.screen.diagmenu .choices{bottom:calc(var(--tb) + 8px);flex-direction:row;flex-wrap:wrap;align-content:flex-start;justify-content:center;gap:8px}
+.screen.diagmenu .choice{flex:1 1 28%;width:auto;margin:0;text-align:center;font-size:14px;padding:10px 8px;line-height:1.5}
+
 footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
 kbd{display:inline-block;background:#21262d;border:1px solid var(--dim);border-bottom-width:2px;
 border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
@@ -139,6 +146,7 @@ border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-si
 <div class="stars"></div>
 <div class="ground"></div>
 <div class="char" id="char"></div>
+<div id="diagram"></div>
 <div class="namebox" id="namebox" style="display:none"></div>
 <div class="textbox" id="textbox"><span id="text"></span><span class="next" id="nextmark" style="display:none">▼</span></div>
 <div class="choices" id="choices"></div>
@@ -377,12 +385,89 @@ b.onclick=()=>{ beep(520,.06); setTimeout(()=>beep(780,.07),70); chEl.classList.
 chEl.appendChild(b);
 });
 chEl.classList.add('show');
+const dg = $('diagram');
+if(dg && dg.style.display === 'block'){
+$('screen').classList.add('diagmenu');
+requestAnimationFrame(()=>{
+const sr = $('screen').getBoundingClientRect();
+const dr = dg.getBoundingClientRect();
+chEl.style.top = Math.max(0, Math.round(dr.bottom - sr.top + 8)) + 'px';
+});
+} else { $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
 }
-function hideChoices(){ chEl.classList.remove('show'); chEl.innerHTML='';}
+function hideChoices(){ chEl.classList.remove('show'); chEl.innerHTML=''; chEl.style.top=''; $('screen').classList.remove('diagmenu'); }
+
+
+/* ============ 図解（8bit風SVG・黒板） ============ */
+function _cm(x,y,ch,fill){ return '<rect x="'+(x+3)+'" y="'+(y+3)+'" width="30" height="30" fill="#000" opacity=".45"/><rect x="'+x+'" y="'+y+'" width="30" height="30" fill="'+fill+'" stroke="#dfe6ff" stroke-width="2"/><text x="'+(x+15)+'" y="'+(y+21)+'" font-size="14" fill="#05060f" text-anchor="middle" font-weight="bold">'+ch+'</text>'; }
+function _ar(x1,y1,x2,y2,col){ col=col||'#8fa3d9'; var pts; if(Math.abs(x2-x1)>=Math.abs(y2-y1)){ pts = x2>x1 ? [[x2,y2],[x2-10,y2-6],[x2-10,y2+6]] : [[x2,y2],[x2+10,y2-6],[x2+10,y2+6]]; } else { pts = y2>y1 ? [[x2,y2],[x2-6,y2-10],[x2+6,y2-10]] : [[x2,y2],[x2-6,y2+10],[x2+6,y2+10]]; } return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+col+'" stroke-width="4"/><polygon points="'+pts.map(function(p){return p.join(',');}).join(' ')+'" fill="'+col+'"/>'; }
+function _ln(x1,y1,x2,y2,col){ return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+(col||'#8fa3d9')+'" stroke-width="3"/>'; }
+function _tx(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'" text-anchor="middle">'+str+'</text>'; }
+function _txl(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'">'+str+'</text>'; }
+function _bx(x,y,w,h,label,fill){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'" stroke="#8fa3d9" stroke-width="2"/><text x="'+(x+w/2)+'" y="'+(y+h/2+5)+'" font-size="12" fill="#fff" text-anchor="middle">'+label+'</text>'; }
+function _tag(x,y,str,col){ var w=str.length*12+12; return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="20" fill="'+col+'"/><text x="'+(x+w/2)+'" y="'+(y+14)+'" font-size="11" fill="#05060f" text-anchor="middle" font-weight="bold">'+str+'</text>'; }
+function _svg(inner){ return '<svg viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'+inner+'</svg>'; }
+function _key(x,y,w,label,fill){ var tc = (fill===YL||fill===GN)? '#05060f':'#fff'; return '<rect x="'+(x+3)+'" y="'+(y+3)+'" width="'+w+'" height="34" fill="#000" opacity=".45"/><rect x="'+x+'" y="'+y+'" width="'+w+'" height="34" fill="'+fill+'" stroke="#dfe6ff" stroke-width="2"/><text x="'+(x+w/2)+'" y="'+(y+22)+'" font-size="13" fill="'+tc+'" text-anchor="middle" font-weight="bold">'+label+'</text>'; }
+function _keysRow(items, capTop, capBot, y){
+y = y || 48;
+var ws = items.map(function(it){ return Math.max(40, it[0].length*10 + 22); });
+var total = ws.reduce(function(a,b){return a+b;},0) + (items.length-1)*22;
+var x = (360-total)/2, s = '';
+if(capTop) s += _tx(180, 26, capTop, DM, 12);
+items.forEach(function(it, i){ s += _key(x, y, ws[i], it[0], it[1]); if(i < items.length-1) s += _ar(x+ws[i]+3, y+17, x+ws[i]+19, y+17, DM); x += ws[i] + 22; });
+if(capBot) s += _tx(180, y+76, capBot, DM, 12);
+return _svg(s);
+}
+function _cross(cap, fill){
+return _svg(_key(163,6,34,'K',fill) + _key(113,46,34,'H',fill) + _key(163,46,34,'J',fill) + _key(213,46,34,'L',fill)
++ _tx(180,112,cap,DM,12));
+}
+function _crossA(cap){
+return _svg(_key(163,6,34,'↑',GY) + _key(113,46,34,'←',GY) + _key(163,46,34,'↓',GY) + _key(213,46,34,'→',GY)
++ _tx(180,112,cap,DM,12));
+}
+var BL='#4a6bff', YL='#ffd94a', GN='#7ee787', RD='#ff7b72', PU='#b18cff', GY='#5a6b9e', DM='#8fa3d9';
+
+const DIAG = {
+a1: _svg(_bx(40,20,280,34,'Vimの手癖 ：w ：q ：wq が効く','#1b2a6e') + _bx(40,64,280,34,'アプリ終了は SPC q q','#3a2a6e')
+ + _tx(180,120,'混ぜずに使い分ける',DM,11)),
+a2: _svg(_bx(40,20,280,34,'：e ファイル名 は効く','#1b2a6e') + _bx(40,64,280,34,'一覧・切替は SPC b b','#3a2a6e')
+ + _tx(180,120,'開くは ： 、選ぶは SPC',DM,11)),
+a3: _svg(_tx(180,14,'：sp ：vs は効く',DM,11)
+ + '<rect x="70" y="20" width="220" height="80" fill="#0a0e24" stroke="#8fa3d9" stroke-width="2"/><line x1="180" y1="20" x2="180" y2="100" stroke="#8fa3d9" stroke-width="2"/><line x1="180" y1="60" x2="290" y2="60" stroke="#8fa3d9" stroke-width="2"/>'
+ + _tx(180,120,'移動は SPC w h j k l',DM,11)),
+a4: _svg(_bx(30,28,300,36,':%s/旧/新/g 置換','#0a0e24')
+ + _tx(180,88,'行操作は d / y の演算子で',DM,12) + _tx(180,110,'範囲指定も Vim のまま',DM,11)),
+b1: _keysRow([['SPC',YL],['f',BL],['f',BL]], 'ファイル探しは SPC f f', '：e は名前が分かるときだけ'),
+b2: _keysRow([['SPC',YL],['b',BL],['b',BL]], 'バッファ切替は SPC b b', '一覧が見えるのが速さの理由'),
+b3: _keysRow([['SPC',YL],['s',BL],['p',BL]], 'プロジェクト検索は SPC s p', '：grep より速く・広く'),
+b4: _keysRow([['SPC',YL],['g',BL],['g',BL]], 'Git は Magit（SPC g g）', '： の世界に Git の入口はない'),
+c1: _svg(_tx(180,20,'SPC の先が読める＝発見装置',DM,12)
+ + _key(148,28,64,'SPC',YL)
+ + _bx(8,80,108,30,'f ファイル','#1b2a6e') + _bx(126,80,108,30,'b バッファ','#1b2a6e') + _bx(244,80,108,30,'w ウィンドウ','#1b2a6e')),
+c2: _keysRow([['g',BL],['c',BL],['c',BL]], 'gcc は第3の道', '演算子の文法は Vim のまま'),
+c3: _keysRow([['SPC',YL],['h',BL]], 'ヘルプは SPC h', 'f 関数 ／ v 変数 ／ k キー'),
+c4: _svg(_key(55,32,64,':',PU) + _tx(87,92,'Exコマンド',PU,12)
+ + _key(215,32,100,'SPC :',YL) + _tx(265,92,'M-x',YL,12)
+ + _tx(180,120,'似てるけど別物',DM,11)),
+d1: _svg(_bx(15,25,155,38,'：set はその場限り','#3a2320') + _bx(190,25,155,38,'config.el に書く','#1b2a6e')
+ + _tx(92,86,'再起動で消える',RD,11) + _ar(267,63,267,86,GN) + _tx(267,110,'doom sync で反映',GN,12)),
+d2: _keysRow([['SPC',YL],['TAB',BL]], 'SPC TAB でワークスペース', '机を切り替える感覚 ／ [ ] で移動'),
+d3: _keysRow([['SPC',YL],['o',BL],['t',BL]], 'SPC o t＝ターミナル', 'SPC o p＝Treemacs（ファイル木）'),
+d4: _svg(_bx(50,10,260,30,'手癖は ： でOK','#1b2a6e') + _bx(50,48,260,30,'探す・一覧・Gitは SPC','#1b2a6e')
+ + _bx(50,86,260,30,'設定は config.el','#1b2a6e')),
+};
+function showDiagFor(id){
+const d = $('diagram');
+if(DIAG[id]){ d.innerHTML = DIAG[id]; d.style.display = 'block'; }
+else d.style.display = 'none';
+}
+function hideDiag(){ $('diagram').style.display = 'none'; $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
 
 /* ============ 画面遷移 ============ */
 function goLevels(){
 hideChoices();
+hideDiag();
 setScene('bg-room','none','');
 renderProgress('レベル選択');
 const dc = doneCount();
@@ -399,6 +484,7 @@ fn: ()=>goLessons(i)};
 }
 function goLessons(li){
 hideChoices();
+hideDiag();
 const lv = LEVELS[li];
 cur.level = li;
 setScene('bg-room','sennin','エマクス仙人');
@@ -419,6 +505,7 @@ if(withRetry) cur.pages.push('\n' + ls.retry);
 cur.page = 0;
 setScene('bg-term','sennin','エマクス仙人');
 renderProgress(LEVELS[li].name + '：' + ls.title);
+showDiagFor(ls.id);
 teachPage();
 }
 function teachPage(){
@@ -460,6 +547,7 @@ showChoices([
 });
 }
 function completeLesson(){
+hideDiag();
 const li = cur.level, idx = cur.lesson;
 const ls = LEVELS[li].lessons[idx];
 done[ls.id] = true; save();

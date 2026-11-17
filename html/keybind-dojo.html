@@ -125,6 +125,13 @@ footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
 .choices{justify-content:flex-start;overflow-y:auto}
 .choice:first-child{margin-top:auto}
 .choice:last-child{margin-bottom:auto}
+
+#diagram{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:min(560px,94%);z-index:5;background:rgba(3,4,16,.88);border:2px solid var(--dim);padding:6px;display:none}
+#diagram svg{width:100%;height:auto;display:block}
+#diagram{transition:width .25s}
+.screen.diagmenu #diagram{width:min(430px,74%)}
+.screen.diagmenu .choices{bottom:calc(var(--tb) + 8px);flex-direction:row;flex-wrap:wrap;align-content:flex-start;justify-content:center;gap:8px}
+.screen.diagmenu .choice{flex:1 1 28%;width:auto;margin:0;text-align:center;font-size:14px;padding:10px 8px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -152,6 +159,7 @@ footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
 <div class="ground"></div>
 <div class="char" id="char"></div>
 <div class="endmark" id="endmark">END</div>
+<div id="diagram"></div>
 <div class="namebox" id="namebox" style="display:none"></div>
 <div class="textbox" id="textbox"><span id="text"></span><span class="next" id="nextmark" style="display:none">▼</span></div>
 <div class="choices" id="choices"></div>
@@ -471,7 +479,69 @@ boxEl.onclick = ()=>{
 if(typing){ clearInterval(typing); typing=null; textEl.textContent=txt; boxEl.scrollTop = boxEl.scrollHeight; nextEl.style.display=''; if(done) done();}
 };
 }
+
+/* ============ 図解（8bit風SVG・黒板） ============ */
+function _cm(x,y,ch,fill){ return '<rect x="'+(x+3)+'" y="'+(y+3)+'" width="30" height="30" fill="#000" opacity=".45"/><rect x="'+x+'" y="'+y+'" width="30" height="30" fill="'+fill+'" stroke="#dfe6ff" stroke-width="2"/><text x="'+(x+15)+'" y="'+(y+21)+'" font-size="14" fill="#05060f" text-anchor="middle" font-weight="bold">'+ch+'</text>'; }
+function _ar(x1,y1,x2,y2,col){ col=col||'#8fa3d9'; var pts; if(Math.abs(x2-x1)>=Math.abs(y2-y1)){ pts = x2>x1 ? [[x2,y2],[x2-10,y2-6],[x2-10,y2+6]] : [[x2,y2],[x2+10,y2-6],[x2+10,y2+6]]; } else { pts = y2>y1 ? [[x2,y2],[x2-6,y2-10],[x2+6,y2-10]] : [[x2,y2],[x2-6,y2+10],[x2+6,y2+10]]; } return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+col+'" stroke-width="4"/><polygon points="'+pts.map(function(p){return p.join(',');}).join(' ')+'" fill="'+col+'"/>'; }
+function _ln(x1,y1,x2,y2,col){ return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+(col||'#8fa3d9')+'" stroke-width="3"/>'; }
+function _tx(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'" text-anchor="middle">'+str+'</text>'; }
+function _txl(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'">'+str+'</text>'; }
+function _bx(x,y,w,h,label,fill){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'" stroke="#8fa3d9" stroke-width="2"/><text x="'+(x+w/2)+'" y="'+(y+h/2+5)+'" font-size="12" fill="#fff" text-anchor="middle">'+label+'</text>'; }
+function _tag(x,y,str,col){ var w=str.length*12+12; return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="20" fill="'+col+'"/><text x="'+(x+w/2)+'" y="'+(y+14)+'" font-size="11" fill="#05060f" text-anchor="middle" font-weight="bold">'+str+'</text>'; }
+function _svg(inner){ return '<svg viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'+inner+'</svg>'; }
+function _key(x,y,w,label,fill){ var tc = (fill===YL||fill===GN)? '#05060f':'#fff'; return '<rect x="'+(x+3)+'" y="'+(y+3)+'" width="'+w+'" height="34" fill="#000" opacity=".45"/><rect x="'+x+'" y="'+y+'" width="'+w+'" height="34" fill="'+fill+'" stroke="#dfe6ff" stroke-width="2"/><text x="'+(x+w/2)+'" y="'+(y+22)+'" font-size="13" fill="'+tc+'" text-anchor="middle" font-weight="bold">'+label+'</text>'; }
+function _keysRow(items, capTop, capBot, y){
+y = y || 48;
+var ws = items.map(function(it){ return Math.max(40, it[0].length*10 + 22); });
+var total = ws.reduce(function(a,b){return a+b;},0) + (items.length-1)*22;
+var x = (360-total)/2, s = '';
+if(capTop) s += _tx(180, 26, capTop, DM, 12);
+items.forEach(function(it, i){ s += _key(x, y, ws[i], it[0], it[1]); if(i < items.length-1) s += _ar(x+ws[i]+3, y+17, x+ws[i]+19, y+17, DM); x += ws[i] + 22; });
+if(capBot) s += _tx(180, y+76, capBot, DM, 12);
+return _svg(s);
+}
+function _cross(cap, fill){
+return _svg(_key(163,6,34,'K',fill) + _key(113,46,34,'H',fill) + _key(163,46,34,'J',fill) + _key(213,46,34,'L',fill)
++ _tx(180,112,cap,DM,12));
+}
+function _crossA(cap){
+return _svg(_key(163,6,34,'↑',GY) + _key(113,46,34,'←',GY) + _key(163,46,34,'↓',GY) + _key(213,46,34,'→',GY)
++ _tx(180,112,cap,DM,12));
+}
+var BL='#4a6bff', YL='#ffd94a', GN='#7ee787', RD='#ff7b72', PU='#b18cff', GY='#5a6b9e', DM='#8fa3d9';
+
+const DIAG = {
+l1: _svg(_bx(45,12,270,30,'Alt ＝ フォーカス','#1b2a6e') + _bx(45,50,270,30,'Alt+Shift ＝ ウィンドウ移動','#1b2a6e')
+ + _bx(45,88,270,30,'Alt+Ctrl ＝ リサイズ','#1b2a6e')),
+q1: _cross('i3：フォーカスは h/j/k/l（J＝下）', BL),
+q2: _cross('i3：+Shift で窓ごと移動（J＝下）', BL),
+q3: _cross('i3：+Ctrl でリサイズ（J＝高さを伸ばす）', BL),
+q4: _keysRow([['Alt',GY],['Ctrl',GY],['5',BL]], 'Alt+Ctrl+5 ＝ ワークスペース15', '数字だけ＝1〜10 ／ +Shift＝窓を送る'),
+q5: _keysRow([['Alt',GY],['Tab',BL]], 'i3 の Alt+Tab ＝ 次のワークスペース', '窓切り替えではない'),
+l2: _svg(_bx(45,12,270,30,'Tatami：主キーは Alt','#3a2a6e') + _bx(45,50,270,30,'フォーカスは矢印キー','#3a2a6e')
+ + _bx(45,88,270,30,'一覧は Alt+K（tatami keybindings）','#3a2a6e')),
+q6: _crossA('Tatami：フォーカスは矢印キー'),
+q7: _keysRow([['Alt',GY],['J',PU]], 'Tatami の Alt+J ＝ 分割トグル', 'i3 のフォーカス下ではない'),
+q8: _keysRow([['Alt',GY],['K',BL]], '一覧コマンド：tatami keybindings', 'Alt+K で出す'),
+q9: _keysRow([['Alt',GY],['-',BL],['=',BL]], 'Tatami のリサイズは Alt ＋ － / ＝', '修飾で量が変わる'),
+q10: _keysRow([['Alt',GY],['1',BL],['0',BL]], 'Tatami の WS は 1〜10', 'スクラッチパッドは Alt+S'),
+l3: _svg(_bx(15,18,155,38,'Alt+T 罠','#3a2320') + _bx(190,18,155,38,'Alt+P 罠','#3a2320')
+ + _bx(15,68,155,38,'Alt+R 罠','#3a2320') + _bx(190,68,155,38,'Alt+Shift+B 罠','#3a2320')
+ + _tx(180,124,'同じキー・違う動作',RD,11)),
+q11: _keysRow([['Alt',GY],['T',PU]], 'Tatami：フローティング切替', 'i3 では ghostty 起動だった'),
+q12: _keysRow([['Alt',GY],['R',PU]], 'Tatami：リロード', 'i3 では自作ローテーションだった'),
+q13: _keysRow([['Alt',GY],['Shift',GY],['B',PU]], 'Tatami：ブラウザ起動', 'i3 では輝度スライダーだった'),
+q14: _svg(_bx(8,50,150,38,'hl.unbind で外す','#3a2320') + _ar(158,69,178,69,YL) + _bx(178,50,150,38,'hl.bind で足す','#1b2a6e')
+ + _tx(180,112,'外してから足す（両方実行される）',DM,11) + _tx(180,26,'手順が大事',YL,12)),
+};
+function showDiagFor(id){
+const d = $('diagram');
+if(DIAG[id]){ d.innerHTML = DIAG[id]; d.style.display = 'block'; }
+else { d.style.display = 'none'; $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+}
+
 function showNode(id){
+showDiagFor(id);
 const n = NODES[id];
 if(!n) return;
 state.node = id;
@@ -506,6 +576,15 @@ showNode(c.to);
 chEl.appendChild(b);
 });
 chEl.classList.add('show');
+const dg = $('diagram');
+if(dg && dg.style.display === 'block'){
+$('screen').classList.add('diagmenu');
+requestAnimationFrame(()=>{
+const sr = $('screen').getBoundingClientRect();
+const dr = dg.getBoundingClientRect();
+chEl.style.top = Math.max(0, Math.round(dr.bottom - sr.top + 8)) + 'px';
+});
+} else { $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
 }
 function showEnding(){
 const s = state.stats;

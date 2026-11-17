@@ -92,6 +92,13 @@ text-shadow:3px 3px 0 var(--blue), 6px 6px 0 #101736}
 .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
 border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;opacity:0;transition:opacity.3s;z-index:50;pointer-events:none}
 .toast.show{opacity:1}
+#diagram{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:min(560px,94%);z-index:5;background:rgba(3,4,16,.88);border:2px solid var(--dim);padding:6px;display:none}
+#diagram svg{width:100%;height:auto;display:block}
+#diagram{transition:width .25s}
+.screen.diagmenu #diagram{width:min(430px,74%)}
+.screen.diagmenu .choices{bottom:calc(var(--tb) + 8px);flex-direction:row;flex-wrap:wrap;align-content:flex-start;justify-content:center;gap:8px}
+.screen.diagmenu .choice{flex:1 1 28%;width:auto;margin:0;text-align:center;font-size:14px;padding:10px 8px;line-height:1.5}
+
 footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
 kbd{display:inline-block;background:#21262d;border:1px solid var(--dim);border-bottom-width:2px;
 border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
@@ -139,6 +146,7 @@ border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-si
 <div class="stars"></div>
 <div class="ground"></div>
 <div class="char" id="char"></div>
+<div id="diagram"></div>
 <div class="namebox" id="namebox" style="display:none"></div>
 <div class="textbox" id="textbox"><span id="text"></span><span class="next" id="nextmark" style="display:none">▼</span></div>
 <div class="choices" id="choices"></div>
@@ -377,12 +385,88 @@ b.onclick=()=>{ beep(520,.06); setTimeout(()=>beep(780,.07),70); chEl.classList.
 chEl.appendChild(b);
 });
 chEl.classList.add('show');
+const dg = $('diagram');
+if(dg && dg.style.display === 'block'){
+$('screen').classList.add('diagmenu');
+requestAnimationFrame(()=>{
+const sr = $('screen').getBoundingClientRect();
+const dr = dg.getBoundingClientRect();
+chEl.style.top = Math.max(0, Math.round(dr.bottom - sr.top + 8)) + 'px';
+});
+} else { $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
 }
-function hideChoices(){ chEl.classList.remove('show'); chEl.innerHTML='';}
+function hideChoices(){ chEl.classList.remove('show'); chEl.innerHTML=''; chEl.style.top=''; $('screen').classList.remove('diagmenu'); }
+
+
+/* ============ 図解（8bit風SVG・黒板） ============ */
+function _cm(x,y,ch,fill){ return '<rect x="'+(x+3)+'" y="'+(y+3)+'" width="30" height="30" fill="#000" opacity=".45"/><rect x="'+x+'" y="'+y+'" width="30" height="30" fill="'+fill+'" stroke="#dfe6ff" stroke-width="2"/><text x="'+(x+15)+'" y="'+(y+21)+'" font-size="14" fill="#05060f" text-anchor="middle" font-weight="bold">'+ch+'</text>'; }
+function _ar(x1,y1,x2,y2,col){ col=col||'#8fa3d9'; var pts; if(Math.abs(x2-x1)>=Math.abs(y2-y1)){ pts = x2>x1 ? [[x2,y2],[x2-10,y2-6],[x2-10,y2+6]] : [[x2,y2],[x2+10,y2-6],[x2+10,y2+6]]; } else { pts = y2>y1 ? [[x2,y2],[x2-6,y2-10],[x2+6,y2-10]] : [[x2,y2],[x2-6,y2+10],[x2+6,y2+10]]; } return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+col+'" stroke-width="4"/><polygon points="'+pts.map(function(p){return p.join(',');}).join(' ')+'" fill="'+col+'"/>'; }
+function _ln(x1,y1,x2,y2,col){ return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+(col||'#8fa3d9')+'" stroke-width="3"/>'; }
+function _tx(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'" text-anchor="middle">'+str+'</text>'; }
+function _txl(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'">'+str+'</text>'; }
+function _bx(x,y,w,h,label,fill){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'" stroke="#8fa3d9" stroke-width="2"/><text x="'+(x+w/2)+'" y="'+(y+h/2+5)+'" font-size="12" fill="#fff" text-anchor="middle">'+label+'</text>'; }
+function _tag(x,y,str,col){ var w=str.length*12+12; return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="20" fill="'+col+'"/><text x="'+(x+w/2)+'" y="'+(y+14)+'" font-size="11" fill="#05060f" text-anchor="middle" font-weight="bold">'+str+'</text>'; }
+function _svg(inner){ return '<svg viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'+inner+'</svg>'; }
+function _key(x,y,w,label,fill){ var tc = (fill===YL||fill===GN)? '#05060f':'#fff'; return '<rect x="'+(x+3)+'" y="'+(y+3)+'" width="'+w+'" height="34" fill="#000" opacity=".45"/><rect x="'+x+'" y="'+y+'" width="'+w+'" height="34" fill="'+fill+'" stroke="#dfe6ff" stroke-width="2"/><text x="'+(x+w/2)+'" y="'+(y+22)+'" font-size="13" fill="'+tc+'" text-anchor="middle" font-weight="bold">'+label+'</text>'; }
+function _keysRow(items, capTop, capBot, y){
+y = y || 48;
+var ws = items.map(function(it){ return Math.max(40, it[0].length*10 + 22); });
+var total = ws.reduce(function(a,b){return a+b;},0) + (items.length-1)*22;
+var x = (360-total)/2, s = '';
+if(capTop) s += _tx(180, 26, capTop, DM, 12);
+items.forEach(function(it, i){ s += _key(x, y, ws[i], it[0], it[1]); if(i < items.length-1) s += _ar(x+ws[i]+3, y+17, x+ws[i]+19, y+17, DM); x += ws[i] + 22; });
+if(capBot) s += _tx(180, y+76, capBot, DM, 12);
+return _svg(s);
+}
+function _cross(cap, fill){
+return _svg(_key(163,6,34,'K',fill) + _key(113,46,34,'H',fill) + _key(163,46,34,'J',fill) + _key(213,46,34,'L',fill)
++ _tx(180,112,cap,DM,12));
+}
+function _crossA(cap){
+return _svg(_key(163,6,34,'↑',GY) + _key(113,46,34,'←',GY) + _key(163,46,34,'↓',GY) + _key(213,46,34,'→',GY)
++ _tx(180,112,cap,DM,12));
+}
+var BL='#4a6bff', YL='#ffd94a', GN='#7ee787', RD='#ff7b72', PU='#b18cff', GY='#5a6b9e', DM='#8fa3d9';
+
+const DIAG = {
+n1: _keysRow([['SPC',YL],['q',BL],['q',BL]], '終了：SPC q q（確認が来る）', '起動はターミナルで emacs'),
+n2: _svg(_bx(15,45,150,40,'ノーマル：移動・操作','#1b2a6e') + _bx(195,45,150,40,'インサート：文字入力','#3a2a6e')
+ + _ar(165,56,195,56,GN) + _tx(180,50,'i',GN,12) + _ar(195,78,165,78,PU) + _tx(180,94,'Esc',PU,12)
+ + _tx(180,116,'Esc で戻るのが基本姿勢',DM,11)),
+n3: _svg(_tx(180,20,'SPC を押すと下にメニューが出る',DM,12)
+ + _key(148,28,64,'SPC',YL)
+ + _bx(8,80,108,30,'f ファイル','#1b2a6e') + _bx(126,80,108,30,'b バッファ','#1b2a6e') + _bx(244,80,108,30,'g Git','#1b2a6e')),
+n4: _keysRow([['SPC',YL],['f',BL],['f',BL]], '開く：SPC f f', '保存：SPC f s ／ 閉じる：SPC b d'),
+s1: _keysRow([['SPC',YL],['b',BL],['b',BL]], 'バッファ一覧から選ぶ', 'SPC b n / b p で前後へ'),
+s2: _svg('<rect x="70" y="16" width="220" height="84" fill="#0a0e24" stroke="#8fa3d9" stroke-width="2"/><line x1="180" y1="16" x2="180" y2="100" stroke="#8fa3d9" stroke-width="2"/><line x1="180" y1="58" x2="290" y2="58" stroke="#8fa3d9" stroke-width="2"/>'
+ + _tx(125,62,'A',DM,14) + _tx(235,40,'B',DM,14) + _tx(235,82,'C',DM,14)
+ + _tx(180,120,'SPC w v＝縦に割る ／ w s＝横に割る',DM,11)),
+s3: _keysRow([['SPC',YL],['s',BL],['p',BL]], 'プロジェクト全体を検索', 'バッファ内は SPC s s'),
+s4: _keysRow([['g',BL],['c',BL],['c',BL]], 'gcc：その行をコメント化', '単語移動は w / b（Vimのまま）'),
+c1: _svg(_tx(180,36,'d i w',YL,20) + _tx(180,64,'＝ 単語を消す（delete inner word）',DM,12)
+ + _tx(180,92,'c i " ＝ "…" の中身を変える',DM,12) + _tx(180,114,'演算子 ＋ 範囲 の文法',DM,11)),
+c2: _keysRow([['SPC',YL],['g',BL],['g',BL]], 'Magit を開く', 's＝ステージ ／ c c＝コミット ／ P p＝プッシュ'),
+c3: _keysRow([['SPC',YL],['p',BL],['p',BL]], 'プロジェクトを切り替える', 'SPC p f＝ファイル ／ p a＝追加'),
+c4: _keysRow([['q',BL],['a',BL]], 'q a で記録開始、q で停止', '再生は @a ／ 名前はレジスタ'),
+j1: _svg(_bx(8,50,104,38,'config.el','#1b2a6e') + _ar(112,69,128,69,YL) + _bx(128,50,104,38,'doom sync','#3a2a6e')
+ + _ar(232,69,248,69,YL) + _bx(248,50,104,38,'再起動','#1b2a6e') + _tx(180,112,'書く → sync → 再起動で反映',DM,11)),
+j2: _svg(_bx(55,12,250,32,'(map! :leader "z" …)','#0a0e24') + _ar(180,44,180,58,YL)
+ + _key(118,62,64,'SPC',YL) + _ar(185,79,203,79,DM) + _key(206,62,44,'z',BL)
+ + _tx(180,120,'SPC z に自作コマンドが生える',DM,11)),
+j3: _keysRow([['SPC',YL],['h',BL],['k',BL]], 'SPC h k：キーから調べる', 'h f＝関数 ／ h v＝変数'),
+j4: _keysRow([['SPC',YL],[':',PU]], 'SPC : ＝ M-x（コマンド名で実行）', 'Vertico 補完で絞り込む'),
+};
+function showDiagFor(id){
+const d = $('diagram');
+if(DIAG[id]){ d.innerHTML = DIAG[id]; d.style.display = 'block'; }
+else d.style.display = 'none';
+}
+function hideDiag(){ $('diagram').style.display = 'none'; $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
 
 /* ============ 画面遷移 ============ */
 function goLevels(){
 hideChoices();
+hideDiag();
 setScene('bg-room','none','');
 renderProgress('レベル選択');
 const dc = doneCount();
@@ -399,6 +483,7 @@ fn: ()=>goLessons(i)};
 }
 function goLessons(li){
 hideChoices();
+hideDiag();
 const lv = LEVELS[li];
 cur.level = li;
 setScene('bg-room','sennin','エマクス仙人');
@@ -419,6 +504,7 @@ if(withRetry) cur.pages.push('\n' + ls.retry);
 cur.page = 0;
 setScene('bg-term','sennin','エマクス仙人');
 renderProgress(LEVELS[li].name + '：' + ls.title);
+showDiagFor(ls.id);
 teachPage();
 }
 function teachPage(){
@@ -460,6 +546,7 @@ showChoices([
 });
 }
 function completeLesson(){
+hideDiag();
 const li = cur.level, idx = cur.lesson;
 const ls = LEVELS[li].lessons[idx];
 done[ls.id] = true; save();
