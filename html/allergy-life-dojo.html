@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>からだ道場 ― アレルギー体質と汗との付き合い方</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{
+--tb:29%;
+--ink:#dfe6ff; --dim:#8fa3d9; --blue:#3355ff; --panel:#0a0e24;
+--win:#101736; --accent:#ffd94a; --good:#7ee787; --bad:#ff7b72;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+body{margin:0;background:#05060f;color:var(--ink);
+font-family:"DotGothic16","Hiragino Kaku Gothic ProN","Noto Sans JP",monospace,sans-serif;
+-webkit-font-smoothing:none;font-smooth:never;
+display:flex;justify-content:center;padding:14px 10px 40px}
+.cab{width:100%;max-width:760px}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{font-weight:900;letter-spacing:2px;font-size:18px;color:#fff;
+text-shadow:2px 2px 0 var(--blue), 4px 4px 0 #101736}
+.logo small{display:block;font-size:11px;color:var(--dim);letter-spacing:1px;text-shadow:none}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer}
+.sbtn{background:var(--win);color:var(--ink);border:2px solid var(--dim);
+padding:4px 10px;font-size:12px;border-radius:4px}
+.sbtn:hover{border-color:#fff;color:#fff}
+.params{display:flex;gap:14px;background:var(--panel);border:2px solid var(--dim);
+padding:6px 12px;font-size:12px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.params b{color:var(--accent)}
+.bar{display:inline-block;width:120px;height:10px;background:#1a2148;vertical-align:middle;margin-left:4px;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--good);display:block}
+.screen{position:relative;border:6px solid var(--dim);border-radius:6px;overflow:hidden;
+aspect-ratio:16/10;background:#000;image-rendering:pixelated}
+.screen::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+background:repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 3px, transparent 3px 6px)}
+.bg{position:absolute;inset:0;transition:opacity.4s}
+.bg-room{background:linear-gradient(#0d1440 0 55%, #182257 55% 100%)}
+.bg-room::before{content:"";position:absolute;right:8%;top:8%;width:110px;height:130px;
+background:linear-gradient(#1b2a63,#0d1440);border:6px solid #05081a;
+box-shadow:0 0 0 4px #26398a, inset 0 0 0 3px #26398a}
+.bg-term{background:radial-gradient(ellipse at 50% 40%, #06280f 0%, #02140a 70%)}
+.bg-term::before{content:"ダニ対策 ❄ 換気 ❄ 保湿 ❄ 花粉 ❄ 汗ケア ❄ 睡眠 ❄";
+position:absolute;inset:6%;color:#2f9e44;font-size:13px;line-height:2.1;opacity:.55;
+font-family:ui-monospace,Menlo,monospace;word-break:break-all}
+.bg-way{background:linear-gradient(#1b1040 0%, #4a2a7a 55%, #c65b8f 82%, #ffb36b 100%)}
+.stars{position:absolute;inset:0;z-index:1;
+background-image:radial-gradient(2px 2px at 12% 18%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 32% 8%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 55% 22%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 74% 10%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 88% 26%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 44% 30%, #9fb4ff 50%, transparent 51%)}
+.char{position:absolute;bottom:var(--tb);left:50%;transform:translateX(-50%);z-index:2;
+filter:drop-shadow(0 0 10px rgba(60,100,255,.75))}
+.char svg{display:block}
+.ground{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:1;
+background:linear-gradient(transparent, rgba(3,5,16,.92) 30%)}
+.namebox{position:absolute;left:14px;bottom:calc(var(--tb) + 8px);z-index:8;color:#ffffff;
+background:var(--win);border:3px solid var(--dim);padding:2px 14px;font-weight:700;font-size:16px;
+letter-spacing:.06em;text-shadow:2px 2px 0 #000}
+.textbox{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:7;color:#ffffff;
+background:rgba(4,6,20,.97);border-top:4px solid var(--dim);
+padding:12px 16px;font-size:18px;line-height:1.8;letter-spacing:.06em;
+text-shadow:2px 2px 0 #000;
+cursor:pointer;white-space:pre-wrap;overflow-y:auto;overflow-x:hidden;
+scrollbar-width:thin;scrollbar-color:#3355ff #0a0e24}
+.textbox::-webkit-scrollbar{width:10px}
+.textbox::-webkit-scrollbar-track{background:#0a0e24}
+.textbox::-webkit-scrollbar-thumb{background:#3355ff;border:2px solid #04061a}
+.textbox.next{position:absolute;right:12px;bottom:6px;color:var(--accent);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.choices{position:absolute;top:0;left:0;right:0;bottom:calc(var(--tb) + 46px);z-index:9;display:none;flex-direction:column;
+align-items:center;justify-content:center;gap:12px;background:rgba(3,5,16,.78);padding:16px;overflow-y:auto}
+.choices.show{display:flex}
+.choice{width:min(92%,520px);background:#05081f;color:#ffffff;font-weight:700;
+border:3px solid #d5ddff;padding:12px 16px;font-size:18px;letter-spacing:.08em;
+text-shadow:2px 2px 0 #000;text-align:left;border-radius:4px}
+.choice:hover{border-color:var(--accent);color:#fff;background:#1b2a6e}
+.choice::before{content:"▶ ";color:var(--accent)}
+.choice.done{border-color:var(--good)}
+.choice.done::before{content:"✔ ";color:var(--good)}
+.title{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
+justify-content:center;gap:14px;background:radial-gradient(ellipse at 50% 35%, #14205e 0%, #05060f 75%);text-align:center;padding:16px}
+.title h1{margin:0;font-size:clamp(26px,6vw,44px);letter-spacing:3px;color:#fff;
+text-shadow:3px 3px 0 var(--blue), 6px 6px 0 #101736}
+.title p{color:#d5ddff;font-size:14px;margin:0;line-height:1.9}
+.tbtn{background:#05081f;color:#fff;font-weight:700;border:3px solid #d5ddff;padding:10px 26px;font-size:17px;letter-spacing:.08em;border-radius:4px}
+.tbtn:hover{border-color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
+border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;opacity:0;transition:opacity.3s;z-index:50;pointer-events:none}
+.toast.show{opacity:1}
+#diagram{transition:width .25s}
+.screen.diagmenu #diagram{width:min(430px,74%)}
+.screen.diagmenu .choices{bottom:calc(var(--tb) + 8px);flex-direction:row;flex-wrap:wrap;align-content:flex-start;justify-content:center;gap:8px}
+.screen.diagmenu .choice{flex:1 1 28%;width:auto;margin:0;text-align:center;font-size:14px;padding:10px 8px;line-height:1.5}
+
+#diagram{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:min(560px,94%);z-index:5;background:rgba(3,4,16,.88);border:2px solid var(--dim);padding:6px;display:none}
+#diagram svg{width:100%;height:auto;display:block}
+
+footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
+kbd{display:inline-block;background:#21262d;border:1px solid var(--dim);border-bottom-width:2px;
+border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+@media (max-width:560px){.textbox{font-size:15px}.char{bottom:var(--tb)}}
+
+/* ===== スマホ縦長対応：画面を縦に取り、本文ボックスの割合を広げる ===== */
+@media (orientation:portrait) and (max-width:760px){
+:root{--tb:46%}
+.screen{aspect-ratio:auto;height:80vh;height:80dvh}
+.textbox{font-size:16px;line-height:1.75}
+.char svg{width:100px;height:127px}
+.choice{font-size:16px;padding:10px 14px}
+.choices{overflow-y:auto}
+.title h1{font-size:25px}
+.title p{font-size:13px}
+.params{gap:8px;font-size:11px}
+.bar{width:80px}
+}
+
+/* ===== 選択肢が上に隠れる問題の修正：中央寄せのまま、溢れたら先頭からスクロール ===== */
+.choices{justify-content:flex-start;overflow-y:auto}
+.choice:first-child{margin-top:auto}
+.choice:last-child{margin-bottom:auto}
+</style>
+</head>
+<body>
+<div class="cab">
+<header>
+<div class="logo">からだ道場<small>― アレルギーと汗 全16課 ―</small></div>
+<div class="btns">
+<button class="sbtn" id="btnSound">🔊 音ON</button>
+<button class="sbtn" id="btnLevels">🏠 レベル選択</button>
+<button class="sbtn" id="btnReset">🗑 進捗リセット</button>
+</div>
+</header>
+
+<div class="params">
+<span>理解済み <b id="pDone">0</b> / 16 課<span class="bar"><i id="bDone" style="width:0%"></i></span></span>
+<span style="color:var(--dim)">現在：<span id="pNow">タイトル</span></span>
+<span style="margin-left:auto;color:var(--dim)">💾 進捗は自動保存（localStorage）</span>
+</div>
+
+<div class="screen" id="screen">
+<div class="bg bg-room" id="bg"></div>
+<div class="stars"></div>
+<div class="ground"></div>
+<div class="char" id="char"></div>
+<div id="diagram"></div>
+<div class="namebox" id="namebox" style="display:none"></div>
+<div class="textbox" id="textbox"><span id="text"></span><span class="next" id="nextmark" style="display:none">▼</span></div>
+<div class="choices" id="choices"></div>
+<div class="title" id="title">
+<h1>からだ道場</h1>
+<p>テーマは「アレルギー体質と多汗症との、毎日の付き合い方」。<br>
+住まいの整え方、毎日の習慣、外出と医療との付き合い方まで全16課。<br>
+「分かった！」で次へ、「分からない」で何度でもやり直し。</p>
+<button class="tbtn" id="btnEnter">▶ 道場に入る</button>
+<p>進捗（理解済み ✔）はブラウザに自動保存されます</p>
+</div>
+</div>
+
+<footer>
+遊び方：説明を読んだら「これは分かった！」か「分からない」を選ぶだけ。分かったら確認問題が1問出て、正解でその課は理解済み ✔。
+間違えてもペナルティなし、補足説明を読んで何度でも挑めます。本文クリックで文字送り、長い文は自動スクロール＋手動スクロール可。
+各課では仕組みと対策を図で描いて、見える化します。内容は一般的な生活上の工夫で、医療の代わりにはなりません。症状が強いとき、長引くときは、耳鼻科・皮膚科などの医療機関に相談してください。
+</footer>
+</div>
+
+<div class="toast" id="toast">💾 保存しました</div>
+
+<script>
+"use strict";
+/* ============ シルエット ============ */
+function sil(extra){
+return '<svg width="150" height="190" viewBox="0 0 120 150">'
++ '<circle cx="60" cy="34" r="17" fill="#141f52"/>'
++ '<path d="M22 150 C22 96 40 66 60 66 C80 66 98 96 98 150 Z" fill="#141f52"/>'
++ (extra || '') + '</svg>';
+}
+const CHARS = {
+sennin: sil('<path d="M28 26 L60 2 L92 26 L84 30 L60 14 L36 30 Z" fill="#141f52"/>'
++ '<path d="M48 44 L72 44 L66 92 L54 92 Z" fill="#141f52"/>'),
+ore: sil(''),
+none: ''
+};
+
+/* ============ カリキュラム ============ */
+/* teach: 説明ページ（クリックで送る） / retry: 補足説明 / quiz: 確認問題 */
+const LEVELS = [
+{ name:'入門編 敵を知る', desc:'アレルギーの仕組みと、汗の正体。体質は「クセ」として捉える。', lessons:[
+{ id:'h1', title:'アレルギーの仕組み', teach:[
+'アレルギーは、免疫の「過剰反応」じゃ。\n本来は無害なもの（花粉、ダニ、食べ物）を体が敵と誤認して、攻撃を始めてしまう。',
+'攻撃のときに放たれるヒスタミンなどの物質が、くしゃみ・鼻水・かゆみ・腫れを引き起こす。\n体質とは「弱さ」ではなく、反応のクセ。クセなら、付き合い方で変わる。'],
+retry:'アレルギー＝免疫が無害なものを敵と誤認する過剰反応。症状はヒスタミン等が起こす。',
+quiz:{ q:'アレルギー症状の正体は？', choices:[
+{ t:'免疫が無害なものを敵と誤認した過剰反応', ok:true }, { t:'体が弱いから病原菌に負けている', ok:false }, { t:'毒が体に溜まっている', ok:false } ] } },
+{ id:'h2', title:'主な相手を知る', teach:[
+'相手は大きく分けて：\nダニ・ハウスダスト（通年）、花粉（季節）、カビ、ペットのフケ、特定の食物。\n対策は相手ごとに違うので、「自分の相手は誰か」が第一歩。',
+'自分の相手は、病院の血液検査（アレルゲン検査）で調べられる。\nなんとなく全部を避けるより、相手を特定して的を絞るほうが、生活はずっと楽になる。'],
+retry:'相手はダニ・花粉・カビ・フケ・食物。検査で自分の相手を特定するのが第一歩。',
+quiz:{ q:'対策の第一歩は？', choices:[
+{ t:'全部を漠然と避ける', ok:false }, { t:'自分のアレルゲンを検査で特定する', ok:true }, { t:'薬を増やす', ok:false } ] } },
+{ id:'h3', title:'多汗症とは', teach:[
+'汗は体温を下げるための、正常で大切な機能じゃ。\n多汗症は、その汗が生活に支障が出るほど多く出る状態のこと。\n暑さだけでなく、緊張でも増えることがある。',
+'大事な前提：汗そのものは汚くないし、出すこと自体は悪くない。\n困りごとの本体は「量」と「かいた後の始末」のほうにある。'],
+retry:'多汗症＝汗が支障が出るほど多い状態。汗自体は正常な機能で、悪者ではない。',
+quiz:{ q:'汗について正しいのは？', choices:[
+{ t:'汗は汚いので止めるべき', ok:false }, { t:'汗は正常な体温調節。問題は量と後のケア', ok:true }, { t:'汗をかくのは体が弱い証拠', ok:false } ] } },
+{ id:'h4', title:'汗とアレルギーの関係', teach:[
+'汗をかいたまま放置すると、皮膚がふやけて刺激に弱くなり、あせも・かぶれ・かゆみが出やすくなる。\nアレルギー性の皮膚トラブルも、汗で悪化しがちじゃ。',
+'だから汗対策の要点は「止める」より「かいたら早く始末する」。\n拭く・流す・着替える。この3つが基本動作になる。'],
+retry:'汗の放置が皮膚トラブルを呼ぶ。要点は止めることより、拭く・流す・着替える。',
+quiz:{ q:'汗対策の要点は？', choices:[
+{ t:'汗を完全に止める', ok:false }, { t:'運動を避ける', ok:false }, { t:'かいたら早く拭く・流す・着替える', ok:true } ] } },
+]},
+{ name:'初級編 住まいの整え方', desc:'ダニ・カビ・花粉を減らす。寝具と湿度が本丸。', lessons:[
+{ id:'i1', title:'ダニ対策の本丸は寝具', teach:[
+'ダニの最大の住処は布団じゃ。人間のフケを食べて、暖かく湿った布団で増える。\n対策の優先順位は、部屋全体よりまず寝具。',
+'効くのは：シーツ・カバーの週1洗濯、布団乾燥機や天日干し、掃除機での吸引。\nダニは60℃以上の熱で死ぬので、乾燥機の高温は特に効く。防ダニシーツも補助になる。'],
+retry:'ダニの本丸は寝具。週1の洗濯・乾燥と、60℃の熱が効く。',
+quiz:{ q:'ダニ対策で最優先の場所は？', choices:[
+{ t:'寝具（布団・シーツ）', ok:true }, { t:'玄関', ok:false }, { t:'キッチン', ok:false } ] } },
+{ id:'i2', title:'掃除の作法', teach:[
+'ホコリは「舞い上げない」が鉄則。\n掃除機はゆっくりかけて、排気で舞う分は換気しながら逃がす。\n高い場所のホコリは、掃除の最初に落としてから床へ。',
+'拭き掃除は水拭き→乾拭きの順。\n空気清浄機は浮遊物を減らす補助にはなるが、布団の中のダニには届かない。\n順番は「発生源（寝具）→床→空気」じゃ。'],
+retry:'掃除は舞い上げない・換気しながら。空気清浄機は補助、本丸は発生源対策。',
+quiz:{ q:'掃除の鉄則は？', choices:[
+{ t:'ホコリを舞い上げないよう、換気しながら', ok:true }, { t:'速く一気に終わらせる', ok:false }, { t:'空気清浄機だけに任せる', ok:false } ] } },
+{ id:'i3', title:'湿度と換気', teach:[
+'湿度の目安は50〜60%。\n高すぎるとダニとカビが繁殖し、低すぎると鼻や喉の粘膜が乾いて防御力が落ちる。\n湿度計を1つ置くと、感覚が数字で見える。',
+'換気は基本じゃが、花粉の季節は時間帯に注意。\n花粉は昼前後と夕方に飛びやすく、雨上がりの翌日も多い。\n換気は短時間で、飛散の少ない時間に。'],
+retry:'湿度は50〜60%を維持。花粉期の換気は、飛散の少ない時間に短く。',
+quiz:{ q:'湿度の目安は？', choices:[
+{ t:'高いほどよい（80%以上）', ok:false }, { t:'50〜60%', ok:true }, { t:'低いほどよい（30%以下）', ok:false } ] } },
+{ id:'i4', title:'カビ対策', teach:[
+'カビの好物は、湿気と汚れと止まった空気。\n発生場所の代表は浴室と、窓の結露じゃ。\n結露は見つけたら拭く、浴室は使った後に換気扇を回す。',
+'カビ取り剤（塩素系）を使うときは換気が必須。\nそして絶対の約束：塩素系と酸性の洗剤を混ぜない。有毒ガスが出る。\n「混ぜるな危険」は本気の警告じゃ。'],
+retry:'カビは湿気対策が先。塩素系は換気必須で、酸性と混ぜない。',
+quiz:{ q:'カビ取りで絶対に守ることは？', choices:[
+{ t:'洗剤を混ぜて強くする', ok:false }, { t:'換気なしで一気にやる', ok:false }, { t:'換気し、塩素系と酸性を混ぜない', ok:true } ] } },
+]},
+{ name:'中級編 毎日の習慣', desc:'入浴・保湿・汗の始末・睡眠。日々の小さな型を作る。', lessons:[
+{ id:'j1', title:'入浴とスキンケア', teach:[
+'お湯はぬるめ（40℃前後）が基本。\n熱いお湯は気持ちよいが、皮脂を取りすぎて肌が乾燥し、かゆみが増える。\n体は泡でなでるように洗い、ゴシゴシこすらない。',
+'保湿は入浴後の早いうちに。肌が潤っているうちに塗ると、水分を閉じ込められる。\n汗をかいた日は、湯船の前にシャワーで汗を流すだけでも違う。'],
+retry:'ぬるめの湯、こすらない洗い、入浴後すぐの保湿。',
+quiz:{ q:'入浴で正しいのは？', choices:[
+{ t:'熱い湯でゴシゴシ洗う', ok:false }, { t:'ぬるめの湯で優しく洗い、直後に保湿', ok:true }, { t:'保湿は肌が完全に乾いてから', ok:false } ] } },
+{ id:'j2', title:'汗をかいた後のケア', teach:[
+'汗は、乾いたタオルでゴシゴシ拭くと肌を傷める。\n濡らしたタオルで押さえるように拭くか、シャワーで流すのが優しい。\nそして可能なら着替える。濡れた服の放置が、かぶれの元じゃ。',
+'制汗剤は、清潔で乾いた肌に使うと効く。汗で濡れた肌では流れてしまう。\nかゆみが出たら、かかずに冷やす。冷たいタオルや保冷剤（直接当てず布越し）が効く。'],
+retry:'汗は押さえて拭く・流す・着替える。かゆみはかかずに冷やす。',
+quiz:{ q:'汗の拭き方で正しいのは？', choices:[
+{ t:'乾いたタオルで強くこする', ok:false }, { t:'濡れタオルで押さえるように拭く', ok:true }, { t:'乾くまで放置する', ok:false } ] } },
+{ id:'j3', title:'睡眠と自律神経', teach:[
+'睡眠不足は、アレルギー症状も汗の調整も悪化させる。\n体は寝ている間に整うので、睡眠は「対策の土台」じゃ。\n寝具の清潔さは入門編の通り。あとは室温と寝間着の調整で、寝汗を減らせる。',
+'寝る前の強い光とスマホは、眠りを浅くする。\n完璧な睡眠を目指すより、まず「寝る時刻をそろえる」から。\nリズムが整うと、日中の症状も安定しやすい。'],
+retry:'睡眠は対策の土台。寝具の清潔＋室温調整＋就寝時刻をそろえる。',
+quiz:{ q:'睡眠でまず整えるのは？', choices:[
+{ t:'寝る時刻をそろえる', ok:true }, { t:'睡眠時間を削って活動する', ok:false }, { t:'寝る直前までスマホを見る', ok:false } ] } },
+{ id:'j4', title:'食事と運動', teach:[
+'食事は「バランスよく」が基本で、魔法の食品はない。\n注意したいのは逆で、食物アレルギーでない食品を自己判断で除去すると、栄養が偏る。\n除去は医師の判断でやるものじゃ。',
+'運動で汗をかく習慣は、体温調節の練習にもなる。\n大事なのは運動の後始末：シャワーで流して、着替える。\n花粉期の屋外運動は、時間帯と装備を選ぶ。'],
+retry:'除去食は自己判断でしない。運動は歓迎、後始末（流す・着替える）セットで。',
+quiz:{ q:'食事で正しいのは？', choices:[
+{ t:'怪しい食品は自己判断で全部やめる', ok:false }, { t:'バランスよく。除去は医師の判断で', ok:true }, { t:'サプリで食事を置き換える', ok:false } ] } },
+]},
+{ name:'上級編 外出と医療との付き合い方', desc:'花粉期の外出、薬と病院の使い方、そして自分の取扱説明書。', lessons:[
+{ id:'k1', title:'花粉シーズンの外出', teach:[
+'花粉は「付けない・持ち込まない」が型じゃ。\n外出時はマスク・メガネ・帽子。花粉が付きにくい、ツルツルした素材の上着も効く。',
+'帰宅したら、玄関で上着をはたいて花粉を落とし、手洗い・洗顔・うがい。\n洗濯物は花粉の多い日は部屋干し。\nこの一連を「帰宅ルーティン」として固定すると、家の中が守れる。'],
+retry:'外出はマスク・メガネ、帰宅は玄関で落として洗顔までが1セット。',
+quiz:{ q:'帰宅時の型は？', choices:[
+{ t:'そのまま部屋に上がる', ok:false }, { t:'玄関で花粉を落とし、洗顔・うがい', ok:true }, { t:'着替えは翌日でよい', ok:false } ] } },
+{ id:'k2', title:'薬との付き合い方', teach:[
+'市販の抗ヒスタミン薬などは、薬剤師に相談して選ぶのが基本じゃ。\n眠気の出方には個人差と薬ごとの違いがある。車の運転がある人は特に相談を。',
+'そして線引き：症状が強い、長引く、市販薬で収まらないときは、耳鼻科・皮膚科・アレルギー科へ。\n自己判断で強い薬を長く続けるのは避ける。医療は「困ったときの味方」として使う。'],
+retry:'市販薬は薬剤師に相談。強い・長引く症状は医療機関へ。',
+quiz:{ q:'薬で正しいのは？', choices:[
+{ t:'強い薬を自己判断で続ける', ok:false }, { t:'市販薬は薬剤師に相談し、長引けば受診', ok:true }, { t:'病院には絶対行かない', ok:false } ] } },
+{ id:'k3', title:'多汗症の相談先', teach:[
+'汗の困りごとが大きいなら、相談先は皮膚科じゃ。\n一般的な選択肢として、制汗の外用薬、イオントフォレーシス（微弱電流の治療）、ボトックス注射などがある。どれが合うかは医師と相談して決める。',
+'市販の制汗剤（塩化アルミニウム系など）は効く反面、かぶれることもある。\n肌に合わないと感じたら無理に続けず、使い方や製品を変えるか、受診のきっかけにする。'],
+retry:'多汗症の相談は皮膚科。治療の選択肢は複数あり、合うものを医師と選ぶ。',
+quiz:{ q:'多汗症の相談先は？', choices:[
+{ t:'皮膚科', ok:true }, { t:'相談先はない', ok:false }, { t:'我慢するしかない', ok:false } ] } },
+{ id:'k4', title:'卒業：自分の取扱説明書', teach:[
+'卒業じゃ。最後の型は「記録」：いつ・どこで・何をしたら悪化したかをメモすると、自分のパターンが見えてくる。\n相手と条件が分かれば、対策は的を絞れる。',
+'体質は治す対象というより、管理する相棒じゃ。\n完璧な対策は続かない。7割の対策を長く続けるほうが、結果として症状は安定する。\n自分の取扱説明書を、少しずつ育てていこう。'],
+retry:'記録で自分のパターンを知る。完璧より、7割の対策を続ける。',
+quiz:{ q:'卒業の型は？', choices:[
+{ t:'完璧な対策を短期間だけやる', ok:false }, { t:'体質を敵として戦う', ok:false }, { t:'記録でパターンを知り、7割を続ける', ok:true } ] } },
+]},
+];
+
+/* ============ エンジン ============ */
+const SAVE_KEY = 'allergyLifeDojoSaveV1';
+const TOTAL = LEVELS.reduce((a,l)=>a+l.lessons.length,0);
+let done = {};
+try{ const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); if(s && s.done) done = s.done;}catch(e){}
+let soundOn = true, typing = null, advanceFn = null;
+let cur = { level:0, lesson:0, pages:[], page:0};
+
+const $ = id => document.getElementById(id);
+const bgEl=$('bg'), charEl=$('char'), nameEl=$('namebox'), textEl=$('text'),
+boxEl=$('textbox'), chEl=$('choices'), nextEl=$('nextmark');
+
+function beep(freq, dur, delay, vol){
+if(!soundOn) return;
+try{
+const ctx = beep.ctx || (beep.ctx = new (window.AudioContext||window.webkitAudioContext)());
+if(ctx.state === 'suspended') ctx.resume();
+const o = ctx.createOscillator(), g = ctx.createGain();
+o.type='square'; o.frequency.value = freq || 660;
+g.gain.value = vol || 0.03;
+o.connect(g); g.connect(ctx.destination);
+const t = ctx.currentTime + (delay||0);
+o.start(t); o.stop(t + (dur||0.06));
+}catch(e){}
+}
+function save(){
+try{ localStorage.setItem(SAVE_KEY, JSON.stringify({done})); toast();}catch(e){}
+}
+function toast(){
+const t=$('toast'); t.classList.add('show');
+clearTimeout(toast.tm); toast.tm=setTimeout(()=>t.classList.remove('show'), 900);
+}
+function doneCount(){ return Object.keys(done).filter(k=>done[k]).length;}
+function renderProgress(now){
+$('pDone').textContent = doneCount();
+$('bDone').style.width = (doneCount()/TOTAL*100) + '%';
+if(now) $('pNow').textContent = now;
+}
+function setScene(bg, char, name){
+bgEl.className = 'bg ' + bg;
+charEl.innerHTML = CHARS[char] || '';
+charEl.style.display = char && char!== 'none'? '': 'none';
+if(name){ nameEl.textContent = name; nameEl.style.display='';} else nameEl.style.display='none';
+}
+function typeText(txt, onDoneTyping){
+clearInterval(typing);
+textEl.textContent=''; nextEl.style.display='none';
+boxEl.scrollTop = 0;
+advanceFn = null;
+let i=0;
+typing = setInterval(()=>{
+i++;
+textEl.textContent = txt.slice(0, i);
+boxEl.scrollTop = boxEl.scrollHeight;
+const ch = txt.charAt(i-1);
+if(ch && ch!== ' ' && ch!== '\n' && i % 2 === 1){
+beep(980 + Math.random()*520, 0.018, 0, 0.012);
+}
+if(i >= txt.length){
+clearInterval(typing); typing=null;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+}
+}, 26);
+boxEl.onclick = ()=>{
+if(typing){
+clearInterval(typing); typing=null;
+textEl.textContent = txt; boxEl.scrollTop = boxEl.scrollHeight;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+} else if(advanceFn){
+const f = advanceFn; advanceFn = null; f();
+}
+};
+}
+document.addEventListener('keydown', e=>{
+if(!typing && advanceFn && (e.key === ' ' || e.key === 'Enter')){
+e.preventDefault();
+const f = advanceFn; advanceFn = null; f();
+}
+});
+function showChoices(items){
+chEl.innerHTML='';
+items.forEach(it=>{
+const b=document.createElement('button');
+b.className='choice' + (it.done? ' done': '');
+b.textContent=it.t;
+b.onclick=()=>{ beep(520,.06); setTimeout(()=>beep(780,.07),70); chEl.classList.remove('show'); it.fn();};
+chEl.appendChild(b);
+});
+chEl.classList.add('show');
+const dg = $('diagram');
+if(dg && dg.style.display === 'block'){
+$('screen').classList.add('diagmenu');
+requestAnimationFrame(()=>{
+const sr = $('screen').getBoundingClientRect();
+const dr = dg.getBoundingClientRect();
+chEl.style.top = Math.max(0, Math.round(dr.bottom - sr.top + 8)) + 'px';
+});
+} else { $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+}
+function hideChoices(){ chEl.classList.remove('show'); chEl.innerHTML=''; chEl.style.top=''; $('screen').classList.remove('diagmenu'); }
+
+
+/* ============ 図解（8bit風SVG・黒板） ============ */
+function _cm(x,y,ch,fill){ return '<rect x="'+(x+3)+'" y="'+(y+3)+'" width="30" height="30" fill="#000" opacity=".45"/><rect x="'+x+'" y="'+y+'" width="30" height="30" fill="'+fill+'" stroke="#dfe6ff" stroke-width="2"/><text x="'+(x+15)+'" y="'+(y+21)+'" font-size="14" fill="#05060f" text-anchor="middle" font-weight="bold">'+ch+'</text>'; }
+function _ar(x1,y1,x2,y2,col){ col=col||'#8fa3d9'; var pts; if(Math.abs(x2-x1)>=Math.abs(y2-y1)){ pts = x2>x1 ? [[x2,y2],[x2-10,y2-6],[x2-10,y2+6]] : [[x2,y2],[x2+10,y2-6],[x2+10,y2+6]]; } else { pts = y2>y1 ? [[x2,y2],[x2-6,y2-10],[x2+6,y2-10]] : [[x2,y2],[x2-6,y2+10],[x2+6,y2+10]]; } return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+col+'" stroke-width="4"/><polygon points="'+pts.map(function(p){return p.join(',');}).join(' ')+'" fill="'+col+'"/>'; }
+function _ln(x1,y1,x2,y2,col){ return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+(col||'#8fa3d9')+'" stroke-width="3"/>'; }
+function _tx(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'" text-anchor="middle">'+str+'</text>'; }
+function _txl(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'">'+str+'</text>'; }
+function _bx(x,y,w,h,label,fill){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'" stroke="#8fa3d9" stroke-width="2"/><text x="'+(x+w/2)+'" y="'+(y+h/2+5)+'" font-size="12" fill="#fff" text-anchor="middle">'+label+'</text>'; }
+function _tag(x,y,str,col){ var w=str.length*12+12; return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="20" fill="'+col+'"/><text x="'+(x+w/2)+'" y="'+(y+14)+'" font-size="11" fill="#05060f" text-anchor="middle" font-weight="bold">'+str+'</text>'; }
+function _svg(inner){ return '<svg viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'+inner+'</svg>'; }
+var BL='#4a6bff', YL='#ffd94a', GN='#7ee787', RD='#ff7b72', PU='#b18cff', GY='#5a6b9e', DM='#8fa3d9';
+const DIAG = {
+h1: _svg(_bx(8,50,104,38,'花粉・ダニ','#3a2a6e') + _ar(112,69,128,69,RD) + _bx(128,50,104,38,'免疫が誤認','#3a2320')
+ + _ar(232,69,248,69,RD) + _bx(248,50,104,38,'くしゃみ・かゆみ','#1b2a6e')
+ + _tx(180,112,'無害なものを敵と間違える過剰反応',DM,11)),
+h2: _svg(_bx(15,20,155,36,'ダニ・ハウスダスト','#1b2a6e') + _bx(190,20,155,36,'花粉（季節）','#1b2a6e')
+ + _bx(15,68,155,36,'カビ・ペットのフケ','#3a2a6e') + _bx(190,68,155,36,'特定の食物','#3a2a6e')
+ + _tx(180,124,'自分の相手を検査で特定する',DM,11)),
+h3: _svg(_tx(180,30,'汗 ＝ 体温を下げる正常な機能',GN,13)
+ + _bx(60,52,240,38,'多汗症：支障が出るほど多い','#3a2320')
+ + _tx(180,112,'汗そのものは悪者ではない',DM,11)),
+h4: _svg(_bx(15,50,100,38,'汗を放置','#3a2320') + _ar(115,69,131,69,RD) + _bx(131,50,100,38,'肌が弱る','#3a2320')
+ + _ar(231,69,247,69,RD) + _bx(247,50,100,38,'かぶれ・かゆみ','#1b2a6e')
+ + _tx(180,112,'要点：拭く・流す・着替える',YL,11)),
+i1: _svg('<rect x="50" y="30" width="260" height="46" fill="#1b2a6e" stroke="#8fa3d9" stroke-width="2"/>'
+ + _tx(180,59,'布団 ＝ ダニの最大の住処','#ffffff',13)
+ + _tx(180,98,'週1の洗濯・乾燥 ＋ 60℃の熱',GN,12) + _tx(180,118,'防ダニシーツは補助',DM,11)),
+i2: _svg(_bx(30,35,130,40,'発生源（寝具）','#1b2a6e') + _ar(160,55,176,55,YL) + _bx(176,35,70,40,'床','#3a2a6e')
+ + _ar(246,55,262,55,YL) + _bx(262,35,70,40,'空気','#3a2a6e')
+ + _tx(180,104,'順番：発生源 → 床 → 空気',DM,11) + _tx(180,122,'舞い上げない・換気しながら',DM,11)),
+i3: _svg(_bx(15,35,100,40,'〜40%','#3a2320') + _bx(130,35,100,40,'50〜60%','#1b2a6e') + _bx(245,35,100,40,'70%〜','#3a2320')
+ + _tx(65,95,'乾燥で粘膜↓',RD,11) + _tx(180,95,'ちょうどよい',GN,11) + _tx(295,95,'ダニ・カビ↑',RD,11)
+ + _tx(180,118,'湿度計で数字を見る',DM,11)),
+i4: _svg(_bx(30,30,130,38,'湿気＋汚れ','#3a2320') + _ar(160,49,180,49,RD) + _bx(180,30,150,38,'カビ繁殖','#3a2320')
+ + _tx(180,92,'塩素系は換気必須・酸性と混ぜない',RD,12) + _tx(180,114,'結露は拭く、浴室は換気扇',DM,11)),
+j1: _svg(_tx(180,30,'お湯は 40℃前後のぬるめ',GN,13)
+ + _bx(45,50,270,38,'入浴後すぐ保湿（水分を閉じ込める）','#1b2a6e')
+ + _tx(180,110,'ゴシゴシ洗いは皮脂を奪う',RD,11)),
+j2: _svg(_bx(8,50,104,38,'押さえて拭く','#1b2a6e') + _ar(112,69,128,69,YL) + _bx(128,50,104,38,'流す','#1b2a6e')
+ + _ar(232,69,248,69,YL) + _bx(248,50,104,38,'着替える','#1b2a6e')
+ + _tx(180,112,'かゆみは かかずに冷やす',DM,11)),
+j3: _svg(_bx(60,25,240,36,'睡眠 ＝ 対策の土台','#3a2a6e')
+ + _tx(180,84,'寝具の清潔 ＋ 室温調整 ＋ 時刻をそろえる',DM,12)
+ + _tx(180,108,'睡眠不足は症状も汗も悪化させる',RD,11)),
+j4: _svg(_bx(15,30,155,40,'食事：バランス','#1b2a6e') + _bx(190,30,155,40,'運動：歓迎','#1b2a6e')
+ + _tx(92,92,'除去は医師判断',YL,11) + _tx(267,92,'後は流す・着替える',YL,11)
+ + _tx(180,118,'魔法の食品はない',DM,11)),
+k1: _svg(_bx(8,50,104,38,'マスク・メガネ','#1b2a6e') + _ar(112,69,128,69,YL) + _bx(128,50,104,38,'玄関で落とす','#3a2a6e')
+ + _ar(232,69,248,69,YL) + _bx(248,50,104,38,'洗顔・うがい','#1b2a6e')
+ + _tx(180,112,'帰宅ルーティンとして固定する',DM,11)),
+k2: _svg(_bx(15,30,155,40,'市販薬：薬剤師に相談','#1b2a6e') + _bx(190,30,155,40,'強い・長引く：受診','#3a2320')
+ + _tx(180,94,'耳鼻科・皮膚科・アレルギー科',DM,12)
+ + _tx(180,116,'自己判断で強い薬を続けない',RD,11)),
+k3: _svg(_bx(110,22,140,36,'皮膚科','#3a2a6e')
+ + _tx(180,80,'外用薬 ／ イオントフォレーシス ／ 注射 など',DM,12)
+ + _tx(180,104,'選択肢は複数。医師と一緒に選ぶ',DM,11)),
+k4: _svg(_bx(45,20,270,34,'症状日誌：いつ・どこで・何で','#1b2a6e')
+ + _ar(180,54,180,68,YL) + _bx(45,68,270,34,'自分のパターンが見える','#3a2a6e')
+ + _tx(180,122,'完璧より「7割を続ける」',YL,12)),
+};
+function showDiagFor(id){
+const d = $('diagram');
+if(DIAG[id]){ d.innerHTML = DIAG[id]; d.style.display = 'block'; }
+else d.style.display = 'none';
+}
+function hideDiag(){ $('diagram').style.display = 'none'; $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+
+/* ============ 画面遷移 ============ */
+function goLevels(){
+hideChoices();
+hideDiag();
+setScene('bg-room','none','');
+renderProgress('レベル選択');
+const dc = doneCount();
+const intro = dc === 0
+? '「よく来た。わしがからだ仙人じゃ」\nテーマは「体質との付き合い方」。全' + TOTAL + '課。\n好きな編からでよい。分かるまで、何度でも付き合うぞ。'
+: '「戻ったか。現在の理解済みは ' + dc + ' / ' + TOTAL + ' 課じゃ」\n続きをやるもよし、済んだ課を復習するもよし。';
+typeText(intro, ()=>{
+showChoices(LEVELS.map((lv, i)=>{
+const c = lv.lessons.filter(l=>done[l.id]).length;
+return { t: lv.name + '（' + c + '/' + lv.lessons.length + ' 済）', done: c === lv.lessons.length,
+fn: ()=>goLessons(i)};
+}));
+});
+}
+function goLessons(li){
+hideChoices();
+hideDiag();
+const lv = LEVELS[li];
+cur.level = li;
+setScene('bg-room','sennin','からだ仙人');
+renderProgress(lv.name);
+typeText('\n' + lv.desc + '\n課を選ぶのじゃ。✔ は理解済み。復習は何度でもできるぞ。', ()=>{
+showChoices(
+lv.lessons.map((ls, i)=>({ t: ls.title, done:!!done[ls.id], fn: ()=>startLesson(li, i, false)}))
+.concat([{ t:'レベル選択に戻る', fn: goLevels}])
+);
+});
+}
+function startLesson(li, idx, withRetry){
+hideChoices();
+const ls = LEVELS[li].lessons[idx];
+cur.level = li; cur.lesson = idx;
+cur.pages = ls.teach.slice();
+if(withRetry) cur.pages.push('\n' + ls.retry);
+cur.page = 0;
+setScene('bg-term','sennin','からだ仙人');
+renderProgress(LEVELS[li].name + '：' + ls.title);
+showDiagFor(ls.id);
+teachPage();
+}
+function teachPage(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+const isLast = cur.page >= cur.pages.length - 1;
+typeText('\n' + cur.pages[cur.page], ()=>{
+if(isLast){ showCheck();}
+else { advanceFn = ()=>{ cur.page++; teachPage();};}
+});
+}
+function showCheck(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+showChoices([
+{ t:'これは分かった！（確認問題へ）', fn: showQuiz},
+{ t:'分からない（もう一度聞く）', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'レッスン一覧に戻る', fn: ()=>goLessons(cur.level)}
+]);
+}
+function showQuiz(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+setScene('bg-term','sennin','からだ仙人');
+typeText('\n' + ls.quiz.q, ()=>{
+showChoices(ls.quiz.choices.map(c=>({
+t: c.t,
+fn: ()=>{ if(c.ok) completeLesson(); else wrongAnswer();}
+})));
+});
+}
+function wrongAnswer(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+beep(220,.12); setTimeout(()=>beep(180,.14),120);
+typeText('「むむ、違うぞ。焦らなくてよい」\n' + ls.retry, ()=>{
+showChoices([
+{ t:'もう一度説明を聞く', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'もう一度問題に挑む', fn: showQuiz}
+]);
+});
+}
+function completeLesson(){
+hideDiag();
+const li = cur.level, idx = cur.lesson;
+const ls = LEVELS[li].lessons[idx];
+done[ls.id] = true; save();
+[523,659,784,1046].forEach((f,i)=>beep(f,.1,i*0.11));
+renderProgress(LEVELS[li].name + '：' + ls.title + ' ✔');
+const dc = doneCount();
+const levelDone = LEVELS[li].lessons.every(l=>done[l.id]);
+let msg = '「うむ、分かったようじゃな」\n理解済み ✔（合計 ' + dc + ' / ' + TOTAL + ' 課）';
+if(dc >= TOTAL){
+setScene('bg-way','sennin','からだ仙人');
+msg += '\n\n――全課目、修了じゃ！\nここから先は実地あるのみ。Doom を開いて、指で覚えていくのじゃ。卒業おめでとう！';
+} else if(levelDone){
+msg += '\nは全課修了じゃ。よくやった。';
+}
+typeText(msg, ()=>{
+const items = [];
+if(dc < TOTAL){
+if(idx + 1 < LEVELS[li].lessons.length){
+items.push({ t:'次の例題へ（' + LEVELS[li].lessons[idx+1].title + '）', fn: ()=>startLesson(li, idx+1, false)});
+} else if(li + 1 < LEVELS.length){
+items.push({ t:'次の編へ（' + LEVELS[li+1].name + '）', fn: ()=>goLessons(li+1)});
+}
+}
+items.push({ t:'レッスン一覧に戻る', fn: ()=>goLessons(li)});
+items.push({ t:'レベル選択に戻る', fn: goLevels});
+showChoices(items);
+});
+}
+
+/* ============ ボタン類 ============ */
+$('btnEnter').onclick = ()=>{ beep(660,.06); $('title').style.display='none'; goLevels();};
+$('btnLevels').onclick = ()=>{ $('title').style.display='none'; goLevels();};
+$('btnReset').onclick = ()=>{
+done = {}; save(); renderProgress('タイトル');
+$('title').style.display='flex';
+};
+$('btnSound').onclick = (e)=>{
+soundOn =!soundOn;
+e.target.textContent = soundOn? '🔊 音ON': '🔇 音OFF';
+if(soundOn) beep(700,.06);
+};
+renderProgress('タイトル');
+</script>
+</body>
+</html>
