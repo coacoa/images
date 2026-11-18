@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>おでかけ道場 ― 毎日外に出る習慣</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{
+--tb:29%;
+--ink:#dfe6ff; --dim:#8fa3d9; --blue:#3355ff; --panel:#0a0e24;
+--win:#101736; --accent:#ffd94a; --good:#7ee787; --bad:#ff7b72;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+body{margin:0;background:#05060f;color:var(--ink);
+font-family:"DotGothic16","Hiragino Kaku Gothic ProN","Noto Sans JP",monospace,sans-serif;
+-webkit-font-smoothing:none;font-smooth:never;
+display:flex;justify-content:center;padding:14px 10px 40px}
+.cab{width:100%;max-width:760px}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{font-weight:900;letter-spacing:2px;font-size:18px;color:#fff;
+text-shadow:2px 2px 0 var(--blue), 4px 4px 0 #101736}
+.logo small{display:block;font-size:11px;color:var(--dim);letter-spacing:1px;text-shadow:none}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer}
+.sbtn{background:var(--win);color:var(--ink);border:2px solid var(--dim);
+padding:4px 10px;font-size:12px;border-radius:4px}
+.sbtn:hover{border-color:#fff;color:#fff}
+.params{display:flex;gap:14px;background:var(--panel);border:2px solid var(--dim);
+padding:6px 12px;font-size:12px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.params b{color:var(--accent)}
+.bar{display:inline-block;width:120px;height:10px;background:#1a2148;vertical-align:middle;margin-left:4px;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--good);display:block}
+.screen{position:relative;border:6px solid var(--dim);border-radius:6px;overflow:hidden;
+aspect-ratio:16/10;background:#000;image-rendering:pixelated}
+.screen::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+background:repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 3px, transparent 3px 6px)}
+.bg{position:absolute;inset:0;transition:opacity.4s}
+.bg-room{background:linear-gradient(#0d1440 0 55%, #182257 55% 100%)}
+.bg-room::before{content:"";position:absolute;right:8%;top:8%;width:110px;height:130px;
+background:linear-gradient(#1b2a63,#0d1440);border:6px solid #05081a;
+box-shadow:0 0 0 4px #26398a, inset 0 0 0 3px #26398a}
+.bg-term{background:radial-gradient(ellipse at 50% 40%, #06280f 0%, #02140a 70%)}
+.bg-term::before{content:"玄関 ❄ 5分 ❄ コース ❄ ○印 ❄ ご褒美 ❄ 最小版 ❄";
+position:absolute;inset:6%;color:#2f9e44;font-size:13px;line-height:2.1;opacity:.55;
+font-family:ui-monospace,Menlo,monospace;word-break:break-all}
+.bg-way{background:linear-gradient(#1b1040 0%, #4a2a7a 55%, #c65b8f 82%, #ffb36b 100%)}
+.stars{position:absolute;inset:0;z-index:1;
+background-image:radial-gradient(2px 2px at 12% 18%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 32% 8%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 55% 22%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 74% 10%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 88% 26%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 44% 30%, #9fb4ff 50%, transparent 51%)}
+.char{position:absolute;bottom:var(--tb);left:50%;transform:translateX(-50%);z-index:2;
+filter:drop-shadow(0 0 10px rgba(60,100,255,.75))}
+.char svg{display:block}
+.ground{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:1;
+background:linear-gradient(transparent, rgba(3,5,16,.92) 30%)}
+.namebox{position:absolute;left:14px;bottom:calc(var(--tb) + 8px);z-index:8;color:#ffffff;
+background:var(--win);border:3px solid var(--dim);padding:2px 14px;font-weight:700;font-size:16px;
+letter-spacing:.06em;text-shadow:2px 2px 0 #000}
+.textbox{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:7;color:#ffffff;
+background:rgba(4,6,20,.97);border-top:4px solid var(--dim);
+padding:12px 16px;font-size:18px;line-height:1.8;letter-spacing:.06em;
+text-shadow:2px 2px 0 #000;
+cursor:pointer;white-space:pre-wrap;overflow-y:auto;overflow-x:hidden;
+scrollbar-width:thin;scrollbar-color:#3355ff #0a0e24}
+.textbox::-webkit-scrollbar{width:10px}
+.textbox::-webkit-scrollbar-track{background:#0a0e24}
+.textbox::-webkit-scrollbar-thumb{background:#3355ff;border:2px solid #04061a}
+.textbox.next{position:absolute;right:12px;bottom:6px;color:var(--accent);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.choices{position:absolute;top:0;left:0;right:0;bottom:calc(var(--tb) + 46px);z-index:9;display:none;flex-direction:column;
+align-items:center;justify-content:center;gap:12px;background:rgba(3,5,16,.78);padding:16px;overflow-y:auto}
+.choices.show{display:flex}
+.choice{width:min(92%,520px);background:#05081f;color:#ffffff;font-weight:700;
+border:3px solid #d5ddff;padding:12px 16px;font-size:18px;letter-spacing:.08em;
+text-shadow:2px 2px 0 #000;text-align:left;border-radius:4px}
+.choice:hover{border-color:var(--accent);color:#fff;background:#1b2a6e}
+.choice::before{content:"▶ ";color:var(--accent)}
+.choice.done{border-color:var(--good)}
+.choice.done::before{content:"✔ ";color:var(--good)}
+.title{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
+justify-content:center;gap:14px;background:radial-gradient(ellipse at 50% 35%, #14205e 0%, #05060f 75%);text-align:center;padding:16px}
+.title h1{margin:0;font-size:clamp(26px,6vw,44px);letter-spacing:3px;color:#fff;
+text-shadow:3px 3px 0 var(--blue), 6px 6px 0 #101736}
+.title p{color:#d5ddff;font-size:14px;margin:0;line-height:1.9}
+.tbtn{background:#05081f;color:#fff;font-weight:700;border:3px solid #d5ddff;padding:10px 26px;font-size:17px;letter-spacing:.08em;border-radius:4px}
+.tbtn:hover{border-color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
+border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;opacity:0;transition:opacity.3s;z-index:50;pointer-events:none}
+.toast.show{opacity:1}
+#diagram{transition:width .25s}
+.screen.diagmenu #diagram{width:min(430px,74%)}
+.screen.diagmenu .choices{bottom:calc(var(--tb) + 8px);flex-direction:row;flex-wrap:wrap;align-content:flex-start;justify-content:center;gap:8px}
+.screen.diagmenu .choice{flex:1 1 28%;width:auto;margin:0;text-align:center;font-size:14px;padding:10px 8px;line-height:1.5}
+
+#diagram{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:min(560px,94%);z-index:5;background:rgba(3,4,16,.88);border:2px solid var(--dim);padding:6px;display:none}
+#diagram svg{width:100%;height:auto;display:block}
+
+footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
+kbd{display:inline-block;background:#21262d;border:1px solid var(--dim);border-bottom-width:2px;
+border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+@media (max-width:560px){.textbox{font-size:15px}.char{bottom:var(--tb)}}
+
+/* ===== スマホ縦長対応：画面を縦に取り、本文ボックスの割合を広げる ===== */
+@media (orientation:portrait) and (max-width:760px){
+:root{--tb:46%}
+.screen{aspect-ratio:auto;height:80vh;height:80dvh}
+.textbox{font-size:16px;line-height:1.75}
+.char svg{width:100px;height:127px}
+.choice{font-size:16px;padding:10px 14px}
+.choices{overflow-y:auto}
+.title h1{font-size:25px}
+.title p{font-size:13px}
+.params{gap:8px;font-size:11px}
+.bar{width:80px}
+}
+
+/* ===== 選択肢が上に隠れる問題の修正：中央寄せのまま、溢れたら先頭からスクロール ===== */
+.choices{justify-content:flex-start;overflow-y:auto}
+.choice:first-child{margin-top:auto}
+.choice:last-child{margin-bottom:auto}
+</style>
+</head>
+<body>
+<div class="cab">
+<header>
+<div class="logo">おでかけ道場<small>― 毎日外に出る 全16課 ―</small></div>
+<div class="btns">
+<button class="sbtn" id="btnSound">🔊 音ON</button>
+<button class="sbtn" id="btnLevels">🏠 レベル選択</button>
+<button class="sbtn" id="btnReset">🗑 進捗リセット</button>
+</div>
+</header>
+
+<div class="params">
+<span>理解済み <b id="pDone">0</b> / 16 課<span class="bar"><i id="bDone" style="width:0%"></i></span></span>
+<span style="color:var(--dim)">現在：<span id="pNow">タイトル</span></span>
+<span style="margin-left:auto;color:var(--dim)">💾 進捗は自動保存（localStorage）</span>
+</div>
+
+<div class="screen" id="screen">
+<div class="bg bg-room" id="bg"></div>
+<div class="stars"></div>
+<div class="ground"></div>
+<div class="char" id="char"></div>
+<div id="diagram"></div>
+<div class="namebox" id="namebox" style="display:none"></div>
+<div class="textbox" id="textbox"><span id="text"></span><span class="next" id="nextmark" style="display:none">▼</span></div>
+<div class="choices" id="choices"></div>
+<div class="title" id="title">
+<h1>おでかけ道場</h1>
+<p>テーマは「毎日、少しだけ外に出る」。<br>
+5分の散歩で十分。玄関を出られたら勝ち、の設計で全16課。<br>
+「分かった！」で次へ、「分からない」で何度でもやり直し。</p>
+<button class="tbtn" id="btnEnter">▶ 道場に入る</button>
+<p>進捗（理解済み ✔）はブラウザに自動保存されます</p>
+</div>
+</div>
+
+<footer>
+遊び方：説明を読んだら「これは分かった！」か「分からない」を選ぶだけ。分かったら確認問題が1問出て、正解でその課は理解済み ✔。
+間違えてもペナルティなし、補足説明を読んで何度でも挑めます。本文クリックで文字送り、長い文は自動スクロール＋手動スクロール可。
+各課では摩擦の下げ方と1日の流れを図で描いて、見える化します。題材は君の自宅と近所です。敵は怠けではなく摩擦と区切りのなさ。意志ではなく設計で変えます。
+</footer>
+<style>
+#galleryWrap{margin:16px 0 4px;text-align:center}
+#gallery{display:none;text-align:left;margin-top:12px}
+.gal-item{background:#070a1c;border:2px solid #2c3a75;padding:10px 12px;margin:0 0 12px}
+.gal-cap{color:#ffd94a;font-size:14px;margin-bottom:8px}
+.gal-diag svg{width:100%;height:auto;display:block}
+</style>
+<div id="galleryWrap">
+<button class="sbtn" id="btnGallery">🖼 図解一覧（復習用）を表示</button>
+<div id="gallery"></div>
+</div>
+<script>
+(function(){
+var btn = document.getElementById('btnGallery');
+var gal = document.getElementById('gallery');
+var built = false;
+function build(){
+var html = '';
+if (typeof LEVELS !== 'undefined' && typeof DIAG !== 'undefined') {
+LEVELS.forEach(function(lv, li){
+lv.lessons.forEach(function(ls, i){
+if (DIAG[ls.id]) html += '<div class="gal-item"><div class="gal-cap">第' + (li+1) + '章 第' + (i+1) + '課：' + ls.title + '</div><div class="gal-diag">' + DIAG[ls.id] + '</div></div>';
+});
+});
+} else if (typeof DIAG !== 'undefined') {
+Object.keys(DIAG).forEach(function(k){
+var cap = k;
+if (typeof NODES !== 'undefined' && NODES[k] && NODES[k].title) cap = NODES[k].title;
+html += '<div class="gal-item"><div class="gal-cap">' + cap + '</div><div class="gal-diag">' + DIAG[k] + '</div></div>';
+});
+}
+gal.innerHTML = html || '<div class="gal-cap">図解はありません</div>';
+}
+btn.onclick = function(){
+var show = gal.style.display !== 'block';
+if (show && !built) { build(); built = true; }
+gal.style.display = show ? 'block' : 'none';
+btn.textContent = show ? '🖼 図解一覧（復習用）を隠す' : '🖼 図解一覧（復習用）を表示';
+};
+})();
+</script>
+</div>
+
+<div class="toast" id="toast">💾 保存しました</div>
+
+<script>
+"use strict";
+/* ============ シルエット ============ */
+function sil(extra){
+return '<svg width="150" height="190" viewBox="0 0 120 150">'
++ '<circle cx="60" cy="34" r="17" fill="#141f52"/>'
++ '<path d="M22 150 C22 96 40 66 60 66 C80 66 98 96 98 150 Z" fill="#141f52"/>'
++ (extra || '') + '</svg>';
+}
+const CHARS = {
+sennin: sil('<path d="M28 26 L60 2 L92 26 L84 30 L60 14 L36 30 Z" fill="#141f52"/>'
++ '<path d="M48 44 L72 44 L66 92 L54 92 Z" fill="#141f52"/>'),
+ore: sil(''),
+none: ''
+};
+
+/* ============ カリキュラム ============ */
+/* teach: 説明ページ（クリックで送る） / retry: 補足説明 / quiz: 確認問題 */
+const LEVELS = [
+{ name:'入門編 出られない理由を知る', desc:'敵は怠けではなく摩擦。勝ちの定義を下げ、きっかけとコースを決める。', lessons:[
+{ id:'a1', title:'敵は怠けではなく摩擦', teach:[
+'まず誤解を解く：外に出られないのは、怠けでも意志の弱さでもない。摩擦の差じゃ。\nPC は摩擦ゼロ（座れば即始まる）。外出は摩擦だらけ（着替え、行き先、天気、鍵、靴……）。人は摩擦の小さい方に流れる。これは自然なことじゃ。',
+'だから作戦は「意志を強くする」ではなく「外出の摩擦を PC 並みに下げる」こと。\nこの道場でやるのは、その設計だけじゃ。'],
+retry:'出られないのは摩擦の差。作戦は外出の摩擦を下げる設計。',
+quiz:{ q:'外に出られない本当の理由は？', choices:[
+{ t:'外出の摩擦が PC より大きいから', ok:true }, { t:'意志が弱いから', ok:false }, { t:'体力がないから', ok:false } ] } },
+{ id:'a2', title:'勝ちの定義を下げる', teach:[
+'この道場の勝ちの定義は、これだけ：玄関のドアを開けて、外に出たら勝ち。\n5分歩けたら大勝ち。30分の立派な散歩など、最初から目指さない。',
+'定義を下げると何が起きるか。「それくらいなら」と体が動く。\nそして不思議なことに、出てしまえば大抵は5分以上歩く。\n狙うのは「出るまで」の1段だけじゃ。'],
+retry:'勝ち＝玄関を出ること。5分歩けば大勝ち。狙うのは出るまでの1段。',
+quiz:{ q:'この道場の「勝ち」の定義は？', choices:[
+{ t:'玄関を出ること', ok:true }, { t:'30分歩くこと', ok:false }, { t:'遠くまで行くこと', ok:false } ] } },
+{ id:'a3', title:'きっかけを1つ決める', teach:[
+'外出を「毎日必ず起きる出来事」に結びつける。例えば：昼食の後、夕食の前、風呂の前、PC 作業の区切り。\n時刻（18時）より出来事に結ぶ方が崩れにくい。生活リズムが多少ずれても、出来事は毎日来るからじゃ。',
+'きっかけは1つだけ決める。複数あると、どれも「まあ今日はいいか」になる。\n君の生活なら、まずは1つ選んでみよう。'],
+retry:'きっかけは出来事に結んで1つだけ。時刻より崩れにくい。',
+quiz:{ q:'きっかけの決め方は？', choices:[
+{ t:'毎日の出来事に結んで1つだけ', ok:true }, { t:'たくさん用意する', ok:false }, { t:'気分次第にする', ok:false } ] } },
+{ id:'a4', title:'行き先は固定コース', teach:[
+'「どこへ行くか考える」ことも摩擦じゃ。だから最初は、家の周りの5分コースを1本だけ決める。\n信号が少ない、車が少ない、戻ってきやすい——その程度の基準でいい。',
+'同じコースで退屈では？と思うかもしれんが、最初は退屈でいい。考えることがゼロなのが価値じゃ。\n景色の変化や別コースは、続いてからの楽しみに取っておく。'],
+retry:'5分の固定コースを1本。考えることをゼロにするのが価値。',
+quiz:{ q:'固定コースの狙いは？', choices:[
+{ t:'考える摩擦をゼロにする', ok:true }, { t:'運動量を増やす', ok:false }, { t:'景色を楽しむ', ok:false } ] } },
+]},
+{ name:'初級編 最初の1週間', desc:'玄関セット、着替えの壁、○だけの記録、ご褒美。', lessons:[
+{ id:'b1', title:'玄関セットを作る', teach:[
+'出るまでの手数を減らす工夫：靴、鍵、スマホ（必要なら帽子や小銭入れ）を、玄関の定位置にまとめておく。\n「あれはどこだ」と探す時間は、そのまま「やっぱりいいか」に変わる。',
+'布団乾燥機の習慣と同じで、続くかどうかは配置で決まる部分が大きい。\n玄関は外出の発射台じゃ。まずここを整える。'],
+retry:'靴・鍵・スマホは玄関の定位置に。探す時間は摩擦になる。',
+quiz:{ q:'玄関セットの目的は？', choices:[
+{ t:'出るまでの手数（摩擦）を減らす', ok:true }, { t:'玄関を飾る', ok:false }, { t:'運動の準備', ok:false } ] } },
+{ id:'b2', title:'着替えの壁を下げる', teach:[
+'意外と大きい壁が「着替え」。ちゃんとした外出着に替えるのは面倒で、そこで止まる。\n最初の段階では基準を下げる：近所の5分なら、部屋着に上着1枚でも、スウェットでも構わない。誰も見ていないし、見られても何の問題もない。',
+'段階が上がって遠くへ行くようになったら、そのとき服も自然に変わる。\n順序を逆にしないことじゃ。'],
+retry:'最初は部屋着＋上着で OK。着替えの壁を下げて出ることを優先。',
+quiz:{ q:'最初の段階の服装の基準は？', choices:[
+{ t:'部屋着＋上着でもよい', ok:true }, { t:'きちんとした外出着が必須', ok:false }, { t:'運動着に着替える', ok:false } ] } },
+{ id:'b3', title:'記録は○だけ', teach:[
+'記録は最小にする：カレンダーやメモに「○」を1つ付けるだけ。出たら○、それだけ。\n歩数も距離も時間も、最初は記録しない。記録自体が摩擦になると本末転倒じゃ。',
+'○が並ぶと、それ自体が「途切れさせたくないもの」になる。これが一番安上がりなご褒美じゃ。\nスマホのカレンダーでも、紙でも、メモサイトでもいい。'],
+retry:'記録は○だけ。並んだ○がご褒美になる。',
+quiz:{ q:'記録の正しい形は？', choices:[
+{ t:'出たら○を1つ付けるだけ', ok:true }, { t:'歩数・距離・時間を全部記録', ok:false }, { t:'記録はしない', ok:false } ] } },
+{ id:'b4', title:'ご褒美を用意する', teach:[
+'「出る→いいこと」の結びつきを作る。帰宅後の温かい飲み物、歩くときだけ聴く音楽やラジオ、散歩中に写真を1枚撮る、帰りにコンビニで小さな好物を買う。\n大げさなものでなくていい。むしろ小さい方が毎日使える。',
+'大事なのは順序：ご褒美は「出た後」。先に取ると動機が消える。\n布団乾燥機の「ふかふか」と同じ仕組みじゃ。'],
+retry:'ご褒美は小さく、出た後に。出る→いいことの結びつきを作る。',
+quiz:{ q:'ご褒美の置き方は？', choices:[
+{ t:'小さなものを、出た後に', ok:true }, { t:'大きなものを、出る前に', ok:false }, { t:'ご褒美は不要', ok:false } ] } },
+]},
+{ name:'中級編 続ける技術', desc:'最小版、PCとの付き合い方、用事との結合、伸ばし方。', lessons:[
+{ id:'c1', title:'雨の日・疲れた日の最小版', teach:[
+'毎日続けるコツは、悪い日の型を先に決めておくことじゃ：\n雨の日＝傘で玄関先まで、またはポストまで。疲れた日＝ゴミ出しだけ、ベランダではなく玄関の外に立つだけ。',
+'これも「出た」うちに入れる。ゼロの日を作らないことが目的で、量は問わない。\nそして目安として、2日連続では休まない。2日空くと再開の摩擦が跳ね上がる。'],
+retry:'悪い日は最小版でゼロを避ける。2日連続で休まない。',
+quiz:{ q:'雨の日の正しい対応は？', choices:[
+{ t:'最小版（玄関先・ポストまで）で済ませる', ok:true }, { t:'休んで翌日2倍歩く', ok:false }, { t:'濡れても通常コース', ok:false } ] } },
+{ id:'c2', title:'PCとの付き合い方', teach:[
+'PC が悪いわけではない。問題は「区切りのなさ」じゃ。ダラダラは、終わりの合図がない状態の名前でもある。\nそこで、PC の区切りを外出のきっかけに転用する：タイマーが鳴ったら、タスクが1つ終わったら、動画が1本終わったら——その瞬間に立つ。',
+'座ったまま「あと少し」が一番強い引力じゃ。合図が来たら、考える前に玄関へ。\n考え始めたら負ける、くらいの割り切りでいい。'],
+retry:'ダラダラの正体は区切りのなさ。PC の区切りを外出の合図に転用。',
+quiz:{ q:'PC の区切りの使い方は？', choices:[
+{ t:'外出のきっかけに転用する', ok:true }, { t:'PC を捨てる', ok:false }, { t:'無視して続ける', ok:false } ] } },
+{ id:'c3', title:'用事と結合する', teach:[
+'慣れてきたら、小さな用事を「歩いて行く用事」に変える：買い物、図書館の返却、郵便、銀行、役所。\n用事があると外出に理由が生まれ、摩擦が下がる。用事がない日は固定コース。',
+'車や自転車で済ませていた近場の用事を、1つだけ徒歩担当にするのがコツじゃ。\n全部を徒歩にする必要はない。'],
+retry:'近場の用事を1つ徒歩担当に。用事は外出の理由になる。',
+quiz:{ q:'用事との結合のコツは？', choices:[
+{ t:'近場の用事を1つだけ徒歩担当にする', ok:true }, { t:'全部の用事を徒歩にする', ok:false }, { t:'用事は外出と分ける', ok:false } ] } },
+{ id:'c4', title:'5分→10分→15分', teach:[
+'伸ばし方の順序：まず「毎日出る」を固める。量は後。\n5分が当たり前になると、体が「もう少し」と言い出す。そのとき自然に10分へ。無理に伸ばすと、明日の摩擦が増える。',
+'目安は「物足りないくらいで帰る」。物足りなさは、明日出る力になる。\n限界まで歩く日は、習慣ではなくイベントとして別に楽しめばいい。'],
+retry:'伸ばすのは続いた後。物足りないくらいで帰るのが続く秘訣。',
+quiz:{ q:'伸ばすタイミングは？', choices:[
+{ t:'毎日出るのが固まってから', ok:true }, { t:'初日から限界まで', ok:false }, { t:'伸ばさない', ok:false } ] } },
+]},
+{ name:'上級編 生活に根づかせる', desc:'楽しみを足す、場所と約束、サボり期の戻り方、卒業。', lessons:[
+{ id:'d1', title:'見つける楽しみを足す', teach:[
+'続いた先の楽しみ：散歩は「見つける」遊びにできる。季節の花、実家の猫、鳥の声、工事の進み具合、夕日の位置。\nスマホで写真を1枚撮るだけでも、「今日は何かあるかな」が生まれる。',
+'これはご褒美の進化形じゃ。義務の外出が、少しだけ「見に行く」外出になる。\n撮った写真はメモサイトの題材にもなるな。'],
+retry:'写真1枚で「見つける楽しみ」に。義務が「見に行く」に変わる。',
+quiz:{ q:'楽しみを足す方法は？', choices:[
+{ t:'散歩で写真を1枚撮る', ok:true }, { t:'高価なカメラを買う', ok:false }, { t:'速く歩く', ok:false } ] } },
+{ id:'d2', title:'場所と約束する', teach:[
+'人との約束は重いが、場所との約束は軽い：図書館の返却日、店の営業日、ゴミの日、市場の日。\nカレンダーに「外の予定」が入っていると、外出は自動で起きる。',
+'これは習慣の自動化じゃ。意志も摩擦も介在しない日が増えていく。\n無理な人付き合いを作る必要はまったくない。'],
+retry:'図書館の返却日など、場所との約束で外出を自動化する。',
+quiz:{ q:'場所との約束の例は？', choices:[
+{ t:'図書館の返却日', ok:true }, { t:'毎日の飲み会', ok:false }, { t:'約束はしない', ok:false } ] } },
+{ id:'d3', title:'サボり期の戻り方', teach:[
+'数日空くことはある。体調、天気、気分——人生には波がある。\n大事なのは自己嫌悪しないこと。「連続記録を守る」ことより「戻ってくる」ことの方が、習慣の本質じゃ。',
+'再開は最小版から：玄関を出るだけの日でいい。\n戻り方を知っている人は、サボりを恐れなくなる。恐れが消えると、かえって続く。'],
+retry:'空いても自己嫌悪しない。再開は最小版から、戻ることが本質。',
+quiz:{ q:'サボり期の正しい戻り方は？', choices:[
+{ t:'最小版から再開する', ok:true }, { t:'反省して通常量で再開', ok:false }, { t:'記録を消して最初から', ok:false } ] } },
+{ id:'d4', title:'卒業：自分の4点セット', teach:[
+'卒業じゃ。自分の型は4点セットで言える：\nきっかけ1つ（例：夕食の前）、コース1本（5分）、最小版1つ（玄関先まで）、ご褒美1つ（帰宅後のお茶と○印）。',
+'完璧な習慣ではなく「戻ってこられる習慣」が目標だった。\nまず今週、今日のきっかけで玄関を出てみよう。それが1つ目の○じゃ。'],
+retry:'型は4点：きっかけ・コース・最小版・ご褒美。戻れる習慣が目標。',
+quiz:{ q:'4点セットに入らないものは？', choices:[
+{ t:'1日の歩数のノルマ', ok:true }, { t:'きっかけ1つ', ok:false }, { t:'最小版1つ', ok:false } ] } },
+]},
+];
+
+/* ============ エンジン ============ */
+const SAVE_KEY = 'outingHabitDojoSaveV1';
+const TOTAL = LEVELS.reduce((a,l)=>a+l.lessons.length,0);
+let done = {};
+try{ const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); if(s && s.done) done = s.done;}catch(e){}
+let soundOn = true, typing = null, advanceFn = null;
+let cur = { level:0, lesson:0, pages:[], page:0};
+
+const $ = id => document.getElementById(id);
+const bgEl=$('bg'), charEl=$('char'), nameEl=$('namebox'), textEl=$('text'),
+boxEl=$('textbox'), chEl=$('choices'), nextEl=$('nextmark');
+
+function beep(freq, dur, delay, vol){
+if(!soundOn) return;
+try{
+const ctx = beep.ctx || (beep.ctx = new (window.AudioContext||window.webkitAudioContext)());
+if(ctx.state === 'suspended') ctx.resume();
+const o = ctx.createOscillator(), g = ctx.createGain();
+o.type='square'; o.frequency.value = freq || 660;
+g.gain.value = vol || 0.03;
+o.connect(g); g.connect(ctx.destination);
+const t = ctx.currentTime + (delay||0);
+o.start(t); o.stop(t + (dur||0.06));
+}catch(e){}
+}
+function save(){
+try{ localStorage.setItem(SAVE_KEY, JSON.stringify({done})); toast();}catch(e){}
+}
+function toast(){
+const t=$('toast'); t.classList.add('show');
+clearTimeout(toast.tm); toast.tm=setTimeout(()=>t.classList.remove('show'), 900);
+}
+function doneCount(){ return Object.keys(done).filter(k=>done[k]).length;}
+function renderProgress(now){
+$('pDone').textContent = doneCount();
+$('bDone').style.width = (doneCount()/TOTAL*100) + '%';
+if(now) $('pNow').textContent = now;
+}
+function setScene(bg, char, name){
+bgEl.className = 'bg ' + bg;
+charEl.innerHTML = CHARS[char] || '';
+charEl.style.display = char && char!== 'none'? '': 'none';
+if(name){ nameEl.textContent = name; nameEl.style.display='';} else nameEl.style.display='none';
+}
+function typeText(txt, onDoneTyping){
+clearInterval(typing);
+textEl.textContent=''; nextEl.style.display='none';
+boxEl.scrollTop = 0;
+advanceFn = null;
+let i=0;
+typing = setInterval(()=>{
+i++;
+textEl.textContent = txt.slice(0, i);
+boxEl.scrollTop = boxEl.scrollHeight;
+const ch = txt.charAt(i-1);
+if(ch && ch!== ' ' && ch!== '\n' && i % 2 === 1){
+beep(980 + Math.random()*520, 0.018, 0, 0.012);
+}
+if(i >= txt.length){
+clearInterval(typing); typing=null;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+}
+}, 26);
+boxEl.onclick = ()=>{
+if(typing){
+clearInterval(typing); typing=null;
+textEl.textContent = txt; boxEl.scrollTop = boxEl.scrollHeight;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+} else if(advanceFn){
+const f = advanceFn; advanceFn = null; f();
+}
+};
+}
+document.addEventListener('keydown', e=>{
+if(!typing && advanceFn && (e.key === ' ' || e.key === 'Enter')){
+e.preventDefault();
+const f = advanceFn; advanceFn = null; f();
+}
+});
+function showChoices(items){
+chEl.innerHTML='';
+items.forEach(it=>{
+const b=document.createElement('button');
+b.className='choice' + (it.done? ' done': '');
+b.textContent=it.t;
+b.onclick=()=>{ beep(520,.06); setTimeout(()=>beep(780,.07),70); chEl.classList.remove('show'); it.fn();};
+chEl.appendChild(b);
+});
+chEl.classList.add('show');
+const dg = $('diagram');
+if(dg && dg.style.display === 'block'){
+$('screen').classList.add('diagmenu');
+requestAnimationFrame(()=>{
+const sr = $('screen').getBoundingClientRect();
+const dr = dg.getBoundingClientRect();
+chEl.style.top = Math.max(0, Math.round(dr.bottom - sr.top + 8)) + 'px';
+});
+} else { $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+}
+function hideChoices(){ chEl.classList.remove('show'); chEl.innerHTML=''; chEl.style.top=''; $('screen').classList.remove('diagmenu'); }
+
+
+/* ============ 図解（8bit風SVG・黒板） ============ */
+function _cm(x,y,ch,fill){ return '<rect x="'+(x+3)+'" y="'+(y+3)+'" width="30" height="30" fill="#000" opacity=".45"/><rect x="'+x+'" y="'+y+'" width="30" height="30" fill="'+fill+'" stroke="#dfe6ff" stroke-width="2"/><text x="'+(x+15)+'" y="'+(y+21)+'" font-size="14" fill="#05060f" text-anchor="middle" font-weight="bold">'+ch+'</text>'; }
+function _ar(x1,y1,x2,y2,col){ col=col||'#8fa3d9'; var pts; if(Math.abs(x2-x1)>=Math.abs(y2-y1)){ pts = x2>x1 ? [[x2,y2],[x2-10,y2-6],[x2-10,y2+6]] : [[x2,y2],[x2+10,y2-6],[x2+10,y2+6]]; } else { pts = y2>y1 ? [[x2,y2],[x2-6,y2-10],[x2+6,y2-10]] : [[x2,y2],[x2-6,y2+10],[x2+6,y2+10]]; } return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+col+'" stroke-width="4"/><polygon points="'+pts.map(function(p){return p.join(',');}).join(' ')+'" fill="'+col+'"/>'; }
+function _ln(x1,y1,x2,y2,col){ return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+(col||'#8fa3d9')+'" stroke-width="3"/>'; }
+function _tx(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'" text-anchor="middle">'+str+'</text>'; }
+function _txl(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'">'+str+'</text>'; }
+function _bx(x,y,w,h,label,fill){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'" stroke="#8fa3d9" stroke-width="2"/><text x="'+(x+w/2)+'" y="'+(y+h/2+5)+'" font-size="12" fill="#fff" text-anchor="middle">'+label+'</text>'; }
+function _tag(x,y,str,col){ var w=str.length*12+12; return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="20" fill="'+col+'"/><text x="'+(x+w/2)+'" y="'+(y+14)+'" font-size="11" fill="#05060f" text-anchor="middle" font-weight="bold">'+str+'</text>'; }
+function _svg(inner){ return '<svg viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'+inner+'</svg>'; }
+var BL='#4a6bff', YL='#ffd94a', GN='#7ee787', RD='#ff7b72', PU='#b18cff', GY='#5a6b9e', DM='#8fa3d9';
+const DIAG = {
+a1: _svg(_bx(15,28,155,40,'PC：座れば始まる','#1b2a6e') + _bx(190,28,155,40,'外出：手順が多い','#3a2320')
+ + _tx(92,92,'摩擦 ゼロ',GN,12) + _tx(267,92,'着替え・行き先・天気…',RD,12)
+ + _tx(180,118,'人は摩擦の小さい方に流れる',YL,11)),
+a2: _svg(_tx(180,34,'勝ち ＝ 玄関のドアを開けて外に出る',GN,13)
+ + _tx(180,64,'5分歩けたら大勝ち',YL,12)
+ + _tx(180,94,'狙うのは「出るまで」の 1 段だけ',DM,12)),
+a3: _svg(_bx(15,35,100,40,'昼食の後','#3a2a6e') + _bx(130,35,100,40,'風呂の前','#3a2a6e') + _bx(245,35,100,40,'作業の区切り','#3a2a6e')
+ + _tx(180,100,'時刻より「出来事」に結ぶ（毎日必ず来る）',YL,12)),
+a4: _svg(_cm(60,30,'家',GN) + _ar(100,45,150,45,YL) + _cm(150,30,'・',YL) + _ar(190,45,240,45,YL) + _cm(240,30,'・',YL)
+ + _ln(270,80,90,80,DM) + _tx(180,112,'5分コース 1 本：考えることをゼロに',YL,11)),
+b1: _svg(_txl(35,32,'玄関の定位置に：',YL,12) + _txl(35,58,'靴 ／ 鍵 ／ スマホ ／（帽子・小銭）',GN,12)
+ + _tx(180,96,'探す時間 ＝ そのまま摩擦',RD,12)
+ + _tx(180,118,'玄関は外出の発射台',DM,11)),
+b2: _svg(_bx(15,30,155,40,'今まで：外出着に着替え','#3a2320') + _bx(190,30,155,40,'最初は：部屋着＋上着','#1b2a6e')
+ + _tx(180,94,'近所 5 分なら誰も見ていない',YL,12)
+ + _tx(180,116,'出ること優先。服は後から変わる',DM,11)),
+b3: _svg(_tx(180,32,'カレンダーに ○ を付けるだけ',YL,13)
+ + _tx(180,62,'○ ○ ○ ○ ○ ○ …',GN,14)
+ + _tx(180,94,'並んだ ○ が「途切れさせたくない」になる',DM,11)),
+b4: _svg(_bx(60,25,240,38,'出た後に、小さなご褒美','#3a2a6e')
+ + _tx(180,86,'温かい飲み物 ／ 音楽 ／ 写真 1 枚',DM,12)
+ + _tx(180,110,'先に取ると動機が消える。順序が大事',RD,11)),
+c1: _svg(_txl(30,30,'雨の日 ＝ 傘で玄関先・ポストまで',YL,12) + _txl(30,56,'疲れた日 ＝ ゴミ出し・玄関の外に立つ',YL,12)
+ + _txl(30,82,'これも「出た」うち。量は問わない',GN,12)
+ + _tx(180,112,'2日連続では休まない',RD,11)),
+c2: _svg(_bx(15,30,155,40,'PC の区切り','#3a2320') + _ar(170,50,190,50,YL) + _bx(190,30,155,40,'外出の合図に','#1b2a6e')
+ + _tx(92,92,'タイマー／タスク完了',DM,11) + _tx(267,92,'考える前に玄関へ',GN,11)
+ + _tx(180,118,'ダラダラの正体は「区切りのなさ」',YL,11)),
+c3: _svg(_txl(30,30,'徒歩担当の用事を 1 つ：',YL,12) + _txl(30,56,'買い物 ／ 図書館 ／ 郵便 ／ 銀行',GN,12)
+ + _txl(30,82,'用事のない日は固定コース',YL,12)
+ + _tx(180,110,'全部を徒歩にする必要はない',DM,11)),
+c4: _svg(_bx(15,40,100,38,'5分 毎日','#1b2a6e') + _ar(115,59,130,59,GN) + _bx(130,40,100,38,'10分 自然に','#3a2a6e')
+ + _ar(230,59,245,59,GN) + _bx(245,40,100,38,'15分 その先','#3a2a6e')
+ + _tx(180,106,'物足りないくらいで帰るのが秘訣',YL,11)),
+d1: _svg(_tx(180,32,'散歩 ＝「見つける」遊び',YL,13)
+ + _tx(180,62,'花・猫・鳥・工事・夕日… 写真 1 枚',GN,12)
+ + _tx(180,94,'義務の外出 →「見に行く」外出へ',DM,11)),
+d2: _svg(_txl(30,30,'場所との約束（軽い）：',YL,12) + _txl(30,56,'図書館の返却日 ／ 店の営業日 ／ ゴミの日',GN,12)
+ + _txl(30,82,'カレンダーに入れば外出は自動で起きる',YL,12)
+ + _tx(180,110,'人付き合いを作る必要はない',DM,11)),
+d3: _svg(_tx(180,32,'数日空くのは普通のこと',YL,13)
+ + _tx(180,62,'大事なのは「戻ってくる」こと',GN,12)
+ + _tx(180,92,'再開は最小版から。自己嫌悪はしない',DM,11)),
+d4: _svg(_txl(30,28,'きっかけ 1つ（例：夕食の前）',YL,12) + _txl(30,54,'コース 1本（5分）',YL,12)
+ + _txl(30,80,'最小版 1つ（玄関先まで）',YL,12) + _txl(30,106,'ご褒美 1つ（お茶と ○印）',YL,12)),
+};
+function showDiagFor(id){
+const d = $('diagram');
+if(DIAG[id]){ d.innerHTML = DIAG[id]; d.style.display = 'block'; }
+else d.style.display = 'none';
+}
+function hideDiag(){ $('diagram').style.display = 'none'; $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+
+/* ============ 画面遷移 ============ */
+function goLevels(){
+hideChoices();
+hideDiag();
+setScene('bg-room','none','');
+renderProgress('レベル選択');
+const dc = doneCount();
+const intro = dc === 0
+? '「よく来た。わしがからだ仙人じゃ」\nテーマは「外に出る設計」。全' + TOTAL + '課。\n好きな編からでよい。分かるまで、何度でも付き合うぞ。'
+: '「戻ったか。現在の理解済みは ' + dc + ' / ' + TOTAL + ' 課じゃ」\n続きをやるもよし、済んだ課を復習するもよし。';
+typeText(intro, ()=>{
+showChoices(LEVELS.map((lv, i)=>{
+const c = lv.lessons.filter(l=>done[l.id]).length;
+return { t: lv.name + '（' + c + '/' + lv.lessons.length + ' 済）', done: c === lv.lessons.length,
+fn: ()=>goLessons(i)};
+}));
+});
+}
+function goLessons(li){
+hideChoices();
+hideDiag();
+const lv = LEVELS[li];
+cur.level = li;
+setScene('bg-room','sennin','からだ仙人');
+renderProgress(lv.name);
+typeText('\n' + lv.desc + '\n課を選ぶのじゃ。✔ は理解済み。復習は何度でもできるぞ。', ()=>{
+showChoices(
+lv.lessons.map((ls, i)=>({ t: ls.title, done:!!done[ls.id], fn: ()=>startLesson(li, i, false)}))
+.concat([{ t:'レベル選択に戻る', fn: goLevels}])
+);
+});
+}
+function startLesson(li, idx, withRetry){
+hideChoices();
+const ls = LEVELS[li].lessons[idx];
+cur.level = li; cur.lesson = idx;
+cur.pages = ls.teach.slice();
+if(withRetry) cur.pages.push('\n' + ls.retry);
+cur.page = 0;
+setScene('bg-term','sennin','からだ仙人');
+renderProgress(LEVELS[li].name + '：' + ls.title);
+showDiagFor(ls.id);
+teachPage();
+}
+function teachPage(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+const isLast = cur.page >= cur.pages.length - 1;
+typeText('\n' + cur.pages[cur.page], ()=>{
+if(isLast){ showCheck();}
+else { advanceFn = ()=>{ cur.page++; teachPage();};}
+});
+}
+function showCheck(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+showChoices([
+{ t:'これは分かった！（確認問題へ）', fn: showQuiz},
+{ t:'分からない（もう一度聞く）', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'レッスン一覧に戻る', fn: ()=>goLessons(cur.level)}
+]);
+}
+function showQuiz(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+setScene('bg-term','sennin','からだ仙人');
+typeText('\n' + ls.quiz.q, ()=>{
+showChoices(ls.quiz.choices.map(c=>({
+t: c.t,
+fn: ()=>{ if(c.ok) completeLesson(); else wrongAnswer();}
+})));
+});
+}
+function wrongAnswer(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+beep(220,.12); setTimeout(()=>beep(180,.14),120);
+typeText('「むむ、違うぞ。焦らなくてよい」\n' + ls.retry, ()=>{
+showChoices([
+{ t:'もう一度説明を聞く', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'もう一度問題に挑む', fn: showQuiz}
+]);
+});
+}
+function completeLesson(){
+hideDiag();
+const li = cur.level, idx = cur.lesson;
+const ls = LEVELS[li].lessons[idx];
+done[ls.id] = true; save();
+[523,659,784,1046].forEach((f,i)=>beep(f,.1,i*0.11));
+renderProgress(LEVELS[li].name + '：' + ls.title + ' ✔');
+const dc = doneCount();
+const levelDone = LEVELS[li].lessons.every(l=>done[l.id]);
+let msg = '「うむ、分かったようじゃな」\n理解済み ✔（合計 ' + dc + ' / ' + TOTAL + ' 課）';
+if(dc >= TOTAL){
+setScene('bg-way','sennin','からだ仙人');
+msg += '\n\n――全課目、修了じゃ！\nここから先は実地あるのみ。Doom を開いて、指で覚えていくのじゃ。卒業おめでとう！';
+} else if(levelDone){
+msg += '\nは全課修了じゃ。よくやった。';
+}
+typeText(msg, ()=>{
+const items = [];
+if(dc < TOTAL){
+if(idx + 1 < LEVELS[li].lessons.length){
+items.push({ t:'次の例題へ（' + LEVELS[li].lessons[idx+1].title + '）', fn: ()=>startLesson(li, idx+1, false)});
+} else if(li + 1 < LEVELS.length){
+items.push({ t:'次の編へ（' + LEVELS[li+1].name + '）', fn: ()=>goLessons(li+1)});
+}
+}
+items.push({ t:'レッスン一覧に戻る', fn: ()=>goLessons(li)});
+items.push({ t:'レベル選択に戻る', fn: goLevels});
+showChoices(items);
+});
+}
+
+/* ============ ボタン類 ============ */
+$('btnEnter').onclick = ()=>{ beep(660,.06); $('title').style.display='none'; goLevels();};
+$('btnLevels').onclick = ()=>{ $('title').style.display='none'; goLevels();};
+$('btnReset').onclick = ()=>{
+done = {}; save(); renderProgress('タイトル');
+$('title').style.display='flex';
+};
+$('btnSound').onclick = (e)=>{
+soundOn =!soundOn;
+e.target.textContent = soundOn? '🔊 音ON': '🔇 音OFF';
+if(soundOn) beep(700,.06);
+};
+renderProgress('タイトル');
+</script>
+</body>
+</html>
