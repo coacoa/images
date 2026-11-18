@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gitロボット道場 ― ロボットで覚えるGit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{
+--tb:29%;
+--ink:#dfe6ff; --dim:#8fa3d9; --blue:#3355ff; --panel:#0a0e24;
+--win:#101736; --accent:#ffd94a; --good:#7ee787; --bad:#ff7b72;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+body{margin:0;background:#05060f;color:var(--ink);
+font-family:"DotGothic16","Hiragino Kaku Gothic ProN","Noto Sans JP",monospace,sans-serif;
+-webkit-font-smoothing:none;font-smooth:never;
+display:flex;justify-content:center;padding:14px 10px 40px}
+.cab{width:100%;max-width:760px}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{font-weight:900;letter-spacing:2px;font-size:18px;color:#fff;
+text-shadow:2px 2px 0 var(--blue), 4px 4px 0 #101736}
+.logo small{display:block;font-size:11px;color:var(--dim);letter-spacing:1px;text-shadow:none}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer}
+.sbtn{background:var(--win);color:var(--ink);border:2px solid var(--dim);
+padding:4px 10px;font-size:12px;border-radius:4px}
+.sbtn:hover{border-color:#fff;color:#fff}
+.params{display:flex;gap:14px;background:var(--panel);border:2px solid var(--dim);
+padding:6px 12px;font-size:12px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.params b{color:var(--accent)}
+.bar{display:inline-block;width:120px;height:10px;background:#1a2148;vertical-align:middle;margin-left:4px;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--good);display:block}
+.screen{position:relative;border:6px solid var(--dim);border-radius:6px;overflow:hidden;
+aspect-ratio:16/10;background:#000;image-rendering:pixelated}
+.screen::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+background:repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 3px, transparent 3px 6px)}
+.bg{position:absolute;inset:0;transition:opacity.4s}
+.bg-room{background:linear-gradient(#0d1440 0 55%, #182257 55% 100%)}
+.bg-room::before{content:"";position:absolute;right:8%;top:8%;width:110px;height:130px;
+background:linear-gradient(#1b2a63,#0d1440);border:6px solid #05081a;
+box-shadow:0 0 0 4px #26398a, inset 0 0 0 3px #26398a}
+.bg-term{background:radial-gradient(ellipse at 50% 40%, #06280f 0%, #02140a 70%)}
+.bg-term::before{content:"add ❄ commit ❄ push ❄ pull ❄ clone ❄ 記録ロボット ❄";
+position:absolute;inset:6%;color:#2f9e44;font-size:13px;line-height:2.1;opacity:.55;
+font-family:ui-monospace,Menlo,monospace;word-break:break-all}
+.bg-way{background:linear-gradient(#1b1040 0%, #4a2a7a 55%, #c65b8f 82%, #ffb36b 100%)}
+.stars{position:absolute;inset:0;z-index:1;
+background-image:radial-gradient(2px 2px at 12% 18%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 32% 8%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 55% 22%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 74% 10%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 88% 26%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 44% 30%, #9fb4ff 50%, transparent 51%)}
+.char{position:absolute;bottom:var(--tb);left:50%;transform:translateX(-50%);z-index:2;
+filter:drop-shadow(0 0 10px rgba(60,100,255,.75))}
+.char svg{display:block}
+.ground{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:1;
+background:linear-gradient(transparent, rgba(3,5,16,.92) 30%)}
+.namebox{position:absolute;left:14px;bottom:calc(var(--tb) + 8px);z-index:8;color:#ffffff;
+background:var(--win);border:3px solid var(--dim);padding:2px 14px;font-weight:700;font-size:16px;
+letter-spacing:.06em;text-shadow:2px 2px 0 #000}
+.textbox{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:7;color:#ffffff;
+background:rgba(4,6,20,.97);border-top:4px solid var(--dim);
+padding:12px 16px;font-size:18px;line-height:1.8;letter-spacing:.06em;
+text-shadow:2px 2px 0 #000;
+cursor:pointer;white-space:pre-wrap;overflow-y:auto;overflow-x:hidden;
+scrollbar-width:thin;scrollbar-color:#3355ff #0a0e24}
+.textbox::-webkit-scrollbar{width:10px}
+.textbox::-webkit-scrollbar-track{background:#0a0e24}
+.textbox::-webkit-scrollbar-thumb{background:#3355ff;border:2px solid #04061a}
+.textbox.next{position:absolute;right:12px;bottom:6px;color:var(--accent);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.choices{position:absolute;top:0;left:0;right:0;bottom:calc(var(--tb) + 46px);z-index:9;display:none;flex-direction:column;
+align-items:center;justify-content:center;gap:12px;background:rgba(3,5,16,.78);padding:16px;overflow-y:auto}
+.choices.show{display:flex}
+.choice{width:min(92%,520px);background:#05081f;color:#ffffff;font-weight:700;
+border:3px solid #d5ddff;padding:12px 16px;font-size:18px;letter-spacing:.08em;
+text-shadow:2px 2px 0 #000;text-align:left;border-radius:4px}
+.choice:hover{border-color:var(--accent);color:#fff;background:#1b2a6e}
+.choice::before{content:"▶ ";color:var(--accent)}
+.choice.done{border-color:var(--good)}
+.choice.done::before{content:"✔ ";color:var(--good)}
+.title{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
+justify-content:center;gap:14px;background:radial-gradient(ellipse at 50% 35%, #14205e 0%, #05060f 75%);text-align:center;padding:16px}
+.title h1{margin:0;font-size:clamp(26px,6vw,44px);letter-spacing:3px;color:#fff;
+text-shadow:3px 3px 0 var(--blue), 6px 6px 0 #101736}
+.title p{color:#d5ddff;font-size:14px;margin:0;line-height:1.9}
+.tbtn{background:#05081f;color:#fff;font-weight:700;border:3px solid #d5ddff;padding:10px 26px;font-size:17px;letter-spacing:.08em;border-radius:4px}
+.tbtn:hover{border-color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
+border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;opacity:0;transition:opacity.3s;z-index:50;pointer-events:none}
+.toast.show{opacity:1}
+#diagram{transition:width .25s}
+.screen.diagmenu #diagram{width:min(430px,74%)}
+.screen.diagmenu .choices{bottom:calc(var(--tb) + 8px);flex-direction:row;flex-wrap:wrap;align-content:flex-start;justify-content:center;gap:8px}
+.screen.diagmenu .choice{flex:1 1 28%;width:auto;margin:0;text-align:center;font-size:14px;padding:10px 8px;line-height:1.5}
+
+#diagram{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:min(560px,94%);z-index:5;background:rgba(3,4,16,.88);border:2px solid var(--dim);padding:6px;display:none}
+#diagram svg{width:100%;height:auto;display:block}
+
+footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
+kbd{display:inline-block;background:#21262d;border:1px solid var(--dim);border-bottom-width:2px;
+border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+@media (max-width:560px){.textbox{font-size:15px}.char{bottom:var(--tb)}}
+
+/* ===== スマホ縦長対応：画面を縦に取り、本文ボックスの割合を広げる ===== */
+@media (orientation:portrait) and (max-width:760px){
+:root{--tb:46%}
+.screen{aspect-ratio:auto;height:80vh;height:80dvh}
+.textbox{font-size:16px;line-height:1.75}
+.char svg{width:100px;height:127px}
+.choice{font-size:16px;padding:10px 14px}
+.choices{overflow-y:auto}
+.title h1{font-size:25px}
+.title p{font-size:13px}
+.params{gap:8px;font-size:11px}
+.bar{width:80px}
+}
+
+/* ===== 選択肢が上に隠れる問題の修正：中央寄せのまま、溢れたら先頭からスクロール ===== */
+.choices{justify-content:flex-start;overflow-y:auto}
+.choice:first-child{margin-top:auto}
+.choice:last-child{margin-bottom:auto}
+</style>
+</head>
+<body>
+<div class="cab">
+<header>
+<div class="logo">Gitロボット道場<small>― 記録ロボットと倉庫ロボット 全16課 ―</small></div>
+<div class="btns">
+<button class="sbtn" id="btnSound">🔊 音ON</button>
+<button class="sbtn" id="btnLevels">🏠 レベル選択</button>
+<button class="sbtn" id="btnReset">🗑 進捗リセット</button>
+</div>
+</header>
+
+<div class="params">
+<span>理解済み <b id="pDone">0</b> / 16 課<span class="bar"><i id="bDone" style="width:0%"></i></span></span>
+<span style="color:var(--dim)">現在：<span id="pNow">タイトル</span></span>
+<span style="margin-left:auto;color:var(--dim)">💾 進捗は自動保存（localStorage）</span>
+</div>
+
+<div class="screen" id="screen">
+<div class="bg bg-room" id="bg"></div>
+<div class="stars"></div>
+<div class="ground"></div>
+<div class="char" id="char"></div>
+<div id="diagram"></div>
+<div class="namebox" id="namebox" style="display:none"></div>
+<div class="textbox" id="textbox"><span id="text"></span><span class="next" id="nextmark" style="display:none">▼</span></div>
+<div class="choices" id="choices"></div>
+<div class="title" id="title">
+<h1>Gitロボット道場</h1>
+<p>テーマは「Gitをロボットで想像する」。<br>
+君のPCの記録ロボットと、GitHubの倉庫ロボット。2体への頼み方で全16課。<br>
+「分かった！」で次へ、「分からない」で何度でもやり直し。</p>
+<button class="tbtn" id="btnEnter">▶ 道場に入る</button>
+<p>進捗（理解済み ✔）はブラウザに自動保存されます</p>
+</div>
+</div>
+
+<footer>
+遊び方：説明を読んだら「これは分かった！」か「分からない」を選ぶだけ。分かったら確認問題が1問出て、正解でその課は理解済み ✔。
+間違えてもペナルティなし、補足説明を読んで何度でも挑めます。本文クリックで文字送り、長い文は自動スクロール＋手動スクロール可。
+各課ではロボット同士のやり取りを図で描いて、見える化します。コマンドは git 本体の作法で書いてあります。Git道場（仕組み編）と対になっています。あわせてやると、地図が頭の中でつながります。
+</footer>
+</div>
+
+<div class="toast" id="toast">💾 保存しました</div>
+
+<script>
+"use strict";
+/* ============ シルエット ============ */
+function sil(extra){
+return '<svg width="150" height="190" viewBox="0 0 120 150">'
++ '<circle cx="60" cy="34" r="17" fill="#141f52"/>'
++ '<path d="M22 150 C22 96 40 66 60 66 C80 66 98 96 98 150 Z" fill="#141f52"/>'
++ (extra || '') + '</svg>';
+}
+const CHARS = {
+sennin: sil('<path d="M28 26 L60 2 L92 26 L84 30 L60 14 L36 30 Z" fill="#141f52"/>'
++ '<path d="M48 44 L72 44 L66 92 L54 92 Z" fill="#141f52"/>'),
+ore: sil(''),
+none: ''
+};
+
+/* ============ カリキュラム ============ */
+/* teach: 説明ページ（クリックで送る） / retry: 補足説明 / quiz: 確認問題 */
+const LEVELS = [
+{ name:'入門編 2体のロボット', desc:'君のPCの記録ロボットと、GitHubの倉庫ロボット。', lessons:[
+{ id:'r1', title:'記録ロボット（git）', teach:[
+'想像してみよう。君の PC の中には「記録ロボット」が住んでいる。\n仕事は、ファイルの版（バージョン）を全部覚えること。\nロボットの記録庫が .git フォルダじゃ。',
+'このロボットは PC の中で働くので、ネットがなくても平気。\n記録も、版の比較も、巻き戻しも、全部このロボットがやる。\ngit のコマンドは、このロボットへの「頼み方」だと思えばいい。'],
+retry:'git＝PCの中の記録ロボット。記録庫は .git。コマンドはロボットへの頼み方。',
+quiz:{ q:'git の記録ロボットが住んでいる場所は？', choices:[
+{ t:'GitHub のサーバー', ok:false }, { t:'自分の PC の中（.git が記録庫）', ok:true }, { t:'ブラウザの中', ok:false } ] } },
+{ id:'r2', title:'倉庫ロボット（GitHub）', teach:[
+'もう1体は、ネットの向こうの GitHub にいる「倉庫ロボット」。\n仕事は、記録ロボットから送られてきた記録を受け取って、大事に保管すること。\nついでに、記録を他の人や他の PC に見せる「展示場」でもある。',
+'大事な区別：git と GitHub は別者じゃ。\ngit は道具（記録ロボット）、GitHub は場所（倉庫＋展示場）。\n倉庫がなくても記録ロボットは働けるし、倉庫は他の道具からも使える。'],
+retry:'GitHub＝倉庫＋展示場のロボット。git（道具）と GitHub（場所）は別者。',
+quiz:{ q:'git と GitHub の関係は？', choices:[
+{ t:'同じものの別名', ok:false }, { t:'git は道具、GitHub は保管と公開の場所', ok:true }, { t:'GitHub が git の新しい版', ok:false } ] } },
+{ id:'r3', title:'add：記録に入れるものを渡す', teach:[
+'君がファイルを編集しても、ロボットは勝手に記録しない。\nまず「次の記録には、これとこれを入れて」と、ファイルを選んでロボットに渡す。\nこれが git add じゃ。渡したファイルが集まる場所を「ステージ」と呼ぶ。',
+'add は「下書きの提出」みたいなもの。\n渡しただけでは記録は確定していない。気が変われば、渡すものを変えられる。\nだから add は、記録の「中身の選別」なのじゃ。'],
+retry:'add＝次の記録に入れるファイルを選んでロボットに渡す（ステージ）。まだ確定ではない。',
+quiz:{ q:'git add の意味は？', choices:[
+{ t:'記録を確定する', ok:false }, { t:'倉庫へ送る', ok:false }, { t:'次の記録に入れるファイルを選んで渡す', ok:true } ] } },
+{ id:'r4', title:'commit：メッセージ付きで確定', teach:[
+'渡したファイルがそろったら、git commit で記録を確定する。\nロボットは、その時点のファイルの姿を丸ごと記録庫にしまう（スナップショット）。\nそして版に番号（ハッシュ）を付ける。',
+'-m のメッセージは、その版への「付箋」じゃ。\n「何をした版か」を短く書く。後で版をたどるとき、この付箋が頼りになる。\nつまり commit は「確定＋付箋」、add は「選別」。役割が違う。'],
+retry:'commit＝渡したものを姿ごと確定記録し、番号と付箋（-m）を付ける。',
+quiz:{ q:'commit でロボットがすることは？', choices:[
+{ t:'その時点の姿を確定記録し、番号と付箋を付ける', ok:true }, { t:'倉庫へ送る', ok:false }, { t:'ファイルを削除する', ok:false } ] } },
+]},
+{ name:'初級編 倉庫とのやり取り', desc:'push・pull・clone。2体のロボットの同期の頼み方。', lessons:[
+{ id:'s1', title:'push origin main：倉庫へ送る', teach:[
+'記録がたまったら、倉庫ロボットにも送っておく。これが git push。\n頼み方は git push origin main と書く。',
+'origin は、倉庫ロボットの「宛名のあだ名」。普通は GitHub のそのリポジトリを指す。\nmain は、送る「本」の名前（ブランチ）。\nつまり「倉庫（origin）の、main の本を、私の記録で最新にして」という頼み方じゃ。'],
+retry:'push origin main＝宛名 origin の倉庫へ、main の本の記録を送る。',
+quiz:{ q:'origin の意味は？', choices:[
+{ t:'倉庫（リモート）の宛名のあだ名', ok:true }, { t:'自分の名前', ok:false }, { t:'最初のコミット', ok:false } ] } },
+{ id:'s2', title:'pull：倉庫から受け取る', teach:[
+'逆向きもある。倉庫のほうが新しいとき（他の PC で作業した後など）は、git pull で受け取る。\n中身は2段：fetch（倉庫の新しい記録をもらう）＋ merge（自分の本に合体させる）。',
+'ロボット同士の同期は、この push と pull の往復じゃ。\n「送る前に、まず受け取る」が揉めないコツになる場面が多い。'],
+retry:'pull＝fetch（受け取り）＋merge（合体）。push と pull で同期する。',
+quiz:{ q:'pull の中身は？', choices:[
+{ t:'削除＋再作成', ok:false }, { t:'fetch ＋ merge', ok:true }, { t:'push の2回分', ok:false } ] } },
+{ id:'s3', title:'clone：記録庫ごと引っ越し', teach:[
+'新しい PC で作業を始めるときは、git clone。\n倉庫から記録庫ごと全部コピーして、その PC に新しい記録ロボットを住まわせる。',
+'clone した時点で、過去の版は全部手元にある。\nだから版をたどる作業は、ネットなしでもできる。\n倉庫は「原本の保管場所」、手元は「作業場つきの複製」という関係じゃ。'],
+retry:'clone＝記録庫ごとコピーして、新しいPCに記録ロボットを置く。',
+quiz:{ q:'clone で手に入るものは？', choices:[
+{ t:'最新のファイルだけ', ok:false }, { t:'記録庫ごと全部（過去の版も）', ok:true }, { t:'倉庫の管理権限', ok:false } ] } },
+{ id:'s4', title:'status と log：ロボットに聞く', teach:[
+'ロボットには質問もできる。\ngit status は「今どうなってる？」：まだ渡していない変更、ステージに渡したもの、倉庫とのズレを教えてくれる。',
+'git log は「記録を見せて」：版の一覧が、新しい順に並ぶ。付箋（メッセージ）がここで効く。\n困ったらまず status。ロボットが現状を説明してくれるのが、git の優しいところじゃ。'],
+retry:'status＝現状を聞く、log＝記録の一覧を見る。困ったら status。',
+quiz:{ q:'現状を知りたいときのコマンドは？', choices:[
+{ t:'git status', ok:true }, { t:'git push', ok:false }, { t:'git commit', ok:false } ] } },
+]},
+{ name:'中級編 本（ブランチ）と合体', desc:'並行して書ける本、merge、そしてロボットの「判断できません」。', lessons:[
+{ id:'t1', title:'ブランチ：別の本を書く', teach:[
+'記録の本は、枝分かれさせて並行に書ける。これがブランチじゃ。\nロボットが、ある版から新しい本を分けてくれる。',
+'本編（main）を汚さずに、新しい試し書きができるのが利点。\nうまくいったら合体、ダメなら本ごと捨てる。\n実験の安全地帯がブランチなのじゃ。'],
+retry:'ブランチ＝記録から分けた別の本。本編を汚さず試せる。',
+quiz:{ q:'ブランチの利点は？', choices:[
+{ t:'本編を汚さず試せる', ok:true }, { t:'記録が速くなる', ok:false }, { t:'倉庫が不要になる', ok:false } ] } },
+{ id:'t2', title:'merge：本を合体させる', teach:[
+'試し書きがうまくいったら、git merge で本編に合体させる。\nロボットは、2つの本の差分を見比べて、自動で1つにまとめる。',
+'別々の場所を直した変更同士は、自動でうまく合体する。\nロボットは「共通の元の版」と比べて、どちらがどう変えたかを見ているからじゃ。'],
+retry:'merge＝2つの本を、元の版と比べながら自動で合体させる。',
+quiz:{ q:'merge で合体が自動でいくのは？', choices:[
+{ t:'同じ場所の変更同士', ok:false }, { t:'別々の場所の変更同士', ok:true }, { t:'全部手作業', ok:false } ] } },
+{ id:'t3', title:'コンフリクト：判断できません', teach:[
+'同じ行を、両方の本で違うふうに変えたら、ロボットは合体を止める。\n「ここは私には判断できません。人間が決めてください」という申告じゃ。これがコンフリクト。',
+'ファイルには <<<<<<< のマーカーが入り、両方の案が並ぶ。\n君が正しい形に直して、add ＋ commit すれば「これで合体して」と伝えられる。\nコンフリクトは故障ではなく、ロボットの正直な相談なのじゃ。'],
+retry:'コンフリクト＝同じ場所の変更がぶつかり、ロボットが人間に判断を仰いだ状態。',
+quiz:{ q:'コンフリクトの正体は？', choices:[
+{ t:'ロボットの故障', ok:false }, { t:'データの消去', ok:false }, { t:'判断できないので人間に決めてほしい、という申告', ok:true } ] } },
+{ id:'t4', title:'switch：開く本を切り替える', teach:[
+'今どの本で作業するかは、git switch（昔の言い方では checkout）で切り替える。\nロボットが、作業場のファイルをその本の姿に入れ替えてくれる。',
+'注意は1つ：確定していない変更があるまま切り替えると、変更がついてきたり、揉めたりする。\n切り替えの前に status で作業場を確認するのが作法じゃ。'],
+retry:'switch＝開く本の切り替え。前に status で未確定の変更を確認。',
+quiz:{ q:'本を切り替える前にすることは？', choices:[
+{ t:'git status で作業場を確認', ok:true }, { t:'PC を再起動', ok:false }, { t:'何もしない', ok:false } ] } },
+]},
+{ name:'上級編 上級の頼み方', desc:'巻き戻し、付け直し、一時預かり。そして全体の地図。', lessons:[
+{ id:'u1', title:'revert と reset：巻き戻し方2種', teach:[
+'版を戻したいとき、頼み方は2種ある。\ngit revert は「打ち消しの版」を新しく足す方法。記録は消えず、安全。倉庫と共有した本ではこちら。',
+'git reset は、記録そのものを巻き戻す方法。\n強力だが、倉庫に送った記録を書き換えると、倉庫側と食い違って揉める。\n使い分けの原則：共有した記録は revert、自分の本の中だけなら reset も可。'],
+retry:'revert＝打ち消しを足す（安全）。reset＝記録を書き換える（共有後は危険）。',
+quiz:{ q:'共有した記録の巻き戻しは？', choices:[
+{ t:'reset で書き換える', ok:false }, { t:'revert で打ち消しの版を足す', ok:true }, { t:'倉庫を消す', ok:false } ] } },
+{ id:'u2', title:'rebase：付け直し', teach:[
+'git rebase は、自分の本の差分を、本編の最新の後ろに「付け直す」頼み方。\n合体の跡（分岐）が残らず、歴史が一直線できれいになる。',
+'ただし付け直すと、版の番号が新しくなる。\n倉庫に送った本でやると、倉庫の記録と食い違う。\nだから鉄則：共有した本は rebase しない。自分の手元の本だけの技じゃ。'],
+retry:'rebase＝差分を新しい元の後ろに付け直す。共有した本ではやらない。',
+quiz:{ q:'rebase の鉄則は？', choices:[
+{ t:'共有した本ではやらない', ok:true }, { t:'毎日やる', ok:false }, { t:'倉庫側でやる', ok:false } ] } },
+{ id:'u3', title:'stash：一時預かり', teach:[
+'作業の途中で、急に別の本を開かなければならないとき。\ngit stash と頼むと、ロボットが未確定の変更を一時的に預かって、作業場をきれいにしてくれる。',
+'用が済んだら git stash pop で返してもらう。\n「ちょっと預かって」ができるのが、このロボットの気が利くところじゃ。'],
+retry:'stash＝未確定の変更の一時預かり。pop で返してもらう。',
+quiz:{ q:'作業途中の変更を一時的に預けるのは？', choices:[
+{ t:'git push', ok:false }, { t:'git stash', ok:true }, { t:'git log', ok:false } ] } },
+{ id:'u4', title:'卒業：全体の地図', teach:[
+'卒業じゃ。全体を1つの流れで言えるようになれば勝ちじゃ：\n作業場で編集 → add でロボットに渡す → commit で確定記録 → push で倉庫へ。\n受け取りは pull。新しい場所では clone。',
+'コマンドが増えても、登場人物は2体だけ。\n「今、どちらのロボットに、何を頼んでいるのか」を考える癖が付けば、知らないコマンドも推測できるようになる。'],
+retry:'編集→add→commit→push。登場人物は記録ロボットと倉庫ロボットの2体。',
+quiz:{ q:'push の前に必ず要る2つは？', choices:[
+{ t:'add と commit', ok:true }, { t:'clone と pull', ok:false }, { t:'log と status', ok:false } ] } },
+]},
+];
+
+/* ============ エンジン ============ */
+const SAVE_KEY = 'gitRobotDojoSaveV1';
+const TOTAL = LEVELS.reduce((a,l)=>a+l.lessons.length,0);
+let done = {};
+try{ const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); if(s && s.done) done = s.done;}catch(e){}
+let soundOn = true, typing = null, advanceFn = null;
+let cur = { level:0, lesson:0, pages:[], page:0};
+
+const $ = id => document.getElementById(id);
+const bgEl=$('bg'), charEl=$('char'), nameEl=$('namebox'), textEl=$('text'),
+boxEl=$('textbox'), chEl=$('choices'), nextEl=$('nextmark');
+
+function beep(freq, dur, delay, vol){
+if(!soundOn) return;
+try{
+const ctx = beep.ctx || (beep.ctx = new (window.AudioContext||window.webkitAudioContext)());
+if(ctx.state === 'suspended') ctx.resume();
+const o = ctx.createOscillator(), g = ctx.createGain();
+o.type='square'; o.frequency.value = freq || 660;
+g.gain.value = vol || 0.03;
+o.connect(g); g.connect(ctx.destination);
+const t = ctx.currentTime + (delay||0);
+o.start(t); o.stop(t + (dur||0.06));
+}catch(e){}
+}
+function save(){
+try{ localStorage.setItem(SAVE_KEY, JSON.stringify({done})); toast();}catch(e){}
+}
+function toast(){
+const t=$('toast'); t.classList.add('show');
+clearTimeout(toast.tm); toast.tm=setTimeout(()=>t.classList.remove('show'), 900);
+}
+function doneCount(){ return Object.keys(done).filter(k=>done[k]).length;}
+function renderProgress(now){
+$('pDone').textContent = doneCount();
+$('bDone').style.width = (doneCount()/TOTAL*100) + '%';
+if(now) $('pNow').textContent = now;
+}
+function setScene(bg, char, name){
+bgEl.className = 'bg ' + bg;
+charEl.innerHTML = CHARS[char] || '';
+charEl.style.display = char && char!== 'none'? '': 'none';
+if(name){ nameEl.textContent = name; nameEl.style.display='';} else nameEl.style.display='none';
+}
+function typeText(txt, onDoneTyping){
+clearInterval(typing);
+textEl.textContent=''; nextEl.style.display='none';
+boxEl.scrollTop = 0;
+advanceFn = null;
+let i=0;
+typing = setInterval(()=>{
+i++;
+textEl.textContent = txt.slice(0, i);
+boxEl.scrollTop = boxEl.scrollHeight;
+const ch = txt.charAt(i-1);
+if(ch && ch!== ' ' && ch!== '\n' && i % 2 === 1){
+beep(980 + Math.random()*520, 0.018, 0, 0.012);
+}
+if(i >= txt.length){
+clearInterval(typing); typing=null;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+}
+}, 26);
+boxEl.onclick = ()=>{
+if(typing){
+clearInterval(typing); typing=null;
+textEl.textContent = txt; boxEl.scrollTop = boxEl.scrollHeight;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+} else if(advanceFn){
+const f = advanceFn; advanceFn = null; f();
+}
+};
+}
+document.addEventListener('keydown', e=>{
+if(!typing && advanceFn && (e.key === ' ' || e.key === 'Enter')){
+e.preventDefault();
+const f = advanceFn; advanceFn = null; f();
+}
+});
+function showChoices(items){
+chEl.innerHTML='';
+items.forEach(it=>{
+const b=document.createElement('button');
+b.className='choice' + (it.done? ' done': '');
+b.textContent=it.t;
+b.onclick=()=>{ beep(520,.06); setTimeout(()=>beep(780,.07),70); chEl.classList.remove('show'); it.fn();};
+chEl.appendChild(b);
+});
+chEl.classList.add('show');
+const dg = $('diagram');
+if(dg && dg.style.display === 'block'){
+$('screen').classList.add('diagmenu');
+requestAnimationFrame(()=>{
+const sr = $('screen').getBoundingClientRect();
+const dr = dg.getBoundingClientRect();
+chEl.style.top = Math.max(0, Math.round(dr.bottom - sr.top + 8)) + 'px';
+});
+} else { $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+}
+function hideChoices(){ chEl.classList.remove('show'); chEl.innerHTML=''; chEl.style.top=''; $('screen').classList.remove('diagmenu'); }
+
+
+/* ============ 図解（8bit風SVG・黒板） ============ */
+function _cm(x,y,ch,fill){ return '<rect x="'+(x+3)+'" y="'+(y+3)+'" width="30" height="30" fill="#000" opacity=".45"/><rect x="'+x+'" y="'+y+'" width="30" height="30" fill="'+fill+'" stroke="#dfe6ff" stroke-width="2"/><text x="'+(x+15)+'" y="'+(y+21)+'" font-size="14" fill="#05060f" text-anchor="middle" font-weight="bold">'+ch+'</text>'; }
+function _ar(x1,y1,x2,y2,col){ col=col||'#8fa3d9'; var pts; if(Math.abs(x2-x1)>=Math.abs(y2-y1)){ pts = x2>x1 ? [[x2,y2],[x2-10,y2-6],[x2-10,y2+6]] : [[x2,y2],[x2+10,y2-6],[x2+10,y2+6]]; } else { pts = y2>y1 ? [[x2,y2],[x2-6,y2-10],[x2+6,y2-10]] : [[x2,y2],[x2-6,y2+10],[x2+6,y2+10]]; } return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+col+'" stroke-width="4"/><polygon points="'+pts.map(function(p){return p.join(',');}).join(' ')+'" fill="'+col+'"/>'; }
+function _ln(x1,y1,x2,y2,col){ return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+(col||'#8fa3d9')+'" stroke-width="3"/>'; }
+function _tx(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'" text-anchor="middle">'+str+'</text>'; }
+function _txl(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'">'+str+'</text>'; }
+function _bx(x,y,w,h,label,fill){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'" stroke="#8fa3d9" stroke-width="2"/><text x="'+(x+w/2)+'" y="'+(y+h/2+5)+'" font-size="12" fill="#fff" text-anchor="middle">'+label+'</text>'; }
+function _tag(x,y,str,col){ var w=str.length*12+12; return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="20" fill="'+col+'"/><text x="'+(x+w/2)+'" y="'+(y+14)+'" font-size="11" fill="#05060f" text-anchor="middle" font-weight="bold">'+str+'</text>'; }
+function _svg(inner){ return '<svg viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'+inner+'</svg>'; }
+var BL='#4a6bff', YL='#ffd94a', GN='#7ee787', RD='#ff7b72', PU='#b18cff', GY='#5a6b9e', DM='#8fa3d9';
+const RB = (x,y,c) => '<line x1="' + (x+17) + '" y1="' + y + '" x2="' + (x+17) + '" y2="' + (y+8) + '" stroke="#8fa3d9" stroke-width="2"/>'
+ + '<circle cx="' + (x+17) + '" cy="' + (y-2) + '" r="3" fill="#ffd94a"/>'
+ + '<rect x="' + x + '" y="' + (y+8) + '" width="34" height="24" fill="' + c + '" stroke="#8fa3d9" stroke-width="2"/>'
+ + '<rect x="' + (x+7) + '" y="' + (y+16) + '" width="6" height="5" fill="#ffd94a"/>'
+ + '<rect x="' + (x+21) + '" y="' + (y+16) + '" width="6" height="5" fill="#ffd94a"/>'
+ + '<rect x="' + (x-3) + '" y="' + (y+34) + '" width="40" height="26" fill="' + c + '" stroke="#8fa3d9" stroke-width="2"/>';
+const DIAG = {
+r1: _svg(RB(60,30,'#1b2a6e') + _bx(150,35,170,40,'記録庫（.git）','#3a2a6e')
+ + _tx(180,106,'記録ロボット ＝ 自分の PC の中にいる',DM,11)),
+r2: _svg(RB(255,30,'#3a2a6e') + _bx(30,35,170,40,'倉庫 ＋ 展示場','#1b2a6e')
+ + _tx(180,106,'倉庫ロボット ＝ GitHub（ネットの向こう）',DM,11)),
+r3: _svg(_bx(8,50,90,38,'作業中の ファイル','#3a2320') + _ar(98,69,114,69,YL) + _bx(114,50,110,38,'ステージ（渡した箱）','#3a2a6e')
+ + _ar(224,69,240,69,DM) + _bx(240,50,112,38,'記録庫（まだ）','#1b2a6e')
+ + _tx(180,112,'add ＝ 選んで渡す。確定はまだ',DM,11)),
+r4: _svg(_bx(30,45,130,44,'渡したファイル','#3a2a6e') + _ar(160,67,180,67,YL) + _bx(180,45,150,44,'確定した版＋付箋','#1b2a6e')
+ + _tx(180,110,'commit ＝ 姿ごと記録 ＋ 番号 ＋ -m の付箋',DM,11)),
+s1: _svg(RB(35,30,'#1b2a6e') + _ar(95,62,150,62,YL) + _tx(180,55,'push',YL,13) + _ar(205,62,262,62,YL) + RB(268,30,'#3a2a6e')
+ + _tx(62,112,'記録ロボット',DM,11) + _tx(295,112,'倉庫ロボット',DM,11)
+ + _tx(180,124,'origin ＝ 宛名、main ＝ 本の名前',DM,11)),
+s2: _svg(RB(268,30,'#3a2a6e') + _ar(262,62,205,62,GN) + _tx(180,55,'pull',GN,13) + _ar(150,62,95,62,GN) + RB(35,30,'#1b2a6e')
+ + _tx(180,112,'中身は fetch（受取）＋ merge（合体）',DM,11)),
+s3: _svg(_bx(15,45,140,44,'倉庫の記録庫','#3a2a6e') + _ar(155,67,175,67,YL) + _tx(180,58,'clone',YL,12)
+ + _ar(190,67,210,67,YL) + _bx(210,45,140,44,'新しいPCの記録庫','#1b2a6e')
+ + _tx(180,110,'過去の版ごと全部コピーされる',DM,11)),
+s4: _svg(_bx(30,30,130,40,'git status','#1b2a6e') + _bx(200,30,130,40,'git log','#3a2a6e')
+ + _tx(95,92,'「今どうなってる？」',DM,11) + _tx(265,92,'「記録を見せて」',DM,11)
+ + _tx(180,118,'困ったらまず status',YL,11)),
+t1: _svg(_cm(40,65) + _ln(52,65,110,65) + _cm(110,65) + _ln(122,65,170,40) + _cm(170,40) + _ln(182,40,240,40) + _cm(240,40)
+ + _ln(122,65,180,65) + _cm(180,65) + _ln(192,65,250,65) + _cm(250,65)
+ + _tag(215,26,'試し書きの本') + _tag(222,86,'main（本編）')
+ + _tx(60,112,'本編を汚さず試せる',DM,11)),
+t2: _svg(_cm(30,65) + _ln(42,65,90,65) + _cm(90,65) + _ln(102,65,150,40) + _cm(150,40) + _ln(102,65,160,65) + _cm(160,65)
+ + _ln(162,40,215,58) + _ln(172,65,215,72) + _ar(215,65,240,65,YL) + _cm(255,65)
+ + _tag(120,26,'別の本') + _tag(275,50,'合体した版') + _tx(180,112,'別々の場所の変更は自動で合体',DM,11)),
+t3: _svg(_tx(180,34,'<<<<<<< 自分の本',RD,13) + _tx(180,60,'=======',DM,13) + _tx(180,86,'>>>>>>> 相手の本',GN,13)
+ + _tx(180,116,'ロボット：「判断できません。決めてください」',YL,11)),
+t4: _svg(_bx(15,30,100,38,'本 A','#1b2a6e') + _bx(130,30,100,38,'本 B','#3a2a6e') + _bx(245,30,100,38,'本 C','#1b2a6e')
+ + _ar(65,85,175,85,YL) + _tx(180,80,'switch',YL,12)
+ + _tx(180,112,'切り替え前に status で確認',DM,11)),
+u1: _svg(_bx(15,30,155,40,'revert：打ち消しを足す','#1b2a6e') + _bx(190,30,155,40,'reset：記録を書換え','#3a2320')
+ + _tx(92,92,'安全（共有OK）',GN,11) + _tx(267,92,'自分の本だけ',RD,11)
+ + _tx(180,118,'共有した記録は revert',DM,11)),
+u2: _svg(_cm(30,80) + _ln(42,80,90,80) + _cm(90,80) + _ln(102,80,160,80) + _cm(160,80) + _ln(172,80,230,80) + _cm(230,80)
+ + _cm(90,40) + _ln(102,40,140,40) + _cm(140,40) + _ar(150,48,205,72,YL)
+ + _tag(120,24,'自分の差分') + _tag(265,66,'付け直し') + _tx(180,116,'歴史は一直線。共有した本ではやらない',DM,11)),
+u3: _svg(_bx(15,50,140,38,'作業中の変更','#3a2320') + _ar(155,69,175,69,YL) + _tx(180,60,'stash',YL,11)
+ + _ar(190,69,210,69,YL) + _bx(210,50,140,38,'ロボットの預かり棚','#3a2a6e')
+ + _tx(180,112,'pop で返してもらう',DM,11)),
+u4: _svg(_txl(25,28,'編集 → add → commit → push',YL,12) + _txl(25,52,'作業場　 渡す　 確定記録　 倉庫へ',DM,11)
+ + RB(50,62,'#1b2a6e') + _ar(110,95,190,95,YL) + RB(255,62,'#3a2a6e')
+ + _tx(180,86,'同期',YL,11)),
+};
+function showDiagFor(id){
+const d = $('diagram');
+if(DIAG[id]){ d.innerHTML = DIAG[id]; d.style.display = 'block'; }
+else d.style.display = 'none';
+}
+function hideDiag(){ $('diagram').style.display = 'none'; $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+
+/* ============ 画面遷移 ============ */
+function goLevels(){
+hideChoices();
+hideDiag();
+setScene('bg-room','none','');
+renderProgress('レベル選択');
+const dc = doneCount();
+const intro = dc === 0
+? '「よく来た。わしがロボ博士じゃ」\nテーマは「Gitのロボット化」。全' + TOTAL + '課。\n好きな編からでよい。分かるまで、何度でも付き合うぞ。'
+: '「戻ったか。現在の理解済みは ' + dc + ' / ' + TOTAL + ' 課じゃ」\n続きをやるもよし、済んだ課を復習するもよし。';
+typeText(intro, ()=>{
+showChoices(LEVELS.map((lv, i)=>{
+const c = lv.lessons.filter(l=>done[l.id]).length;
+return { t: lv.name + '（' + c + '/' + lv.lessons.length + ' 済）', done: c === lv.lessons.length,
+fn: ()=>goLessons(i)};
+}));
+});
+}
+function goLessons(li){
+hideChoices();
+hideDiag();
+const lv = LEVELS[li];
+cur.level = li;
+setScene('bg-room','sennin','ロボ博士');
+renderProgress(lv.name);
+typeText('\n' + lv.desc + '\n課を選ぶのじゃ。✔ は理解済み。復習は何度でもできるぞ。', ()=>{
+showChoices(
+lv.lessons.map((ls, i)=>({ t: ls.title, done:!!done[ls.id], fn: ()=>startLesson(li, i, false)}))
+.concat([{ t:'レベル選択に戻る', fn: goLevels}])
+);
+});
+}
+function startLesson(li, idx, withRetry){
+hideChoices();
+const ls = LEVELS[li].lessons[idx];
+cur.level = li; cur.lesson = idx;
+cur.pages = ls.teach.slice();
+if(withRetry) cur.pages.push('\n' + ls.retry);
+cur.page = 0;
+setScene('bg-term','sennin','ロボ博士');
+renderProgress(LEVELS[li].name + '：' + ls.title);
+showDiagFor(ls.id);
+teachPage();
+}
+function teachPage(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+const isLast = cur.page >= cur.pages.length - 1;
+typeText('\n' + cur.pages[cur.page], ()=>{
+if(isLast){ showCheck();}
+else { advanceFn = ()=>{ cur.page++; teachPage();};}
+});
+}
+function showCheck(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+showChoices([
+{ t:'これは分かった！（確認問題へ）', fn: showQuiz},
+{ t:'分からない（もう一度聞く）', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'レッスン一覧に戻る', fn: ()=>goLessons(cur.level)}
+]);
+}
+function showQuiz(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+setScene('bg-term','sennin','ロボ博士');
+typeText('\n' + ls.quiz.q, ()=>{
+showChoices(ls.quiz.choices.map(c=>({
+t: c.t,
+fn: ()=>{ if(c.ok) completeLesson(); else wrongAnswer();}
+})));
+});
+}
+function wrongAnswer(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+beep(220,.12); setTimeout(()=>beep(180,.14),120);
+typeText('「むむ、違うぞ。焦らなくてよい」\n' + ls.retry, ()=>{
+showChoices([
+{ t:'もう一度説明を聞く', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'もう一度問題に挑む', fn: showQuiz}
+]);
+});
+}
+function completeLesson(){
+hideDiag();
+const li = cur.level, idx = cur.lesson;
+const ls = LEVELS[li].lessons[idx];
+done[ls.id] = true; save();
+[523,659,784,1046].forEach((f,i)=>beep(f,.1,i*0.11));
+renderProgress(LEVELS[li].name + '：' + ls.title + ' ✔');
+const dc = doneCount();
+const levelDone = LEVELS[li].lessons.every(l=>done[l.id]);
+let msg = '「うむ、分かったようじゃな」\n理解済み ✔（合計 ' + dc + ' / ' + TOTAL + ' 課）';
+if(dc >= TOTAL){
+setScene('bg-way','sennin','ロボ博士');
+msg += '\n\n――全課目、修了じゃ！\nここから先は実地あるのみ。Doom を開いて、指で覚えていくのじゃ。卒業おめでとう！';
+} else if(levelDone){
+msg += '\nは全課修了じゃ。よくやった。';
+}
+typeText(msg, ()=>{
+const items = [];
+if(dc < TOTAL){
+if(idx + 1 < LEVELS[li].lessons.length){
+items.push({ t:'次の例題へ（' + LEVELS[li].lessons[idx+1].title + '）', fn: ()=>startLesson(li, idx+1, false)});
+} else if(li + 1 < LEVELS.length){
+items.push({ t:'次の編へ（' + LEVELS[li+1].name + '）', fn: ()=>goLessons(li+1)});
+}
+}
+items.push({ t:'レッスン一覧に戻る', fn: ()=>goLessons(li)});
+items.push({ t:'レベル選択に戻る', fn: goLevels});
+showChoices(items);
+});
+}
+
+/* ============ ボタン類 ============ */
+$('btnEnter').onclick = ()=>{ beep(660,.06); $('title').style.display='none'; goLevels();};
+$('btnLevels').onclick = ()=>{ $('title').style.display='none'; goLevels();};
+$('btnReset').onclick = ()=>{
+done = {}; save(); renderProgress('タイトル');
+$('title').style.display='flex';
+};
+$('btnSound').onclick = (e)=>{
+soundOn =!soundOn;
+e.target.textContent = soundOn? '🔊 音ON': '🔇 音OFF';
+if(soundOn) beep(700,.06);
+};
+renderProgress('タイトル');
+</script>
+</body>
+</html>
