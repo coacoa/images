@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>字幕道場 ― Whisperと声の匿名化</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{
+--tb:29%;
+--ink:#dfe6ff; --dim:#8fa3d9; --blue:#3355ff; --panel:#0a0e24;
+--win:#101736; --accent:#ffd94a; --good:#7ee787; --bad:#ff7b72;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+body{margin:0;background:#05060f;color:var(--ink);
+font-family:"DotGothic16","Hiragino Kaku Gothic ProN","Noto Sans JP",monospace,sans-serif;
+-webkit-font-smoothing:none;font-smooth:never;
+display:flex;justify-content:center;padding:14px 10px 40px}
+.cab{width:100%;max-width:760px}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{font-weight:900;letter-spacing:2px;font-size:18px;color:#fff;
+text-shadow:2px 2px 0 var(--blue), 4px 4px 0 #101736}
+.logo small{display:block;font-size:11px;color:var(--dim);letter-spacing:1px;text-shadow:none}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer}
+.sbtn{background:var(--win);color:var(--ink);border:2px solid var(--dim);
+padding:4px 10px;font-size:12px;border-radius:4px}
+.sbtn:hover{border-color:#fff;color:#fff}
+.params{display:flex;gap:14px;background:var(--panel);border:2px solid var(--dim);
+padding:6px 12px;font-size:12px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.params b{color:var(--accent)}
+.bar{display:inline-block;width:120px;height:10px;background:#1a2148;vertical-align:middle;margin-left:4px;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--good);display:block}
+.screen{position:relative;border:6px solid var(--dim);border-radius:6px;overflow:hidden;
+aspect-ratio:16/10;background:#000;image-rendering:pixelated}
+.screen::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+background:repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 3px, transparent 3px 6px)}
+.bg{position:absolute;inset:0;transition:opacity.4s}
+.bg-room{background:linear-gradient(#0d1440 0 55%, #182257 55% 100%)}
+.bg-room::before{content:"";position:absolute;right:8%;top:8%;width:110px;height:130px;
+background:linear-gradient(#1b2a63,#0d1440);border:6px solid #05081a;
+box-shadow:0 0 0 4px #26398a, inset 0 0 0 3px #26398a}
+.bg-term{background:radial-gradient(ellipse at 50% 40%, #06280f 0%, #02140a 70%)}
+.bg-term::before{content:"Whisper ❄ SRT ❄ ピッチ ❄ RubberBand ❄ Blender ❄ VSE ❄";
+position:absolute;inset:6%;color:#2f9e44;font-size:13px;line-height:2.1;opacity:.55;
+font-family:ui-monospace,Menlo,monospace;word-break:break-all}
+.bg-way{background:linear-gradient(#1b1040 0%, #4a2a7a 55%, #c65b8f 82%, #ffb36b 100%)}
+.stars{position:absolute;inset:0;z-index:1;
+background-image:radial-gradient(2px 2px at 12% 18%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 32% 8%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 55% 22%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 74% 10%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 88% 26%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 44% 30%, #9fb4ff 50%, transparent 51%)}
+.char{position:absolute;bottom:var(--tb);left:50%;transform:translateX(-50%);z-index:2;
+filter:drop-shadow(0 0 10px rgba(60,100,255,.75))}
+.char svg{display:block}
+.ground{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:1;
+background:linear-gradient(transparent, rgba(3,5,16,.92) 30%)}
+.namebox{position:absolute;left:14px;bottom:calc(var(--tb) + 8px);z-index:8;color:#ffffff;
+background:var(--win);border:3px solid var(--dim);padding:2px 14px;font-weight:700;font-size:16px;
+letter-spacing:.06em;text-shadow:2px 2px 0 #000}
+.textbox{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:7;color:#ffffff;
+background:rgba(4,6,20,.97);border-top:4px solid var(--dim);
+padding:12px 16px;font-size:18px;line-height:1.8;letter-spacing:.06em;
+text-shadow:2px 2px 0 #000;
+cursor:pointer;white-space:pre-wrap;overflow-y:auto;overflow-x:hidden;
+scrollbar-width:thin;scrollbar-color:#3355ff #0a0e24}
+.textbox::-webkit-scrollbar{width:10px}
+.textbox::-webkit-scrollbar-track{background:#0a0e24}
+.textbox::-webkit-scrollbar-thumb{background:#3355ff;border:2px solid #04061a}
+.textbox.next{position:absolute;right:12px;bottom:6px;color:var(--accent);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.choices{position:absolute;top:0;left:0;right:0;bottom:calc(var(--tb) + 46px);z-index:9;display:none;flex-direction:column;
+align-items:center;justify-content:center;gap:12px;background:rgba(3,5,16,.78);padding:16px;overflow-y:auto}
+.choices.show{display:flex}
+.choice{width:min(92%,520px);background:#05081f;color:#ffffff;font-weight:700;
+border:3px solid #d5ddff;padding:12px 16px;font-size:18px;letter-spacing:.08em;
+text-shadow:2px 2px 0 #000;text-align:left;border-radius:4px}
+.choice:hover{border-color:var(--accent);color:#fff;background:#1b2a6e}
+.choice::before{content:"▶ ";color:var(--accent)}
+.choice.done{border-color:var(--good)}
+.choice.done::before{content:"✔ ";color:var(--good)}
+.title{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
+justify-content:center;gap:14px;background:radial-gradient(ellipse at 50% 35%, #14205e 0%, #05060f 75%);text-align:center;padding:16px}
+.title h1{margin:0;font-size:clamp(26px,6vw,44px);letter-spacing:3px;color:#fff;
+text-shadow:3px 3px 0 var(--blue), 6px 6px 0 #101736}
+.title p{color:#d5ddff;font-size:14px;margin:0;line-height:1.9}
+.tbtn{background:#05081f;color:#fff;font-weight:700;border:3px solid #d5ddff;padding:10px 26px;font-size:17px;letter-spacing:.08em;border-radius:4px}
+.tbtn:hover{border-color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
+border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;opacity:0;transition:opacity.3s;z-index:50;pointer-events:none}
+.toast.show{opacity:1}
+#diagram{transition:width .25s}
+.screen.diagmenu #diagram{width:min(430px,74%)}
+.screen.diagmenu .choices{bottom:calc(var(--tb) + 8px);flex-direction:row;flex-wrap:wrap;align-content:flex-start;justify-content:center;gap:8px}
+.screen.diagmenu .choice{flex:1 1 28%;width:auto;margin:0;text-align:center;font-size:14px;padding:10px 8px;line-height:1.5}
+
+#diagram{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:min(560px,94%);z-index:5;background:rgba(3,4,16,.88);border:2px solid var(--dim);padding:6px;display:none}
+#diagram svg{width:100%;height:auto;display:block}
+
+footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
+kbd{display:inline-block;background:#21262d;border:1px solid var(--dim);border-bottom-width:2px;
+border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+@media (max-width:560px){.textbox{font-size:15px}.char{bottom:var(--tb)}}
+
+/* ===== スマホ縦長対応：画面を縦に取り、本文ボックスの割合を広げる ===== */
+@media (orientation:portrait) and (max-width:760px){
+:root{--tb:46%}
+.screen{aspect-ratio:auto;height:80vh;height:80dvh}
+.textbox{font-size:16px;line-height:1.75}
+.char svg{width:100px;height:127px}
+.choice{font-size:16px;padding:10px 14px}
+.choices{overflow-y:auto}
+.title h1{font-size:25px}
+.title p{font-size:13px}
+.params{gap:8px;font-size:11px}
+.bar{width:80px}
+}
+
+/* ===== 選択肢が上に隠れる問題の修正：中央寄せのまま、溢れたら先頭からスクロール ===== */
+.choices{justify-content:flex-start;overflow-y:auto}
+.choice:first-child{margin-top:auto}
+.choice:last-child{margin-bottom:auto}
+</style>
+</head>
+<body>
+<div class="cab">
+<header>
+<div class="logo">字幕道場<small>― Whisper／ピッチ変更／Blender VSE 全16課 ―</small></div>
+<div class="btns">
+<button class="sbtn" id="btnSound">🔊 音ON</button>
+<button class="sbtn" id="btnLevels">🏠 レベル選択</button>
+<button class="sbtn" id="btnReset">🗑 進捗リセット</button>
+</div>
+</header>
+
+<div class="params">
+<span>理解済み <b id="pDone">0</b> / 16 課<span class="bar"><i id="bDone" style="width:0%"></i></span></span>
+<span style="color:var(--dim)">現在：<span id="pNow">タイトル</span></span>
+<span style="margin-left:auto;color:var(--dim)">💾 進捗は自動保存（localStorage）</span>
+</div>
+
+<div class="screen" id="screen">
+<div class="bg bg-room" id="bg"></div>
+<div class="stars"></div>
+<div class="ground"></div>
+<div class="char" id="char"></div>
+<div id="diagram"></div>
+<div class="namebox" id="namebox" style="display:none"></div>
+<div class="textbox" id="textbox"><span id="text"></span><span class="next" id="nextmark" style="display:none">▼</span></div>
+<div class="choices" id="choices"></div>
+<div class="title" id="title">
+<h1>字幕道場</h1>
+<p>テーマは「自分の声から、字幕付き動画を作る」。<br>
+Whisperの文字起こし、ピッチ変更の匿名化、Blender VSEでの合成まで全16課。<br>
+「分かった！」で次へ、「分からない」で何度でもやり直し。</p>
+<button class="tbtn" id="btnEnter">▶ 道場に入る</button>
+<p>進捗（理解済み ✔）はブラウザに自動保存されます</p>
+</div>
+</div>
+
+<footer>
+遊び方：説明を読んだら「これは分かった！」か「分からない」を選ぶだけ。分かったら確認問題が1問出て、正解でその課は理解済み ✔。
+間違えてもペナルティなし、補足説明を読んで何度でも挑めます。本文クリックで文字送り、長い文は自動スクロール＋手動スクロール可。
+各課ではパイプラインを図で描いて、見える化します。題材は君のNixOSとGPU機です。道具は全部フリー。文字起こしは元の声で、公開する声だけ変えるのが鉄則です。
+</footer>
+</div>
+
+<div class="toast" id="toast">💾 保存しました</div>
+
+<script>
+"use strict";
+/* ============ シルエット ============ */
+function sil(extra){
+return '<svg width="150" height="190" viewBox="0 0 120 150">'
++ '<circle cx="60" cy="34" r="17" fill="#141f52"/>'
++ '<path d="M22 150 C22 96 40 66 60 66 C80 66 98 96 98 150 Z" fill="#141f52"/>'
++ (extra || '') + '</svg>';
+}
+const CHARS = {
+sennin: sil('<path d="M28 26 L60 2 L92 26 L84 30 L60 14 L36 30 Z" fill="#141f52"/>'
++ '<path d="M48 44 L72 44 L66 92 L54 92 Z" fill="#141f52"/>'),
+ore: sil(''),
+none: ''
+};
+
+/* ============ カリキュラム ============ */
+/* teach: 説明ページ（クリックで送る） / retry: 補足説明 / quiz: 確認問題 */
+const LEVELS = [
+{ name:'入門編 声→文字の地図', desc:'Whisperの正体と、録音から字幕動画までの全体像。', lessons:[
+{ id:'w1', title:'Whisperとは', teach:[
+'Whisper は、音声を文字に変える AI じゃ。チャット AI（LLM）よりずっと軽く、ローカル PC で実用的に回る。\n開発は OpenAI で、モデルは公開されている。whisper.cpp のような実装で NixOS でも動く。',
+'やることは1つ：音声ファイルを渡すと、時刻つきのテキストが返る。\nこの「時刻つき」が、字幕作りの心臓部になる。'],
+retry:'Whisper＝音声→時刻つきテキスト。軽くてローカルで回る。',
+quiz:{ q:'Whisper の仕事は？', choices:[
+{ t:'音声を時刻つきテキストに変える', ok:true }, { t:'文章を考える', ok:false }, { t:'動画を編集する', ok:false } ] } },
+{ id:'w2', title:'パイプライン全体の地図', teach:[
+'字幕動画作りは、5つの工程の流れじゃ：\n1. 録音（自分の声）\n2. ピッチ変更（公開用の声だけ、匿名化）\n3. 文字起こし（Whisper、元の声で）\n4. 字幕ファイル化（SRT の整形・装飾）\n5. 動画合成（Blender VSE）',
+'工程を分けておくと、失敗したときに「どの工程か」が分かる。\n一気に全部つなぐ前に、1工程ずつ動かすのが型じゃ。'],
+retry:'録音→ピッチ→文字起こし→字幕→合成。工程を分けて1つずつ。',
+quiz:{ q:'工程の分け方の利点は？', choices:[
+{ t:'失敗した工程が特定できる', ok:true }, { t:'速くなる', ok:false }, { t:'不要になる工程がある', ok:false } ] } },
+{ id:'w3', title:'モデルとGPUの目安', teach:[
+'Whisper のモデルには大きさがある。小さいものは速いが誤りが増え、大きいものは正確だが VRAM と時間を食う。\n日本語の実用ラインは、large 系（large-v3 や、その高速版 turbo）が本命じゃ。',
+'VRAM の目安：large 系は 6GB で実用的に動き、4GB では small〜medium 級が現実的。\n君の布陣なら、2080 Ti が本命、6GB 勢がワーカ、4GB 勢は短い音声の下処理向きじゃ。'],
+retry:'large 系が本命。6GB で実用、4GB は小さめモデル。',
+quiz:{ q:'large 系 Whisper の本命マシンは？', choices:[
+{ t:'2080 Ti（11GB）', ok:true }, { t:'1050 Ti（4GB）', ok:false }, { t:'GPU は不要', ok:false } ] } },
+{ id:'w4', title:'成果物はSRT', teach:[
+'SRT は字幕の共通形式じゃ：番号、開始→終了の時刻、テキスト、の繰り返し。\nWhisper はこの形式で直接書き出せる。',
+'SRT の強みは「どの道具にも渡せる」こと。装飾を付ける ASS 形式への変換も、動画編集への取り込みも、入口は SRT。\nまず SRT をきれいに作ることが、全体の土台になる。'],
+retry:'SRT＝時刻つき字幕の共通形式。まずこれをきれいに作る。',
+quiz:{ q:'字幕作りの土台になる形式は？', choices:[
+{ t:'SRT', ok:true }, { t:'PDF', ok:false }, { t:'MP3', ok:false } ] } },
+]},
+{ name:'初級編 声を守る（ピッチ変更）', desc:'テンポを変えずに声だけ変える。匿名化の仕組みと限界。', lessons:[
+{ id:'x1', title:'ピッチ変更とは', teach:[
+'ピッチ変更は、声の「高さ」だけを変える加工じゃ。再生速度（テンポ）は変えない。\nテンポが同じということは、発話のタイミングが元のまま——つまり字幕の時刻がそのまま使える。',
+'道具は Rubber Band が定番。ffmpeg 経由でも呼べる、フリーの音声加工ライブラリじゃ。'],
+retry:'ピッチ変更＝高さだけ変更、テンポ不変。だから字幕の時刻が合う。',
+quiz:{ q:'ピッチ変更で変わらないのは？', choices:[
+{ t:'テンポ（発話のタイミング）', ok:true }, { t:'声の高さ', ok:false }, { t:'声の印象', ok:false } ] } },
+{ id:'x2', title:'設定の目安', teach:[
+'目安の出発点：ピッチ比率 0.84（約 −3 半音）で、声は一段低く、別人のように聞こえる。\nフォルマント（声の響きの特徴）も一緒にずらす設定にすると、より素の声から離れる。',
+'下げすぎると不自然で聞き取りにくくなる。−3 半音あたりから試して、耳で確かめるのが正解じゃ。\n上げる方向（高くする）でも匿名化はできる。'],
+retry:'出発点は 0.84（約 −3 半音）＋フォルマントずらし。耳で調整。',
+quiz:{ q:'ピッチ比率 0.84 はおよそ？', choices:[
+{ t:'−3 半音（一段低い声）', ok:true }, { t:'半分の速さ', ok:false }, { t:'音量が 84%', ok:false } ] } },
+{ id:'x3', title:'匿名化の限界', teach:[
+'正直な話：ピッチ変更は「声紋をぼかす」加工で、絶対の匿名化ではない。\n話し方の癖や、話す内容そのもの（固有名詞、身の上話）からも、人は特定されうる。',
+'だから匿名化は二段構え：声はピッチで、内容は「出さない情報」を決めて守る。\n過信せず、しかし「素の声をそのまま公開する」よりは遥かに強い、という位置づけじゃ。'],
+retry:'ピッチ変更は絶対ではない。声＋内容の二段構えで守る。',
+quiz:{ q:'匿名化の考え方は？', choices:[
+{ t:'ピッチ変更だけで完全', ok:false }, { t:'声の加工＋出さない情報の線引き', ok:true }, { t:'何もしなくてよい', ok:false } ] } },
+{ id:'x4', title:'順序の鉄則：文字起こしは元の声で', teach:[
+'ここが一番の鉄則じゃ：文字起こしは「元の声」でやる。\nピッチ変更した声は Whisper にとって未知の声になり、認識精度が落ちる。',
+'正しい順序：元の録音 → Whisper で文字起こし（SRT 完成）→ 公開する音声だけピッチ変更 → 合成。\nテンポが変わらないから、SRT の時刻は変更後の音声にもそのまま合う。'],
+retry:'文字起こしは元の声。ピッチ変更は公開音声だけに、最後に。',
+quiz:{ q:'正しい順序は？', choices:[
+{ t:'ピッチ変更→文字起こし', ok:false }, { t:'文字起こし（元の声）→ピッチ変更', ok:true }, { t:'同時に行う', ok:false } ] } },
+]},
+{ name:'中級編 日本語の文字起こし実践', desc:'whisper.cppの使い方、精度のコツ、Nixの道具立てと分担。', lessons:[
+{ id:'y1', title:'whisper.cppの使い方', teach:[
+'whisper.cpp は Whisper の軽量実装で、ggml 形式のモデルを使う。\n基本の形：モデルと言語（-l ja）と音声ファイルを指定して実行し、SRT 形式で書き出すオプションを付ける。',
+'日本語は必ず -l ja で指定する。自動判定に任せると、短い音声で言語を取り違えることがある。\nまず短い録音で試して、出力の形を確かめるのが第一歩じゃ。'],
+retry:'whisper.cpp＋ggml モデル。日本語は -l ja、出力は SRT で。',
+quiz:{ q:'日本語の文字起こしで大事なのは？', choices:[
+{ t:'-l ja で言語を指定する', ok:true }, { t:'自動判定に任せる', ok:false }, { t:'音量を上げる', ok:false } ] } },
+{ id:'y2', title:'精度を上げるコツ', teach:[
+'Whisper の精度は、モデルより先に「録音の質」で決まる部分が大きい。\n静かな部屋、マイクとの距離を一定に、エアコンや PC ファンの音を遠ざける。これだけで誤りが減る。',
+'それでも固有名詞や専門用語は間違える。そこは「後で直す前提」で、SRT をテキストとして直す工程を最初から見込んでおく。\n完璧な一発変換ではなく、9割自動＋人の直し、が現実の型じゃ。'],
+retry:'精度は録音の質から。固有名詞は後直し前提で 9割自動を目指す。',
+quiz:{ q:'精度を上げる最初の手は？', choices:[
+{ t:'静かな録音とマイク距離', ok:true }, { t:'最大のモデルに替える', ok:false }, { t:'何度も実行する', ok:false } ] } },
+{ id:'y3', title:'Nixでの道具立て', teach:[
+'NixOS なら、道具は nix shell で一時的に揃えるのが手軽じゃ：ffmpeg（変換・加工の万能係）、whisper-cpp（文字起こし）、rubberband（ピッチ変更）。\n常時使うなら home-manager や flake に入れて固定する。',
+'流れの例：録音（WAV 化は ffmpeg）→ whisper で SRT → rubberband で公開用の音声 → Blender へ。\n各工程がコマンド1つで終わる形にしておくと、後でスクリプト化して一括処理にできる。'],
+retry:'nix shell で ffmpeg／whisper-cpp／rubberband。工程ごとにコマンド化。',
+quiz:{ q:'ピッチ変更の道具は？', choices:[
+{ t:'rubberband', ok:true }, { t:'whisper', ok:false }, { t:'Blender だけ', ok:false } ] } },
+{ id:'y4', title:'マシンの分担', teach:[
+'長い音声の文字起こしは時間がかかる。ここで複数台の出番じゃ：\n重いモデル（large 系）は 2080 Ti。6GB 勢はファイルを分けて並列ワーカー。4GB 勢は小さめモデルで短い音声の下処理。',
+'夜間にまとめて回すバッチ運用と相性がいい。\n「どのマシンにどのファイルを渡したか」だけ、簡単なメモで管理すると迷子にならない。'],
+retry:'large は 2080Ti、6GB は並列ワーカー、4GB は下処理。夜間バッチ向き。',
+quiz:{ q:'長い音声の分担で 6GB 勢の役は？', choices:[
+{ t:'ファイルを分けて並列に処理するワーカー', ok:true }, { t:'何もしない', ok:false }, { t:'表示だけ', ok:false } ] } },
+]},
+{ name:'上級編 Blender VSEで字幕動画', desc:'装飾、透明背景の書き出し、合成の進め方、卒業。', lessons:[
+{ id:'z1', title:'SRT→ASSで装飾する', teach:[
+'SRT は時刻と文字だけ。フォント、縁取り、表示位置といった「見た目」は ASS 形式の担当じゃ。\nSRT を ASS に変換して、日本語フォント（Noto Sans CJK など）を指定し、縁取りで読みやすくする。',
+'変換や微調整には Aegisub のような字幕エディタが使える。\n装飾は「読みやすさ優先、凝りすぎない」が長続きのコツじゃ。'],
+retry:'見た目は ASS で。フォント指定と縁取り、読みやすさ優先。',
+quiz:{ q:'字幕の見た目（フォント・縁取り）を担う形式は？', choices:[
+{ t:'ASS', ok:true }, { t:'SRT', ok:false }, { t:'WAV', ok:false } ] } },
+{ id:'z2', title:'透明背景の書き出し', teach:[
+'透明（アルファ）つき動画の形式は、VP9 の WebM や ProRes 4444 が代表じゃ。\n字幕だけを透明背景で書き出せば、他の映像への重ね合わせ素材になる。',
+'ただし注意：YouTube は透明を保持しない。透明版は「合成用の素材」や OBS での利用と割り切り、公開用は合成済みの通常動画を別に書き出す。\n用途で形式を使い分けるのが、この課の要点じゃ。'],
+retry:'透明は VP9 WebM／ProRes 4444。YouTube は保持しないので素材用。',
+quiz:{ q:'透明背景動画の位置づけは？', choices:[
+{ t:'合成素材や OBS 用。公開用は合成済みを別途', ok:true }, { t:'YouTube にそのまま上げて透明になる', ok:false }, { t:'不要な技術', ok:false } ] } },
+{ id:'z3', title:'Blenderでの進め方', teach:[
+'合成は Blender の VSE（君の前提どおり）。映像、音声、字幕をタイムラインに並べる場所じゃ。\n字幕は、外部で作った SRT/ASS を取り込む形が基本になる。',
+'Blender には Whisper 内蔵の字幕アドオンもあるが、NixOS では追加導入まわりが不安定になりがち。\n「文字起こしは外（whisper.cpp）で済ませ、Blender は合成に専念」のハイブリッドが、君の環境では堅い。'],
+retry:'Blender は合成専念。SRT は外で作って取り込むハイブリッドが堅い。',
+quiz:{ q:'NixOS での堅い進め方は？', choices:[
+{ t:'文字起こしは外部、Blender は合成専念', ok:true }, { t:'全部 Blender 内で完結させる', ok:false }, { t:'字幕は手打ちする', ok:false } ] } },
+{ id:'z4', title:'卒業：1本のパイプライン', teach:[
+'卒業じゃ。全体を1本にすると：\n録音 →（元の声で）Whisper 文字起こし → SRT 整形・ASS 装飾 → 公開音声だけピッチ変更 → Blender VSE で合成 → 用途別に書き出し（公開用／透明素材）。',
+'最初は3分の短い音声で、最後まで1周させること。それが一番の近道じゃ。\n詰まったら、工程のどこかを思い出す：地図は第1章にある。'],
+retry:'録音→文字起こし→字幕→ピッチ→合成→書き出し。まず短い音声で1周。',
+quiz:{ q:'最初の実践として正しいのは？', choices:[
+{ t:'短い音声で最後まで1周させる', ok:true }, { t:'1時間の音声から始める', ok:false }, { t:'道具を全部揃えてから始める', ok:false } ] } },
+]},
+];
+
+/* ============ エンジン ============ */
+const SAVE_KEY = 'whisperSubDojoSaveV1';
+const TOTAL = LEVELS.reduce((a,l)=>a+l.lessons.length,0);
+let done = {};
+try{ const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); if(s && s.done) done = s.done;}catch(e){}
+let soundOn = true, typing = null, advanceFn = null;
+let cur = { level:0, lesson:0, pages:[], page:0};
+
+const $ = id => document.getElementById(id);
+const bgEl=$('bg'), charEl=$('char'), nameEl=$('namebox'), textEl=$('text'),
+boxEl=$('textbox'), chEl=$('choices'), nextEl=$('nextmark');
+
+function beep(freq, dur, delay, vol){
+if(!soundOn) return;
+try{
+const ctx = beep.ctx || (beep.ctx = new (window.AudioContext||window.webkitAudioContext)());
+if(ctx.state === 'suspended') ctx.resume();
+const o = ctx.createOscillator(), g = ctx.createGain();
+o.type='square'; o.frequency.value = freq || 660;
+g.gain.value = vol || 0.03;
+o.connect(g); g.connect(ctx.destination);
+const t = ctx.currentTime + (delay||0);
+o.start(t); o.stop(t + (dur||0.06));
+}catch(e){}
+}
+function save(){
+try{ localStorage.setItem(SAVE_KEY, JSON.stringify({done})); toast();}catch(e){}
+}
+function toast(){
+const t=$('toast'); t.classList.add('show');
+clearTimeout(toast.tm); toast.tm=setTimeout(()=>t.classList.remove('show'), 900);
+}
+function doneCount(){ return Object.keys(done).filter(k=>done[k]).length;}
+function renderProgress(now){
+$('pDone').textContent = doneCount();
+$('bDone').style.width = (doneCount()/TOTAL*100) + '%';
+if(now) $('pNow').textContent = now;
+}
+function setScene(bg, char, name){
+bgEl.className = 'bg ' + bg;
+charEl.innerHTML = CHARS[char] || '';
+charEl.style.display = char && char!== 'none'? '': 'none';
+if(name){ nameEl.textContent = name; nameEl.style.display='';} else nameEl.style.display='none';
+}
+function typeText(txt, onDoneTyping){
+clearInterval(typing);
+textEl.textContent=''; nextEl.style.display='none';
+boxEl.scrollTop = 0;
+advanceFn = null;
+let i=0;
+typing = setInterval(()=>{
+i++;
+textEl.textContent = txt.slice(0, i);
+boxEl.scrollTop = boxEl.scrollHeight;
+const ch = txt.charAt(i-1);
+if(ch && ch!== ' ' && ch!== '\n' && i % 2 === 1){
+beep(980 + Math.random()*520, 0.018, 0, 0.012);
+}
+if(i >= txt.length){
+clearInterval(typing); typing=null;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+}
+}, 26);
+boxEl.onclick = ()=>{
+if(typing){
+clearInterval(typing); typing=null;
+textEl.textContent = txt; boxEl.scrollTop = boxEl.scrollHeight;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+} else if(advanceFn){
+const f = advanceFn; advanceFn = null; f();
+}
+};
+}
+document.addEventListener('keydown', e=>{
+if(!typing && advanceFn && (e.key === ' ' || e.key === 'Enter')){
+e.preventDefault();
+const f = advanceFn; advanceFn = null; f();
+}
+});
+function showChoices(items){
+chEl.innerHTML='';
+items.forEach(it=>{
+const b=document.createElement('button');
+b.className='choice' + (it.done? ' done': '');
+b.textContent=it.t;
+b.onclick=()=>{ beep(520,.06); setTimeout(()=>beep(780,.07),70); chEl.classList.remove('show'); it.fn();};
+chEl.appendChild(b);
+});
+chEl.classList.add('show');
+const dg = $('diagram');
+if(dg && dg.style.display === 'block'){
+$('screen').classList.add('diagmenu');
+requestAnimationFrame(()=>{
+const sr = $('screen').getBoundingClientRect();
+const dr = dg.getBoundingClientRect();
+chEl.style.top = Math.max(0, Math.round(dr.bottom - sr.top + 8)) + 'px';
+});
+} else { $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+}
+function hideChoices(){ chEl.classList.remove('show'); chEl.innerHTML=''; chEl.style.top=''; $('screen').classList.remove('diagmenu'); }
+
+
+/* ============ 図解（8bit風SVG・黒板） ============ */
+function _cm(x,y,ch,fill){ return '<rect x="'+(x+3)+'" y="'+(y+3)+'" width="30" height="30" fill="#000" opacity=".45"/><rect x="'+x+'" y="'+y+'" width="30" height="30" fill="'+fill+'" stroke="#dfe6ff" stroke-width="2"/><text x="'+(x+15)+'" y="'+(y+21)+'" font-size="14" fill="#05060f" text-anchor="middle" font-weight="bold">'+ch+'</text>'; }
+function _ar(x1,y1,x2,y2,col){ col=col||'#8fa3d9'; var pts; if(Math.abs(x2-x1)>=Math.abs(y2-y1)){ pts = x2>x1 ? [[x2,y2],[x2-10,y2-6],[x2-10,y2+6]] : [[x2,y2],[x2+10,y2-6],[x2+10,y2+6]]; } else { pts = y2>y1 ? [[x2,y2],[x2-6,y2-10],[x2+6,y2-10]] : [[x2,y2],[x2-6,y2+10],[x2+6,y2+10]]; } return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+col+'" stroke-width="4"/><polygon points="'+pts.map(function(p){return p.join(',');}).join(' ')+'" fill="'+col+'"/>'; }
+function _ln(x1,y1,x2,y2,col){ return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+(col||'#8fa3d9')+'" stroke-width="3"/>'; }
+function _tx(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'" text-anchor="middle">'+str+'</text>'; }
+function _txl(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'">'+str+'</text>'; }
+function _bx(x,y,w,h,label,fill){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'" stroke="#8fa3d9" stroke-width="2"/><text x="'+(x+w/2)+'" y="'+(y+h/2+5)+'" font-size="12" fill="#fff" text-anchor="middle">'+label+'</text>'; }
+function _tag(x,y,str,col){ var w=str.length*12+12; return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="20" fill="'+col+'"/><text x="'+(x+w/2)+'" y="'+(y+14)+'" font-size="11" fill="#05060f" text-anchor="middle" font-weight="bold">'+str+'</text>'; }
+function _svg(inner){ return '<svg viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'+inner+'</svg>'; }
+var BL='#4a6bff', YL='#ffd94a', GN='#7ee787', RD='#ff7b72', PU='#b18cff', GY='#5a6b9e', DM='#8fa3d9';
+const DIAG = {
+w1: _svg(_bx(30,45,110,40,'音声ファイル','#3a2a6e') + _ar(140,65,160,65,YL) + _bx(160,45,170,40,'時刻つきテキスト','#1b2a6e')
+ + _tx(180,112,'Whisper：軽くてローカルで回る',DM,11)),
+w2: _svg(_bx(6,50,60,36,'録音','#3a2a6e') + _ar(66,68,76,68,YL) + _bx(76,50,60,36,'ピッチ','#3a2320')
+ + _ar(136,68,146,68,YL) + _bx(146,50,66,36,'文字起こし','#1b2a6e') + _ar(212,68,222,68,YL)
+ + _bx(222,50,60,36,'字幕化','#3a2a6e') + _ar(282,68,292,68,YL) + _bx(292,50,62,36,'合成','#1b2a6e')
+ + _tx(180,112,'5工程。分けておくと失敗箇所が分かる',DM,11)),
+w3: _svg(_txl(30,30,'large 系 ＝ 精度本命（6GB で実用）',GN,12) + _txl(30,56,'small〜medium ＝ 4GB 勢の現実ライン',YL,12)
+ + _txl(30,82,'2080 Ti が本命、6GB 勢がワーカ',YL,12)
+ + _tx(180,112,'モデルは大きいほど正確・重い',DM,11)),
+w4: _svg(_txl(40,30,'1',DM,12) + _txl(40,52,'00:00:01,000 --> 00:00:04,000',YL,12)
+ + _txl(40,78,'今日は字幕の作り方を話します。',GN,12)
+ + _tx(180,110,'SRT ＝ 番号・時刻・テキストの繰り返し',DM,11)),
+x1: _svg(_bx(15,30,155,40,'ピッチ変更','#3a2320') + _bx(190,30,155,40,'変わらないもの','#1b2a6e')
+ + _tx(92,92,'声の高さ',YL,11) + _tx(267,92,'テンポ ＝ 字幕の時刻が合う',GN,11)
+ + _tx(180,118,'道具は Rubber Band',DM,11)),
+x2: _svg(_tx(180,34,'ピッチ比率 0.84 ＝ 約 −3 半音',YL,13)
+ + _tx(180,62,'フォルマントもずらすと、より別人らしく',YL,12)
+ + _tx(180,92,'下げすぎ ＝ 不自然・聞き取りにくい',RD,12)
+ + _tx(180,114,'出発点は −3 半音、耳で調整',DM,11)),
+x3: _svg(_bx(15,30,155,40,'声：ピッチで守る','#1b2a6e') + _bx(190,30,155,40,'内容：出さない情報','#3a2320')
+ + _tx(180,94,'ピッチだけでは絶対の匿名化ではない',RD,12)
+ + _tx(180,116,'二段構えが正解',YL,11)),
+x4: _svg(_bx(6,50,100,36,'元の録音','#3a2a6e') + _ar(106,68,118,68,GN) + _bx(118,50,110,36,'文字起こし','#1b2a6e')
+ + _ar(228,68,240,68,YL) + _bx(240,50,114,36,'ピッチは最後','#3a2320')
+ + _tx(180,112,'変更後の声は Whisper の精度が落ちる',RD,11)),
+y1: _svg(_txl(30,30,'whisper.cpp ＋ ggml モデル',YL,12) + _txl(30,56,'-l ja ＝ 日本語を明示',GN,12)
+ + _txl(30,82,'出力形式 ＝ SRT',GN,12)
+ + _tx(180,110,'自動判定まかせは短い音声で取り違える',DM,11)),
+y2: _svg(_txl(30,30,'精度は録音の質で決まる部分が大きい',YL,12)
+ + _txl(30,56,'静かな部屋 ／ マイク距離を一定に',YL,12) + _txl(30,82,'固有名詞は後直し前提（9割自動）',YL,12)
+ + _tx(180,110,'モデルの前に録音環境',DM,11)),
+y3: _svg(_bx(8,45,104,40,'ffmpeg 変換','#3a2a6e') + _bx(128,45,104,40,'whisper 文字','#1b2a6e') + _bx(248,45,104,40,'rubberband','#3a2320')
+ + _tx(180,106,'nix shell で一時的に揃える',YL,12)
+ + _tx(180,124,'工程ごとにコマンド化 → 後で一括処理',DM,10)),
+y4: _svg(_bx(8,30,104,38,'2080Ti：large','#1b2a6e') + _bx(128,30,104,38,'6GB：並列ワーカー','#3a2a6e') + _bx(248,30,104,38,'4GB：下処理','#3a2320')
+ + _tx(180,94,'長い音声は分けて夜間バッチ',YL,12)
+ + _tx(180,116,'渡したファイルのメモ管理を忘れずに',DM,11)),
+z1: _svg(_bx(30,45,110,40,'SRT（時刻・文字）','#3a2a6e') + _ar(140,65,160,65,YL) + _bx(160,45,170,40,'ASS（見た目）','#1b2a6e')
+ + _tx(180,112,'フォント指定＋縁取り、読みやすさ優先',DM,11)),
+z2: _svg(_bx(15,30,155,40,'透明版：VP9／ProRes','#1b2a6e') + _bx(190,30,155,40,'公開用：合成済み','#3a2a6e')
+ + _tx(180,94,'YouTube は透明を保持しない',RD,12)
+ + _tx(180,116,'透明版は合成素材・OBS 用',DM,11)),
+z3: _svg(_bx(15,30,155,40,'外：whisper.cpp','#1b2a6e') + _bx(190,30,155,40,'Blender：合成専念','#3a2a6e')
+ + _tx(180,94,'SRT を作って取り込むハイブリッド',YL,12)
+ + _tx(180,116,'NixOS ではこの形が堅い',DM,11)),
+z4: _svg(_txl(22,28,'録音 → 文字起こし（元の声）→ SRT／ASS',YL,11)
+ + _txl(22,52,'→ ピッチ変更（公開音声だけ）',YL,11) + _txl(22,76,'→ Blender VSE 合成 → 用途別に書き出し',YL,11)
+ + _tx(180,108,'まず短い音声で最後まで 1 周',GN,12)),
+};
+function showDiagFor(id){
+const d = $('diagram');
+if(DIAG[id]){ d.innerHTML = DIAG[id]; d.style.display = 'block'; }
+else d.style.display = 'none';
+}
+function hideDiag(){ $('diagram').style.display = 'none'; $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+
+/* ============ 画面遷移 ============ */
+function goLevels(){
+hideChoices();
+hideDiag();
+setScene('bg-room','none','');
+renderProgress('レベル選択');
+const dc = doneCount();
+const intro = dc === 0
+? '「よく来た。わしがじまく仙人じゃ」\nテーマは「声のパイプライン」。全' + TOTAL + '課。\n好きな編からでよい。分かるまで、何度でも付き合うぞ。'
+: '「戻ったか。現在の理解済みは ' + dc + ' / ' + TOTAL + ' 課じゃ」\n続きをやるもよし、済んだ課を復習するもよし。';
+typeText(intro, ()=>{
+showChoices(LEVELS.map((lv, i)=>{
+const c = lv.lessons.filter(l=>done[l.id]).length;
+return { t: lv.name + '（' + c + '/' + lv.lessons.length + ' 済）', done: c === lv.lessons.length,
+fn: ()=>goLessons(i)};
+}));
+});
+}
+function goLessons(li){
+hideChoices();
+hideDiag();
+const lv = LEVELS[li];
+cur.level = li;
+setScene('bg-room','sennin','じまく仙人');
+renderProgress(lv.name);
+typeText('\n' + lv.desc + '\n課を選ぶのじゃ。✔ は理解済み。復習は何度でもできるぞ。', ()=>{
+showChoices(
+lv.lessons.map((ls, i)=>({ t: ls.title, done:!!done[ls.id], fn: ()=>startLesson(li, i, false)}))
+.concat([{ t:'レベル選択に戻る', fn: goLevels}])
+);
+});
+}
+function startLesson(li, idx, withRetry){
+hideChoices();
+const ls = LEVELS[li].lessons[idx];
+cur.level = li; cur.lesson = idx;
+cur.pages = ls.teach.slice();
+if(withRetry) cur.pages.push('\n' + ls.retry);
+cur.page = 0;
+setScene('bg-term','sennin','じまく仙人');
+renderProgress(LEVELS[li].name + '：' + ls.title);
+showDiagFor(ls.id);
+teachPage();
+}
+function teachPage(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+const isLast = cur.page >= cur.pages.length - 1;
+typeText('\n' + cur.pages[cur.page], ()=>{
+if(isLast){ showCheck();}
+else { advanceFn = ()=>{ cur.page++; teachPage();};}
+});
+}
+function showCheck(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+showChoices([
+{ t:'これは分かった！（確認問題へ）', fn: showQuiz},
+{ t:'分からない（もう一度聞く）', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'レッスン一覧に戻る', fn: ()=>goLessons(cur.level)}
+]);
+}
+function showQuiz(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+setScene('bg-term','sennin','じまく仙人');
+typeText('\n' + ls.quiz.q, ()=>{
+showChoices(ls.quiz.choices.map(c=>({
+t: c.t,
+fn: ()=>{ if(c.ok) completeLesson(); else wrongAnswer();}
+})));
+});
+}
+function wrongAnswer(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+beep(220,.12); setTimeout(()=>beep(180,.14),120);
+typeText('「むむ、違うぞ。焦らなくてよい」\n' + ls.retry, ()=>{
+showChoices([
+{ t:'もう一度説明を聞く', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'もう一度問題に挑む', fn: showQuiz}
+]);
+});
+}
+function completeLesson(){
+hideDiag();
+const li = cur.level, idx = cur.lesson;
+const ls = LEVELS[li].lessons[idx];
+done[ls.id] = true; save();
+[523,659,784,1046].forEach((f,i)=>beep(f,.1,i*0.11));
+renderProgress(LEVELS[li].name + '：' + ls.title + ' ✔');
+const dc = doneCount();
+const levelDone = LEVELS[li].lessons.every(l=>done[l.id]);
+let msg = '「うむ、分かったようじゃな」\n理解済み ✔（合計 ' + dc + ' / ' + TOTAL + ' 課）';
+if(dc >= TOTAL){
+setScene('bg-way','sennin','じまく仙人');
+msg += '\n\n――全課目、修了じゃ！\nここから先は実地あるのみ。Doom を開いて、指で覚えていくのじゃ。卒業おめでとう！';
+} else if(levelDone){
+msg += '\nは全課修了じゃ。よくやった。';
+}
+typeText(msg, ()=>{
+const items = [];
+if(dc < TOTAL){
+if(idx + 1 < LEVELS[li].lessons.length){
+items.push({ t:'次の例題へ（' + LEVELS[li].lessons[idx+1].title + '）', fn: ()=>startLesson(li, idx+1, false)});
+} else if(li + 1 < LEVELS.length){
+items.push({ t:'次の編へ（' + LEVELS[li+1].name + '）', fn: ()=>goLessons(li+1)});
+}
+}
+items.push({ t:'レッスン一覧に戻る', fn: ()=>goLessons(li)});
+items.push({ t:'レベル選択に戻る', fn: goLevels});
+showChoices(items);
+});
+}
+
+/* ============ ボタン類 ============ */
+$('btnEnter').onclick = ()=>{ beep(660,.06); $('title').style.display='none'; goLevels();};
+$('btnLevels').onclick = ()=>{ $('title').style.display='none'; goLevels();};
+$('btnReset').onclick = ()=>{
+done = {}; save(); renderProgress('タイトル');
+$('title').style.display='flex';
+};
+$('btnSound').onclick = (e)=>{
+soundOn =!soundOn;
+e.target.textContent = soundOn? '🔊 音ON': '🔇 音OFF';
+if(soundOn) beep(700,.06);
+};
+renderProgress('タイトル');
+</script>
+<style>
+#galleryWrap{max-width:900px;margin:14px auto 30px;padding:0 10px;text-align:center}
+#btnGallery{cursor:pointer}
+#gallery{display:none;text-align:left;margin-top:12px}
+.gal-item{background:#070a1c;border:2px solid #2c3a75;padding:10px 12px;margin:0 0 12px}
+.gal-cap{color:#ffd94a;font-size:14px;margin-bottom:8px}
+.gal-diag svg{width:100%;height:auto;display:block}
+</style>
+<div id="galleryWrap">
+<button class="sbtn" id="btnGallery">🖼 図解一覧（復習用）を表示</button>
+<div id="gallery"></div>
+</div>
+<script>
+(function(){
+var btn = document.getElementById('btnGallery');
+var gal = document.getElementById('gallery');
+var built = false;
+function build(){
+var html = '';
+if (typeof LEVELS !== 'undefined' && typeof DIAG !== 'undefined') {
+LEVELS.forEach(function(lv, li){
+lv.lessons.forEach(function(ls, i){
+if (DIAG[ls.id]) html += '<div class="gal-item"><div class="gal-cap">第' + (li+1) + '章 第' + (i+1) + '課：' + ls.title + '</div><div class="gal-diag">' + DIAG[ls.id] + '</div></div>';
+});
+});
+} else if (typeof DIAG !== 'undefined') {
+Object.keys(DIAG).forEach(function(k){
+var cap = k;
+if (typeof NODES !== 'undefined' && NODES[k] && NODES[k].title) cap = NODES[k].title;
+html += '<div class="gal-item"><div class="gal-cap">' + cap + '</div><div class="gal-diag">' + DIAG[k] + '</div></div>';
+});
+}
+gal.innerHTML = html || '<div class="gal-cap">図解はありません</div>';
+}
+btn.onclick = function(){
+var show = gal.style.display !== 'block';
+if (show && !built) { build(); built = true; }
+gal.style.display = show ? 'block' : 'none';
+btn.textContent = show ? '🖼 図解一覧（復習用）を隠す' : '🖼 図解一覧（復習用）を表示';
+};
+})();
+</script>
+</body>
+</html>
