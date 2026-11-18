@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>セキュリティ道場 ― 不安を可視化に変える</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{
+--tb:29%;
+--ink:#dfe6ff; --dim:#8fa3d9; --blue:#3355ff; --panel:#0a0e24;
+--win:#101736; --accent:#ffd94a; --good:#7ee787; --bad:#ff7b72;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+body{margin:0;background:#05060f;color:var(--ink);
+font-family:"DotGothic16","Hiragino Kaku Gothic ProN","Noto Sans JP",monospace,sans-serif;
+-webkit-font-smoothing:none;font-smooth:never;
+display:flex;justify-content:center;padding:14px 10px 40px}
+.cab{width:100%;max-width:760px}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{font-weight:900;letter-spacing:2px;font-size:18px;color:#fff;
+text-shadow:2px 2px 0 var(--blue), 4px 4px 0 #101736}
+.logo small{display:block;font-size:11px;color:var(--dim);letter-spacing:1px;text-shadow:none}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer}
+.sbtn{background:var(--win);color:var(--ink);border:2px solid var(--dim);
+padding:4px 10px;font-size:12px;border-radius:4px}
+.sbtn:hover{border-color:#fff;color:#fff}
+.params{display:flex;gap:14px;background:var(--panel);border:2px solid var(--dim);
+padding:6px 12px;font-size:12px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.params b{color:var(--accent)}
+.bar{display:inline-block;width:120px;height:10px;background:#1a2148;vertical-align:middle;margin-left:4px;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--good);display:block}
+.screen{position:relative;border:6px solid var(--dim);border-radius:6px;overflow:hidden;
+aspect-ratio:16/10;background:#000;image-rendering:pixelated}
+.screen::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+background:repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 3px, transparent 3px 6px)}
+.bg{position:absolute;inset:0;transition:opacity.4s}
+.bg-room{background:linear-gradient(#0d1440 0 55%, #182257 55% 100%)}
+.bg-room::before{content:"";position:absolute;right:8%;top:8%;width:110px;height:130px;
+background:linear-gradient(#1b2a63,#0d1440);border:6px solid #05081a;
+box-shadow:0 0 0 4px #26398a, inset 0 0 0 3px #26398a}
+.bg-term{background:radial-gradient(ellipse at 50% 40%, #06280f 0%, #02140a 70%)}
+.bg-term::before{content:"棚卸し ❄ ポート ❄ Tailscale ❄ ACL ❄ ログ ❄ 点検 ❄";
+position:absolute;inset:6%;color:#2f9e44;font-size:13px;line-height:2.1;opacity:.55;
+font-family:ui-monospace,Menlo,monospace;word-break:break-all}
+.bg-way{background:linear-gradient(#1b1040 0%, #4a2a7a 55%, #c65b8f 82%, #ffb36b 100%)}
+.stars{position:absolute;inset:0;z-index:1;
+background-image:radial-gradient(2px 2px at 12% 18%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 32% 8%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 55% 22%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 74% 10%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 88% 26%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 44% 30%, #9fb4ff 50%, transparent 51%)}
+.char{position:absolute;bottom:var(--tb);left:50%;transform:translateX(-50%);z-index:2;
+filter:drop-shadow(0 0 10px rgba(60,100,255,.75))}
+.char svg{display:block}
+.ground{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:1;
+background:linear-gradient(transparent, rgba(3,5,16,.92) 30%)}
+.namebox{position:absolute;left:14px;bottom:calc(var(--tb) + 8px);z-index:8;color:#ffffff;
+background:var(--win);border:3px solid var(--dim);padding:2px 14px;font-weight:700;font-size:16px;
+letter-spacing:.06em;text-shadow:2px 2px 0 #000}
+.textbox{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:7;color:#ffffff;
+background:rgba(4,6,20,.97);border-top:4px solid var(--dim);
+padding:12px 16px;font-size:18px;line-height:1.8;letter-spacing:.06em;
+text-shadow:2px 2px 0 #000;
+cursor:pointer;white-space:pre-wrap;overflow-y:auto;overflow-x:hidden;
+scrollbar-width:thin;scrollbar-color:#3355ff #0a0e24}
+.textbox::-webkit-scrollbar{width:10px}
+.textbox::-webkit-scrollbar-track{background:#0a0e24}
+.textbox::-webkit-scrollbar-thumb{background:#3355ff;border:2px solid #04061a}
+.textbox.next{position:absolute;right:12px;bottom:6px;color:var(--accent);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.choices{position:absolute;top:0;left:0;right:0;bottom:calc(var(--tb) + 46px);z-index:9;display:none;flex-direction:column;
+align-items:center;justify-content:center;gap:12px;background:rgba(3,5,16,.78);padding:16px;overflow-y:auto}
+.choices.show{display:flex}
+.choice{width:min(92%,520px);background:#05081f;color:#ffffff;font-weight:700;
+border:3px solid #d5ddff;padding:12px 16px;font-size:18px;letter-spacing:.08em;
+text-shadow:2px 2px 0 #000;text-align:left;border-radius:4px}
+.choice:hover{border-color:var(--accent);color:#fff;background:#1b2a6e}
+.choice::before{content:"▶ ";color:var(--accent)}
+.choice.done{border-color:var(--good)}
+.choice.done::before{content:"✔ ";color:var(--good)}
+.title{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
+justify-content:center;gap:14px;background:radial-gradient(ellipse at 50% 35%, #14205e 0%, #05060f 75%);text-align:center;padding:16px}
+.title h1{margin:0;font-size:clamp(26px,6vw,44px);letter-spacing:3px;color:#fff;
+text-shadow:3px 3px 0 var(--blue), 6px 6px 0 #101736}
+.title p{color:#d5ddff;font-size:14px;margin:0;line-height:1.9}
+.tbtn{background:#05081f;color:#fff;font-weight:700;border:3px solid #d5ddff;padding:10px 26px;font-size:17px;letter-spacing:.08em;border-radius:4px}
+.tbtn:hover{border-color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
+border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;opacity:0;transition:opacity.3s;z-index:50;pointer-events:none}
+.toast.show{opacity:1}
+#diagram{transition:width .25s}
+.screen.diagmenu #diagram{width:min(430px,74%)}
+.screen.diagmenu .choices{bottom:calc(var(--tb) + 8px);flex-direction:row;flex-wrap:wrap;align-content:flex-start;justify-content:center;gap:8px}
+.screen.diagmenu .choice{flex:1 1 28%;width:auto;margin:0;text-align:center;font-size:14px;padding:10px 8px;line-height:1.5}
+
+#diagram{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:min(560px,94%);z-index:5;background:rgba(3,4,16,.88);border:2px solid var(--dim);padding:6px;display:none}
+#diagram svg{width:100%;height:auto;display:block}
+
+footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
+kbd{display:inline-block;background:#21262d;border:1px solid var(--dim);border-bottom-width:2px;
+border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+@media (max-width:560px){.textbox{font-size:15px}.char{bottom:var(--tb)}}
+
+/* ===== スマホ縦長対応：画面を縦に取り、本文ボックスの割合を広げる ===== */
+@media (orientation:portrait) and (max-width:760px){
+:root{--tb:46%}
+.screen{aspect-ratio:auto;height:80vh;height:80dvh}
+.textbox{font-size:16px;line-height:1.75}
+.char svg{width:100px;height:127px}
+.choice{font-size:16px;padding:10px 14px}
+.choices{overflow-y:auto}
+.title h1{font-size:25px}
+.title p{font-size:13px}
+.params{gap:8px;font-size:11px}
+.bar{width:80px}
+}
+
+/* ===== 選択肢が上に隠れる問題の修正：中央寄せのまま、溢れたら先頭からスクロール ===== */
+.choices{justify-content:flex-start;overflow-y:auto}
+.choice:first-child{margin-top:auto}
+.choice:last-child{margin-bottom:auto}
+</style>
+</head>
+<body>
+<div class="cab">
+<header>
+<div class="logo">セキュリティ道場<small>― 外からの見え方とTailscale 全16課 ―</small></div>
+<div class="btns">
+<button class="sbtn" id="btnSound">🔊 音ON</button>
+<button class="sbtn" id="btnLevels">🏠 レベル選択</button>
+<button class="sbtn" id="btnReset">🗑 進捗リセット</button>
+</div>
+</header>
+
+<div class="params">
+<span>理解済み <b id="pDone">0</b> / 16 課<span class="bar"><i id="bDone" style="width:0%"></i></span></span>
+<span style="color:var(--dim)">現在：<span id="pNow">タイトル</span></span>
+<span style="margin-left:auto;color:var(--dim)">💾 進捗は自動保存（localStorage）</span>
+</div>
+
+<div class="screen" id="screen">
+<div class="bg bg-room" id="bg"></div>
+<div class="stars"></div>
+<div class="ground"></div>
+<div class="char" id="char"></div>
+<div id="diagram"></div>
+<div class="namebox" id="namebox" style="display:none"></div>
+<div class="textbox" id="textbox"><span id="text"></span><span class="next" id="nextmark" style="display:none">▼</span></div>
+<div class="choices" id="choices"></div>
+<div class="title" id="title">
+<h1>セキュリティ道場</h1>
+<p>テーマは「不安を可視化に変える」。<br>
+入口の棚卸し、外からの見え方、Tailscaleの固め方、定期点検まで全16課。<br>
+「分かった！」で次へ、「分からない」で何度でもやり直し。</p>
+<button class="tbtn" id="btnEnter">▶ 道場に入る</button>
+<p>進捗（理解済み ✔）はブラウザに自動保存されます</p>
+</div>
+</div>
+
+<footer>
+遊び方：説明を読んだら「これは分かった！」か「分からない」を選ぶだけ。分かったら確認問題が1問出て、正解でその課は理解済み ✔。
+間違えてもペナルティなし、補足説明を読んで何度でも挑めます。本文クリックで文字送り、長い文は自動スクロール＋手動スクロール可。
+各課では入口と通信の流れを図で描いて、見える化します。題材は君の自宅LANとTailscaleです。完璧な安全ではなく「数えられる・見える・気づける」状態が目標です。
+</footer>
+</div>
+
+<div class="toast" id="toast">💾 保存しました</div>
+
+<script>
+"use strict";
+/* ============ シルエット ============ */
+function sil(extra){
+return '<svg width="150" height="190" viewBox="0 0 120 150">'
++ '<circle cx="60" cy="34" r="17" fill="#141f52"/>'
++ '<path d="M22 150 C22 96 40 66 60 66 C80 66 98 96 98 150 Z" fill="#141f52"/>'
++ (extra || '') + '</svg>';
+}
+const CHARS = {
+sennin: sil('<path d="M28 26 L60 2 L92 26 L84 30 L60 14 L36 30 Z" fill="#141f52"/>'
++ '<path d="M48 44 L72 44 L66 92 L54 92 Z" fill="#141f52"/>'),
+ore: sil(''),
+none: ''
+};
+
+/* ============ カリキュラム ============ */
+/* teach: 説明ページ（クリックで送る） / retry: 補足説明 / quiz: 確認問題 */
+const LEVELS = [
+{ name:'入門編 不安を分解する', desc:'見えないから怖い。入口と資産を数えられる形にする。', lessons:[
+{ id:'a1', title:'不安の正体は「見えない」', teach:[
+'セキュリティの不安の正体は、大抵「何があるか分からない」ことじゃ。\n敵が強いからではなく、自分の家の中が見えていないから怖い。',
+'だから第一歩は、防御を固めることではなく「棚卸し」。\n機器の一覧、通信の一覧、入口の一覧。\n数えられる形になれば、不安は「監視項目」に変わる。'],
+retry:'不安の正体は見えないこと。第一歩は防御より棚卸し。',
+quiz:{ q:'セキュリティの第一歩は？', choices:[
+{ t:'棚卸し（機器・通信・入口の一覧化）', ok:true }, { t:'高価な機器を買う', ok:false }, { t:'全部の通信を止める', ok:false } ] } },
+{ id:'a2', title:'入口は3種類だけ', teach:[
+'家への入口は、整理すると3種類しかない：\n1. WAN から直接の入口（ポート開放やルーターの公開設定）\n2. Tailscale 経由の入口\n3. 中から外への出口（マルウェアや情報漏れは、大抵こちら側の問題）',
+'入口が3種類と数えられれば、点検の対象も3つに絞れる。\n漠然とした不安が、具体的なチェックリストに変わる瞬間じゃ。'],
+retry:'入口は WAN直接・Tailscale・内側からの出口、の3種類。数えれば点検できる。',
+quiz:{ q:'入口の数え方は？', choices:[
+{ t:'無数にある', ok:false }, { t:'WAN直接・Tailscale・内からの出口の3種類', ok:true }, { t:'玄関の1つだけ', ok:false } ] } },
+{ id:'a3', title:'資産の棚卸し：機器一覧', teach:[
+'まず LAN の機器一覧を作る。手っ取り早い材料は、ルーターの DHCP リース表（住所を貸した機器の一覧）じゃ。\nMAC アドレスと、貸した IP と、名前（出れば）が載っている。',
+'一覧を見て「これは何の機器か」が全部言えるか。\n自分の機器には分かる名前を付けておく（DHCP 予約のメモ欄や一覧表に）。\n「知らない機器がいる」ことに気づけるのが、棚卸しの価値じゃ。'],
+retry:'DHCP リース表から機器一覧を作り、全部に心当たりがある状態にする。',
+quiz:{ q:'機器一覧の材料として手っ取り早いのは？', choices:[
+{ t:'ルーターの DHCP リース表', ok:true }, { t:'勘', ok:false }, { t:'箱の保管', ok:false } ] } },
+{ id:'a4', title:'通信の棚卸し：平常を知る', teach:[
+'次は通信の一覧。どの機器が、どこ（外のどこ）と話しているか。\nAdGuard のログや、ルーターの接続状況で見える。',
+'ここでの目的は、全部を理解することではなく「平常の景色」を知ること。\n平常が分かれば、「いつもと違う」が異常として浮かび上がる。\n可視化とは、この「違いに気づける状態」を作ることじゃ。'],
+retry:'通信の平常を知る。異常は「平常との違い」として見える。',
+quiz:{ q:'通信の棚卸しの目的は？', choices:[
+{ t:'全部の通信を暗記する', ok:false }, { t:'平常を知り、違いに気づけるようにする', ok:true }, { t:'通信を全部止める', ok:false } ] } },
+]},
+{ name:'初級編 外から見えているか', desc:'ポート開放・UPnP・自分の目での確認。WAN側の点検。', lessons:[
+{ id:'b1', title:'ポート開放の確認', teach:[
+'外から家の中が見えるのは、原則「開けたポート」からだけじゃ。\nルーターのポートフォワーディング（ポート開放）設定の一覧を開いて、1つずつ「これは何のためか」を確認する。',
+'心当たりのない開放は閉じる。使っていない公開サービスは止める。\n入口は「開けた分だけ」と数えられるのが、正しい状態じゃ。'],
+retry:'外から見えるのは開けたポートだけ。一覧を全部説明できる状態にする。',
+quiz:{ q:'ポート開放一覧で目指す状態は？', choices:[
+{ t:'全部の開放に心当たりがある', ok:true }, { t:'多いほど便利', ok:false }, { t:'見ないほうが安心', ok:false } ] } },
+{ id:'b2', title:'UPnPの落とし穴', teach:[
+'UPnP は、機器やアプリが「自動でポートを開ける」機能じゃ。\nゲーム等では便利だが、棚卸しの一覧に載らない形で入口が増えるのが問題。',
+'原則はオフ。ポートが必要な機器があるなら、その分だけ手動で開けて、一覧に載せる。\n「自動で増える入口」を止めるのが、この課の要点じゃ。'],
+retry:'UPnP は入口が勝手に増える機能。原則オフ、必要分は手動で。',
+quiz:{ q:'UPnP の扱いは？', choices:[
+{ t:'便利なので常にオン', ok:false }, { t:'原則オフ。必要な開放は手動で一覧化', ok:true }, { t:'気にしなくてよい', ok:false } ] } },
+{ id:'b3', title:'自分で外から確かめる', teach:[
+'確認は自分でできる。スマホの Wi-Fi を切って（モバイル回線にして）、外の立場から自宅のグローバル IP に接続を試みる。\nポートチェックのサービスに自分の IP を入れて、開いているポートを見る方法もある。',
+'Shodan のような検索エンジンに自分の IP を入れると、「外からどう記録されているか」も見える。\n注意：調べていいのは自分の IP だけ。他人の IP を調べ回るのは厳禁じゃ。'],
+retry:'外からの見え方は、自分で（モバイル回線・チェックサービス）確認できる。対象は自分のIPだけ。',
+quiz:{ q:'外からの確認で正しいのは？', choices:[
+{ t:'自分の IP だけを調べる', ok:true }, { t:'近所の IP もついでに調べる', ok:false }, { t:'確認方法はない', ok:false } ] } },
+{ id:'b4', title:'管理画面と初期設定', teach:[
+'ルーターや OpenWrt の管理画面は、LAN の中からだけ開けるのが原則。WAN 側に開けていたら、それ自体が最大の入口になる。\nリモート管理の設定がオフか、確認する。',
+'あわせて初期設定の棚卸し：管理パスワードは初期値から変えたか。使っていない機能（リモート管理、古い暗号化の Wi-Fi 等）は止めたか。\nここは一度やれば終わる点検じゃ。'],
+retry:'管理画面は内側だけ。初期パスワード変更と不要機能オフは一度きりの点検。',
+quiz:{ q:'管理画面の原則は？', choices:[
+{ t:'外からも開けると便利', ok:false }, { t:'LAN の中からだけ開ける', ok:true }, { t:'パスワードなしでよい', ok:false } ] } },
+]},
+{ name:'中級編 Tailscaleを固める', desc:'ポートを開けない安心材料と、アカウント・ACL・共有の注意。', lessons:[
+{ id:'c1', title:'Tailscaleの安心材料', teach:[
+'Tailscale が心強いのは、ポート開放なしで外から家に届くからじゃ。\n仕組みは WireGuard ベースの暗号化通信で、端末同士が直接つながる（NAT 越えの工夫で、玄関に鍵穴を増やさない）。',
+'つまり「外からリモートで使う」と「外に入口を開ける」が両立しない問題を、Tailscale は回避している。\n君が複数 PC をリモートで使う形は、この前提の上に立っている。'],
+retry:'Tailscale＝ポート開放なし＋暗号化。入口を増やさずリモートできる。',
+quiz:{ q:'Tailscale の安心材料は？', choices:[
+{ t:'ポート開放が不要で、通信が暗号化される', ok:true }, { t:'速くなる', ok:false }, { t:'匿名になれる', ok:false } ] } },
+{ id:'c2', title:'アカウントが要（かなめ）', teach:[
+'Tailscale の安全は、ログイン（Google や GitHub 等の ID）の安全に直結する。\nその ID に2要素認証（MFA）を必ず入れる。ここが一番の急所じゃ。',
+'管理画面では、参加している端末の一覧を定期的に見る。心当たりのない端末がいないか。\n端末の承認（新しい端末を手動で許可する設定）も、規模が小さいうちは有効な選択肢じゃ。'],
+retry:'要はログインの MFA。端末一覧の定期確認と、必要なら端末承認。',
+quiz:{ q:'Tailscale で一番の急所は？', choices:[
+{ t:'ログイン ID の MFA（2要素認証）', ok:true }, { t:'通信速度', ok:false }, { t:'端末の色', ok:false } ] } },
+{ id:'c3', title:'ACLと鍵の管理', teach:[
+'ACL は「どの端末が、どの端末の何へ届いてよいか」のルール表じゃ。\n最初は全部許可でも動くが、慣れたら「この端末はこの PC の SSH だけ」のように絞ると、1台が乗っ取られたときの被害が小さくなる。',
+'鍵まわり：使わなくなった端末は tailnet から削除する。鍵の有効期限切れの再認証を放置しない。\n「参加者の棚卸し」が、ここでも効いてくる。'],
+retry:'ACL で届く範囲を絞る。使わない端末は削除し、参加者を棚卸しする。',
+quiz:{ q:'ACL の役割は？', choices:[
+{ t:'どの端末がどこへ届いてよいかを決める', ok:true }, { t:'通信を速くする', ok:false }, { t:'広告を消す', ok:false } ] } },
+{ id:'c4', title:'exit nodeと共有の注意', teach:[
+'exit node は、その端末経由でインターネットに出る設定。便利だが、その端末と回線を「出口」として信頼する行為になる。\n自分で管理している端末だけを exit node にする。',
+'もう1つ：subnet router（家 LAN の帯域を tailnet に広告する設定）は、家の中全体への道を開ける。便利さと引き換えに境界が広がるので、意味を理解してから有効にする。\n端末の共有も同じで、共有＝境界を広げる行為じゃ。'],
+retry:'exit node と subnet router は境界を広げる設定。理解してから使う。',
+quiz:{ q:'subnet router の注意は？', choices:[
+{ t:'家 LAN 全体への道が開くので慎重に', ok:true }, { t:'特に注意はない', ok:false }, { t:'速度が落ちるだけ', ok:false } ] } },
+]},
+{ name:'上級編 中の可視化と定期点検', desc:'未知の端末検知、ログの習慣、月1点検、そして卒業。', lessons:[
+{ id:'d1', title:'未知の端末に気づく', teach:[
+'LAN の中に新しい機器が来たら気づける仕組みがあると強い。NetAlertX のような在席検知ツールは、未知の端末の出現を通知してくれる。',
+'道具がなくても、DHCP リース表を時々眺めるだけで第一歩になる。\n「知らない MAC」がいたら、まず自分の機器の消去法（家族の機器、自分のサブ端末、MAC ランダム化のスマホ等）から確かめる。慌てず、しかし放置しない。'],
+retry:'未知端末の検知（ツール or リース表）。見つけたら消去法で確認。',
+quiz:{ q:'知らない端末を見つけたら？', choices:[
+{ t:'すぐ全部の電源を切る', ok:false }, { t:'自分の機器の消去法で確かめる', ok:true }, { t:'無視する', ok:false } ] } },
+{ id:'d2', title:'ログを見る習慣', teach:[
+'AdGuard のクエリログは、家の通信の癖を映す鏡じゃ。\nどの機器が、どの名前を、どれくらい引いているかが見える。',
+'読み方は「全部読む」ではない。平常と違う点——夜中の大量の名前引き、知らないドメインへの頻繁な通信——を探す。\na4 の「平常を知る」が、ここで武器になる。'],
+retry:'ログは平常との違いを探すために見る。全部読む必要はない。',
+quiz:{ q:'ログの読み方は？', choices:[
+{ t:'全部を毎日読む', ok:false }, { t:'平常と違う点（夜中・頻繁・未知）を探す', ok:true }, { t:'見ない', ok:false } ] } },
+{ id:'d3', title:'月1点検の型', teach:[
+'点検は、チェックリストにして月1回回すと続く：\n機器一覧に知らない物はないか／ポート開放は全部説明できるか／Tailscale の端末一覧は正しいか／OS と OpenWrt の更新は済んだか／バックアップは取れているか。',
+'発展形として、この点検の一部（OpenWrt の設定監査など）は、エージェントに定期実行させて差分だけ報告させる形も作れる。\nまず手で回して型を作り、面倒な部分から自動化するのが順序じゃ。'],
+retry:'月1チェックリスト（機器・開放・Tailscale・更新・バックアップ）。自動化は型の後。',
+quiz:{ q:'点検を続けるコツは？', choices:[
+{ t:'チェックリスト化して月1回回す', ok:true }, { t:'気づいたときだけやる', ok:false }, { t:'毎日全部やる', ok:false } ] } },
+{ id:'d4', title:'卒業：不安との付き合い方', teach:[
+'卒業じゃ。正直に言うと、100% の安全はない。\n目指す状態は別で：「入口が数えられる」「平常が見える」「異常に気づける」。この3つがそろえば、不安は根拠のある警戒に変わる。',
+'知識は、点検を回すたびに増える。分からない項目が出たら、その都度調べればいい。\nセキュリティは一度の工事ではなく、家の見回りの習慣じゃ。\nまず今週、DHCP リース表から始めてみよう。'],
+retry:'目標は「数えられる・見える・気づける」。点検の習慣が知識を増やす。',
+quiz:{ q:'目指す状態は？', choices:[
+{ t:'100% の安全', ok:false }, { t:'入口が数えられ、平常が見え、異常に気づける', ok:true }, { t:'何も使わないこと', ok:false } ] } },
+]},
+];
+
+/* ============ エンジン ============ */
+const SAVE_KEY = 'securityDojoSaveV1';
+const TOTAL = LEVELS.reduce((a,l)=>a+l.lessons.length,0);
+let done = {};
+try{ const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); if(s && s.done) done = s.done;}catch(e){}
+let soundOn = true, typing = null, advanceFn = null;
+let cur = { level:0, lesson:0, pages:[], page:0};
+
+const $ = id => document.getElementById(id);
+const bgEl=$('bg'), charEl=$('char'), nameEl=$('namebox'), textEl=$('text'),
+boxEl=$('textbox'), chEl=$('choices'), nextEl=$('nextmark');
+
+function beep(freq, dur, delay, vol){
+if(!soundOn) return;
+try{
+const ctx = beep.ctx || (beep.ctx = new (window.AudioContext||window.webkitAudioContext)());
+if(ctx.state === 'suspended') ctx.resume();
+const o = ctx.createOscillator(), g = ctx.createGain();
+o.type='square'; o.frequency.value = freq || 660;
+g.gain.value = vol || 0.03;
+o.connect(g); g.connect(ctx.destination);
+const t = ctx.currentTime + (delay||0);
+o.start(t); o.stop(t + (dur||0.06));
+}catch(e){}
+}
+function save(){
+try{ localStorage.setItem(SAVE_KEY, JSON.stringify({done})); toast();}catch(e){}
+}
+function toast(){
+const t=$('toast'); t.classList.add('show');
+clearTimeout(toast.tm); toast.tm=setTimeout(()=>t.classList.remove('show'), 900);
+}
+function doneCount(){ return Object.keys(done).filter(k=>done[k]).length;}
+function renderProgress(now){
+$('pDone').textContent = doneCount();
+$('bDone').style.width = (doneCount()/TOTAL*100) + '%';
+if(now) $('pNow').textContent = now;
+}
+function setScene(bg, char, name){
+bgEl.className = 'bg ' + bg;
+charEl.innerHTML = CHARS[char] || '';
+charEl.style.display = char && char!== 'none'? '': 'none';
+if(name){ nameEl.textContent = name; nameEl.style.display='';} else nameEl.style.display='none';
+}
+function typeText(txt, onDoneTyping){
+clearInterval(typing);
+textEl.textContent=''; nextEl.style.display='none';
+boxEl.scrollTop = 0;
+advanceFn = null;
+let i=0;
+typing = setInterval(()=>{
+i++;
+textEl.textContent = txt.slice(0, i);
+boxEl.scrollTop = boxEl.scrollHeight;
+const ch = txt.charAt(i-1);
+if(ch && ch!== ' ' && ch!== '\n' && i % 2 === 1){
+beep(980 + Math.random()*520, 0.018, 0, 0.012);
+}
+if(i >= txt.length){
+clearInterval(typing); typing=null;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+}
+}, 26);
+boxEl.onclick = ()=>{
+if(typing){
+clearInterval(typing); typing=null;
+textEl.textContent = txt; boxEl.scrollTop = boxEl.scrollHeight;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+} else if(advanceFn){
+const f = advanceFn; advanceFn = null; f();
+}
+};
+}
+document.addEventListener('keydown', e=>{
+if(!typing && advanceFn && (e.key === ' ' || e.key === 'Enter')){
+e.preventDefault();
+const f = advanceFn; advanceFn = null; f();
+}
+});
+function showChoices(items){
+chEl.innerHTML='';
+items.forEach(it=>{
+const b=document.createElement('button');
+b.className='choice' + (it.done? ' done': '');
+b.textContent=it.t;
+b.onclick=()=>{ beep(520,.06); setTimeout(()=>beep(780,.07),70); chEl.classList.remove('show'); it.fn();};
+chEl.appendChild(b);
+});
+chEl.classList.add('show');
+const dg = $('diagram');
+if(dg && dg.style.display === 'block'){
+$('screen').classList.add('diagmenu');
+requestAnimationFrame(()=>{
+const sr = $('screen').getBoundingClientRect();
+const dr = dg.getBoundingClientRect();
+chEl.style.top = Math.max(0, Math.round(dr.bottom - sr.top + 8)) + 'px';
+});
+} else { $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+}
+function hideChoices(){ chEl.classList.remove('show'); chEl.innerHTML=''; chEl.style.top=''; $('screen').classList.remove('diagmenu'); }
+
+
+/* ============ 図解（8bit風SVG・黒板） ============ */
+function _cm(x,y,ch,fill){ return '<rect x="'+(x+3)+'" y="'+(y+3)+'" width="30" height="30" fill="#000" opacity=".45"/><rect x="'+x+'" y="'+y+'" width="30" height="30" fill="'+fill+'" stroke="#dfe6ff" stroke-width="2"/><text x="'+(x+15)+'" y="'+(y+21)+'" font-size="14" fill="#05060f" text-anchor="middle" font-weight="bold">'+ch+'</text>'; }
+function _ar(x1,y1,x2,y2,col){ col=col||'#8fa3d9'; var pts; if(Math.abs(x2-x1)>=Math.abs(y2-y1)){ pts = x2>x1 ? [[x2,y2],[x2-10,y2-6],[x2-10,y2+6]] : [[x2,y2],[x2+10,y2-6],[x2+10,y2+6]]; } else { pts = y2>y1 ? [[x2,y2],[x2-6,y2-10],[x2+6,y2-10]] : [[x2,y2],[x2-6,y2+10],[x2+6,y2+10]]; } return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+col+'" stroke-width="4"/><polygon points="'+pts.map(function(p){return p.join(',');}).join(' ')+'" fill="'+col+'"/>'; }
+function _ln(x1,y1,x2,y2,col){ return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+(col||'#8fa3d9')+'" stroke-width="3"/>'; }
+function _tx(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'" text-anchor="middle">'+str+'</text>'; }
+function _txl(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'">'+str+'</text>'; }
+function _bx(x,y,w,h,label,fill){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'" stroke="#8fa3d9" stroke-width="2"/><text x="'+(x+w/2)+'" y="'+(y+h/2+5)+'" font-size="12" fill="#fff" text-anchor="middle">'+label+'</text>'; }
+function _tag(x,y,str,col){ var w=str.length*12+12; return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="20" fill="'+col+'"/><text x="'+(x+w/2)+'" y="'+(y+14)+'" font-size="11" fill="#05060f" text-anchor="middle" font-weight="bold">'+str+'</text>'; }
+function _svg(inner){ return '<svg viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'+inner+'</svg>'; }
+var BL='#4a6bff', YL='#ffd94a', GN='#7ee787', RD='#ff7b72', PU='#b18cff', GY='#5a6b9e', DM='#8fa3d9';
+const DIAG = {
+a1: _svg(_tx(180,30,'不安 ＝「見えていない」こと',RD,13)
+ + _bx(45,50,270,38,'棚卸し → 数えられる → 監視項目になる','#1b2a6e')
+ + _tx(180,110,'第一歩は防御ではなく一覧化',YL,12)),
+a2: _svg(_bx(8,45,104,44,'WANから 直接','#3a2320') + _bx(128,45,104,44,'Tailscale 経由','#3a2a6e') + _bx(248,45,104,44,'内からの 出口','#1b2a6e')
+ + _tx(180,112,'入口は3種類。数えられれば点検できる',DM,11)),
+a3: _svg(_txl(35,30,'DHCP リース表（住所を貸した一覧）',YL,12)
+ + _txl(35,56,'・192.168.1.10 ＝ メインPC',GN,12) + _txl(35,80,'・192.168.1.23 ＝ ？？？',RD,12)
+ + _tx(180,112,'全部に心当たりがある状態が目標',DM,11)),
+a4: _svg(_bx(30,35,130,40,'平常の景色','#1b2a6e') + _ar(160,55,180,55,YL) + _bx(180,35,150,40,'違い ＝ 異常の合図','#3a2320')
+ + _tx(180,100,'可視化 ＝ 違いに気づける状態',YL,12)),
+b1: _svg(_txl(35,30,'ポート開放の一覧を全部説明できるか',YL,12)
+ + _txl(35,56,'・443 ＝ 公開中のサービス（把握済み）',GN,12) + _txl(35,80,'・???? ＝ 心当たりなし → 閉じる',RD,12)
+ + _tx(180,112,'外から見えるのは「開けた分」だけ',DM,11)),
+b2: _svg(_bx(60,30,240,40,'UPnP：機器が勝手に開ける','#3a2320')
+ + _tx(180,90,'棚卸しの一覧に載らない入口',RD,12)
+ + _tx(180,112,'原則オフ。必要分は手動で開けて一覧化',YL,11)),
+b3: _svg(_bx(8,50,100,38,'スマホ（4G）','#3a2a6e') + _ar(108,69,128,69,YL) + _tx(150,60,'外の立場',DM,10)
+ + _bx(160,50,90,38,'自宅IP','#1b2a6e') + _ar(250,69,266,69,GN) + _bx(266,50,86,38,'見え方','#1b2a6e')
+ + _tx(180,112,'調べるのは自分の IP だけ',RD,11)),
+b4: _svg(_bx(15,30,155,40,'管理画面：LAN内だけ','#1b2a6e') + _bx(190,30,155,40,'初期パスワード変更','#3a2a6e')
+ + _tx(180,94,'リモート管理はオフか確認',YL,12)
+ + _tx(180,116,'一度やれば終わる点検',DM,11)),
+c1: _svg(_bx(8,50,90,38,'外の端末','#3a2a6e') + _ar(98,69,120,69,GN) + _tx(150,60,'暗号化',GN,10)
+ + _bx(160,50,90,38,'直接接続','#1b2a6e') + _ar(250,69,266,69,GN) + _bx(266,50,86,38,'家のPC','#1b2a6e')
+ + _tx(180,112,'ポート開放なし ＝ 玄関に鍵穴を増やさない',DM,11)),
+c2: _svg(_bx(45,25,270,38,'ログイン ID ＋ MFA（2要素認証）','#3a2320')
+ + _ar(180,63,180,77,YL) + _bx(45,77,270,34,'Tailscale の安全はここに直結','#1b2a6e')
+ + _tx(180,126,'端末一覧の定期確認もセット',DM,11)),
+c3: _svg(_txl(30,30,'ACL（届いてよい範囲の表）',YL,12)
+ + _txl(30,56,'・スマホ → PC の SSH：可',GN,12) + _txl(30,80,'・IoT → PC 全般：不可',RD,12)
+ + _tx(180,112,'絞ると、1台の被害が小さくなる',DM,11)),
+c4: _svg(_bx(15,30,155,40,'exit node（出口）','#3a2a6e') + _bx(190,30,155,40,'subnet router','#3a2320')
+ + _tx(92,92,'信頼する端末だけ',DM,11) + _tx(267,92,'LAN全体への道',RD,11)
+ + _tx(180,118,'境界を広げる設定は、理解してから',YL,11)),
+d1: _svg(_tx(180,32,'新しい機器が LAN に出現',YL,13)
+ + _bx(60,50,240,38,'検知（ツール or リース表）','#1b2a6e')
+ + _tx(180,110,'知らない物は消去法で確認、放置しない',DM,11)),
+d2: _svg(_txl(35,30,'AdGuard ログ ＝ 通信の癖の鏡',YL,12)
+ + _txl(35,56,'・平常：日中、決まった名前引き',GN,12) + _txl(35,80,'・異常？：夜中の大量リクエスト',RD,12)
+ + _tx(180,112,'全部読まない。違いを探す',DM,11)),
+d3: _svg(_txl(30,26,'月1チェックリスト',YL,12)
+ + _txl(30,50,'□ 機器一覧　□ ポート開放　□ Tailscale端末',DM,11)
+ + _txl(30,72,'□ 更新（OS/OpenWrt）　□ バックアップ',DM,11)
+ + _tx(180,106,'型を作ってから、面倒な部分を自動化',YL,11)),
+d4: _svg(_bx(8,40,104,40,'入口が 数えられる','#1b2a6e') + _bx(128,40,104,40,'平常が 見える','#3a2a6e') + _bx(248,40,104,40,'異常に 気づける','#1b2a6e')
+ + _tx(180,106,'不安 → 根拠のある警戒 へ',GN,12)),
+};
+function showDiagFor(id){
+const d = $('diagram');
+if(DIAG[id]){ d.innerHTML = DIAG[id]; d.style.display = 'block'; }
+else d.style.display = 'none';
+}
+function hideDiag(){ $('diagram').style.display = 'none'; $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+
+/* ============ 画面遷移 ============ */
+function goLevels(){
+hideChoices();
+hideDiag();
+setScene('bg-room','none','');
+renderProgress('レベル選択');
+const dc = doneCount();
+const intro = dc === 0
+? '「よく来た。わしがみはり仙人じゃ」\nテーマは「可視化」。全' + TOTAL + '課。\n好きな編からでよい。分かるまで、何度でも付き合うぞ。'
+: '「戻ったか。現在の理解済みは ' + dc + ' / ' + TOTAL + ' 課じゃ」\n続きをやるもよし、済んだ課を復習するもよし。';
+typeText(intro, ()=>{
+showChoices(LEVELS.map((lv, i)=>{
+const c = lv.lessons.filter(l=>done[l.id]).length;
+return { t: lv.name + '（' + c + '/' + lv.lessons.length + ' 済）', done: c === lv.lessons.length,
+fn: ()=>goLessons(i)};
+}));
+});
+}
+function goLessons(li){
+hideChoices();
+hideDiag();
+const lv = LEVELS[li];
+cur.level = li;
+setScene('bg-room','sennin','みはり仙人');
+renderProgress(lv.name);
+typeText('\n' + lv.desc + '\n課を選ぶのじゃ。✔ は理解済み。復習は何度でもできるぞ。', ()=>{
+showChoices(
+lv.lessons.map((ls, i)=>({ t: ls.title, done:!!done[ls.id], fn: ()=>startLesson(li, i, false)}))
+.concat([{ t:'レベル選択に戻る', fn: goLevels}])
+);
+});
+}
+function startLesson(li, idx, withRetry){
+hideChoices();
+const ls = LEVELS[li].lessons[idx];
+cur.level = li; cur.lesson = idx;
+cur.pages = ls.teach.slice();
+if(withRetry) cur.pages.push('\n' + ls.retry);
+cur.page = 0;
+setScene('bg-term','sennin','みはり仙人');
+renderProgress(LEVELS[li].name + '：' + ls.title);
+showDiagFor(ls.id);
+teachPage();
+}
+function teachPage(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+const isLast = cur.page >= cur.pages.length - 1;
+typeText('\n' + cur.pages[cur.page], ()=>{
+if(isLast){ showCheck();}
+else { advanceFn = ()=>{ cur.page++; teachPage();};}
+});
+}
+function showCheck(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+showChoices([
+{ t:'これは分かった！（確認問題へ）', fn: showQuiz},
+{ t:'分からない（もう一度聞く）', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'レッスン一覧に戻る', fn: ()=>goLessons(cur.level)}
+]);
+}
+function showQuiz(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+setScene('bg-term','sennin','みはり仙人');
+typeText('\n' + ls.quiz.q, ()=>{
+showChoices(ls.quiz.choices.map(c=>({
+t: c.t,
+fn: ()=>{ if(c.ok) completeLesson(); else wrongAnswer();}
+})));
+});
+}
+function wrongAnswer(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+beep(220,.12); setTimeout(()=>beep(180,.14),120);
+typeText('「むむ、違うぞ。焦らなくてよい」\n' + ls.retry, ()=>{
+showChoices([
+{ t:'もう一度説明を聞く', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'もう一度問題に挑む', fn: showQuiz}
+]);
+});
+}
+function completeLesson(){
+hideDiag();
+const li = cur.level, idx = cur.lesson;
+const ls = LEVELS[li].lessons[idx];
+done[ls.id] = true; save();
+[523,659,784,1046].forEach((f,i)=>beep(f,.1,i*0.11));
+renderProgress(LEVELS[li].name + '：' + ls.title + ' ✔');
+const dc = doneCount();
+const levelDone = LEVELS[li].lessons.every(l=>done[l.id]);
+let msg = '「うむ、分かったようじゃな」\n理解済み ✔（合計 ' + dc + ' / ' + TOTAL + ' 課）';
+if(dc >= TOTAL){
+setScene('bg-way','sennin','みはり仙人');
+msg += '\n\n――全課目、修了じゃ！\nここから先は実地あるのみ。Doom を開いて、指で覚えていくのじゃ。卒業おめでとう！';
+} else if(levelDone){
+msg += '\nは全課修了じゃ。よくやった。';
+}
+typeText(msg, ()=>{
+const items = [];
+if(dc < TOTAL){
+if(idx + 1 < LEVELS[li].lessons.length){
+items.push({ t:'次の例題へ（' + LEVELS[li].lessons[idx+1].title + '）', fn: ()=>startLesson(li, idx+1, false)});
+} else if(li + 1 < LEVELS.length){
+items.push({ t:'次の編へ（' + LEVELS[li+1].name + '）', fn: ()=>goLessons(li+1)});
+}
+}
+items.push({ t:'レッスン一覧に戻る', fn: ()=>goLessons(li)});
+items.push({ t:'レベル選択に戻る', fn: goLevels});
+showChoices(items);
+});
+}
+
+/* ============ ボタン類 ============ */
+$('btnEnter').onclick = ()=>{ beep(660,.06); $('title').style.display='none'; goLevels();};
+$('btnLevels').onclick = ()=>{ $('title').style.display='none'; goLevels();};
+$('btnReset').onclick = ()=>{
+done = {}; save(); renderProgress('タイトル');
+$('title').style.display='flex';
+};
+$('btnSound').onclick = (e)=>{
+soundOn =!soundOn;
+e.target.textContent = soundOn? '🔊 音ON': '🔇 音OFF';
+if(soundOn) beep(700,.06);
+};
+renderProgress('タイトル');
+</script>
+</body>
+</html>

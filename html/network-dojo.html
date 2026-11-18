@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ネットワーク道場 ― IPv4の基礎からOpenWrt実践まで</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{
+--tb:29%;
+--ink:#dfe6ff; --dim:#8fa3d9; --blue:#3355ff; --panel:#0a0e24;
+--win:#101736; --accent:#ffd94a; --good:#7ee787; --bad:#ff7b72;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+body{margin:0;background:#05060f;color:var(--ink);
+font-family:"DotGothic16","Hiragino Kaku Gothic ProN","Noto Sans JP",monospace,sans-serif;
+-webkit-font-smoothing:none;font-smooth:never;
+display:flex;justify-content:center;padding:14px 10px 40px}
+.cab{width:100%;max-width:760px}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{font-weight:900;letter-spacing:2px;font-size:18px;color:#fff;
+text-shadow:2px 2px 0 var(--blue), 4px 4px 0 #101736}
+.logo small{display:block;font-size:11px;color:var(--dim);letter-spacing:1px;text-shadow:none}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer}
+.sbtn{background:var(--win);color:var(--ink);border:2px solid var(--dim);
+padding:4px 10px;font-size:12px;border-radius:4px}
+.sbtn:hover{border-color:#fff;color:#fff}
+.params{display:flex;gap:14px;background:var(--panel);border:2px solid var(--dim);
+padding:6px 12px;font-size:12px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.params b{color:var(--accent)}
+.bar{display:inline-block;width:120px;height:10px;background:#1a2148;vertical-align:middle;margin-left:4px;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--good);display:block}
+.screen{position:relative;border:6px solid var(--dim);border-radius:6px;overflow:hidden;
+aspect-ratio:16/10;background:#000;image-rendering:pixelated}
+.screen::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+background:repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 3px, transparent 3px 6px)}
+.bg{position:absolute;inset:0;transition:opacity.4s}
+.bg-room{background:linear-gradient(#0d1440 0 55%, #182257 55% 100%)}
+.bg-room::before{content:"";position:absolute;right:8%;top:8%;width:110px;height:130px;
+background:linear-gradient(#1b2a63,#0d1440);border:6px solid #05081a;
+box-shadow:0 0 0 4px #26398a, inset 0 0 0 3px #26398a}
+.bg-term{background:radial-gradient(ellipse at 50% 40%, #06280f 0%, #02140a 70%)}
+.bg-term::before{content:"192.168.1.1 ❄ /24 ❄ DHCP ❄ DNS ❄ VLAN ❄ AdGuard ❄";
+position:absolute;inset:6%;color:#2f9e44;font-size:13px;line-height:2.1;opacity:.55;
+font-family:ui-monospace,Menlo,monospace;word-break:break-all}
+.bg-way{background:linear-gradient(#1b1040 0%, #4a2a7a 55%, #c65b8f 82%, #ffb36b 100%)}
+.stars{position:absolute;inset:0;z-index:1;
+background-image:radial-gradient(2px 2px at 12% 18%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 32% 8%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 55% 22%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 74% 10%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 88% 26%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 44% 30%, #9fb4ff 50%, transparent 51%)}
+.char{position:absolute;bottom:var(--tb);left:50%;transform:translateX(-50%);z-index:2;
+filter:drop-shadow(0 0 10px rgba(60,100,255,.75))}
+.char svg{display:block}
+.ground{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:1;
+background:linear-gradient(transparent, rgba(3,5,16,.92) 30%)}
+.namebox{position:absolute;left:14px;bottom:calc(var(--tb) + 8px);z-index:8;color:#ffffff;
+background:var(--win);border:3px solid var(--dim);padding:2px 14px;font-weight:700;font-size:16px;
+letter-spacing:.06em;text-shadow:2px 2px 0 #000}
+.textbox{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:7;color:#ffffff;
+background:rgba(4,6,20,.97);border-top:4px solid var(--dim);
+padding:12px 16px;font-size:18px;line-height:1.8;letter-spacing:.06em;
+text-shadow:2px 2px 0 #000;
+cursor:pointer;white-space:pre-wrap;overflow-y:auto;overflow-x:hidden;
+scrollbar-width:thin;scrollbar-color:#3355ff #0a0e24}
+.textbox::-webkit-scrollbar{width:10px}
+.textbox::-webkit-scrollbar-track{background:#0a0e24}
+.textbox::-webkit-scrollbar-thumb{background:#3355ff;border:2px solid #04061a}
+.textbox.next{position:absolute;right:12px;bottom:6px;color:var(--accent);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.choices{position:absolute;top:0;left:0;right:0;bottom:calc(var(--tb) + 46px);z-index:9;display:none;flex-direction:column;
+align-items:center;justify-content:center;gap:12px;background:rgba(3,5,16,.78);padding:16px;overflow-y:auto}
+.choices.show{display:flex}
+.choice{width:min(92%,520px);background:#05081f;color:#ffffff;font-weight:700;
+border:3px solid #d5ddff;padding:12px 16px;font-size:18px;letter-spacing:.08em;
+text-shadow:2px 2px 0 #000;text-align:left;border-radius:4px}
+.choice:hover{border-color:var(--accent);color:#fff;background:#1b2a6e}
+.choice::before{content:"▶ ";color:var(--accent)}
+.choice.done{border-color:var(--good)}
+.choice.done::before{content:"✔ ";color:var(--good)}
+.title{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
+justify-content:center;gap:14px;background:radial-gradient(ellipse at 50% 35%, #14205e 0%, #05060f 75%);text-align:center;padding:16px}
+.title h1{margin:0;font-size:clamp(26px,6vw,44px);letter-spacing:3px;color:#fff;
+text-shadow:3px 3px 0 var(--blue), 6px 6px 0 #101736}
+.title p{color:#d5ddff;font-size:14px;margin:0;line-height:1.9}
+.tbtn{background:#05081f;color:#fff;font-weight:700;border:3px solid #d5ddff;padding:10px 26px;font-size:17px;letter-spacing:.08em;border-radius:4px}
+.tbtn:hover{border-color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
+border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;opacity:0;transition:opacity.3s;z-index:50;pointer-events:none}
+.toast.show{opacity:1}
+#diagram{transition:width .25s}
+.screen.diagmenu #diagram{width:min(430px,74%)}
+.screen.diagmenu .choices{bottom:calc(var(--tb) + 8px);flex-direction:row;flex-wrap:wrap;align-content:flex-start;justify-content:center;gap:8px}
+.screen.diagmenu .choice{flex:1 1 28%;width:auto;margin:0;text-align:center;font-size:14px;padding:10px 8px;line-height:1.5}
+
+#diagram{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:min(560px,94%);z-index:5;background:rgba(3,4,16,.88);border:2px solid var(--dim);padding:6px;display:none}
+#diagram svg{width:100%;height:auto;display:block}
+
+footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
+kbd{display:inline-block;background:#21262d;border:1px solid var(--dim);border-bottom-width:2px;
+border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+@media (max-width:560px){.textbox{font-size:15px}.char{bottom:var(--tb)}}
+
+/* ===== スマホ縦長対応：画面を縦に取り、本文ボックスの割合を広げる ===== */
+@media (orientation:portrait) and (max-width:760px){
+:root{--tb:46%}
+.screen{aspect-ratio:auto;height:80vh;height:80dvh}
+.textbox{font-size:16px;line-height:1.75}
+.char svg{width:100px;height:127px}
+.choice{font-size:16px;padding:10px 14px}
+.choices{overflow-y:auto}
+.title h1{font-size:25px}
+.title p{font-size:13px}
+.params{gap:8px;font-size:11px}
+.bar{width:80px}
+}
+
+/* ===== 選択肢が上に隠れる問題の修正：中央寄せのまま、溢れたら先頭からスクロール ===== */
+.choices{justify-content:flex-start;overflow-y:auto}
+.choice:first-child{margin-top:auto}
+.choice:last-child{margin-bottom:auto}
+</style>
+</head>
+<body>
+<div class="cab">
+<header>
+<div class="logo">ネットワーク道場<small>― 基礎から帯域分離・AdGuard 全16課 ―</small></div>
+<div class="btns">
+<button class="sbtn" id="btnSound">🔊 音ON</button>
+<button class="sbtn" id="btnLevels">🏠 レベル選択</button>
+<button class="sbtn" id="btnReset">🗑 進捗リセット</button>
+</div>
+</header>
+
+<div class="params">
+<span>理解済み <b id="pDone">0</b> / 16 課<span class="bar"><i id="bDone" style="width:0%"></i></span></span>
+<span style="color:var(--dim)">現在：<span id="pNow">タイトル</span></span>
+<span style="margin-left:auto;color:var(--dim)">💾 進捗は自動保存（localStorage）</span>
+</div>
+
+<div class="screen" id="screen">
+<div class="bg bg-room" id="bg"></div>
+<div class="stars"></div>
+<div class="ground"></div>
+<div class="char" id="char"></div>
+<div id="diagram"></div>
+<div class="namebox" id="namebox" style="display:none"></div>
+<div class="textbox" id="textbox"><span id="text"></span><span class="next" id="nextmark" style="display:none">▼</span></div>
+<div class="choices" id="choices"></div>
+<div class="title" id="title">
+<h1>ネットワーク道場</h1>
+<p>テーマは「LANの仕組みの可視化」。<br>
+IPv4と2進数の基礎から、OpenWrtでの帯域分離とAdGuardまで全16課。<br>
+「分かった！」で次へ、「分からない」で何度でもやり直し。</p>
+<button class="tbtn" id="btnEnter">▶ 道場に入る</button>
+<p>進捗（理解済み ✔）はブラウザに自動保存されます</p>
+</div>
+</div>
+
+<footer>
+遊び方：説明を読んだら「これは分かった！」か「分からない」を選ぶだけ。分かったら確認問題が1問出て、正解でその課は理解済み ✔。
+間違えてもペナルティなし、補足説明を読んで何度でも挑めます。本文クリックで文字送り、長い文は自動スクロール＋手動スクロール可。
+各課では通信の流れを図で描いて、仕組みを見える化します。題材は君の自宅LANとOpenWrtです。実際に自分のLANのIPアドレスを確認しながら進めると一番効きます。
+</footer>
+</div>
+
+<div class="toast" id="toast">💾 保存しました</div>
+
+<script>
+"use strict";
+/* ============ シルエット ============ */
+function sil(extra){
+return '<svg width="150" height="190" viewBox="0 0 120 150">'
++ '<circle cx="60" cy="34" r="17" fill="#141f52"/>'
++ '<path d="M22 150 C22 96 40 66 60 66 C80 66 98 96 98 150 Z" fill="#141f52"/>'
++ (extra || '') + '</svg>';
+}
+const CHARS = {
+sennin: sil('<path d="M28 26 L60 2 L92 26 L84 30 L60 14 L36 30 Z" fill="#141f52"/>'
++ '<path d="M48 44 L72 44 L66 92 L54 92 Z" fill="#141f52"/>'),
+ore: sil(''),
+none: ''
+};
+
+/* ============ カリキュラム ============ */
+/* teach: 説明ページ（クリックで送る） / retry: 補足説明 / quiz: 確認問題 */
+const LEVELS = [
+{ name:'入門編 数の基礎とIPアドレス', desc:'2進数から、IPアドレスの読み方・分け方まで。', lessons:[
+{ id:'n1', title:'2進数と255の謎', teach:[
+'コンピュータの数字は2進数：0 と 1 だけ。1桁を bit、8桁を byte と言う。\n8bit で表せるのは 00000000〜11111111、つまり 0〜255。\nIP アドレスに 255 がよく出るのは、このためじゃ。',
+'10進数への直し方は「位の足し算」：8bit の位は左から 128・64・32・16・8・4・2・1。\n例えば 11000000 は 128＋64＝192。IP の 192 はこうして出てくる。\n8進数は今はほぼ使わない（ファイル権限の表記で見る程度）ので、深追いは不要じゃ。'],
+retry:'8bit＝0〜255。2進数は位（128,64,32,…）の足し算で10進数に戻す。',
+quiz:{ q:'2進数 11000000 は10進数で？', choices:[
+{ t:'128', ok:false }, { t:'192', ok:true }, { t:'255', ok:false } ] } },
+{ id:'n2', title:'IPv4アドレスの形', teach:[
+'IPv4 アドレスは、8bit × 4つ ＝ 32bit の数字じゃ。\n書き方は 192.168.1.1 のように、8bit ごとに区切って10進数で書く。\n区切りの1つを「オクテット」と呼ぶ。各オクテットは 0〜255。',
+'つまり IP アドレスは、巨大な1つの数字を読みやすく区切った姿。\n「192.168.1.1 の 192 は 2進数で 11000000」と言えれば、この課は卒業じゃ。'],
+retry:'IPv4＝8bit×4（オクテット）。各 0〜255、全体で 32bit の数字。',
+quiz:{ q:'IPv4 アドレス全体の bit 数は？', choices:[
+{ t:'16bit', ok:false }, { t:'32bit', ok:true }, { t:'64bit', ok:false } ] } },
+{ id:'n3', title:'ネットワーク部とホスト部', teach:[
+'IP アドレスは「町名＋番地」に分かれる。\n前の部分がネットワーク部（どの町か）、後ろがホスト部（町の中のどの家か）。\n境目を決めるのがサブネットマスクじゃ。',
+'家庭の標準 /24（マスク 255.255.255.0）は、最初の3オクテットが町名、最後が番地。\n192.168.1.x の町には番地が 256 個あり、両端（.0 は町そのもの、.255 は一斉放送）を除いて、機器に使えるのは 254 個。'],
+retry:'/24 は「3つが町名、最後が番地」。使える番地は 254 個。',
+quiz:{ q:'192.168.1.0/24 で機器に使える数（目安）は？', choices:[
+{ t:'254', ok:true }, { t:'256', ok:false }, { t:'24', ok:false } ] } },
+{ id:'n4', title:'プライベートIPとNAT', teach:[
+'192.168.x.x、10.x.x.x、172.16〜31.x.x は「プライベート IP」：家の中だけで使う住所で、世界中どこの家でも使い回されている。\n世界の住所は「グローバル IP」で、契約ごとに（だいたい）1つ。',
+'変換を担うのがルーターの NAT じゃ。\n家の中の機器はプライベート住所で話し、外に出るときルーターがグローバル住所に着替えて送り出す。\n返事はルーターが、元の機器に届け直す。'],
+retry:'プライベートIPは家内専用。NAT がルーターで住所を着替える。',
+quiz:{ q:'NAT の仕事は？', choices:[
+{ t:'広告を消す', ok:false }, { t:'プライベートとグローバルの住所を変換する', ok:true }, { t:'名前を IP に変える', ok:false } ] } },
+]},
+{ name:'初級編 LANの登場人物', desc:'ルーター・DHCP・DNS・ポート。家の中の係たち。', lessons:[
+{ id:'o1', title:'ルーターの仕事とOpenWrt', teach:[
+'ルーターは家の「玄関」じゃ。外（WAN）と内（LAN）の間に立ち、NAT で住所を変換し、交通整理をする。\nOpenWrt は、そのルーターの頭脳（ファームウェア）を入れ替える Linux。',
+'市販ルーターではできない細かい設定——帯域を分ける、DNS を差し替える、詳しいファイアウォール——ができるようになるのが、OpenWrt を入れる意味じゃ。'],
+retry:'ルーター＝玄関（NAT＋交通整理）。OpenWrt は頭脳の入れ替え。',
+quiz:{ q:'OpenWrt を入れる意味は？', choices:[
+{ t:'速さが必ず上がる', ok:false }, { t:'帯域分離や DNS など細かい設定ができる', ok:true }, { t:'電気代が下がる', ok:false } ] } },
+{ id:'o2', title:'DHCP：住所の自動配布', teach:[
+'新しい機器が LAN に来ると、DHCP が空いている番地を自動で貸す。\nだから普通は、IP を手で設定しなくていい。\n貸し出しには期間（リース）がある。',
+'逆に、サーバーや AdGuard のように「住所が変わると困る」機器には、DHCP の予約（静的リース）で番地を固定する。\n「自動で配る＋要る機器だけ固定」が家庭の型じゃ。'],
+retry:'DHCP は住所の自動貸し出し。要る機器は予約で固定。',
+quiz:{ q:'住所を固定したい機器への設定は？', choices:[
+{ t:'DHCP の予約（静的リース）', ok:true }, { t:'電源を入れ直す', ok:false }, { t:'ケーブルを替える', ok:false } ] } },
+{ id:'o3', title:'DNS：名前の電話帳', teach:[
+'人間は example.com のような名前を使い、機械は IP アドレスで話す。\nその変換表が DNS（電話帳）じゃ。\nブラウザが最初にやるのは、大抵この名前引き。',
+'ここが大事：電話帳を差し替えれば、通信の行き先をコントロールできる。\n広告のドメインだけ「載っていない」電話帳を使えば、広告が表示できなくなる。\nAdGuard の伏線はここじゃ。'],
+retry:'DNS は名前→IP の電話帳。差し替えると行き先を制御できる。',
+quiz:{ q:'DNS の役割は？', choices:[
+{ t:'名前を IP アドレスに変換する', ok:true }, { t:'住所を自動で配る', ok:false }, { t:'住所を着替える', ok:false } ] } },
+{ id:'o4', title:'ポートと通信の向き', teach:[
+'IP が「家の住所」なら、ポートは「部屋番号」。\nWeb は 80/443、SSH は 22、DNS は 53。同じ機器でも、サービスごとに部屋が違う。',
+'ファイアウォールの基本形：内→外の通信と、その返事は通す。外→内の新規の通信は、原則閉じる。\n「どの向きに、どの部屋へ」を決めるのがルールの書き方じゃ。'],
+retry:'ポート＝部屋番号。外→内は原則閉、が基本形。',
+quiz:{ q:'ファイアウォールの基本形は？', choices:[
+{ t:'全部開ける', ok:false }, { t:'外→内の新規は原則閉じる', ok:true }, { t:'内→外を閉じる', ok:false } ] } },
+]},
+{ name:'中級編 帯域を分ける', desc:'サブネット・ゾーン・VLAN。そして自分の帯域設計。', lessons:[
+{ id:'p1', title:'サブネットを分ける意味', teach:[
+'192.168.1.x と 192.168.2.x は、別の「町」。\n別の町の機器同士は、ルーターを通らないと話せない。\nつまり、町の境目に「関所（ルーター）」が立つ。',
+'分ける理由は2つ：整理（機器の種類ごとに住所を分ける）と、安全（怪しい機器を本命の機器に近づけない）。\n特に IoT や古い機器は、別の町に住まわせる価値が高い。'],
+retry:'別サブネット＝別の町で、境目に関所が立つ。整理と安全のために分ける。',
+quiz:{ q:'帯域を分ける主な理由は？', choices:[
+{ t:'速くするためだけ', ok:false }, { t:'整理と、機器同士を近づけない安全のため', ok:true }, { t:'住所が足りないから', ok:false } ] } },
+{ id:'p2', title:'ゾーンとファイアウォール', teach:[
+'OpenWrt のファイアウォールは「ゾーン」で考える。\nゾーンは町のグループ（lan、wan、guest、iot など）で、ゾーン間の通信を「許可／拒否」で決める。',
+'書き方の原則は「デフォルト拒否、必要なものだけ許可」。\n例：iot → lan は拒否（IoT から本命 PC へは行けない）。lan → iot は許可（管理は本命から）。\n向きまで含めて決めるのが実践じゃ。'],
+retry:'ゾーン間の許可を決める。原則はデフォルト拒否＋必要だけ許可。',
+quiz:{ q:'ゾーン設計の原則は？', choices:[
+{ t:'デフォルト拒否、必要な通信だけ許可', ok:true }, { t:'デフォルト許可、危ないものだけ拒否', ok:false }, { t:'全部許可して様子を見る', ok:false } ] } },
+{ id:'p3', title:'VLANの考え方', teach:[
+'物理的には1本のケーブル・1台のスイッチでも、論理的に町を分けられる仕組みが VLAN じゃ。\n通信に「タグ（町の印）」を付けて、スイッチやルーターが振り分ける。',
+'OpenWrt（DSA 機）の設定は少しクセがある。だから実践の順序としては：\n最初はルーターの別ポートや安いスイッチで「物理的に分ける」でもよい。\n考え方（町と関所）が先、VLAN はその実装の1つじゃ。'],
+retry:'VLAN＝1本の中で論理的に町分け（タグ方式）。まず物理分離からでもよい。',
+quiz:{ q:'VLAN とは？', choices:[
+{ t:'速いケーブルの規格', ok:false }, { t:'1本の配線の中で論理的にネットワークを分ける仕組み', ok:true }, { t:'無線の規格', ok:false } ] } },
+{ id:'p4', title:'実践：自分の帯域設計', teach:[
+'設計の例を引いてみよう：\n192.168.1.x ＝ メイン（PC 類、本命）\n192.168.2.x ＝ IoT・古い Android・実験用\n192.168.3.x ＝ ゲスト用 Wi-Fi',
+'ルールの例：メイン→IoT は可（管理のため）。IoT→メインは不可。ゲストはネットだけ、家の中は不可。\nこの「表」が書ければ、設定はその翻訳作業になる。\nまず紙（メモ）で表を作るのが実践の第一歩じゃ。'],
+retry:'帯域の表＋向きのルール表を先に書く。設定はその翻訳。',
+quiz:{ q:'実践の第一歩は？', choices:[
+{ t:'いきなり設定画面を開く', ok:false }, { t:'帯域とルールの表を書く', ok:true }, { t:'機器を全部買い替える', ok:false } ] } },
+]},
+{ name:'上級編 AdGuardとセキュリティ', desc:'DNSで広告を止める仕組みと、守りの型、切り分け方。', lessons:[
+{ id:'q1', title:'AdGuard Homeの仕組み', teach:[
+'AdGuard Home は、自分専用の「電話帳サーバー」じゃ。\n広告やトラッキングのドメインを引かれたら、「その住所はありません」と返す（0.0.0.0 等に誘導する）。\n広告の部品が取りに行けなくなり、結果として広告が表示されない。',
+'利点は、LAN の全機器に一括で効くこと。TV やアプリなど、ブラウザ拡張が入らない機器にも効く場合がある。\n仕組みは o3 の DNS の応用、そのものじゃ。'],
+retry:'AdGuard＝広告ドメインを「ないことにする」自宅 DNS。全機器に効く。',
+quiz:{ q:'AdGuard が広告を止める仕組みは？', choices:[
+{ t:'画面を黒く塗る', ok:false }, { t:'DNS で広告ドメインを存在しないことにする', ok:true }, { t:'通信を遅くする', ok:false } ] } },
+{ id:'q2', title:'DNSの向き先を変える', teach:[
+'AdGuard を効かせるには、機器たちの「電話帳の向き先」を AdGuard に変える。\n家庭の型は、DHCP の配布情報に AdGuard の IP を入れること。これで新規の機器も自動で向く。',
+'知っておくべき抜け道：機器やブラウザが独自の DNS（DoH など）を使うと、AdGuard を素通りすることがある。\n「効いていない機器がある」場合は、まずこれを疑う。完璧でなくてよい、まず大半をカバーするのが実践じゃ。'],
+retry:'DHCP で配る DNS を AdGuard に。DoH 等の抜け道はある、と知っておく。',
+quiz:{ q:'全機器に AdGuard を効かせる型は？', choices:[
+{ t:'1台ずつ手で設定する', ok:false }, { t:'DHCP で配る DNS を AdGuard にする', ok:true }, { t:'ケーブルを変える', ok:false } ] } },
+{ id:'q3', title:'セキュリティの型', teach:[
+'守りの基本を並べる：\nルーターの管理画面を WAN 側に開けない。管理パスワードは初期値から変える。ファームウェア（OpenWrt）を更新する。使わないサービスは止める。UPnP は必要性を疑う。',
+'そして帯域分離が効いてくる：万一 IoT 機器が乗っ取られても、別の町にいれば本命の PC には届きにくい。\n「1つの穴で全部やられない」形を作るのが、家庭のセキュリティの目標じゃ。'],
+retry:'管理画面は内だけ、更新、不要サービス停止。分離で被害を町の中に閉じる。',
+quiz:{ q:'家庭セキュリティの目標は？', choices:[
+{ t:'絶対に侵入されないこと', ok:false }, { t:'1つの穴で全部やられない形にすること', ok:true }, { t:'機器を増やさないこと', ok:false } ] } },
+{ id:'q4', title:'卒業：地図と切り分け', teach:[
+'卒業じゃ。最後に2つの型を置く。\n1つ目：自分の LAN の地図（帯域・機器・ルール）を図にして残す。設定の意図が未来の自分に伝わる。',
+'2つ目：困ったときの切り分け順序——物理（ケーブル・電源）→ IP（住所はあるか）→ DNS（名前は引けるか）→ アプリ（サービス自体）。\n下から順に確かめると、大抵の不調は場所が特定できる。\nこの2つがあれば、実践しながら伸ばしていける。'],
+retry:'LAN の地図を残す。切り分けは物理→IP→DNS→アプリの順。',
+quiz:{ q:'不調の切り分け順序は？', choices:[
+{ t:'アプリ→DNS→IP→物理', ok:false }, { t:'物理→IP→DNS→アプリ', ok:true }, { t:'順序は関係ない', ok:false } ] } },
+]},
+];
+
+/* ============ エンジン ============ */
+const SAVE_KEY = 'networkDojoSaveV1';
+const TOTAL = LEVELS.reduce((a,l)=>a+l.lessons.length,0);
+let done = {};
+try{ const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); if(s && s.done) done = s.done;}catch(e){}
+let soundOn = true, typing = null, advanceFn = null;
+let cur = { level:0, lesson:0, pages:[], page:0};
+
+const $ = id => document.getElementById(id);
+const bgEl=$('bg'), charEl=$('char'), nameEl=$('namebox'), textEl=$('text'),
+boxEl=$('textbox'), chEl=$('choices'), nextEl=$('nextmark');
+
+function beep(freq, dur, delay, vol){
+if(!soundOn) return;
+try{
+const ctx = beep.ctx || (beep.ctx = new (window.AudioContext||window.webkitAudioContext)());
+if(ctx.state === 'suspended') ctx.resume();
+const o = ctx.createOscillator(), g = ctx.createGain();
+o.type='square'; o.frequency.value = freq || 660;
+g.gain.value = vol || 0.03;
+o.connect(g); g.connect(ctx.destination);
+const t = ctx.currentTime + (delay||0);
+o.start(t); o.stop(t + (dur||0.06));
+}catch(e){}
+}
+function save(){
+try{ localStorage.setItem(SAVE_KEY, JSON.stringify({done})); toast();}catch(e){}
+}
+function toast(){
+const t=$('toast'); t.classList.add('show');
+clearTimeout(toast.tm); toast.tm=setTimeout(()=>t.classList.remove('show'), 900);
+}
+function doneCount(){ return Object.keys(done).filter(k=>done[k]).length;}
+function renderProgress(now){
+$('pDone').textContent = doneCount();
+$('bDone').style.width = (doneCount()/TOTAL*100) + '%';
+if(now) $('pNow').textContent = now;
+}
+function setScene(bg, char, name){
+bgEl.className = 'bg ' + bg;
+charEl.innerHTML = CHARS[char] || '';
+charEl.style.display = char && char!== 'none'? '': 'none';
+if(name){ nameEl.textContent = name; nameEl.style.display='';} else nameEl.style.display='none';
+}
+function typeText(txt, onDoneTyping){
+clearInterval(typing);
+textEl.textContent=''; nextEl.style.display='none';
+boxEl.scrollTop = 0;
+advanceFn = null;
+let i=0;
+typing = setInterval(()=>{
+i++;
+textEl.textContent = txt.slice(0, i);
+boxEl.scrollTop = boxEl.scrollHeight;
+const ch = txt.charAt(i-1);
+if(ch && ch!== ' ' && ch!== '\n' && i % 2 === 1){
+beep(980 + Math.random()*520, 0.018, 0, 0.012);
+}
+if(i >= txt.length){
+clearInterval(typing); typing=null;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+}
+}, 26);
+boxEl.onclick = ()=>{
+if(typing){
+clearInterval(typing); typing=null;
+textEl.textContent = txt; boxEl.scrollTop = boxEl.scrollHeight;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+} else if(advanceFn){
+const f = advanceFn; advanceFn = null; f();
+}
+};
+}
+document.addEventListener('keydown', e=>{
+if(!typing && advanceFn && (e.key === ' ' || e.key === 'Enter')){
+e.preventDefault();
+const f = advanceFn; advanceFn = null; f();
+}
+});
+function showChoices(items){
+chEl.innerHTML='';
+items.forEach(it=>{
+const b=document.createElement('button');
+b.className='choice' + (it.done? ' done': '');
+b.textContent=it.t;
+b.onclick=()=>{ beep(520,.06); setTimeout(()=>beep(780,.07),70); chEl.classList.remove('show'); it.fn();};
+chEl.appendChild(b);
+});
+chEl.classList.add('show');
+const dg = $('diagram');
+if(dg && dg.style.display === 'block'){
+$('screen').classList.add('diagmenu');
+requestAnimationFrame(()=>{
+const sr = $('screen').getBoundingClientRect();
+const dr = dg.getBoundingClientRect();
+chEl.style.top = Math.max(0, Math.round(dr.bottom - sr.top + 8)) + 'px';
+});
+} else { $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+}
+function hideChoices(){ chEl.classList.remove('show'); chEl.innerHTML=''; chEl.style.top=''; $('screen').classList.remove('diagmenu'); }
+
+
+/* ============ 図解（8bit風SVG・黒板） ============ */
+function _cm(x,y,ch,fill){ return '<rect x="'+(x+3)+'" y="'+(y+3)+'" width="30" height="30" fill="#000" opacity=".45"/><rect x="'+x+'" y="'+y+'" width="30" height="30" fill="'+fill+'" stroke="#dfe6ff" stroke-width="2"/><text x="'+(x+15)+'" y="'+(y+21)+'" font-size="14" fill="#05060f" text-anchor="middle" font-weight="bold">'+ch+'</text>'; }
+function _ar(x1,y1,x2,y2,col){ col=col||'#8fa3d9'; var pts; if(Math.abs(x2-x1)>=Math.abs(y2-y1)){ pts = x2>x1 ? [[x2,y2],[x2-10,y2-6],[x2-10,y2+6]] : [[x2,y2],[x2+10,y2-6],[x2+10,y2+6]]; } else { pts = y2>y1 ? [[x2,y2],[x2-6,y2-10],[x2+6,y2-10]] : [[x2,y2],[x2-6,y2+10],[x2+6,y2+10]]; } return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+col+'" stroke-width="4"/><polygon points="'+pts.map(function(p){return p.join(',');}).join(' ')+'" fill="'+col+'"/>'; }
+function _ln(x1,y1,x2,y2,col){ return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+(col||'#8fa3d9')+'" stroke-width="3"/>'; }
+function _tx(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'" text-anchor="middle">'+str+'</text>'; }
+function _txl(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'">'+str+'</text>'; }
+function _bx(x,y,w,h,label,fill){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'" stroke="#8fa3d9" stroke-width="2"/><text x="'+(x+w/2)+'" y="'+(y+h/2+5)+'" font-size="12" fill="#fff" text-anchor="middle">'+label+'</text>'; }
+function _tag(x,y,str,col){ var w=str.length*12+12; return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="20" fill="'+col+'"/><text x="'+(x+w/2)+'" y="'+(y+14)+'" font-size="11" fill="#05060f" text-anchor="middle" font-weight="bold">'+str+'</text>'; }
+function _svg(inner){ return '<svg viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'+inner+'</svg>'; }
+var BL='#4a6bff', YL='#ffd94a', GN='#7ee787', RD='#ff7b72', PU='#b18cff', GY='#5a6b9e', DM='#8fa3d9';
+const DIAG = {
+n1: _svg(_tx(180,28,'8bit の位（左から）',YL,12)
+ + _tx(180,56,'128　64　32　16　8　4　2　1',GN,14)
+ + _tx(180,86,'11000000 ＝ 128＋64 ＝ 192',GN,13)
+ + _tx(180,112,'だから IP の数字は 0〜255',DM,11)),
+n2: _svg(_bx(8,45,80,40,'192','#1b2a6e') + _bx(96,45,80,40,'168','#3a2a6e') + _bx(184,45,80,40,'1','#1b2a6e') + _bx(272,45,80,40,'1','#3a2a6e')
+ + _tx(180,108,'8bit × 4 ＝ 32bit（各オクテット 0〜255）',DM,11)),
+n3: _svg(_bx(8,40,176,40,'ネットワーク部（町名）','#3a2a6e') + _bx(192,40,160,40,'ホスト部（番地）','#1b2a6e')
+ + _tx(96,100,'192.168.1',DM,12) + _tx(272,100,'.1 〜 .254',DM,12)
+ + _tx(180,122,'/24：使える番地は 254 個',DM,11)),
+n4: _svg(_bx(8,50,104,38,'家の機器','#1b2a6e') + _ar(112,69,128,69,YL) + _bx(128,50,104,38,'ルーター NAT','#3a2a6e')
+ + _ar(232,69,248,69,YL) + _bx(248,50,104,38,'世界（WAN）','#1b2a6e')
+ + _tx(180,112,'プライベート住所 → グローバル住所に着替える',DM,11)),
+o1: _svg(_bx(15,45,100,44,'WAN（外）','#3a2320') + _bx(130,45,100,44,'ルーター（玄関）','#3a2a6e') + _bx(245,45,100,44,'LAN（内）','#1b2a6e')
+ + _tx(180,110,'OpenWrt ＝ 玄関の頭脳を入れ替える',DM,11)),
+o2: _svg(_bx(8,50,104,38,'新しい機器','#3a2320') + _ar(112,69,128,69,YL) + _tx(150,60,'ください',DM,10)
+ + _bx(160,50,90,38,'DHCP','#3a2a6e') + _ar(250,69,266,69,YL) + _bx(266,50,86,38,'空き番地','#1b2a6e')
+ + _tx(180,112,'要る機器は予約で番地を固定',DM,11)),
+o3: _svg(_bx(15,45,140,44,'example.com','#3a2a6e') + _ar(155,67,175,67,YL) + _bx(175,45,80,44,'DNS 電話帳','#1b2a6e')
+ + _ar(255,67,275,67,YL) + _bx(275,45,70,44,'IP住所','#1b2a6e')
+ + _tx(180,110,'電話帳を差し替えると、行き先を制御できる',DM,11)),
+o4: _svg(_tx(180,30,'部屋番号：80/443 Web、22 SSH、53 DNS',DM,12)
+ + _bx(45,50,120,38,'内 → 外：通す','#1b2a6e') + _bx(195,50,120,38,'外 → 内：原則閉','#3a2320')
+ + _tx(180,110,'「どの向きに、どの部屋へ」を決める',DM,11)),
+p1: _svg(_bx(15,30,155,40,'192.168.1.x の町','#1b2a6e') + _bx(190,30,155,40,'192.168.2.x の町','#3a2a6e')
+ + _tx(180,92,'境目には関所（ルーター）が立つ',YL,12)
+ + _tx(180,116,'分ける理由：整理 と 安全',DM,11)),
+p2: _svg(_bx(15,30,100,38,'lan ゾーン','#1b2a6e') + _bx(245,30,100,38,'iot ゾーン','#3a2320')
+ + _ar(115,49,245,49,GN) + _tx(180,42,'lan → iot：許可',GN,11)
+ + _ar(245,86,115,86,RD) + _tx(180,102,'iot → lan：拒否',RD,11)
+ + _tx(180,124,'原則はデフォルト拒否',DM,11)),
+p3: _svg('<rect x="40" y="45" width="280" height="18" fill="#1b2a6e" stroke="#8fa3d9" stroke-width="2"/>'
+ + _tx(90,36,'タグ：町1',YL,11) + _tx(180,36,'タグ：町2',GN,11) + _tx(270,36,'タグ：町3',YL,11)
+ + _tx(180,88,'1本のケーブルの中に、論理的に複数の町',DM,12)
+ + _tx(180,110,'まず物理分離からでもよい',DM,11)),
+p4: _svg(_txl(30,30,'192.168.1.x ＝ メイン（本命PC）',YL,12) + _txl(30,54,'192.168.2.x ＝ IoT・古いAndroid',YL,12)
+ + _txl(30,78,'192.168.3.x ＝ ゲスト Wi-Fi',YL,12)
+ + _tx(180,110,'帯域の表 ＋ 向きのルール表を先に書く',DM,11)),
+q1: _svg(_bx(8,50,90,38,'機器','#1b2a6e') + _ar(98,69,114,69,YL) + _bx(114,50,110,38,'AdGuard（電話帳）','#3a2a6e')
+ + _ar(224,69,240,69,RD) + _bx(240,50,112,38,'広告：存在しない','#3a2320')
+ + _tx(180,112,'LAN の全機器に一括で効く',DM,11)),
+q2: _svg(_bx(30,35,130,40,'DHCP の配布情報','#3a2a6e') + _ar(160,55,180,55,YL) + _bx(180,35,150,40,'DNS ＝ AdGuard の IP','#1b2a6e')
+ + _tx(180,100,'抜け道：独自 DNS（DoH）を使う機器',RD,12)
+ + _tx(180,120,'まず大半をカバーすればよい',DM,11)),
+q3: _svg(_txl(30,28,'・管理画面は WAN に開けない',YL,12) + _txl(30,52,'・パスワード変更／ファーム更新',YL,12)
+ + _txl(30,76,'・不要なサービスは止める',YL,12)
+ + _tx(180,110,'分離で「1つの穴で全部」を防ぐ',GN,12)),
+q4: _svg(_bx(4,50,80,38,'物理','#3a2320') + _ar(84,69,96,69,YL) + _bx(96,50,80,38,'IP','#3a2a6e')
+ + _ar(176,69,188,69,YL) + _bx(188,50,80,38,'DNS','#1b2a6e') + _ar(268,69,280,69,YL) + _bx(280,50,76,38,'アプリ','#1b2a6e')
+ + _tx(180,112,'不調の切り分けは、下から順に',DM,11)),
+};
+function showDiagFor(id){
+const d = $('diagram');
+if(DIAG[id]){ d.innerHTML = DIAG[id]; d.style.display = 'block'; }
+else d.style.display = 'none';
+}
+function hideDiag(){ $('diagram').style.display = 'none'; $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+
+/* ============ 画面遷移 ============ */
+function goLevels(){
+hideChoices();
+hideDiag();
+setScene('bg-room','none','');
+renderProgress('レベル選択');
+const dc = doneCount();
+const intro = dc === 0
+? '「よく来た。わしがネット仙人じゃ」\nテーマは「ネットワークの可視化」。全' + TOTAL + '課。\n好きな編からでよい。分かるまで、何度でも付き合うぞ。'
+: '「戻ったか。現在の理解済みは ' + dc + ' / ' + TOTAL + ' 課じゃ」\n続きをやるもよし、済んだ課を復習するもよし。';
+typeText(intro, ()=>{
+showChoices(LEVELS.map((lv, i)=>{
+const c = lv.lessons.filter(l=>done[l.id]).length;
+return { t: lv.name + '（' + c + '/' + lv.lessons.length + ' 済）', done: c === lv.lessons.length,
+fn: ()=>goLessons(i)};
+}));
+});
+}
+function goLessons(li){
+hideChoices();
+hideDiag();
+const lv = LEVELS[li];
+cur.level = li;
+setScene('bg-room','sennin','ネット仙人');
+renderProgress(lv.name);
+typeText('\n' + lv.desc + '\n課を選ぶのじゃ。✔ は理解済み。復習は何度でもできるぞ。', ()=>{
+showChoices(
+lv.lessons.map((ls, i)=>({ t: ls.title, done:!!done[ls.id], fn: ()=>startLesson(li, i, false)}))
+.concat([{ t:'レベル選択に戻る', fn: goLevels}])
+);
+});
+}
+function startLesson(li, idx, withRetry){
+hideChoices();
+const ls = LEVELS[li].lessons[idx];
+cur.level = li; cur.lesson = idx;
+cur.pages = ls.teach.slice();
+if(withRetry) cur.pages.push('\n' + ls.retry);
+cur.page = 0;
+setScene('bg-term','sennin','ネット仙人');
+renderProgress(LEVELS[li].name + '：' + ls.title);
+showDiagFor(ls.id);
+teachPage();
+}
+function teachPage(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+const isLast = cur.page >= cur.pages.length - 1;
+typeText('\n' + cur.pages[cur.page], ()=>{
+if(isLast){ showCheck();}
+else { advanceFn = ()=>{ cur.page++; teachPage();};}
+});
+}
+function showCheck(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+showChoices([
+{ t:'これは分かった！（確認問題へ）', fn: showQuiz},
+{ t:'分からない（もう一度聞く）', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'レッスン一覧に戻る', fn: ()=>goLessons(cur.level)}
+]);
+}
+function showQuiz(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+setScene('bg-term','sennin','ネット仙人');
+typeText('\n' + ls.quiz.q, ()=>{
+showChoices(ls.quiz.choices.map(c=>({
+t: c.t,
+fn: ()=>{ if(c.ok) completeLesson(); else wrongAnswer();}
+})));
+});
+}
+function wrongAnswer(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+beep(220,.12); setTimeout(()=>beep(180,.14),120);
+typeText('「むむ、違うぞ。焦らなくてよい」\n' + ls.retry, ()=>{
+showChoices([
+{ t:'もう一度説明を聞く', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'もう一度問題に挑む', fn: showQuiz}
+]);
+});
+}
+function completeLesson(){
+hideDiag();
+const li = cur.level, idx = cur.lesson;
+const ls = LEVELS[li].lessons[idx];
+done[ls.id] = true; save();
+[523,659,784,1046].forEach((f,i)=>beep(f,.1,i*0.11));
+renderProgress(LEVELS[li].name + '：' + ls.title + ' ✔');
+const dc = doneCount();
+const levelDone = LEVELS[li].lessons.every(l=>done[l.id]);
+let msg = '「うむ、分かったようじゃな」\n理解済み ✔（合計 ' + dc + ' / ' + TOTAL + ' 課）';
+if(dc >= TOTAL){
+setScene('bg-way','sennin','ネット仙人');
+msg += '\n\n――全課目、修了じゃ！\nここから先は実地あるのみ。Doom を開いて、指で覚えていくのじゃ。卒業おめでとう！';
+} else if(levelDone){
+msg += '\nは全課修了じゃ。よくやった。';
+}
+typeText(msg, ()=>{
+const items = [];
+if(dc < TOTAL){
+if(idx + 1 < LEVELS[li].lessons.length){
+items.push({ t:'次の例題へ（' + LEVELS[li].lessons[idx+1].title + '）', fn: ()=>startLesson(li, idx+1, false)});
+} else if(li + 1 < LEVELS.length){
+items.push({ t:'次の編へ（' + LEVELS[li+1].name + '）', fn: ()=>goLessons(li+1)});
+}
+}
+items.push({ t:'レッスン一覧に戻る', fn: ()=>goLessons(li)});
+items.push({ t:'レベル選択に戻る', fn: goLevels});
+showChoices(items);
+});
+}
+
+/* ============ ボタン類 ============ */
+$('btnEnter').onclick = ()=>{ beep(660,.06); $('title').style.display='none'; goLevels();};
+$('btnLevels').onclick = ()=>{ $('title').style.display='none'; goLevels();};
+$('btnReset').onclick = ()=>{
+done = {}; save(); renderProgress('タイトル');
+$('title').style.display='flex';
+};
+$('btnSound').onclick = (e)=>{
+soundOn =!soundOn;
+e.target.textContent = soundOn? '🔊 音ON': '🔇 音OFF';
+if(soundOn) beep(700,.06);
+};
+renderProgress('タイトル');
+</script>
+</body>
+</html>
