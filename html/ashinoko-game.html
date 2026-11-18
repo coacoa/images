@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>まよなかターミナル ― 8bit風ADV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{
+--tb:29%;
+--ink:#dfe6ff; --dim:#8fa3d9; --blue:#3355ff; --panel:#0a0e24;
+--win:#101736; --accent:#ffd94a; --good:#7ee787; --bad:#ff7b72;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+body{margin:0;background:#05060f;color:var(--ink);
+font-family:"DotGothic16","Hiragino Kaku Gothic ProN","Noto Sans JP",monospace,sans-serif;
+-webkit-font-smoothing:none;font-smooth:never;
+display:flex;justify-content:center;padding:14px 10px 40px}
+.cab{width:100%;max-width:760px}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{font-weight:900;letter-spacing:2px;font-size:18px;color:#fff;
+text-shadow:2px 2px 0 var(--blue), 4px 4px 0 #101736}
+.logo small{display:block;font-size:11px;color:var(--dim);letter-spacing:1px;text-shadow:none}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer}
+.sbtn{background:var(--win);color:var(--ink);border:2px solid var(--dim);
+padding:4px 10px;font-size:12px;border-radius:4px}
+.sbtn:hover{border-color:#fff;color:#fff}
+.params{display:flex;gap:14px;background:var(--panel);border:2px solid var(--dim);
+padding:6px 12px;font-size:12px;margin-bottom:10px;flex-wrap:wrap}
+.params b{color:var(--accent)}
+.bar{display:inline-block;width:74px;height:10px;background:#1a2148;vertical-align:middle;margin-left:4px;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--good);display:block}
+.screen{position:relative;border:6px solid var(--dim);border-radius:6px;overflow:hidden;
+aspect-ratio:16/10;background:#000;image-rendering:pixelated}
+.screen::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+background:repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 3px, transparent 3px 6px)}
+.bg{position:absolute;inset:0;transition:opacity.4s}
+.bg-room{background:linear-gradient(#0d1440 0 55%, #182257 55% 100%)}
+.bg-room::before{content:"";position:absolute;right:8%;top:8%;width:110px;height:130px;
+background:linear-gradient(#1b2a63,#0d1440);border:6px solid #05081a;
+box-shadow:0 0 0 4px #26398a, inset 0 0 0 3px #26398a}
+.bg-term{background:radial-gradient(ellipse at 50% 40%, #06280f 0%, #02140a 70%)}
+.bg-term::before{content:"$ nixos-rebuild switch --flake.#endeavor ❄ building... ❄ $ doom sync ❄ $ nvim init.lua ❄";
+position:absolute;inset:6%;color:#2f9e44;font-size:13px;line-height:2.1;opacity:.55;
+font-family:ui-monospace,Menlo,monospace;word-break:break-all}
+.bg-router{background:linear-gradient(#070b1e,#0a1030)}
+.bg-router::before{content:"● ● ●";position:absolute;left:10%;bottom:24%;color:#51ff7a;
+font-size:22px;letter-spacing:26px;text-shadow:0 0 12px #51ff7a}
+.bg-router::after{content:"";position:absolute;left:6%;bottom:16%;width:280px;height:56px;
+background:#0d1440;border:4px solid #26398a}
+.bg-way{background:linear-gradient(#1b1040 0%, #4a2a7a 55%, #c65b8f 82%, #ffb36b 100%)}
+.bg-way::before{content:"";position:absolute;left:0;right:0;bottom:0;height:26%;
+background:linear-gradient(transparent,#0a0618)}
+.bg-lake{background:linear-gradient(#232c4e 0%, #4a5f8a 45%, #6d87ad 60%, #2c4258 61%, #1d2f42 100%)}
+.bg-lake::before{content:"";position:absolute;left:0;right:0;top:26%;height:36%;background:repeating-linear-gradient(0deg, rgba(255,255,255,.15) 0 6px, transparent 6px 15px)}
+.bg-dusk{background:linear-gradient(#2b1a4a 0%, #7a3a6e 55%, #e08a4e 76%, #3a2438 77%, #241a2e 100%)}
+.bg-night{background:linear-gradient(#04060f 0%, #0a1230 70%, #0d1a33 100%)}
+.bg-night::before{content:"";position:absolute;right:12%;top:9%;width:50px;height:50px;border-radius:50%;background:#dfe6ff;box-shadow:0 0 24px #dfe6ff}
+.bg-inn{background:linear-gradient(#241a10 0 60%, #171008 60% 100%)}
+.bg-inn::before{content:"";position:absolute;left:8%;top:10%;width:120px;height:150px;background:linear-gradient(#3a2a16,#241a10);border:5px solid #0d0906;box-shadow:0 0 0 3px #4a3820, inset 0 0 0 3px #4a3820}
+.bg-store{background:linear-gradient(#10131c 0%, #181d2a 100%)}
+.bg-store::before{content:"";position:absolute;left:50%;top:12%;transform:translateX(-50%);width:200px;height:150px;background:#0a0d14;border:5px solid #2c3448;box-shadow:inset 0 0 0 3px #2c3448}
+.stars{position:absolute;inset:0;z-index:1;
+background-image:radial-gradient(2px 2px at 12% 18%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 32% 8%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 55% 22%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 74% 10%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 88% 26%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 44% 30%, #9fb4ff 50%, transparent 51%)}
+.char{position:absolute;bottom:var(--tb);left:50%;transform:translateX(-50%);z-index:2;
+filter:drop-shadow(0 0 10px rgba(60,100,255,.75))}
+.char svg{display:block}
+.ground{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:1;
+background:linear-gradient(transparent, rgba(3,5,16,.92) 30%)}
+.namebox{position:absolute;left:14px;bottom:calc(var(--tb) + 8px);z-index:8;color:#ffffff;
+background:var(--win);border:3px solid var(--dim);padding:2px 14px;font-weight:700;font-size:16px;
+letter-spacing:.06em;text-shadow:2px 2px 0 #000}
+.textbox{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:7;color:#ffffff;
+background:rgba(4,6,20,.97);border-top:4px solid var(--dim);
+padding:12px 16px;font-size:18px;line-height:1.8;letter-spacing:.06em;
+text-shadow:2px 2px 0 #000;
+cursor:pointer;white-space:pre-wrap;overflow-y:auto;overflow-x:hidden;
+scrollbar-width:thin;scrollbar-color:#3355ff #0a0e24}
+.textbox::-webkit-scrollbar{width:10px}
+.textbox::-webkit-scrollbar-track{background:#0a0e24}
+.textbox::-webkit-scrollbar-thumb{background:#3355ff;border:2px solid #04061a}
+.textbox.next{position:absolute;right:12px;bottom:6px;color:var(--accent);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.choices{position:absolute;top:0;left:0;right:0;bottom:calc(var(--tb) + 46px);z-index:9;display:none;flex-direction:column;
+align-items:center;justify-content:center;gap:12px;background:rgba(3,5,16,.78);padding:16px}
+.choices.show{display:flex}
+.choice{width:min(92%,520px);background:#05081f;color:#ffffff;font-weight:700;
+border:3px solid #d5ddff;padding:12px 16px;font-size:18px;letter-spacing:.08em;
+text-shadow:2px 2px 0 #000;text-align:left;border-radius:4px}
+.choice:hover{border-color:var(--accent);color:#fff;background:#1b2a6e}
+.choice::before{content:"▶ ";color:var(--accent)}
+.title{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
+justify-content:center;gap:14px;background:radial-gradient(ellipse at 50% 35%, #14205e 0%, #05060f 75%);text-align:center;padding:16px}
+.title h1{margin:0;font-size:clamp(26px,6vw,44px);letter-spacing:3px;color:#fff;
+text-shadow:3px 3px 0 var(--blue), 6px 6px 0 #101736}
+.title p{color:#d5ddff;font-size:14px;margin:0;line-height:1.9}
+.tbtn{background:#05081f;color:#fff;font-weight:700;border:3px solid #d5ddff;padding:10px 26px;font-size:17px;letter-spacing:.08em;border-radius:4px}
+.tbtn:hover{border-color:var(--accent)}
+.tbtn:disabled{opacity:.35;cursor:default}
+.endmark{position:absolute;top:12px;right:12px;z-index:8;background:#000a;border:2px solid var(--accent);
+color:var(--accent);padding:2px 10px;font-size:12px;display:none}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
+border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;opacity:0;transition:opacity.3s;z-index:50;pointer-events:none}
+.toast.show{opacity:1}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;z-index:40;align-items:center;justify-content:center;padding:16px}
+.modal.show{display:flex}
+.modal.box{background:var(--panel);border:3px solid var(--dim);max-width:640px;width:100%;
+max-height:78vh;overflow:auto;padding:16px 20px;font-size:13px;line-height:1.9;white-space:pre-wrap}
+footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
+@media (max-width:560px){.textbox{font-size:15px}.char{bottom:var(--tb)}}
+
+/* ===== スマホ縦長対応：画面を縦に取り、本文ボックスの割合を広げる ===== */
+@media (orientation:portrait) and (max-width:760px){
+:root{--tb:46%}
+.screen{aspect-ratio:auto;height:80vh;height:80dvh}
+.textbox{font-size:16px;line-height:1.75}
+.char svg{width:100px;height:127px}
+.choice{font-size:16px;padding:10px 14px}
+.choices{overflow-y:auto}
+.title h1{font-size:25px}
+.title p{font-size:13px}
+.params{gap:8px;font-size:11px}
+.bar{width:80px}
+}
+
+/* ===== 選択肢が上に隠れる問題の修正：中央寄せのまま、溢れたら先頭からスクロール ===== */
+.choices{justify-content:flex-start;overflow-y:auto}
+.choice:first-child{margin-top:auto}
+.choice:last-child{margin-bottom:auto}
+
+#diagram{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:min(560px,94%);z-index:5;background:rgba(3,4,16,.88);border:2px solid var(--dim);padding:6px;display:none}
+#diagram svg{width:100%;height:auto;display:block}
+#diagram{transition:width .25s}
+.screen.diagmenu #diagram{width:min(430px,74%)}
+.screen.diagmenu .choices{bottom:calc(var(--tb) + 8px);flex-direction:row;flex-wrap:wrap;align-content:flex-start;justify-content:center;gap:8px}
+.screen.diagmenu .choice{flex:1 1 28%;width:auto;margin:0;text-align:center;font-size:14px;padding:10px 8px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="cab">
+<header>
+<div class="logo">あしのこに消ゆ<small>― 第一話「霧の桟橋」神奈川・芦ノ湖 ―</small></div>
+<div class="btns">
+<button class="sbtn" id="btnLog">📜 ログ</button>
+<button class="sbtn" id="btnSound">🔊 音ON</button>
+<button class="sbtn" id="btnBgm">🎵 BGM ON</button>
+<button class="sbtn" id="btnTitle">🏠 タイトル</button>
+<button class="sbtn" id="btnReset">🗑 セーブ消去</button>
+</div>
+</header>
+
+<div class="params">
+<span>推理力 <b id="pEmacs">0</b><span class="bar"><i id="bEmacs" style="width:0%"></i></span></span>
+<span>観察力 <b id="pVim">0</b><span class="bar"><i id="bVim" style="width:0%"></i></span></span>
+<span>度胸 <b id="pNix">0</b><span class="bar"><i id="bNix" style="width:0%"></i></span></span>
+<span style="margin-left:auto;color:var(--dim)">💾 自動セーブ：localStorage</span>
+</div>
+
+<div class="screen" id="screen">
+<div class="bg bg-room" id="bg"></div>
+<div class="stars"></div>
+<div class="ground"></div>
+<div class="char" id="char"></div>
+<div class="endmark" id="endmark">END</div>
+<div id="diagram"></div>
+<div class="namebox" id="namebox" style="display:none"></div>
+<div class="textbox" id="textbox"><span id="text"></span><span class="next" id="nextmark" style="display:none">▼</span></div>
+<div class="choices" id="choices"></div>
+<div class="title" id="title">
+<h1>あしのこに消ゆ</h1>
+<p>神奈川・芦ノ湖。三十年前に消えた画家と、霧の桟橋に立つ女の影。<br>
+元刑事の調査員・佐伯圭が、差出人不明の手紙に導かれて湖畔の宿へ。<br>
+1980年代の名作コマンドADVへのオマージュとして作られた、オリジナルの短編ミステリー。</p>
+<button class="tbtn" id="btnNew">▶ はじめから</button>
+<button class="tbtn" id="btnContinue">▶ つづきから</button>
+<p>第一話「霧の桟橋」／ 所要時間：約10分 ／ エンディング複数 ／ BGMつき（🎵ボタン）／ セーブはブラウザ内</p>
+</div>
+</div>
+
+<footer>
+遊び方：本文クリックで文字送り。選択とパラメータ（推理・観察・度胸）で結末が変わります。BGM は 🎵 ボタンで ON/OFF（ゲーム開始時に自動で鳴り始めます）。
+本作は1980年代の名作コマンド式ADVへのオマージュですが、物語・人物・音楽はすべてオリジナルです。セーブは localStorage（シーンごとに自動保存）。
+第二話は「相模湖」編を構想中――シリーズは続く。
+</footer>
+<style>
+#galleryWrap{margin:16px 0 4px;text-align:center}
+#gallery{display:none;text-align:left;margin-top:12px}
+.gal-item{background:#070a1c;border:2px solid #2c3a75;padding:10px 12px;margin:0 0 12px}
+.gal-cap{color:#ffd94a;font-size:14px;margin-bottom:8px}
+.gal-diag svg{width:100%;height:auto;display:block}
+</style>
+<div id="galleryWrap">
+<button class="sbtn" id="btnGallery">🖼 図解一覧（復習用）を表示</button>
+<div id="gallery"></div>
+</div>
+<script>
+(function(){
+var btn = document.getElementById('btnGallery');
+var gal = document.getElementById('gallery');
+var built = false;
+function build(){
+var html = '';
+if (typeof LEVELS !== 'undefined' && typeof DIAG !== 'undefined') {
+LEVELS.forEach(function(lv, li){
+lv.lessons.forEach(function(ls, i){
+if (DIAG[ls.id]) html += '<div class="gal-item"><div class="gal-cap">第' + (li+1) + '章 第' + (i+1) + '課：' + ls.title + '</div><div class="gal-diag">' + DIAG[ls.id] + '</div></div>';
+});
+});
+} else if (typeof DIAG !== 'undefined') {
+Object.keys(DIAG).forEach(function(k){
+var cap = k;
+if (typeof NODES !== 'undefined' && NODES[k] && NODES[k].title) cap = NODES[k].title;
+html += '<div class="gal-item"><div class="gal-cap">' + cap + '</div><div class="gal-diag">' + DIAG[k] + '</div></div>';
+});
+}
+gal.innerHTML = html || '<div class="gal-cap">図解はありません</div>';
+}
+btn.onclick = function(){
+var show = gal.style.display !== 'block';
+if (show && !built) { build(); built = true; }
+gal.style.display = show ? 'block' : 'none';
+btn.textContent = show ? '🖼 図解一覧（復習用）を隠す' : '🖼 図解一覧（復習用）を表示';
+};
+})();
+</script>
+</div>
+
+<div class="modal" id="logModal"><div class="box" id="logBox"></div></div>
+<div class="toast" id="toast">💾 セーブしました</div>
+
+<script>
+"use strict";
+/* ============ キャラのシルエット（SVG） ============ */
+function sil(body, extra){
+return '<svg width="150" height="190" viewBox="0 0 120 150">'
++ '<circle cx="60" cy="34" r="17" fill="#141f52"/>'
++ '<path d="M22 150 C22 96 40 66 60 66 C80 66 98 96 98 150 Z" fill="#141f52"/>'
++ (extra || '') + (body || '') + '</svg>';
+}
+const CHARS = {
+saeki: sil('', '<path d="M46 64 L60 84 L74 64 L78 74 L60 100 L42 74 Z" fill="#0a0f2e"/>'),
+okami: sil('', '<circle cx="60" cy="9" r="8" fill="#141f52"/>'
++ '<path d="M47 64 L60 88 L73 64 L77 73 L60 101 L43 73 Z" fill="#0a0f2e"/>'),
+sencho: sil('', '<path d="M37 25 L83 25 L83 31 L37 31 Z" fill="#141f52"/><rect x="32" y="29" width="56" height="5" fill="#141f52"/>'
++ '<path d="M46 42 Q60 62 74 42 L74 52 Q60 70 46 52 Z" fill="#141f52"/>'),
+shirase: sil('', '<rect x="35" y="22" width="10" height="54" fill="#141f52"/><rect x="75" y="22" width="10" height="54" fill="#141f52"/>'
++ '<rect x="90" y="94" width="27" height="19" fill="#141f52"/><rect x="98" y="88" width="11" height="7" fill="#141f52"/>'),
+chizuru: sil('', '<path d="M39 28 Q60 4 81 28 L81 50 Q60 33 39 50 Z" fill="#141f52"/>'
++ '<rect x="47" y="84" width="26" height="17" fill="#0a0f2e"/><circle cx="60" cy="92" r="5" fill="#26398a"/>'),
+none: ''
+};
+
+/* ============ シナリオ ============ */
+/* fx: パラメータ加算 {e:推理, v:観察, n:度胸} / bgm: 'calm'|'tense' */
+const NODES = {
+start: { bg:'bg-room', char:'saeki', name:'佐伯', bgm:'calm',
+text:'俺の名は佐伯圭。元刑事、今は小さな調査事務所の所長兼・唯一の所員だ。\nある朝、事務所のポストに奇妙な封筒が入っていた。差出人の名はない。中には、湖の桟橋を描いた古い絵葉書と、一文だけの手紙。\n「三十年前の約束を、果たしに来い。――芦ノ湖にて」',
+choices:[
+{ t:'手紙を詳しく調べる', to:'letter', fx:{e:1}},
+{ t:'ともかく箱根へ向かう', to:'inn_arrive'},
+{ t:'気味が悪い。放っておく', to:'end_home'}
+]},
+letter: { bg:'bg-room', char:'none', name:'', title:'捜査メモ：手紙',
+text:'消印は小田原。紙は古いが、インクは新しい。誰かが「古い手紙のふり」をしている。\n三十年前の芦ノ湖――頭の隅で、何かが引っかかった。そうだ。画家・霧島透の失踪事件。霧の朝、湖畔の宿を出たまま、彼は二度と戻らなかった。未解決のまま、事件は風化している。\n……行くしかない。約束の相手が、誰であれ。',
+choices:[ { t:'箱根へ向かう', to:'inn_arrive'}]},
+end_home: { bg:'bg-room', char:'saeki', name:'佐伯', ending:true,
+text:'俺は封筒を机の引き出しにしまった。\n――だが、その夜から毎晩、夢を見るようになった。霧の湖。桟橋に立つ、誰かの影。\n放っておく、という選択にも代償はある。三十年目の約束は、まだ果たされていない。\n（第1話・未完 ― 行かなかった男の結末）',
+choices:[]},
+inn_arrive: { bg:'bg-inn', char:'okami', name:'澄江', bgm:'calm',
+text:'芦ノ湖畔の小さな旅館「霧笛荘」。霧の粒を含んだ風が、湖面を静かに撫でている。\n出迎えた女将は、深沢澄江。俺が絵葉書を見せた瞬間、彼女の笑顔から、ほんの一瞬だけ血の気が引いた。\n「……まさか。あなたが、あの手紙を」\n彼女は知っている。この宿で三十年前に何があったかを。',
+choices:[
+{ t:'女将に話を聞く', to:'okami_talk'},
+{ t:'先に湖と桟橋を見に行く', to:'pier1'}
+]},
+okami_talk: { bg:'bg-inn', char:'okami', name:'澄江',
+text:'「霧島透さん。将来を嘱望された、若い画家でした。当時うちに逗留して、湖の絵ばかり描いていて」\n「三十年前の今頃、霧の濃い朝でした。『桟橋の霧を描く』と言って出て行って……それきり」\n女将の目が、湖の方へ泳ぐ。\n「今朝も、濃い霧でした。……今朝も、です」',
+choices:[
+{ t:'桟橋へ行く', to:'pier1'},
+{ t:'宿で夕方まで様子を見る', to:'eve_inn'}
+]},
+pier1: { bg:'bg-lake', char:'none', name:'', title:'芦ノ湖の地図',
+text:'元箱根の桟橋。観光船が霧の中から、汽笛を鳴らして姿を現す。\n湖の向こうに箱根の山々、晴れれば富士が見えるはずの場所だが、今日は白い帳の向こうだ。\n桟橋の突端には、年季の入った船着場の小屋と、観光船の発着表。人の気配はまばらだ。',
+choices:[
+{ t:'小屋の船長に話を聞く', to:'sencho_talk'},
+{ t:'桟橋を調べる', to:'pier_look'},
+{ t:'宿へ戻る', to:'eve_inn'}
+]},
+sencho_talk: { bg:'bg-lake', char:'sencho', name:'源爺',
+text:'小屋の主は、源爺と呼ばれる老船員だった。六十年、芦ノ湖の水を見てきた男だ。\n「三十年前のあの朝も、俺はここにいた。霧の中でな、桟橋の突端に女が立っとった。長い髪の、白い服の……」\n源爺は湖を見つめたまま、ぽつりと言った。\n「今朝も見たよ。あの女を」',
+choices:[
+{ t:'桟橋の突端を調べる', to:'pier_look'},
+{ t:'宿へ戻る', to:'eve_inn'}
+]},
+pier_look: { bg:'bg-lake', char:'none', name:'',
+text:'桟橋の突端。板の隙間に、何か光るものが挟まっていた。――絵筆だ。しかも、まだ濡れている。穂先には青灰色の絵の具。\n柄には古い刻印。「T.K」。\n誰かが今朝、ここで絵を描いていた。三十年前の画家のイニシャルを刻んだ筆で。観察眼が、静かに熱を持つ。',
+choices:[ { t:'宿へ戻る（夕方）', to:'eve_inn', fx:{v:1}}]},
+eve_inn: { bg:'bg-dusk', char:'none', name:'', bgm:'calm',
+text:'夕刻。霧笛荘の広間では、宿泊客たちが夕食を囲んでいた。\nカメラを提げた若い女・千鶴。革の鞄を置いた、物静かな男・白瀬。そして女将の澄江。\n三十年前の事件と、今朝の霧。その両方を知る者が、この中にいる気がしてならない。',
+choices:[
+{ t:'千鶴と話す', to:'chizuru_talk'},
+{ t:'白瀬と話す', to:'shirase_talk'},
+{ t:'女将の様子を見る', to:'okami_eve'},
+{ t:'早めに部屋へ戻る', to:'night_hub'}
+]},
+chizuru_talk: { bg:'bg-dusk', char:'chizuru', name:'千鶴',
+text:'「私、湖の写真を撮りに来てるんです。特に、霧の朝が好きで」\n千鶴は少し得意げに、カメラの背面液晶をこちらへ向けた。\n「今朝の写真、見ますか？ 桟橋に……人が、写ってるんです」',
+choices:[ { t:'写真を見せてもらう', to:'photo'}]},
+photo: { bg:'bg-dusk', char:'chizuru', name:'千鶴', title:'捜査メモ：写真',
+text:'霧の桟橋。突端に立つ、長い髪の人影。白い服。撮影時刻は今朝5時12分。\nだが俺の目は、別のものに止まった。人影の足元――影がない。いや、霧の朝に影は薄い。それよりも、桟橋の板の濡れ方だ。写真の桟橋は乾いている。今朝の桟橋は、夜露で濡れていたはずだ。\nこの写真は「今朝」撮られたものではないのかもしれない。',
+choices:[ { t:'夜に備える', to:'night_hub', fx:{e:1}}]},
+shirase_talk: { bg:'bg-dusk', char:'shirase', name:'白瀬',
+text:'「美術商をしています、白瀬です」男は穏やかに笑った。\n「霧島透の幻の作、『霧の桟橋』をご存じですか。失踪の朝に描かれたという、あの絵です。完成作がこの宿の蔵に眠っているという噂があってね」\n「本物なら、億に近い値が付きますよ」\n億。その一言が、広間の空気をわずかに変えた。',
+choices:[ { t:'夜に備える', to:'night_hub'}]},
+okami_eve: { bg:'bg-dusk', char:'okami', name:'澄江',
+text:'夕食の後片付けをする女将の手元を見た。\n彼女は小さな鍵を、帯の間にしまい込んだ。蔵の鍵だ。視線に気づいた女将は、困ったように笑った。\n「……佐伯さん。今夜、蔵には近づかないでください。お願いです」\n頼み方が、警告の形をしていた。',
+choices:[ { t:'夜になる', to:'night_hub', fx:{v:1}}]},
+night_hub: { bg:'bg-night', char:'none', name:'', bgm:'calm',
+text:'夜。湖は闇に沈み、霧笛荘の明かりだけが霧に滲んでいる。\n蔵の鍵を持つ女将。今朝の写真。億の値が付く絵。そして、三十年前に消えた画家。\n――今夜、動くなら今だ。',
+choices:[
+{ t:'女将に、蔵のことを正面から聞く', to:'okami_night'},
+{ t:'蔵を調べに行く', to:'store_night'},
+{ t:'夜の桟橋を見に行く', to:'pier_night'}
+]},
+okami_night: { bg:'bg-inn', char:'okami', name:'澄江',
+text:'俺は単刀直入に聞いた。女将は長い沈黙のあと、観念したように笑った。\n「透さんは、私の婚約者でした。あの朝、彼は二枚目の絵を描き上げるつもりだったんです」\n「『霧の桟橋』は、二枚あるんです。一枚は完成作。もう一枚は……私を描いた、描きかけの」\n「手紙を出したのは、私です。三十年、蔵を開けられなかった。でも今朝、桟橋に立つ女の噂を聞いて、決めたんです。もう終わりにしたい、と」',
+choices:[ { t:'女将と一緒に蔵を開ける', to:'store_open', fx:{e:1}}]},
+store_open: { bg:'bg-store', char:'okami', name:'澄江', title:'捜査メモ：二枚の絵',
+text:'蔵の奥。油の匂いと、静かに眠るカンバスが二点。\n一枚は完成作『霧の桟橋』。霧の湖と桟橋、そして小さく立つ女の影。\nもう一枚は、同じ構図の描きかけ。だがこちらの女には、顔があった。若い日の澄江の顔だ。\n「透さんは、あの朝この絵を仕上げに湖へ出た。そして――」\n女将の言葉が途切れた。そのとき、蔵の外で霧笛が鳴った。朝霧の観光船の、第一便の合図だ。',
+choices:[ { t:'霧の朝、女将と桟橋へ向かう', to:'end_truth'}]},
+store_night: { bg:'bg-store', char:'none', name:'', bgm:'tense',
+text:'蔵の前。鍵は当然、掛かっている。だが裏の通気窓から中を覗くと、カンバスが二点、月明かりに浮かんでいた。\n――そのとき、蔵の裏手で小石の音。誰かいる。俺の他にも、今夜この蔵を狙う者が。\n心臓が跳ねた。度胸の見せどころだ。',
+choices:[
+{ t:'音の方へ走る', to:'chase', fx:{n:1}},
+{ t:'今夜は退く', to:'morning'}
+]},
+chase: { bg:'bg-night', char:'none', name:'', bgm:'tense',
+text:'霧の中を走る。人影は桟橋の方へ――そして霧に溶けた。\n残されたのは、桟橋の板の上に落ちた小さなレシート。画材店のものだ。日付は一週間前、場所は小田原。誰かが最近、ここで絵を描く準備をしていた。\n息を整えながら、俺は確信した。今朝の「女の人影」は、幽霊ではない。人の仕業だ。',
+choices:[ { t:'朝を待つ', to:'morning', fx:{n:1}}]},
+pier_night: { bg:'bg-night', char:'chizuru', name:'千鶴', bgm:'tense',
+text:'夜の桟橋。霧の中に、人影が立っていた。俺は息を止めた。\n「……あ、佐伯さん？」\n千鶴だった。夜景の撮影だという。だが彼女は、真剣な顔で言った。\n「今朝の写真ですけど、私、嘘をつきました。あれ、今朝の写真じゃないんです。昨日、夕霧で撮ったものを、今朝だと言ってしまった。……誰かに、そう言うよう頼まれて」',
+choices:[ { t:'朝を待つ', to:'morning', fx:{n:1}}]},
+morning: { bg:'bg-lake', char:'none', name:'', bgm:'calm',
+text:'翌朝。また濃い霧が湖を包んでいた。\nそして広間に、騒ぎが持ち上がった。「桟橋に、また女が立っていた」と、朝食に来た客が言う。\n源爺の言葉が蘇る。――今朝も見たよ、あの女を。\n決着をつけるなら、今朝だ。',
+choices:[ { t:'どう動くか決める', to:'final2'}]},
+final2: { bg:'bg-lake', char:'saeki', name:'佐伯',
+text:'霧は刻一刻と濃くなる。桟橋の人影の正体を確かめる方法は、限られていた。\n女将は宿で客を抑えている。警察は、元同僚に連絡すれば来るが、霧の山道では時間がかかる。\nさあ、どうする。',
+choices:[
+{ t:'一人で桟橋へ向かう', to:'end_bad'},
+{ t:'元同僚に連絡し、到着を待つ', to:'end_normal'}
+]},
+end_truth: { bg:'bg-lake', char:'none', name:'', ending:true, bgm:'calm',
+text:'霧の桟橋。突端に、イーゼルを立てる男がいた。白い服の女の絵を、霧の中に描いている。\n白瀬の雇った贋作家だった。蔵の本物とすり替えるための「本物らしい下絵」を、現場で作っていたのだ。今朝の人影の噂も、蔵を開けさせるための仕掛けだった。\n女将の声に、男は観念して筆を置いた。「……霧島の絵は、誰にも描けない。分かっていたのに」\n蔵の二枚は無事だった。だが、三十年前に消えた霧島透の行方は、まだ霧の中だ。\n――芦ノ湖の事件は、始まったばかりである。（第一話・完／真相編）',
+choices:[]},
+end_normal: { bg:'bg-lake', char:'none', name:'', ending:true,
+text:'警察が到着したとき、桟橋に人影はなかった。イーゼルの跡と、青灰色の絵の具だけが残されていた。\n蔵の絵は無事だった。女将は「これで良かったんです」と言ったが、その目は湖を見ていた。\n贋作を巡る企みは潰えた。だが、三十年前の霧の朝に何があったのか――その答えは、まだ誰も持っていない。\n――芦ノ湖の事件は、始まったばかりである。（第一話・完／未完編）',
+choices:[]},
+end_bad: { bg:'bg-night', char:'none', name:'', ending:true, bgm:'tense',
+text:'霧の中、桟橋の板は濡れて滑った。\n人影に声をかけようとした瞬間、足元が、ずるりと――。\n冷たい湖水の感触。もがく俺の腕を、強い手が掴んだ。源爺だった。「若いもんが、霧の湖を甘く見るな」\n人影は、その隙に霧へ消えた。真相も一緒に。\n――命あっての物種、とはこのことだ。芦ノ湖の事件は、まだ終わらない。（第一話・完／湖畔の危機編）',
+choices:[]}
+};
+
+/* ============ エンジン ============ */
+const SAVE_KEY = 'ashinokoSaveV1';
+let state = { node:'start', stats:{e:0,v:0,n:0}, log:[]};
+let typing = null, fullText = '', soundOn = true;
+
+const $ = id => document.getElementById(id);
+const bgEl=$('bg'), charEl=$('char'), nameEl=$('namebox'), textEl=$('text'),
+boxEl=$('textbox'), chEl=$('choices'), nextEl=$('nextmark'), endEl=$('endmark');
+
+function beep(freq, dur, delay, vol){
+if(!soundOn) return;
+try{
+const ctx = beep.ctx || (beep.ctx = new (window.AudioContext||window.webkitAudioContext)());
+if(ctx.state === 'suspended') ctx.resume();
+const o = ctx.createOscillator(), g = ctx.createGain();
+o.type='square'; o.frequency.value = freq || 660;
+g.gain.value = vol || 0.03;
+o.connect(g); g.connect(ctx.destination);
+const t = ctx.currentTime + (delay||0);
+o.start(t); o.stop(t + (dur||0.06));
+}catch(e){}
+}
+function save(){
+try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); toast();}catch(e){}
+}
+function loadSave(){
+try{ const s = localStorage.getItem(SAVE_KEY); return s? JSON.parse(s): null;}catch(e){ return null;}
+}
+function toast(){
+const t=$('toast'); t.classList.add('show');
+clearTimeout(toast.tm); toast.tm=setTimeout(()=>t.classList.remove('show'), 900);
+}
+function renderParams(){
+$('pEmacs').textContent = state.stats.e;
+$('pVim').textContent = state.stats.v;
+$('pNix').textContent = state.stats.n;
+$('bEmacs').style.width = Math.min(100, state.stats.e*16) + '%';
+$('bVim').style.width = Math.min(100, state.stats.v*16) + '%';
+$('bNix').style.width = Math.min(100, state.stats.n*14) + '%';
+}
+function typeText(txt, done){
+clearInterval(typing);
+fullText = txt; textEl.textContent=''; nextEl.style.display='none';
+boxEl.scrollTop = 0;
+let i=0;
+typing = setInterval(()=>{
+i++;
+textEl.textContent = txt.slice(0, i);
+boxEl.scrollTop = boxEl.scrollHeight;
+const ch = txt.charAt(i-1);
+if(ch && ch !== ' ' && ch !== '\n' && i % 2 === 1){
+beep(980 + Math.random()*520, 0.018, 0, 0.012);
+}
+if(i >= txt.length){ clearInterval(typing); typing=null; nextEl.style.display=''; if(done) done();}
+}, 26);
+boxEl.onclick = ()=>{
+if(typing){ clearInterval(typing); typing=null; textEl.textContent=txt; boxEl.scrollTop = boxEl.scrollHeight; nextEl.style.display=''; if(done) done();}
+};
+}
+
+/* ============ 図解（8bit風SVG・黒板） ============ */
+function _cm(x,y,ch,fill){ return '<rect x="'+(x+3)+'" y="'+(y+3)+'" width="30" height="30" fill="#000" opacity=".45"/><rect x="'+x+'" y="'+y+'" width="30" height="30" fill="'+fill+'" stroke="#dfe6ff" stroke-width="2"/><text x="'+(x+15)+'" y="'+(y+21)+'" font-size="14" fill="#05060f" text-anchor="middle" font-weight="bold">'+ch+'</text>'; }
+function _ar(x1,y1,x2,y2,col){ col=col||'#8fa3d9'; var pts; if(Math.abs(x2-x1)>=Math.abs(y2-y1)){ pts = x2>x1 ? [[x2,y2],[x2-10,y2-6],[x2-10,y2+6]] : [[x2,y2],[x2+10,y2-6],[x2+10,y2+6]]; } else { pts = y2>y1 ? [[x2,y2],[x2-6,y2-10],[x2+6,y2-10]] : [[x2,y2],[x2-6,y2+10],[x2+6,y2+10]]; } return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+col+'" stroke-width="4"/><polygon points="'+pts.map(function(p){return p.join(',');}).join(' ')+'" fill="'+col+'"/>'; }
+function _ln(x1,y1,x2,y2,col){ return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+(col||'#8fa3d9')+'" stroke-width="3"/>'; }
+function _tx(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'" text-anchor="middle">'+str+'</text>'; }
+function _txl(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'">'+str+'</text>'; }
+function _bx(x,y,w,h,label,fill){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'" stroke="#8fa3d9" stroke-width="2"/><text x="'+(x+w/2)+'" y="'+(y+h/2+5)+'" font-size="12" fill="#fff" text-anchor="middle">'+label+'</text>'; }
+function _tag(x,y,str,col){ var w=str.length*12+12; return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="20" fill="'+col+'"/><text x="'+(x+w/2)+'" y="'+(y+14)+'" font-size="11" fill="#05060f" text-anchor="middle" font-weight="bold">'+str+'</text>'; }
+function _svg(inner){ return '<svg viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'+inner+'</svg>'; }
+function _key(x,y,w,label,fill){ var tc = (fill===YL||fill===GN)? '#05060f':'#fff'; return '<rect x="'+(x+3)+'" y="'+(y+3)+'" width="'+w+'" height="34" fill="#000" opacity=".45"/><rect x="'+x+'" y="'+y+'" width="'+w+'" height="34" fill="'+fill+'" stroke="#dfe6ff" stroke-width="2"/><text x="'+(x+w/2)+'" y="'+(y+22)+'" font-size="13" fill="'+tc+'" text-anchor="middle" font-weight="bold">'+label+'</text>'; }
+function _keysRow(items, capTop, capBot, y){
+y = y || 48;
+var ws = items.map(function(it){ return Math.max(40, it[0].length*10 + 22); });
+var total = ws.reduce(function(a,b){return a+b;},0) + (items.length-1)*22;
+var x = (360-total)/2, s = '';
+if(capTop) s += _tx(180, 26, capTop, DM, 12);
+items.forEach(function(it, i){ s += _key(x, y, ws[i], it[0], it[1]); if(i < items.length-1) s += _ar(x+ws[i]+3, y+17, x+ws[i]+19, y+17, DM); x += ws[i] + 22; });
+if(capBot) s += _tx(180, y+76, capBot, DM, 12);
+return _svg(s);
+}
+function _cross(cap, fill){
+return _svg(_key(163,6,34,'K',fill) + _key(113,46,34,'H',fill) + _key(163,46,34,'J',fill) + _key(213,46,34,'L',fill)
++ _tx(180,112,cap,DM,12));
+}
+function _crossA(cap){
+return _svg(_key(163,6,34,'↑',GY) + _key(113,46,34,'←',GY) + _key(163,46,34,'↓',GY) + _key(213,46,34,'→',GY)
++ _tx(180,112,cap,DM,12));
+}
+var BL='#4a6bff', YL='#ffd94a', GN='#7ee787', RD='#ff7b72', PU='#b18cff', GY='#5a6b9e', DM='#8fa3d9';
+
+const DIAG = {
+letter: _svg(_txl(30,28,'捜査メモ：手紙と事件',YL,12)
+ + _txl(30,54,'・消印は小田原、インクは新しい',GN,12) + _txl(30,80,'・30年前：画家・霧島透が芦ノ湖で失踪',GN,12)
+ + _tx(180,112,'「古い手紙のふり」を誰かがしている',RD,11)),
+pier1: _svg(_tx(180,26,'芦ノ湖（元箱根）',YL,13)
+ + _bx(15,45,100,38,'霧笛荘','#1b2a6e') + _bx(130,45,100,38,'桟橋','#3a2a6e') + _bx(245,45,100,38,'観光船','#1b2a6e')
+ + _tx(180,106,'霧の日は視界が消える。富士は見えない',DM,11)),
+photo: _svg(_txl(30,28,'捜査メモ：千鶴の写真',YL,12)
+ + _txl(30,54,'・撮影時刻 5:12、長い髪の人影',GN,12) + _txl(30,80,'・桟橋が乾いている（今朝は濡れていた）',RD,12)
+ + _tx(180,112,'「今朝の写真」ではない可能性',YL,11)),
+store_open: _svg(_bx(15,40,155,42,'完成作『霧の桟橋』','#1b2a6e') + _bx(190,40,155,42,'描きかけ（澄江の顔）','#3a2320')
+ + _tx(180,106,'絵は二枚ある。それが女将の秘密だった',YL,11)),
+};
+function showDiagFor(id){
+const d = $('diagram');
+if(DIAG[id]){ d.innerHTML = DIAG[id]; d.style.display = 'block'; }
+else { d.style.display = 'none'; $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+}
+
+function showNode(id){
+showDiagFor(id);
+if(NODES[id] && NODES[id].bgm && typeof setBgmTrack === 'function') setBgmTrack(NODES[id].bgm);
+const n = NODES[id];
+if(!n) return;
+state.node = id;
+bgEl.className = 'bg ' + n.bg;
+charEl.innerHTML = CHARS[n.char] || '';
+charEl.style.display = n.char && n.char!== 'none'? '': 'none';
+if(n.name){ nameEl.textContent = n.name; nameEl.style.display='';} else nameEl.style.display='none';
+endEl.style.display = n.ending? '': 'none';
+chEl.classList.remove('show'); chEl.innerHTML='';
+state.log.push((n.name? '': '') + n.text);
+renderParams();
+typeText(n.text, ()=>{
+if(n.ending){ showEnding();}
+else if(n.choices && n.choices.length){ showChoices(n.choices);}
+});
+save();
+}
+function showChoices(choices){
+chEl.innerHTML='';
+choices.forEach(c=>{
+const b=document.createElement('button');
+b.className='choice'; b.textContent=c.t;
+b.onclick=()=>{
+beep(520,.06); setTimeout(()=>beep(780,.07), 70);
+if(c.fx){
+state.stats.e += c.fx.e||0; state.stats.v += c.fx.v||0; state.stats.n += c.fx.n||0;
+}
+state.log.push('▶ ' + c.t);
+chEl.classList.remove('show');
+showNode(c.to);
+};
+chEl.appendChild(b);
+});
+chEl.classList.add('show');
+const dg = $('diagram');
+if(dg && dg.style.display === 'block'){
+$('screen').classList.add('diagmenu');
+requestAnimationFrame(()=>{
+const sr = $('screen').getBoundingClientRect();
+const dr = dg.getBoundingClientRect();
+chEl.style.top = Math.max(0, Math.round(dr.bottom - sr.top + 8)) + 'px';
+});
+} else { $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+}
+function showEnding(){
+const s = state.stats;
+const total = s.e + s.v + s.n;
+const rank = total >= 8? '湖畔の名探偵': total >= 5? '一人前の調査員': total >= 3? '見習い調査員': '霧に迷った観光客';
+const b=document.createElement('button');
+b.className='choice';
+b.textContent='結果を見る（称号：' + rank + ' / 推理 ' + s.e + '・観察 ' + s.v + '・度胸 ' + s.n + '）→ タイトルへ';
+b.onclick=()=>{ beep(660,.07); setTimeout(()=>beep(880,.09),90); goTitle();};
+chEl.innerHTML=''; chEl.appendChild(b); chEl.classList.add('show');
+[523,659,784,1046].forEach((f,i)=>beep(f,.1,i*0.11));
+}
+function goTitle(){
+$('title').style.display='flex';
+const sv = loadSave();
+$('btnContinue').disabled =!(sv && sv.node &&!NODES[sv.node].ending);
+}
+function startGame(fromSave){
+$('title').style.display='none';
+if(fromSave){
+const sv = loadSave();
+if(sv && sv.node){ state = sv; showNode(state.node); return;}
+}
+state = { node:'start', stats:{e:0,v:0,n:0}, log:[]};
+showNode('start');
+}
+$('btnNew').onclick = ()=>{ beep(660,.06); startGame(false);};
+$('btnContinue').onclick = ()=>{ beep(660,.06); startGame(true);};
+$('btnTitle').onclick = ()=>{ chEl.classList.remove('show'); goTitle();};
+$('btnReset').onclick = ()=>{
+try{ localStorage.removeItem(SAVE_KEY);}catch(e){}
+state = { node:'start', stats:{e:0,v:0,n:0}, log:[]};
+renderParams(); goTitle();
+};
+$('btnSound').onclick = (e)=>{
+soundOn =!soundOn;
+e.target.textContent = soundOn? '🔊 音ON': '🔇 音OFF';
+if(soundOn) beep(700,.06);
+};
+$('btnLog').onclick = ()=>{
+$('logBox').textContent = state.log.length? state.log.join('\n\n'): '（まだログがありません）';
+$('logModal').classList.add('show');
+};
+$('logModal').onclick = ()=> $('logModal').classList.remove('show');
+renderParams();
+goTitle();
+/* ============ BGM（Web Audioチップチューン・全曲オリジナル） ============ */
+let bgmOn = true, bgmCtx = null, bgmTimer = null, bgmStep = 0, bgmNext = 0, bgmTrack = 'calm';
+const BGM_BPM = 84;
+const BGM_TRACKS = {
+calm: {
+lead:[69,0,72,76,74,0,72,0, 65,0,69,72,69,0,65,0, 67,0,72,76,74,0,72,0, 64,0,68,71,69,0,0,0],
+bass:[45,0,0,0,52,0,0,0, 41,0,0,0,48,0,0,0, 48,0,0,0,55,0,0,0, 40,0,0,0,47,0,0,0]
+},
+tense: {
+lead:[74,0,74,0,73,0,74,0, 69,0,69,0,74,0,0,0, 74,0,74,0,77,0,74,0, 73,0,69,0,68,0,0,0],
+bass:[38,0,38,0,38,0,38,0, 36,0,36,0,36,0,36,0, 38,0,38,0,38,0,38,0, 33,0,33,0,34,0,36,0]
+}
+};
+function bgmNote(midi, t, dur, type, vol){
+const o = bgmCtx.createOscillator(), g = bgmCtx.createGain();
+o.type = type; o.frequency.value = 440 * Math.pow(2, (midi - 69) / 12);
+g.gain.setValueAtTime(0.0001, t);
+g.gain.linearRampToValueAtTime(vol, t + 0.02);
+g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+o.connect(g); g.connect(bgmCtx.destination);
+o.start(t); o.stop(t + dur + 0.05);
+}
+function bgmTick(){
+if(!bgmCtx) return;
+const spb = 60 / BGM_BPM / 2;
+while(bgmNext < bgmCtx.currentTime + 0.18){
+const tr = BGM_TRACKS[bgmTrack] || BGM_TRACKS.calm;
+const i = bgmStep % 32;
+if(tr.lead[i]) bgmNote(tr.lead[i], bgmNext, spb * 1.9, 'square', 0.028);
+if(tr.bass[i]) bgmNote(tr.bass[i], bgmNext, spb * 1.9, 'triangle', 0.055);
+bgmNext += spb; bgmStep++;
+}
+}
+function startBgm(){
+if(!bgmOn || bgmCtx) return;
+try{
+bgmCtx = new (window.AudioContext || window.webkitAudioContext)();
+bgmNext = bgmCtx.currentTime + 0.08; bgmStep = 0;
+bgmTimer = setInterval(bgmTick, 80);
+}catch(e){}
+}
+function stopBgm(){
+if(bgmTimer) clearInterval(bgmTimer);
+bgmTimer = null;
+if(bgmCtx){ try{ bgmCtx.close(); }catch(e){} bgmCtx = null; }
+}
+function setBgmTrack(t){ if(BGM_TRACKS[t]) bgmTrack = t; }
+$('btnBgm').onclick = (e)=>{
+bgmOn = !bgmOn;
+e.target.textContent = bgmOn? '🎵 BGM ON': '🎵 BGM OFF';
+if(bgmOn) startBgm(); else stopBgm();
+};
+$('btnNew').addEventListener('click', startBgm);
+$('btnContinue').addEventListener('click', startBgm);
+</script>
+</body>
+</html>
