@@ -166,6 +166,47 @@ Whisperの文字起こし、ピッチ変更の匿名化、Blender VSEでの合�
 間違えてもペナルティなし、補足説明を読んで何度でも挑めます。本文クリックで文字送り、長い文は自動スクロール＋手動スクロール可。
 各課ではパイプラインを図で描いて、見える化します。題材は君のNixOSとGPU機です。道具は全部フリー。文字起こしは元の声で、公開する声だけ変えるのが鉄則です。
 </footer>
+<style>
+#galleryWrap{margin:16px 0 4px;text-align:center}
+#gallery{display:none;text-align:left;margin-top:12px}
+.gal-item{background:#070a1c;border:2px solid #2c3a75;padding:10px 12px;margin:0 0 12px}
+.gal-cap{color:#ffd94a;font-size:14px;margin-bottom:8px}
+.gal-diag svg{width:100%;height:auto;display:block}
+</style>
+<div id="galleryWrap">
+<button class="sbtn" id="btnGallery">🖼 図解一覧（復習用）を表示</button>
+<div id="gallery"></div>
+</div>
+<script>
+(function(){
+var btn = document.getElementById('btnGallery');
+var gal = document.getElementById('gallery');
+var built = false;
+function build(){
+var html = '';
+if (typeof LEVELS !== 'undefined' && typeof DIAG !== 'undefined') {
+LEVELS.forEach(function(lv, li){
+lv.lessons.forEach(function(ls, i){
+if (DIAG[ls.id]) html += '<div class="gal-item"><div class="gal-cap">第' + (li+1) + '章 第' + (i+1) + '課：' + ls.title + '</div><div class="gal-diag">' + DIAG[ls.id] + '</div></div>';
+});
+});
+} else if (typeof DIAG !== 'undefined') {
+Object.keys(DIAG).forEach(function(k){
+var cap = k;
+if (typeof NODES !== 'undefined' && NODES[k] && NODES[k].title) cap = NODES[k].title;
+html += '<div class="gal-item"><div class="gal-cap">' + cap + '</div><div class="gal-diag">' + DIAG[k] + '</div></div>';
+});
+}
+gal.innerHTML = html || '<div class="gal-cap">図解はありません</div>';
+}
+btn.onclick = function(){
+var show = gal.style.display !== 'block';
+if (show && !built) { build(); built = true; }
+gal.style.display = show ? 'block' : 'none';
+btn.textContent = show ? '🖼 図解一覧（復習用）を隠す' : '🖼 図解一覧（復習用）を表示';
+};
+})();
+</script>
 </div>
 
 <div class="toast" id="toast">💾 保存しました</div>
@@ -592,48 +633,6 @@ e.target.textContent = soundOn? '🔊 音ON': '🔇 音OFF';
 if(soundOn) beep(700,.06);
 };
 renderProgress('タイトル');
-</script>
-<style>
-#galleryWrap{max-width:900px;margin:14px auto 30px;padding:0 10px;text-align:center}
-#btnGallery{cursor:pointer}
-#gallery{display:none;text-align:left;margin-top:12px}
-.gal-item{background:#070a1c;border:2px solid #2c3a75;padding:10px 12px;margin:0 0 12px}
-.gal-cap{color:#ffd94a;font-size:14px;margin-bottom:8px}
-.gal-diag svg{width:100%;height:auto;display:block}
-</style>
-<div id="galleryWrap">
-<button class="sbtn" id="btnGallery">🖼 図解一覧（復習用）を表示</button>
-<div id="gallery"></div>
-</div>
-<script>
-(function(){
-var btn = document.getElementById('btnGallery');
-var gal = document.getElementById('gallery');
-var built = false;
-function build(){
-var html = '';
-if (typeof LEVELS !== 'undefined' && typeof DIAG !== 'undefined') {
-LEVELS.forEach(function(lv, li){
-lv.lessons.forEach(function(ls, i){
-if (DIAG[ls.id]) html += '<div class="gal-item"><div class="gal-cap">第' + (li+1) + '章 第' + (i+1) + '課：' + ls.title + '</div><div class="gal-diag">' + DIAG[ls.id] + '</div></div>';
-});
-});
-} else if (typeof DIAG !== 'undefined') {
-Object.keys(DIAG).forEach(function(k){
-var cap = k;
-if (typeof NODES !== 'undefined' && NODES[k] && NODES[k].title) cap = NODES[k].title;
-html += '<div class="gal-item"><div class="gal-cap">' + cap + '</div><div class="gal-diag">' + DIAG[k] + '</div></div>';
-});
-}
-gal.innerHTML = html || '<div class="gal-cap">図解はありません</div>';
-}
-btn.onclick = function(){
-var show = gal.style.display !== 'block';
-if (show && !built) { build(); built = true; }
-gal.style.display = show ? 'block' : 'none';
-btn.textContent = show ? '🖼 図解一覧（復習用）を隠す' : '🖼 図解一覧（復習用）を表示';
-};
-})();
 </script>
 </body>
 </html>

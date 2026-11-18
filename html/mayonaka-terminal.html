@@ -179,6 +179,47 @@ Wayland の扉のあいだを彷徨う、ちいさな夜の物語。</p>
 セーブは Cookie ではなく localStorage を使っています（容量が大きく、GitHub Pages に置いてもそのまま動くため）。進捗はシーンごとに自動保存。
 v1.1：ドット絵フォント（DotGothic16、読み込めない環境では等幅フォントにフォールバック）＋文字送り「ピピピ」音を追加。音は 🔊 ボタンで ON/OFF。
 </footer>
+<style>
+#galleryWrap{margin:16px 0 4px;text-align:center}
+#gallery{display:none;text-align:left;margin-top:12px}
+.gal-item{background:#070a1c;border:2px solid #2c3a75;padding:10px 12px;margin:0 0 12px}
+.gal-cap{color:#ffd94a;font-size:14px;margin-bottom:8px}
+.gal-diag svg{width:100%;height:auto;display:block}
+</style>
+<div id="galleryWrap">
+<button class="sbtn" id="btnGallery">🖼 図解一覧（復習用）を表示</button>
+<div id="gallery"></div>
+</div>
+<script>
+(function(){
+var btn = document.getElementById('btnGallery');
+var gal = document.getElementById('gallery');
+var built = false;
+function build(){
+var html = '';
+if (typeof LEVELS !== 'undefined' && typeof DIAG !== 'undefined') {
+LEVELS.forEach(function(lv, li){
+lv.lessons.forEach(function(ls, i){
+if (DIAG[ls.id]) html += '<div class="gal-item"><div class="gal-cap">第' + (li+1) + '章 第' + (i+1) + '課：' + ls.title + '</div><div class="gal-diag">' + DIAG[ls.id] + '</div></div>';
+});
+});
+} else if (typeof DIAG !== 'undefined') {
+Object.keys(DIAG).forEach(function(k){
+var cap = k;
+if (typeof NODES !== 'undefined' && NODES[k] && NODES[k].title) cap = NODES[k].title;
+html += '<div class="gal-item"><div class="gal-cap">' + cap + '</div><div class="gal-diag">' + DIAG[k] + '</div></div>';
+});
+}
+gal.innerHTML = html || '<div class="gal-cap">図解はありません</div>';
+}
+btn.onclick = function(){
+var show = gal.style.display !== 'block';
+if (show && !built) { build(); built = true; }
+gal.style.display = show ? 'block' : 'none';
+btn.textContent = show ? '🖼 図解一覧（復習用）を隠す' : '🖼 図解一覧（復習用）を表示';
+};
+})();
+</script>
 </div>
 
 <div class="modal" id="logModal"><div class="box" id="logBox"></div></div>
