@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<!-- build: 2026-11-19 19:45:24 JST -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>フィルム・ノワール道場 ― 1940〜60年代クラシック入門</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{
+--tb:29%;
+--ink:#dfe6ff; --dim:#8fa3d9; --blue:#3355ff; --panel:#0a0e24;
+--win:#101736; --accent:#ffd94a; --good:#7ee787; --bad:#ff7b72;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+body{margin:0;background:#05060f;color:var(--ink);
+font-family:"DotGothic16","Hiragino Kaku Gothic ProN","Noto Sans JP",monospace,sans-serif;
+-webkit-font-smoothing:none;font-smooth:never;
+display:flex;justify-content:center;padding:14px 10px 40px}
+.cab{width:100%;max-width:760px}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{font-weight:900;letter-spacing:2px;font-size:18px;color:#fff;
+text-shadow:2px 2px 0 var(--blue), 4px 4px 0 #101736}
+.logo small{display:block;font-size:11px;color:var(--dim);letter-spacing:1px;text-shadow:none}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer}
+.sbtn{background:var(--win);color:var(--ink);border:2px solid var(--dim);
+padding:4px 10px;font-size:12px;border-radius:4px}
+.sbtn:hover{border-color:#fff;color:#fff}
+.params{display:flex;gap:14px;background:var(--panel);border:2px solid var(--dim);
+padding:6px 12px;font-size:12px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.params b{color:var(--accent)}
+.bar{display:inline-block;width:120px;height:10px;background:#1a2148;vertical-align:middle;margin-left:4px;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--good);display:block}
+.screen{position:relative;border:6px solid var(--dim);border-radius:6px;overflow:hidden;
+aspect-ratio:16/10;background:#000;image-rendering:pixelated}
+.screen::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+background:repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 3px, transparent 3px 6px)}
+.bg{position:absolute;inset:0;transition:opacity.4s}
+.bg-room{background:linear-gradient(#0d1440 0 55%, #182257 55% 100%)}
+.bg-room::before{content:"";position:absolute;right:8%;top:8%;width:110px;height:130px;
+background:linear-gradient(#1b2a63,#0d1440);border:6px solid #05081a;
+box-shadow:0 0 0 4px #26398a, inset 0 0 0 3px #26398a}
+.bg-term{background:radial-gradient(ellipse at 50% 40%, #06280f 0%, #02140a 70%)}
+.bg-term::before{content:"FILM NOIR ❄ 1941 THE MALTESE FALCON ❄ 1944 DOUBLE INDEMNITY ❄ 1950 SUNSET BOULEVARD ❄ 1958 TOUCH OF EVIL ❄";
+position:absolute;inset:6%;color:#2f9e44;font-size:13px;line-height:2.1;opacity:.55;
+font-family:ui-monospace,Menlo,monospace;word-break:break-all}
+.bg-way{background:linear-gradient(#1b1040 0%, #4a2a7a 55%, #c65b8f 82%, #ffb36b 100%)}
+.stars{position:absolute;inset:0;z-index:1;
+background-image:radial-gradient(2px 2px at 12% 18%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 32% 8%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 55% 22%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 74% 10%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 88% 26%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 44% 30%, #9fb4ff 50%, transparent 51%)}
+.char{position:absolute;bottom:var(--tb);left:50%;transform:translateX(-50%);z-index:2;
+filter:drop-shadow(0 0 10px rgba(60,100,255,.75))}
+.char svg{display:block}
+.ground{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:1;
+background:linear-gradient(transparent, rgba(3,5,16,.92) 30%)}
+.namebox{position:absolute;left:14px;bottom:calc(var(--tb) + 8px);z-index:8;color:#ffffff;
+background:var(--win);border:3px solid var(--dim);padding:2px 14px;font-weight:700;font-size:16px;
+letter-spacing:.06em;text-shadow:2px 2px 0 #000}
+.textbox{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:7;color:#ffffff;
+background:rgba(4,6,20,.97);border-top:4px solid var(--dim);
+padding:12px 16px;font-size:18px;line-height:1.8;letter-spacing:.06em;
+text-shadow:2px 2px 0 #000;
+cursor:pointer;white-space:pre-wrap;overflow-y:auto;overflow-x:hidden;
+scrollbar-width:thin;scrollbar-color:#3355ff #0a0e24}
+.textbox::-webkit-scrollbar{width:10px}
+.textbox::-webkit-scrollbar-track{background:#0a0e24}
+.textbox::-webkit-scrollbar-thumb{background:#3355ff;border:2px solid #04061a}
+.textbox.next{position:absolute;right:12px;bottom:6px;color:var(--accent);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.choices{position:absolute;top:0;left:0;right:0;bottom:calc(var(--tb) + 46px);z-index:9;display:none;flex-direction:column;
+align-items:center;justify-content:center;gap:12px;background:rgba(3,5,16,.78);padding:16px;overflow-y:auto}
+.choices.show{display:flex}
+.choice{width:min(92%,520px);background:#05081f;color:#ffffff;font-weight:700;
+border:3px solid #d5ddff;padding:12px 16px;font-size:18px;letter-spacing:.08em;
+text-shadow:2px 2px 0 #000;text-align:left;border-radius:4px}
+.choice:hover{border-color:var(--accent);color:#fff;background:#1b2a6e}
+.choice::before{content:"▶ ";color:var(--accent)}
+.choice.done{border-color:var(--good)}
+.choice.done::before{content:"✔ ";color:var(--good)}
+.title{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
+justify-content:center;gap:14px;background:radial-gradient(ellipse at 50% 35%, #14205e 0%, #05060f 75%);text-align:center;padding:16px}
+.title h1{margin:0;font-size:clamp(26px,6vw,44px);letter-spacing:3px;color:#fff;
+text-shadow:3px 3px 0 var(--blue), 6px 6px 0 #101736}
+.title p{color:#d5ddff;font-size:14px;margin:0;line-height:1.9}
+.tbtn{background:#05081f;color:#fff;font-weight:700;border:3px solid #d5ddff;padding:10px 26px;font-size:17px;letter-spacing:.08em;border-radius:4px}
+.tbtn:hover{border-color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
+border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;opacity:0;transition:opacity.3s;z-index:50;pointer-events:none}
+.toast.show{opacity:1}
+#diagram{transition:width .25s}
+.screen.diagmenu #diagram{width:min(430px,74%)}
+.screen.diagmenu .choices{bottom:calc(var(--tb) + 8px);flex-direction:row;flex-wrap:wrap;align-content:flex-start;justify-content:center;gap:8px}
+.screen.diagmenu .choice{flex:1 1 28%;width:auto;margin:0;text-align:center;font-size:14px;padding:10px 8px;line-height:1.5}
+
+#diagram{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:min(560px,94%);z-index:5;background:rgba(3,4,16,.88);border:2px solid var(--dim);padding:6px;display:none}
+#diagram svg{width:100%;height:auto;display:block}
+
+footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
+kbd{display:inline-block;background:#21262d;border:1px solid var(--dim);border-bottom-width:2px;
+border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+@media (max-width:560px){.textbox{font-size:15px}.char{bottom:var(--tb)}}
+
+/* ===== スマホ縦長対応：画面を縦に取り、本文ボックスの割合を広げる ===== */
+@media (orientation:portrait) and (max-width:760px){
+:root{--tb:46%}
+.screen{aspect-ratio:auto;height:80vh;height:80dvh}
+.textbox{font-size:16px;line-height:1.75}
+.char svg{width:100px;height:127px}
+.choice{font-size:16px;padding:10px 14px}
+.choices{overflow-y:auto}
+.title h1{font-size:25px}
+.title p{font-size:13px}
+.params{gap:8px;font-size:11px}
+.bar{width:80px}
+}
+
+/* ===== 選択肢が上に隠れる問題の修正：中央寄せのまま、溢れたら先頭からスクロール ===== */
+.choices{justify-content:flex-start;overflow-y:auto}
+.choice:first-child{margin-top:auto}
+.choice:last-child{margin-bottom:auto}
+</style>
+</head>
+<body>
+<div class="cab">
+<header>
+<div class="logo">フィルム・ノワール道場<small>― 1940〜60年代 クラシック映画 全16課 ―</small></div>
+<div class="btns">
+<button class="sbtn" id="btnSound">🔊 音ON</button><button class="sbtn" id="btnTts">🗣 読上OFF</button>
+<button class="sbtn" id="btnLevels">🏠 レベル選択</button>
+<button class="sbtn" id="btnReset">🗑 進捗リセット</button>
+</div>
+</header>
+
+<div class="params">
+<span>理解済み <b id="pDone">0</b> / 16 課<span class="bar"><i id="bDone" style="width:0%"></i></span></span>
+<span style="color:var(--dim)">現在：<span id="pNow">タイトル</span></span>
+<span style="margin-left:auto;color:var(--dim)">💾 進捗は自動保存（localStorage）</span>
+</div>
+
+<div class="screen" id="screen">
+<div class="bg bg-room" id="bg"></div>
+<div class="stars"></div>
+<div class="ground"></div>
+<div class="char" id="char"></div>
+<div id="diagram"></div>
+<div class="namebox" id="namebox" style="display:none"></div>
+<div class="textbox" id="textbox"><span id="text"></span><span class="next" id="nextmark" style="display:none">▼</span></div>
+<div class="choices" id="choices"></div>
+<div class="title" id="title">
+<h1>フィルム・ノワール道場</h1>
+<p>テーマは「クラシック映画、フィルム・ノワールの30年」。<br>
+1940年代の誕生から、1950年代の円熟、1960年代の変容まで全16課。<br>
+「分かった！」で次へ、「分からない」で何度でもやり直し。</p>
+<button class="tbtn" id="btnEnter">▶ 道場に入る</button>
+<p>進捗（理解済み ✔）はブラウザに自動保存されます</p>
+</div>
+</div>
+
+<footer>
+遊び方：説明を読んだら「これは分かった！」か「分からない」を選ぶだけ。分かったら確認問題が1問出て、正解でその課は理解済み ✔。
+間違えてもペナルティなし、補足説明を読んで何度でも挑めます。本文クリックで文字送り、長い文は自動スクロール＋手動スクロール可。
+各課では作品の系譜を図で描いて、ノワールの様式を見える化します。扱うのは作品の事実と鑑賞の手引きだけ。本文を読み、リスニングで流し聞きしながら、年代順に1本ずつ観ていくと一番効きます。
+</footer>
+<style>
+#galleryWrap{margin:16px 0 4px;text-align:center}
+#gallery{display:none;text-align:left;margin-top:12px}
+.gal-item{background:#070a1c;border:2px solid #2c3a75;padding:10px 12px;margin:0 0 12px}
+.gal-cap{color:#ffd94a;font-size:14px;margin-bottom:8px}
+.gal-diag svg{width:100%;height:auto;display:block}
+</style>
+<div id="galleryWrap">
+<div style="margin-bottom:10px"><button class="sbtn" id="btnListen">🎧 リスニング（全レッスン読み上げ）</button>
+<div id="listenPanel" style="display:none;text-align:left;margin-top:10px;background:#070a1c;border:2px solid #2c3a75;padding:10px 12px">
+<div style="margin-bottom:8px"><button class="sbtn" id="btnPlay">▶ ブラウザ音声で再生</button> <button class="sbtn" id="btnStop">⏹ 停止</button> <span id="listenStatus" style="font-size:12px;color:#9fb7ff"></span></div>
+<div style="height:8px;background:#1a2350;border:1px solid #2c3a75;margin-bottom:8px"><div id="listenFill" style="height:100%;width:0%;background:#ffd94a"></div></div>
+<div style="font-size:12px;color:#9fb7ff;margin-bottom:8px">PCでは Read Aloud 拡張機能で、この下のテキストをそのまま読み上げられます。</div>
+<div id="listenText" style="color:#fff;font-size:15px;line-height:1.7"></div>
+</div></div>
+<button class="sbtn" id="btnGallery">🖼 図解一覧（復習用）を表示</button>
+<div id="gallery"></div>
+</div>
+<script>
+(function(){
+var btnMain = document.getElementById('btnListen');
+var panel = document.getElementById('listenPanel');
+var btn = document.getElementById('btnPlay');
+var btnStop = document.getElementById('btnStop');
+var st = document.getElementById('listenStatus');
+var fill = document.getElementById('listenFill');
+var lt = document.getElementById('listenText');
+if(!btnMain || !panel || !btn) return;
+var playing = false, items = [], idx = 0, curId = 0, watchdog = null, tickTimer = null, itemStart = 0, started = false, attempts = 0, built = false, paused = false;
+function buildItems(){
+  var arr = [];
+  LEVELS.forEach(function(ch, ci){
+    arr.push('第' + (ci + 1) + '章。' + ch.name);
+    ch.lessons.forEach(function(ls){
+      arr.push(ls.title);
+      (ls.teach || []).forEach(function(t){ arr.push(t); });
+    });
+  });
+  return arr;
+}
+function buildText(){
+  lt.innerHTML = '';
+  LEVELS.forEach(function(ch, ci){
+    var h = document.createElement('div');
+    h.style.cssText = 'color:#ffd94a;font-weight:bold;margin:14px 0 6px';
+    h.textContent = '第' + (ci + 1) + '章 ' + ch.name;
+    lt.appendChild(h);
+    ch.lessons.forEach(function(ls){
+      var t = document.createElement('div');
+      t.style.cssText = 'font-weight:bold;margin:10px 0 4px';
+      t.textContent = ls.title;
+      lt.appendChild(t);
+      (ls.teach || []).forEach(function(tx){
+        var p = document.createElement('div');
+        p.style.cssText = 'margin:0 0 8px;white-space:pre-wrap';
+        p.textContent = tx;
+        lt.appendChild(p);
+      });
+    });
+  });
+}
+function pickVoice(){
+  var vs = speechSynthesis.getVoices();
+  for(var i = 0; i < vs.length; i++){ if(vs[i].lang && vs[i].lang.toLowerCase().indexOf('ja') === 0) return vs[i]; }
+  return vs[0] || null;
+}
+function fmt(sec){ var m = Math.floor(sec / 60), s = sec % 60; return m + ':' + (s < 10 ? '0' : '') + s; }
+function setBar(){ if(fill && items.length) fill.style.width = Math.round(idx / items.length * 100) + '%'; }
+function status(){
+  if(!st || !playing) return;
+  var el = Math.floor((Date.now() - itemStart) / 1000);
+  st.textContent = (started ? '再生中 ' : '準備中… ') + (idx + 1) + '/' + items.length + '（' + fmt(el) + '）' + (items[idx] || '').slice(0, 18);
+}
+function clearTimers(){
+  if(watchdog){ clearTimeout(watchdog); watchdog = null; }
+  if(tickTimer){ clearInterval(tickTimer); tickTimer = null; }
+}
+function stop(msg){
+  playing = false; paused = false; curId++; clearTimers();
+  try{ speechSynthesis.cancel(); }catch(e){}
+  btn.textContent = '▶ ブラウザ音声で再生';
+  if(st) st.textContent = msg || '';
+  if(fill) fill.style.width = '0%';
+}
+function armWatchdog(text){
+  if(watchdog) clearTimeout(watchdog);
+  var est = Math.min(45000, Math.max(7000, text.length * 260 + 4000));
+  watchdog = setTimeout(function(){
+    if(!playing) return;
+    curId++;
+    try{ speechSynthesis.cancel(); }catch(e){}
+    idx++; next();
+  }, est);
+}
+function trySpeak(text, useVoice){
+  var my = ++curId;
+  started = false; itemStart = Date.now(); setBar(); status();
+  try{ speechSynthesis.resume(); }catch(e){}
+  var u = new SpeechSynthesisUtterance(String(text).replace(/\n+/g, ' '));
+  u.lang = 'ja-JP'; u.rate = 1.0;
+  var v = useVoice ? pickVoice() : null;
+  if(v) u.voice = v;
+  u.onstart = function(){ if(my === curId){ started = true; status(); } };
+  u.onend = function(){ if(my === curId && playing){ idx++; next(); } };
+  u.onerror = function(){
+    if(my !== curId || !playing) return;
+    if(speechSynthesis.getVoices().length === 0){ stop('音声が見つかりません（この端末では読み上げできません）'); return; }
+    if(useVoice && attempts === 0){ attempts++; trySpeak(text, false); return; }
+    idx++; next();
+  };
+  armWatchdog(text);
+  try{ speechSynthesis.speak(u); }catch(e){ setTimeout(function(){ if(my === curId && playing){ idx++; next(); } }, 300); }
+}
+function next(){
+  if(!playing || paused) return;
+  if(idx >= items.length){ stop('読み上げ終了（全' + items.length + '項目）'); if(fill) fill.style.width = '100%'; return; }
+  attempts = 0;
+  trySpeak(items[idx], true);
+}
+if(btnStop) btnStop.onclick = function(){ if(playing) stop('停止しました'); };
+btnMain.onclick = function(){
+  if(panel.style.display !== 'none'){
+    panel.style.display = 'none';
+    btnMain.textContent = '🎧 リスニング（全レッスン読み上げ）';
+    if(playing) stop('停止しました');
+    return;
+  }
+  if((typeof LEVELS === 'undefined' && typeof NODES === 'undefined')){ return; }
+  if(!built){ buildText(); built = true; }
+  panel.style.display = 'block';
+  btnMain.textContent = '🎧 リスニングを閉じる';
+};
+btn.onclick = function(){
+  if(!('speechSynthesis' in window)){ if(st) st.textContent = 'このブラウザは読み上げに未対応です'; return; }
+  if(playing && !paused){
+    paused = true; curId++; clearTimers();
+    try{ speechSynthesis.cancel(); }catch(e){}
+    btn.textContent = '▶ 再開';
+    if(st) st.textContent = '一時停止中 ' + (idx + 1) + '/' + items.length + '（再開はこの項目の頭から）';
+    return;
+  }
+  if(playing && paused){
+    paused = false;
+    btn.textContent = '⏸ 一時停止';
+    if(st) st.textContent = '再開します';
+    attempts = 0;
+    clearTimers();
+    tickTimer = setInterval(status, 500);
+    trySpeak(items[idx], true);
+    return;
+  }
+  if((typeof LEVELS === 'undefined' && typeof NODES === 'undefined')){ if(st) st.textContent = 'データ読み込みに失敗しました'; return; }
+  items = buildItems(); idx = 0; playing = true; itemStart = Date.now();
+  btn.textContent = '⏸ 一時停止';
+  if(st) st.textContent = '準備中…';
+  if(fill) fill.style.width = '0%';
+  try{ speechSynthesis.cancel(); }catch(e){}
+  clearTimers();
+  tickTimer = setInterval(status, 500);
+  setTimeout(next, 200);
+};
+})();
+</script>
+<script>
+(function(){
+var btn = document.getElementById('btnGallery');
+var gal = document.getElementById('gallery');
+var built = false;
+function build(){
+var html = '';
+if (typeof LEVELS !== 'undefined' && typeof DIAG !== 'undefined') {
+LEVELS.forEach(function(lv, li){
+lv.lessons.forEach(function(ls, i){
+if (DIAG[ls.id]) html += '<div class="gal-item"><div class="gal-cap">第' + (li+1) + '章 第' + (i+1) + '課：' + ls.title + '</div><div class="gal-diag">' + DIAG[ls.id] + '</div></div>';
+});
+});
+} else if (typeof DIAG !== 'undefined') {
+Object.keys(DIAG).forEach(function(k){
+var cap = k;
+if (typeof NODES !== 'undefined' && NODES[k] && NODES[k].title) cap = NODES[k].title;
+html += '<div class="gal-item"><div class="gal-cap">' + cap + '</div><div class="gal-diag">' + DIAG[k] + '</div></div>';
+});
+}
+gal.innerHTML = html || '<div class="gal-cap">図解はありません</div>';
+}
+btn.onclick = function(){
+var show = gal.style.display !== 'block';
+if (show && !built) { build(); built = true; }
+gal.style.display = show ? 'block' : 'none';
+btn.textContent = show ? '🖼 図解一覧（復習用）を隠す' : '🖼 図解一覧（復習用）を表示';
+};
+})();
+</script>
+</div>
+
+<div class="toast" id="toast">💾 保存しました</div>
+
+<script>
+"use strict";
+/* ============ シルエット ============ */
+function sil(extra){
+return '<svg width="150" height="190" viewBox="0 0 120 150">'
++ '<circle cx="60" cy="34" r="17" fill="#141f52"/>'
++ '<path d="M22 150 C22 96 40 66 60 66 C80 66 98 96 98 150 Z" fill="#141f52"/>'
++ (extra || '') + '</svg>';
+}
+const CHARS = {
+sennin: sil('<path d="M28 26 L60 2 L92 26 L84 30 L60 14 L36 30 Z" fill="#141f52"/>'
++ '<path d="M48 44 L72 44 L66 92 L54 92 Z" fill="#141f52"/>'),
+ore: sil(''),
+none: ''
+};
+
+/* ============ カリキュラム ============ */
+/* teach: 説明ページ（クリックで送る） / retry: 補足説明 / quiz: 確認問題 */
+const LEVELS = [
+{ name:'1940年代 ノワールの誕生', desc:'名前の由来、ボガート、ワイルダー、そして様式の文法。', lessons:[
+{ id:'a1', title:'「フィルム・ノワール」とは何か', teach:[
+'フィルム・ノワールはフランス語で「黒い映画」。1946年、フランスの批評家ニーノ・フランクが、アメリカから届いた暗い犯罪映画の群れに付けた名前じゃ。',
+'面白いのは、アメリカの作り手は「ノワールを撮ろう」と思っていなかったこと。戦争の影、安い予算、犯罪小説の流行が重なって、結果として様式が生まれた。名前は後から来たのじゃ。'],
+retry:'ノワール＝「黒い映画」。1946年にフランスの批評家が命名。様式は結果として生まれた。',
+quiz:{ q:'フィルム・ノワールという名前を付けたのは？', choices:[
+{ t:'アメリカの映画会社', ok:false }, { t:'フランスの批評家', ok:true }, { t:'日本の配給会社', ok:false } ] } },
+{ id:'a2', title:'『マルタの鷹』(1941)', teach:[
+'私立探偵サム・スペード（ハンフリー・ボガート）のもとに、謎の依頼人と「黒い鳥の像」を巡る嘘つきたちが集まってくる。ジョン・ヒューストンの監督デビュー作じゃ。',
+'原作はダシール・ハメットのハードボイルド小説。甘さのない文体と会話の応酬が、ノワールの土台になった。この1本から古典ノワールの時代が始まるとされる。'],
+retry:'マルタの鷹＝ボガートの探偵スペード。ハメット原作、時代の起点。',
+quiz:{ q:'『マルタの鷹』の探偵は？', choices:[
+{ t:'フィリップ・マーロウ', ok:false }, { t:'サム・スペード', ok:true }, { t:'マイク・ハマー', ok:false } ] } },
+{ id:'a3', title:'『深夜の告白』(1944)', teach:[
+'ビリー・ワイルダー監督。保険のセールスマンが、客の妻（バーバラ・スタンウィック）に誘われて保険金殺人を計画する。ファム・ファタール——「運命の女」の代表作じゃ。',
+'物語は、傷ついた主人公が録音機に告白する形で語られる。結末の気配を漂わせながら過去を辿る「告白＋回想＋ナレーション」は、ノワールの基本文法になった。'],
+retry:'深夜の告白＝保険金殺人とファム・ファタール。告白形式の回想が文法に。',
+quiz:{ q:'『深夜の告白』の語りの仕掛けは？', choices:[
+{ t:'主人公の告白による回想', ok:true }, { t:'夢オチ', ok:false }, { t:'タイムトラベル', ok:false } ] } },
+{ id:'a4', title:'様式の文法と代表作', teach:[
+'ノワールの画面の約束事：ローキー照明（暗部が多い照明）、ブラインド越しの縞模様の影、雨の夜道、煙草の煙。安いセットをごまかす工夫が、そのまま様式美になった。',
+'この時期の必見は他に『大いなる眠り』(1946、ボガート＆バコール、筋が難解なことで有名）と『過去を逃れて』(1947、過去から逃げられない男の物語）。文法を覚えると、どれを観ても「ノワールだ」と分かるようになる。'],
+retry:'文法＝影・ブラインド・雨・ナレーション。代表作は大いなる眠り、過去を逃れて。',
+quiz:{ q:'ノワールの画面の特徴は？', choices:[
+{ t:'明るく均一な照明', ok:false }, { t:'影が多く、ブラインドの縞が落ちる画面', ok:true }, { t:'カラフルな色彩', ok:false } ] } },
+]},
+{ name:'1950年代 円熟と広がり', desc:'ハリウッドの自画像、強盗映画の型、過激化、そして終幕。', lessons:[
+{ id:'b1', title:'『サンセット大通り』(1950)', teach:[
+'ワイルダーが再び。冒頭、プールに浮かぶ死体——語り手はその死者本人という大胆なナレーションで始まる。落ちぶれた脚本家と、忘れられた大女優の物語じゃ。',
+'描かれるのはハリウッド自身の暗部。映画産業が自らの夢と残酷さを撮った、ノワールの円熟を示す1本じゃ。'],
+retry:'サンセット大通り＝死者のナレーション、ハリウッドの自画像。',
+quiz:{ q:'『サンセット大通り』の語り手は？', choices:[
+{ t:'冒頭で死んでいる主人公', ok:true }, { t:'探偵', ok:false }, { t:'監督本人', ok:false } ] } },
+{ id:'b2', title:'『アスファルト・ジャングル』(1950)', teach:[
+'ヒューストン監督の強盗映画。宝石強奪の計画を、仲間集めから実行、綻びまで淡々と描く。以後の「ケイパー（強盗）映画」の型はここから生まれた。',
+'悪人たちにも生活と哀れみがあるのがノワールの味。成功の寸前で崩れる運命の描き方は、このジャンルのお家芸じゃ。'],
+retry:'アスファルト・ジャングル＝強盗映画の型。計画→実行→綻び。',
+quiz:{ q:'『アスファルト・ジャングル』が型を作ったジャンルは？', choices:[
+{ t:'西部劇', ok:false }, { t:'強盗（ケイパー）映画', ok:true }, { t:'ミュージカル', ok:false } ] } },
+{ id:'b3', title:'『キッスで殺せ』(1955)', teach:[
+'探偵マイク・ハマーが拾った女から始まる、原子力時代のノワール。「光る箱」を巡る物語は、冷戦の不安そのものじゃ。暴力描写の過激さでも知られる。',
+'B級（低予算）の勢いが、A級にはない毒を生んだ好例。1950年代半ば、ノワールは明るさを失い、さらに黒くなっていく。'],
+retry:'キッスで殺せ＝原子力時代の不安と「光る箱」。B級の毒。',
+quiz:{ q:'『キッスで殺せ』の時代背景は？', choices:[
+{ t:'禁酒法時代', ok:false }, { t:'冷戦・原子力時代', ok:true }, { t:'西部開拓時代', ok:false } ] } },
+{ id:'b4', title:'『黒い罠』(1958)', teach:[
+'オーソン・ウェルズ監督・主演。国境の町を舞台に、冒頭は約3分のワンカット（長回し）で車が進み、爆発までを一息に見せる。有名な撮影の名場面じゃ。',
+'この作品は「古典ノワールの最後」とよく呼ばれる。50年代の終わりとともに、白黒犯罪映画の時代は幕を閉じていく。'],
+retry:'黒い罠＝ウェルズ、冒頭の長回し。古典ノワールの終幕。',
+quiz:{ q:'『黒い罠』が呼ばれる称号は？', choices:[
+{ t:'最初のノワール', ok:false }, { t:'古典ノワールの最後', ok:true }, { t:'唯一のカラー・ノワール', ok:false } ] } },
+]},
+{ name:'1960年代 変容と世界のノワール', desc:'カラー化と拡散、ヒッチコック、日本とフランスの暗い映画。', lessons:[
+{ id:'c1', title:'終わりと拡散', teach:[
+'1960年代、映画はカラーが標準になり、テレビが家庭に入った。スタジオ・システムも崩れ、白黒の犯罪映画という形のノワールは役目を終える。',
+'だが要素は死ななかった。影の美学、運命の女、裏切りの構造は、スリラーやスパイ映画、刑事ドラマへ拡散していく。これが「ネオ・ノワール（新しいノワール）」の始まりじゃ。'],
+retry:'形は終わり、要素は拡散。ネオ・ノワールへ。',
+quiz:{ q:'1960年代のノワールは？', choices:[
+{ t:'完全に消滅した', ok:false }, { t:'形を変えて他ジャンルへ拡散した', ok:true }, { t:'カラーで全盛になった', ok:false } ] } },
+{ id:'c2', title:'『サイコ』(1960)とヒッチコック圏', teach:[
+'ヒッチコック『サイコ』はノワールそのものではないが、金を持ち逃げする女とモーテルの影の美学は、ノワールの血を引く。あえて白黒で撮ったことも効果の一部じゃ。',
+'『恐怖の岬』(1962)では、復讐に来る元囚人をロバート・ミッチャム（『過去を逃れて』の主演）が演じた。ノワールの顔が、そのまま脅威として再登場する好例じゃ。'],
+retry:'サイコと恐怖の岬＝ノワールの血を引く60年代スリラー。',
+quiz:{ q:'『恐怖の岬』の元囚人を演じたのは？', choices:[
+{ t:'ロバート・ミッチャム（ノワールの顔）', ok:true }, { t:'ハンフリー・ボガート', ok:false }, { t:'オーソン・ウェルズ', ok:false } ] } },
+{ id:'c3', title:'日本のノワール', teach:[
+'日本にも暗い映画の系譜がある。黒澤明『天国と地獄』(1963)は誘拐劇で、前半の室内劇から後半の捜査へ、画面の設計が見事じゃ。',
+'日活では鈴木清順『東京流れ者』(1966)のような様式美の強い作品が生まれた。色とセットで魅せる日本のノワールは、世界にファンを持つ。'],
+retry:'日本のノワール＝天国と地獄、日活・清順の様式美。',
+quiz:{ q:'『天国と地獄』の監督は？', choices:[
+{ t:'小津安二郎', ok:false }, { t:'黒澤明', ok:true }, { t:'鈴木清順', ok:false } ] } },
+{ id:'c4', title:'フランスとネオ・ノワール', teach:[
+'ノワールと名付けたフランスは、自らも作り手になった。ジャン＝ピエール・メルヴィル『サムライ』(1967、アラン・ドロン）は、寡黙な殺し屋の様式美で、ネオ・ノワールの規範になった。',
+'アメリカでは『ポイント・ブランク』(1967)が、裏切られた男の復讐を硬質に描いた。60年代の終わりに、ノワールは「引用される様式」として生まれ変わる。'],
+retry:'サムライ＝仏ネオ・ノワールの規範。ポイント・ブランクも67年。',
+quiz:{ q:'『サムライ』の監督は？', choices:[
+{ t:'ゴダール', ok:false }, { t:'メルヴィル', ok:true }, { t:'トリュフォー', ok:false } ] } },
+]},
+{ name:'上級編 観るための型', desc:'観る順番、観る場所、観るポイント。卒業とシリーズの次。', lessons:[
+{ id:'d1', title:'入門の王道ルート', teach:[
+'観る順番は年代順がおすすめじゃ。『マルタの鷹』→『深夜の告白』→『サンセット大通り』→『黒い罠』。この4本で、誕生・文法・円熟・終幕が一通り掴める。',
+'1本ごとに、この道場の課を1つ読み返すと効果的じゃ。知ってから観るのと、観てから知るの、両方の楽しみがある。'],
+retry:'王道4本＝マルタの鷹→深夜の告白→サンセット大通り→黒い罠。',
+quiz:{ q:'入門ルートの最後（終幕）に置く作品は？', choices:[
+{ t:'マルタの鷹', ok:false }, { t:'黒い罠', ok:true }, { t:'サムライ', ok:false } ] } },
+{ id:'d2', title:'観る場所（合法的に）', teach:[
+'古い作品の一部は著作権が切れたパブリックドメインで、Internet Archive などで合法的に無料で観られる。ノワールでは『デトゥアー』(1945) や『D.O.A.』(1950) が有名じゃ。',
+'ただし権利状態は作品ごとに違う。配信サービスの特集や、Blu-ray の復刻も多い。まず「観られる形があるか」を探すのが第一歩じゃ。'],
+retry:'一部はパブリックドメインで合法的に無料。権利は作品ごとに確認。',
+quiz:{ q:'パブリックドメイン作品の注意点は？', choices:[
+{ t:'何でも自由に使える', ok:false }, { t:'権利状態は作品ごとに確認する', ok:true }, { t:'画質が必ず良い', ok:false } ] } },
+{ id:'d3', title:'観るポイント4つ', teach:[
+'観るときの型：①影の使い方（どこが暗いか）②ナレーションの有無と狙い ③ファム・ファタールがどう運命を動かすか ④結末の後味。この4点のメモを取りながら観ると、ただの「古い映画」が様式の読み物に変わる。',
+'分からなければ道場に戻る。図解一覧でその課の図を見返すのもよい。リスニングで流し聞きしてから観るのも、このシリーズの使い方じゃ。'],
+retry:'型は 影・ナレーション・ファム・ファタール・後味 の4点メモ。',
+quiz:{ q:'観るポイントに入らないものは？', choices:[
+{ t:'影の使い方', ok:false }, { t:'ナレーションの有無', ok:false }, { t:'上映当時の株価', ok:true } ] } },
+{ id:'d4', title:'卒業：年代を1本ずつ', teach:[
+'卒業じゃ。型はシンプルに：年代ごとに1本ずつ観て、1行メモを残す。それだけで、30年の系譜が自分のものになる。',
+'この先は1970年代——『チャイナタウン』(1974) に代表されるネオ・ノワールの全盛が待っている。シリーズの次巻はその時代を取り上げる予定じゃ（作るかどうかは、また相談しよう）。'],
+retry:'型は年代ごとに1本＋1行メモ。次は1970年代ネオ・ノワール。',
+quiz:{ q:'卒業の型は？', choices:[
+{ t:'年代ごとに1本ずつ観て1行メモ', ok:true }, { t:'一晩で10本観る', ok:false }, { t:'新しい順に観る', ok:false } ] } },
+]},
+];
+
+/* ============ エンジン ============ */
+const SAVE_KEY = 'noirDojoSaveV1';
+const TOTAL = LEVELS.reduce((a,l)=>a+l.lessons.length,0);
+let done = {};
+try{ const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); if(s && s.done) done = s.done;}catch(e){}
+let soundOn = true, typing = null, advanceFn = null;
+let cur = { level:0, lesson:0, pages:[], page:0};
+
+const $ = id => document.getElementById(id);
+const bgEl=$('bg'), charEl=$('char'), nameEl=$('namebox'), textEl=$('text'),
+boxEl=$('textbox'), chEl=$('choices'), nextEl=$('nextmark');
+
+function beep(freq, dur, delay, vol){
+if(!soundOn) return;
+try{
+const ctx = beep.ctx || (beep.ctx = new (window.AudioContext||window.webkitAudioContext)());
+if(ctx.state === 'suspended') ctx.resume();
+const o = ctx.createOscillator(), g = ctx.createGain();
+o.type='square'; o.frequency.value = freq || 660;
+g.gain.value = vol || 0.03;
+o.connect(g); g.connect(ctx.destination);
+const t = ctx.currentTime + (delay||0);
+o.start(t); o.stop(t + (dur||0.06));
+}catch(e){}
+}
+function save(){
+try{ localStorage.setItem(SAVE_KEY, JSON.stringify({done})); toast();}catch(e){}
+}
+function toast(){
+const t=$('toast'); t.classList.add('show');
+clearTimeout(toast.tm); toast.tm=setTimeout(()=>t.classList.remove('show'), 900);
+}
+function doneCount(){ return Object.keys(done).filter(k=>done[k]).length;}
+function renderProgress(now){
+$('pDone').textContent = doneCount();
+$('bDone').style.width = (doneCount()/TOTAL*100) + '%';
+if(now) $('pNow').textContent = now;
+}
+function setScene(bg, char, name){
+bgEl.className = 'bg ' + bg;
+charEl.innerHTML = CHARS[char] || '';
+charEl.style.display = char && char!== 'none'? '': 'none';
+if(name){ nameEl.textContent = name; nameEl.style.display='';} else nameEl.style.display='none';
+}
+function typeText(txt, onDoneTyping){ speak(txt);
+clearInterval(typing);
+textEl.textContent=''; nextEl.style.display='none';
+boxEl.scrollTop = 0;
+advanceFn = null;
+let i=0;
+typing = setInterval(()=>{
+i++;
+textEl.textContent = txt.slice(0, i);
+boxEl.scrollTop = boxEl.scrollHeight;
+const ch = txt.charAt(i-1);
+if(ch && ch!== ' ' && ch!== '\n' && i % 2 === 1){
+beep(980 + Math.random()*520, 0.018, 0, 0.012);
+}
+if(i >= txt.length){
+clearInterval(typing); typing=null;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+}
+}, 26);
+boxEl.onclick = ()=>{
+if(typing){
+clearInterval(typing); typing=null;
+textEl.textContent = txt; boxEl.scrollTop = boxEl.scrollHeight;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+} else if(advanceFn){
+const f = advanceFn; advanceFn = null; f();
+}
+};
+}
+document.addEventListener('keydown', e=>{
+if(!typing && advanceFn && (e.key === ' ' || e.key === 'Enter')){
+e.preventDefault();
+const f = advanceFn; advanceFn = null; f();
+}
+});
+function showChoices(items){
+chEl.innerHTML='';
+items.forEach(it=>{
+const b=document.createElement('button');
+b.className='choice' + (it.done? ' done': '');
+b.textContent=it.t;
+b.onclick=()=>{ beep(520,.06); setTimeout(()=>beep(780,.07),70); chEl.classList.remove('show'); it.fn();};
+chEl.appendChild(b);
+});
+chEl.classList.add('show');
+const dg = $('diagram');
+if(dg && dg.style.display === 'block'){
+$('screen').classList.add('diagmenu');
+requestAnimationFrame(()=>{
+const sr = $('screen').getBoundingClientRect();
+const dr = dg.getBoundingClientRect();
+chEl.style.top = Math.max(0, Math.round(dr.bottom - sr.top + 8)) + 'px';
+});
+} else { $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+}
+function hideChoices(){ chEl.classList.remove('show'); chEl.innerHTML=''; chEl.style.top=''; $('screen').classList.remove('diagmenu'); }
+
+
+/* ============ 図解（8bit風SVG・黒板） ============ */
+function _cm(x,y,ch,fill){ return '<rect x="'+(x+3)+'" y="'+(y+3)+'" width="30" height="30" fill="#000" opacity=".45"/><rect x="'+x+'" y="'+y+'" width="30" height="30" fill="'+fill+'" stroke="#dfe6ff" stroke-width="2"/><text x="'+(x+15)+'" y="'+(y+21)+'" font-size="14" fill="#05060f" text-anchor="middle" font-weight="bold">'+ch+'</text>'; }
+function _ar(x1,y1,x2,y2,col){ col=col||'#8fa3d9'; var pts; if(Math.abs(x2-x1)>=Math.abs(y2-y1)){ pts = x2>x1 ? [[x2,y2],[x2-10,y2-6],[x2-10,y2+6]] : [[x2,y2],[x2+10,y2-6],[x2+10,y2+6]]; } else { pts = y2>y1 ? [[x2,y2],[x2-6,y2-10],[x2+6,y2-10]] : [[x2,y2],[x2-6,y2+10],[x2+6,y2+10]]; } return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+col+'" stroke-width="4"/><polygon points="'+pts.map(function(p){return p.join(',');}).join(' ')+'" fill="'+col+'"/>'; }
+function _ln(x1,y1,x2,y2,col){ return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+(col||'#8fa3d9')+'" stroke-width="3"/>'; }
+function _tx(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'" text-anchor="middle">'+str+'</text>'; }
+function _txl(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'">'+str+'</text>'; }
+function _bx(x,y,w,h,label,fill){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'" stroke="#8fa3d9" stroke-width="2"/><text x="'+(x+w/2)+'" y="'+(y+h/2+5)+'" font-size="12" fill="#fff" text-anchor="middle">'+label+'</text>'; }
+function _tag(x,y,str,col){ var w=str.length*12+12; return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="20" fill="'+col+'"/><text x="'+(x+w/2)+'" y="'+(y+14)+'" font-size="11" fill="#05060f" text-anchor="middle" font-weight="bold">'+str+'</text>'; }
+function _svg(inner){ return '<svg viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'+inner+'</svg>'; }
+var BL='#4a6bff', YL='#ffd94a', GN='#7ee787', RD='#ff7b72', PU='#b18cff', GY='#5a6b9e', DM='#8fa3d9';
+const DIAG = {
+a1: _svg(_tx(180,16,'名前は後から来た',DM,12)
+ + _bx(2,44,110,38,'米で量産','#1b2a6e') + _ar(112,63,124,63)
+ + _bx(124,44,110,38,'1946 命名','#1b2a6e') + _ar(234,63,246,63)
+ + _bx(246,44,110,38,'フィルム・ノワール','#1b2a6e')),
+a2: _svg(_tx(180,16,'『マルタの鷹』(1941)',DM,12)
+ + _bx(14,36,150,40,'探偵スペード','#1b2a6e') + _bx(196,36,150,40,'黒い鳥の像','#1b2a6e')
+ + _tx(180,102,'嘘の応酬が物語を運ぶ',YL,12)),
+a3: _svg(_tx(180,16,'『深夜の告白』の骨格',DM,12)
+ + _bx(8,44,76,38,'保険','#1b2a6e') + _ar(84,63,98,63)
+ + _bx(98,44,76,38,'誘惑','#1b2a6e') + _ar(174,63,188,63)
+ + _bx(188,44,76,38,'殺人','#1b2a6e') + _ar(264,63,278,63)
+ + _bx(278,44,76,38,'告白','#1b2a6e')),
+a4: _svg(_tx(180,16,'様式の文法：影と雨の夜',DM,12)
+ + _ln(50,20,270,110,DM) + _ln(50,48,300,124,DM) + _ln(50,76,320,126,DM)
+ + _tag(216,10,'ブラインドの影',YL)),
+b1: _svg(_tx(180,16,'『サンセット大通り』(1950)',DM,12)
+ + _bx(8,44,104,38,'死者の語り','#1b2a6e') + _ar(112,63,128,63)
+ + _bx(128,44,104,38,'落ちぶれた脚本家','#1b2a6e') + _ar(232,63,248,63)
+ + _bx(248,44,104,38,'大女優の屋敷','#1b2a6e')),
+b2: _svg(_tx(180,16,'強盗映画の型',DM,12)
+ + _bx(8,44,76,38,'計画','#1b2a6e') + _ar(84,63,98,63)
+ + _bx(98,44,76,38,'実行','#1b2a6e') + _ar(174,63,188,63)
+ + _bx(188,44,76,38,'綻び','#1b2a6e') + _ar(264,63,278,63)
+ + _bx(278,44,76,38,'全滅','#1b2a6e')),
+b3: _svg(_tx(180,16,'『キッスで殺せ』(1955)',DM,12)
+ + _bx(80,38,200,42,'光る箱','#4a1420')
+ + _tx(180,104,'冷戦・原子力時代の不安',YL,12)),
+b4: _svg(_tx(180,16,'冒頭の長回し（約3分）',DM,12)
+ + _ln(24,74,336,74,DM)
+ + _cm(24,59,'車',GN) + _cm(168,59,'進',BL) + _cm(306,59,'爆',YL)
+ + _tx(39,112,'国境の検問',DM,11) + _tx(183,112,'ワンカットで進む',DM,11) + _tx(321,112,'爆発',DM,11)),
+c1: _svg(_tx(180,16,'ノワールの30年',DM,12)
+ + _bx(2,44,110,38,'1940年代','#1b2a6e') + _ar(112,63,124,63)
+ + _bx(124,44,110,38,'1950年代','#1b2a6e') + _ar(234,63,246,63)
+ + _bx(246,44,110,38,'1960年代','#1b2a6e')
+ + _tx(180,104,'白黒の全盛 → 円熟 → カラーと拡散',DM,12)),
+c2: _svg(_tx(180,16,'ヒッチコック圏',DM,12)
+ + _bx(20,44,140,38,'サイコ (1960)','#1b2a6e') + _ar(160,63,200,63)
+ + _bx(200,44,140,38,'恐怖の岬 (1962)','#1b2a6e')
+ + _tx(180,104,'ノワールの血を引くスリラー',YL,12)),
+c3: _svg(_tx(180,16,'日本のノワール',DM,12)
+ + _bx(14,44,150,38,'天国と地獄 (1963)','#1b2a6e') + _bx(196,44,150,38,'東京流れ者 (1966)','#1b2a6e')
+ + _tx(180,104,'黒澤明と日活の様式美',YL,12)),
+c4: _svg(_tx(180,16,'世界のノワール (1967)',DM,12)
+ + _bx(14,44,150,38,'サムライ (1967)','#1b2a6e') + _bx(196,44,150,38,'ポイント・ブランク','#1b2a6e')
+ + _tx(180,104,'仏と米、ネオ・ノワールの夜明け',YL,12)),
+d1: _svg(_tx(180,16,'入門の王道ルート',DM,12)
+ + _bx(8,44,76,38,'マルタの鷹','#1b2a6e') + _ar(84,63,98,63)
+ + _bx(98,44,76,38,'深夜の告白','#1b2a6e') + _ar(174,63,188,63)
+ + _bx(188,44,76,38,'サンセット','#1b2a6e') + _ar(264,63,278,63)
+ + _bx(278,44,76,38,'黒い罠','#1b2a6e')),
+d2: _svg(_tx(180,16,'観る場所',DM,12)
+ + _bx(14,36,150,40,'Internet Archive','#1b2a6e') + _bx(196,36,150,40,'配信・Blu-ray','#1b2a6e')
+ + _tx(180,102,'パブリックドメインは作品ごとに確認',DM,12)),
+d3: _svg(_tx(180,16,'観るポイント',DM,12)
+ + _tag(24,32,'影の使い方',YL) + _tag(120,32,'ナレーション',YL) + _tag(228,32,'後味',YL)
+ + _tag(24,66,'ファム・ファタール',GN) + _tag(156,66,'1行メモ',GN)),
+d4: _svg(_tx(180,16,'卒業の型',DM,12)
+ + _bx(8,44,104,38,'年代ごとに1本','#1b2a6e') + _ar(112,63,128,63)
+ + _bx(128,44,104,38,'1行メモ','#1b2a6e') + _ar(232,63,248,63)
+ + _bx(248,44,104,38,'次は1970年代','#1b2a6e')),
+};
+function showDiagFor(id){
+const d = $('diagram');
+if(DIAG[id]){ d.innerHTML = DIAG[id]; d.style.display = 'block'; }
+else d.style.display = 'none';
+}
+function hideDiag(){ $('diagram').style.display = 'none'; $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+
+/* ============ 画面遷移 ============ */
+function goLevels(){
+hideChoices();
+hideDiag();
+setScene('bg-room','none','');
+renderProgress('レベル選択');
+const dc = doneCount();
+const intro = dc === 0
+? '「よく来た。わしがノワール仙人じゃ」\nテーマは「1940〜60年代ノワールの系譜」。全' + TOTAL + '課。\n好きな編からでよい。分かるまで、何度でも付き合うぞ。'
+: '「戻ったか。現在の理解済みは ' + dc + ' / ' + TOTAL + ' 課じゃ」\n続きをやるもよし、済んだ課を復習するもよし。';
+typeText(intro, ()=>{
+showChoices(LEVELS.map((lv, i)=>{
+const c = lv.lessons.filter(l=>done[l.id]).length;
+return { t: lv.name + '（' + c + '/' + lv.lessons.length + ' 済）', done: c === lv.lessons.length,
+fn: ()=>goLessons(i)};
+}));
+});
+}
+function goLessons(li){
+hideChoices();
+hideDiag();
+const lv = LEVELS[li];
+cur.level = li;
+setScene('bg-room','sennin','ノワール仙人');
+renderProgress(lv.name);
+typeText('\n' + lv.desc + '\n課を選ぶのじゃ。✔ は理解済み。復習は何度でもできるぞ。', ()=>{
+showChoices(
+lv.lessons.map((ls, i)=>({ t: ls.title, done:!!done[ls.id], fn: ()=>startLesson(li, i, false)}))
+.concat([{ t:'レベル選択に戻る', fn: goLevels}])
+);
+});
+}
+function startLesson(li, idx, withRetry){
+hideChoices();
+const ls = LEVELS[li].lessons[idx];
+cur.level = li; cur.lesson = idx;
+cur.pages = ls.teach.slice();
+if(withRetry) cur.pages.push('\n' + ls.retry);
+cur.page = 0;
+setScene('bg-term','sennin','ノワール仙人');
+renderProgress(LEVELS[li].name + '：' + ls.title);
+showDiagFor(ls.id);
+teachPage();
+}
+function teachPage(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+const isLast = cur.page >= cur.pages.length - 1;
+typeText('\n' + cur.pages[cur.page], ()=>{
+if(isLast){ showCheck();}
+else { advanceFn = ()=>{ cur.page++; teachPage();};}
+});
+}
+function showCheck(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+showChoices([
+{ t:'これは分かった！（確認問題へ）', fn: showQuiz},
+{ t:'分からない（もう一度聞く）', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'レッスン一覧に戻る', fn: ()=>goLessons(cur.level)}
+]);
+}
+function showQuiz(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+setScene('bg-term','sennin','ノワール仙人');
+typeText('\n' + ls.quiz.q, ()=>{
+showChoices(ls.quiz.choices.map(c=>({
+t: c.t,
+fn: ()=>{ if(c.ok) completeLesson(); else wrongAnswer();}
+})));
+});
+}
+function wrongAnswer(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+beep(220,.12); setTimeout(()=>beep(180,.14),120);
+typeText('「むむ、違うぞ。焦らなくてよい」\n' + ls.retry, ()=>{
+showChoices([
+{ t:'もう一度説明を聞く', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'もう一度問題に挑む', fn: showQuiz}
+]);
+});
+}
+function completeLesson(){
+hideDiag();
+const li = cur.level, idx = cur.lesson;
+const ls = LEVELS[li].lessons[idx];
+done[ls.id] = true; save();
+[523,659,784,1046].forEach((f,i)=>beep(f,.1,i*0.11));
+renderProgress(LEVELS[li].name + '：' + ls.title + ' ✔');
+const dc = doneCount();
+const levelDone = LEVELS[li].lessons.every(l=>done[l.id]);
+let msg = '「うむ、分かったようじゃな」\n理解済み ✔（合計 ' + dc + ' / ' + TOTAL + ' 課）';
+if(dc >= TOTAL){
+setScene('bg-way','sennin','ノワール仙人');
+msg += '\n\n――全課目、修了じゃ！\nここから先は実地あるのみ。Doom を開いて、指で覚えていくのじゃ。卒業おめでとう！';
+} else if(levelDone){
+msg += '\nは全課修了じゃ。よくやった。';
+}
+typeText(msg, ()=>{
+const items = [];
+if(dc < TOTAL){
+if(idx + 1 < LEVELS[li].lessons.length){
+items.push({ t:'次の例題へ（' + LEVELS[li].lessons[idx+1].title + '）', fn: ()=>startLesson(li, idx+1, false)});
+} else if(li + 1 < LEVELS.length){
+items.push({ t:'次の編へ（' + LEVELS[li+1].name + '）', fn: ()=>goLessons(li+1)});
+}
+}
+items.push({ t:'レッスン一覧に戻る', fn: ()=>goLessons(li)});
+items.push({ t:'レベル選択に戻る', fn: goLevels});
+showChoices(items);
+});
+}
+
+/* ============ ボタン類 ============ */
+$('btnEnter').onclick = ()=>{ beep(660,.06); $('title').style.display='none'; goLevels();};
+$('btnLevels').onclick = ()=>{ $('title').style.display='none'; goLevels();};
+$('btnReset').onclick = ()=>{
+done = {}; save(); renderProgress('タイトル');
+$('title').style.display='flex';
+};
+$('btnSound').onclick = (e)=>{
+soundOn =!soundOn;
+e.target.textContent = soundOn? '🔊 音ON': '🔇 音OFF';
+if(soundOn) beep(700,.06);
+};
+renderProgress('タイトル');
+
+let ttsOn = false;
+try{ ttsOn = localStorage.getItem('advTtsV1') === '1'; }catch(e){}
+const btnTts = document.getElementById('btnTts');
+function updTtsBtn(){ if(btnTts) btnTts.textContent = ttsOn ? '🗣 読上ON' : '🗣 読上OFF'; }
+function speak(txt){
+  if(!ttsOn || !('speechSynthesis' in window)) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(String(txt).replace(/\n+/g, ' '));
+    u.lang = 'ja-JP'; u.rate = 1.0;
+    const vs = speechSynthesis.getVoices();
+    const jv = vs.find(v => v.lang && v.lang.toLowerCase().indexOf('ja') === 0) || vs[0];
+    if(jv) u.voice = jv;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+if(btnTts) btnTts.onclick = () => {
+  ttsOn = !ttsOn;
+  try{ localStorage.setItem('advTtsV1', ttsOn ? '1' : '0'); }catch(e){}
+  updTtsBtn();
+  if(ttsOn){ speak(textEl.textContent); setTimeout(checkVoices, 800); }
+  else if('speechSynthesis' in window) speechSynthesis.cancel();
+};
+function checkVoices(){
+  if(!ttsOn || !btnTts || !('speechSynthesis' in window)) return;
+  if(speechSynthesis.getVoices().length === 0) btnTts.textContent = '🗣 音声なし';
+  else updTtsBtn();
+}
+if('speechSynthesis' in window) speechSynthesis.onvoiceschanged = checkVoices;
+updTtsBtn();
+setTimeout(checkVoices, 800);
+</script>
+</body>
+</html>
