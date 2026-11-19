@@ -683,6 +683,9 @@ function speak(txt){
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(String(txt).replace(/\n+/g, ' '));
     u.lang = 'ja-JP'; u.rate = 1.0;
+    const vs = speechSynthesis.getVoices();
+    const jv = vs.find(v => v.lang && v.lang.toLowerCase().indexOf('ja') === 0) || vs[0];
+    if(jv) u.voice = jv;
     speechSynthesis.speak(u);
   }catch(e){}
 }
@@ -690,10 +693,17 @@ if(btnTts) btnTts.onclick = () => {
   ttsOn = !ttsOn;
   try{ localStorage.setItem('advTtsV1', ttsOn ? '1' : '0'); }catch(e){}
   updTtsBtn();
-  if(ttsOn) speak(textEl.textContent);
+  if(ttsOn){ speak(textEl.textContent); setTimeout(checkVoices, 800); }
   else if('speechSynthesis' in window) speechSynthesis.cancel();
 };
+function checkVoices(){
+  if(!ttsOn || !btnTts || !('speechSynthesis' in window)) return;
+  if(speechSynthesis.getVoices().length === 0) btnTts.textContent = '🗣 音声なし';
+  else updTtsBtn();
+}
+if('speechSynthesis' in window) speechSynthesis.onvoiceschanged = checkVoices;
 updTtsBtn();
+setTimeout(checkVoices, 800);
 </script>
 </body>
 </html>
