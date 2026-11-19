@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<!-- build: 2026-11-19 13:42:45 JST -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ホームラボ道場 ― NixOS×スマホ×Tailscaleの使いこなし</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{
+--tb:29%;
+--ink:#dfe6ff; --dim:#8fa3d9; --blue:#3355ff; --panel:#0a0e24;
+--win:#101736; --accent:#ffd94a; --good:#7ee787; --bad:#ff7b72;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+body{margin:0;background:#05060f;color:var(--ink);
+font-family:"DotGothic16","Hiragino Kaku Gothic ProN","Noto Sans JP",monospace,sans-serif;
+-webkit-font-smoothing:none;font-smooth:never;
+display:flex;justify-content:center;padding:14px 10px 40px}
+.cab{width:100%;max-width:760px}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{font-weight:900;letter-spacing:2px;font-size:18px;color:#fff;
+text-shadow:2px 2px 0 var(--blue), 4px 4px 0 #101736}
+.logo small{display:block;font-size:11px;color:var(--dim);letter-spacing:1px;text-shadow:none}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer}
+.sbtn{background:var(--win);color:var(--ink);border:2px solid var(--dim);
+padding:4px 10px;font-size:12px;border-radius:4px}
+.sbtn:hover{border-color:#fff;color:#fff}
+.params{display:flex;gap:14px;background:var(--panel);border:2px solid var(--dim);
+padding:6px 12px;font-size:12px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.params b{color:var(--accent)}
+.bar{display:inline-block;width:120px;height:10px;background:#1a2148;vertical-align:middle;margin-left:4px;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--good);display:block}
+.screen{position:relative;border:6px solid var(--dim);border-radius:6px;overflow:hidden;
+aspect-ratio:16/10;background:#000;image-rendering:pixelated}
+.screen::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+background:repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 3px, transparent 3px 6px)}
+.bg{position:absolute;inset:0;transition:opacity.4s}
+.bg-room{background:linear-gradient(#0d1440 0 55%, #182257 55% 100%)}
+.bg-room::before{content:"";position:absolute;right:8%;top:8%;width:110px;height:130px;
+background:linear-gradient(#1b2a63,#0d1440);border:6px solid #05081a;
+box-shadow:0 0 0 4px #26398a, inset 0 0 0 3px #26398a}
+.bg-term{background:radial-gradient(ellipse at 50% 40%, #06280f 0%, #02140a 70%)}
+.bg-term::before{content:"$ tailscale status ❄ jellyfin ❄ immich ❄ syncthing ❄ nixos-rebuild ❄ restic ❄";
+position:absolute;inset:6%;color:#2f9e44;font-size:13px;line-height:2.1;opacity:.55;
+font-family:ui-monospace,Menlo,monospace;word-break:break-all}
+.bg-way{background:linear-gradient(#1b1040 0%, #4a2a7a 55%, #c65b8f 82%, #ffb36b 100%)}
+.stars{position:absolute;inset:0;z-index:1;
+background-image:radial-gradient(2px 2px at 12% 18%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 32% 8%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 55% 22%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 74% 10%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 88% 26%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 44% 30%, #9fb4ff 50%, transparent 51%)}
+.char{position:absolute;bottom:var(--tb);left:50%;transform:translateX(-50%);z-index:2;
+filter:drop-shadow(0 0 10px rgba(60,100,255,.75))}
+.char svg{display:block}
+.ground{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:1;
+background:linear-gradient(transparent, rgba(3,5,16,.92) 30%)}
+.namebox{position:absolute;left:14px;bottom:calc(var(--tb) + 8px);z-index:8;color:#ffffff;
+background:var(--win);border:3px solid var(--dim);padding:2px 14px;font-weight:700;font-size:16px;
+letter-spacing:.06em;text-shadow:2px 2px 0 #000}
+.textbox{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:7;color:#ffffff;
+background:rgba(4,6,20,.97);border-top:4px solid var(--dim);
+padding:12px 16px;font-size:18px;line-height:1.8;letter-spacing:.06em;
+text-shadow:2px 2px 0 #000;
+cursor:pointer;white-space:pre-wrap;overflow-y:auto;overflow-x:hidden;
+scrollbar-width:thin;scrollbar-color:#3355ff #0a0e24}
+.textbox::-webkit-scrollbar{width:10px}
+.textbox::-webkit-scrollbar-track{background:#0a0e24}
+.textbox::-webkit-scrollbar-thumb{background:#3355ff;border:2px solid #04061a}
+.textbox.next{position:absolute;right:12px;bottom:6px;color:var(--accent);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.choices{position:absolute;top:0;left:0;right:0;bottom:calc(var(--tb) + 46px);z-index:9;display:none;flex-direction:column;
+align-items:center;justify-content:center;gap:12px;background:rgba(3,5,16,.78);padding:16px;overflow-y:auto}
+.choices.show{display:flex}
+.choice{width:min(92%,520px);background:#05081f;color:#ffffff;font-weight:700;
+border:3px solid #d5ddff;padding:12px 16px;font-size:18px;letter-spacing:.08em;
+text-shadow:2px 2px 0 #000;text-align:left;border-radius:4px}
+.choice:hover{border-color:var(--accent);color:#fff;background:#1b2a6e}
+.choice::before{content:"▶ ";color:var(--accent)}
+.choice.done{border-color:var(--good)}
+.choice.done::before{content:"✔ ";color:var(--good)}
+.title{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
+justify-content:center;gap:14px;background:radial-gradient(ellipse at 50% 35%, #14205e 0%, #05060f 75%);text-align:center;padding:16px}
+.title h1{margin:0;font-size:clamp(26px,6vw,44px);letter-spacing:3px;color:#fff;
+text-shadow:3px 3px 0 var(--blue), 6px 6px 0 #101736}
+.title p{color:#d5ddff;font-size:14px;margin:0;line-height:1.9}
+.tbtn{background:#05081f;color:#fff;font-weight:700;border:3px solid #d5ddff;padding:10px 26px;font-size:17px;letter-spacing:.08em;border-radius:4px}
+.tbtn:hover{border-color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
+border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;opacity:0;transition:opacity.3s;z-index:50;pointer-events:none}
+.toast.show{opacity:1}
+#diagram{transition:width .25s}
+.screen.diagmenu #diagram{width:min(430px,74%)}
+.screen.diagmenu .choices{bottom:calc(var(--tb) + 8px);flex-direction:row;flex-wrap:wrap;align-content:flex-start;justify-content:center;gap:8px}
+.screen.diagmenu .choice{flex:1 1 28%;width:auto;margin:0;text-align:center;font-size:14px;padding:10px 8px;line-height:1.5}
+
+#diagram{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:min(560px,94%);z-index:5;background:rgba(3,4,16,.88);border:2px solid var(--dim);padding:6px;display:none}
+#diagram svg{width:100%;height:auto;display:block}
+
+footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
+kbd{display:inline-block;background:#21262d;border:1px solid var(--dim);border-bottom-width:2px;
+border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+@media (max-width:560px){.textbox{font-size:15px}.char{bottom:var(--tb)}}
+
+/* ===== スマホ縦長対応：画面を縦に取り、本文ボックスの割合を広げる ===== */
+@media (orientation:portrait) and (max-width:760px){
+:root{--tb:46%}
+.screen{aspect-ratio:auto;height:80vh;height:80dvh}
+.textbox{font-size:16px;line-height:1.75}
+.char svg{width:100px;height:127px}
+.choice{font-size:16px;padding:10px 14px}
+.choices{overflow-y:auto}
+.title h1{font-size:25px}
+.title p{font-size:13px}
+.params{gap:8px;font-size:11px}
+.bar{width:80px}
+}
+
+/* ===== 選択肢が上に隠れる問題の修正：中央寄せのまま、溢れたら先頭からスクロール ===== */
+.choices{justify-content:flex-start;overflow-y:auto}
+.choice:first-child{margin-top:auto}
+.choice:last-child{margin-bottom:auto}
+</style>
+</head>
+<body>
+<div class="cab">
+<header>
+<div class="logo">ホームラボ道場<small>― NixOS × スマホ × Tailscale 全16課 ―</small></div>
+<div class="btns">
+<button class="sbtn" id="btnSound">🔊 音ON</button><button class="sbtn" id="btnTts">🗣 読上OFF</button>
+<button class="sbtn" id="btnLevels">🏠 レベル選択</button>
+<button class="sbtn" id="btnReset">🗑 進捗リセット</button>
+</div>
+</header>
+
+<div class="params">
+<span>理解済み <b id="pDone">0</b> / 16 課<span class="bar"><i id="bDone" style="width:0%"></i></span></span>
+<span style="color:var(--dim)">現在：<span id="pNow">タイトル</span></span>
+<span style="margin-left:auto;color:var(--dim)">💾 進捗は自動保存（localStorage）</span>
+</div>
+
+<div class="screen" id="screen">
+<div class="bg bg-room" id="bg"></div>
+<div class="stars"></div>
+<div class="ground"></div>
+<div class="char" id="char"></div>
+<div id="diagram"></div>
+<div class="namebox" id="namebox" style="display:none"></div>
+<div class="textbox" id="textbox"><span id="text"></span><span class="next" id="nextmark" style="display:none">▼</span></div>
+<div class="choices" id="choices"></div>
+<div class="title" id="title">
+<h1>ホームラボ道場</h1>
+<p>テーマは「自宅サーバーの守りと可視化」。<br>
+Jellyfin／Immich／Syncthing の先、セキュリティ・見える化・運用の型まで全16課。<br>
+「分かった！」で次へ、「分からない」で何度でもやり直し。</p>
+<button class="tbtn" id="btnEnter">▶ 道場に入る</button>
+<p>進捗（理解済み ✔）はブラウザに自動保存されます</p>
+</div>
+</div>
+
+<footer>
+遊び方：説明を読んだら「これは分かった！」か「分からない」を選ぶだけ。分かったら確認問題が1問出て、正解でその課は理解済み ✔。
+間違えてもペナルティなし、補足説明を読んで何度でも挑めます。本文クリックで文字送り、長い文は自動スクロール＋手動スクロール可。
+各課では自宅ネットのつながりを図で描いて、仕組みを見える化します。設定は NixOS と Tailscale の作法で書いてあります。実際に手元の常駐機と Tailscale の管理画面を眺めながら進めると一番効きます。
+</footer>
+<style>
+#galleryWrap{margin:16px 0 4px;text-align:center}
+#gallery{display:none;text-align:left;margin-top:12px}
+.gal-item{background:#070a1c;border:2px solid #2c3a75;padding:10px 12px;margin:0 0 12px}
+.gal-cap{color:#ffd94a;font-size:14px;margin-bottom:8px}
+.gal-diag svg{width:100%;height:auto;display:block}
+</style>
+<div id="galleryWrap">
+<div style="margin-bottom:10px"><button class="sbtn" id="btnListen">🎧 リスニング（全レッスン読み上げ）</button>
+<div id="listenPanel" style="display:none;text-align:left;margin-top:10px;background:#070a1c;border:2px solid #2c3a75;padding:10px 12px">
+<div style="margin-bottom:8px"><button class="sbtn" id="btnPlay">▶ ブラウザ音声で再生</button> <span id="listenStatus" style="font-size:12px;color:#9fb7ff"></span></div>
+<div style="height:8px;background:#1a2350;border:1px solid #2c3a75;margin-bottom:8px"><div id="listenFill" style="height:100%;width:0%;background:#ffd94a"></div></div>
+<div style="font-size:12px;color:#9fb7ff;margin-bottom:8px">PCでは Read Aloud 拡張機能で、この下のテキストをそのまま読み上げられます。</div>
+<div id="listenText" style="color:#fff;font-size:15px;line-height:1.7"></div>
+</div></div>
+<button class="sbtn" id="btnGallery">🖼 図解一覧（復習用）を表示</button>
+<div id="gallery"></div>
+</div>
+<script>
+(function(){
+var btnMain = document.getElementById('btnListen');
+var panel = document.getElementById('listenPanel');
+var btn = document.getElementById('btnPlay');
+var st = document.getElementById('listenStatus');
+var fill = document.getElementById('listenFill');
+var lt = document.getElementById('listenText');
+if(!btnMain || !panel || !btn) return;
+var playing = false, items = [], idx = 0, curId = 0, watchdog = null, tickTimer = null, itemStart = 0, started = false, attempts = 0, built = false;
+function buildItems(){
+  var arr = [];
+  LEVELS.forEach(function(ch, ci){
+    arr.push('第' + (ci + 1) + '章。' + ch.name);
+    ch.lessons.forEach(function(ls){
+      arr.push(ls.title);
+      (ls.teach || []).forEach(function(t){ arr.push(t); });
+    });
+  });
+  return arr;
+}
+function buildText(){
+  lt.innerHTML = '';
+  LEVELS.forEach(function(ch, ci){
+    var h = document.createElement('div');
+    h.style.cssText = 'color:#ffd94a;font-weight:bold;margin:14px 0 6px';
+    h.textContent = '第' + (ci + 1) + '章 ' + ch.name;
+    lt.appendChild(h);
+    ch.lessons.forEach(function(ls){
+      var t = document.createElement('div');
+      t.style.cssText = 'font-weight:bold;margin:10px 0 4px';
+      t.textContent = ls.title;
+      lt.appendChild(t);
+      (ls.teach || []).forEach(function(tx){
+        var p = document.createElement('div');
+        p.style.cssText = 'margin:0 0 8px;white-space:pre-wrap';
+        p.textContent = tx;
+        lt.appendChild(p);
+      });
+    });
+  });
+}
+function pickVoice(){
+  var vs = speechSynthesis.getVoices();
+  for(var i = 0; i < vs.length; i++){ if(vs[i].lang && vs[i].lang.toLowerCase().indexOf('ja') === 0) return vs[i]; }
+  return vs[0] || null;
+}
+function fmt(sec){ var m = Math.floor(sec / 60), s = sec % 60; return m + ':' + (s < 10 ? '0' : '') + s; }
+function setBar(){ if(fill && items.length) fill.style.width = Math.round(idx / items.length * 100) + '%'; }
+function status(){
+  if(!st || !playing) return;
+  var el = Math.floor((Date.now() - itemStart) / 1000);
+  st.textContent = (started ? '再生中 ' : '準備中… ') + (idx + 1) + '/' + items.length + '（' + fmt(el) + '）' + (items[idx] || '').slice(0, 18);
+}
+function clearTimers(){
+  if(watchdog){ clearTimeout(watchdog); watchdog = null; }
+  if(tickTimer){ clearInterval(tickTimer); tickTimer = null; }
+}
+function stop(msg){
+  playing = false; curId++; clearTimers();
+  try{ speechSynthesis.cancel(); }catch(e){}
+  btn.textContent = '▶ ブラウザ音声で再生';
+  if(st) st.textContent = msg || '';
+  if(fill) fill.style.width = '0%';
+}
+function armWatchdog(text){
+  if(watchdog) clearTimeout(watchdog);
+  var est = Math.min(45000, Math.max(7000, text.length * 260 + 4000));
+  watchdog = setTimeout(function(){
+    if(!playing) return;
+    curId++;
+    try{ speechSynthesis.cancel(); }catch(e){}
+    idx++; next();
+  }, est);
+}
+function trySpeak(text, useVoice){
+  var my = ++curId;
+  started = false; itemStart = Date.now(); setBar(); status();
+  try{ speechSynthesis.resume(); }catch(e){}
+  var u = new SpeechSynthesisUtterance(String(text).replace(/\n+/g, ' '));
+  u.lang = 'ja-JP'; u.rate = 1.0;
+  var v = useVoice ? pickVoice() : null;
+  if(v) u.voice = v;
+  u.onstart = function(){ if(my === curId){ started = true; status(); } };
+  u.onend = function(){ if(my === curId && playing){ idx++; next(); } };
+  u.onerror = function(){
+    if(my !== curId || !playing) return;
+    if(speechSynthesis.getVoices().length === 0){ stop('音声が見つかりません（この端末では読み上げできません）'); return; }
+    if(useVoice && attempts === 0){ attempts++; trySpeak(text, false); return; }
+    idx++; next();
+  };
+  armWatchdog(text);
+  try{ speechSynthesis.speak(u); }catch(e){ setTimeout(function(){ if(my === curId && playing){ idx++; next(); } }, 300); }
+}
+function next(){
+  if(!playing) return;
+  if(idx >= items.length){ stop('読み上げ終了（全' + items.length + '項目）'); if(fill) fill.style.width = '100%'; return; }
+  attempts = 0;
+  trySpeak(items[idx], true);
+}
+btnMain.onclick = function(){
+  if(panel.style.display !== 'none'){
+    panel.style.display = 'none';
+    btnMain.textContent = '🎧 リスニング（全レッスン読み上げ）';
+    if(playing) stop('停止しました');
+    return;
+  }
+  if(typeof LEVELS === 'undefined'){ return; }
+  if(!built){ buildText(); built = true; }
+  panel.style.display = 'block';
+  btnMain.textContent = '🎧 リスニングを閉じる';
+};
+btn.onclick = function(){
+  if(!('speechSynthesis' in window)){ if(st) st.textContent = 'このブラウザは読み上げに未対応です'; return; }
+  if(playing){ stop('停止しました'); return; }
+  if(typeof LEVELS === 'undefined'){ if(st) st.textContent = 'データ読み込みに失敗しました'; return; }
+  items = buildItems(); idx = 0; playing = true; itemStart = Date.now();
+  btn.textContent = '⏹ 停止';
+  if(st) st.textContent = '準備中…';
+  if(fill) fill.style.width = '0%';
+  try{ speechSynthesis.cancel(); }catch(e){}
+  clearTimers();
+  tickTimer = setInterval(status, 500);
+  setTimeout(next, 200);
+};
+})();
+</script>
+<script>
+(function(){
+var btn = document.getElementById('btnGallery');
+var gal = document.getElementById('gallery');
+var built = false;
+function build(){
+var html = '';
+if (typeof LEVELS !== 'undefined' && typeof DIAG !== 'undefined') {
+LEVELS.forEach(function(lv, li){
+lv.lessons.forEach(function(ls, i){
+if (DIAG[ls.id]) html += '<div class="gal-item"><div class="gal-cap">第' + (li+1) + '章 第' + (i+1) + '課：' + ls.title + '</div><div class="gal-diag">' + DIAG[ls.id] + '</div></div>';
+});
+});
+} else if (typeof DIAG !== 'undefined') {
+Object.keys(DIAG).forEach(function(k){
+var cap = k;
+if (typeof NODES !== 'undefined' && NODES[k] && NODES[k].title) cap = NODES[k].title;
+html += '<div class="gal-item"><div class="gal-cap">' + cap + '</div><div class="gal-diag">' + DIAG[k] + '</div></div>';
+});
+}
+gal.innerHTML = html || '<div class="gal-cap">図解はありません</div>';
+}
+btn.onclick = function(){
+var show = gal.style.display !== 'block';
+if (show && !built) { build(); built = true; }
+gal.style.display = show ? 'block' : 'none';
+btn.textContent = show ? '🖼 図解一覧（復習用）を隠す' : '🖼 図解一覧（復習用）を表示';
+};
+})();
+</script>
+</div>
+
+<div class="toast" id="toast">💾 保存しました</div>
+
+<script>
+"use strict";
+/* ============ シルエット ============ */
+function sil(extra){
+return '<svg width="150" height="190" viewBox="0 0 120 150">'
++ '<circle cx="60" cy="34" r="17" fill="#141f52"/>'
++ '<path d="M22 150 C22 96 40 66 60 66 C80 66 98 96 98 150 Z" fill="#141f52"/>'
++ (extra || '') + '</svg>';
+}
+const CHARS = {
+sennin: sil('<path d="M28 26 L60 2 L92 26 L84 30 L60 14 L36 30 Z" fill="#141f52"/>'
++ '<path d="M48 44 L72 44 L66 92 L54 92 Z" fill="#141f52"/>'),
+ore: sil(''),
+none: ''
+};
+
+/* ============ カリキュラム ============ */
+/* teach: 説明ページ（クリックで送る） / retry: 補足説明 / quiz: 確認問題 */
+const LEVELS = [
+{ name:'入門編 現在地と布陣', desc:'動いている3サービスを土台に、常駐機・台帳・公開範囲の型を決める。', lessons:[
+{ id:'a1', title:'いまの到達点', teach:[
+'Jellyfin（動画）・Immich（写真）・Syncthing（同期）が動き、外からスマホで見られる。ここまでで「自宅サーバーの土台」は完成じゃ。',
+'次の一歩で大事なのは、新しいサービスを足すことではない。「守る」「見える化する」「続けられる形にする」の3つじゃ。順番を間違えると、広げた分だけ穴も増える。'],
+retry:'土台は完成。次は 守る → 見える化 → 続けられる形 の順。',
+quiz:{ q:'次に優先すべき順番は？', choices:[
+{ t:'守る → 見える化 → 続けられる形', ok:true }, { t:'サービスをどんどん足す', ok:false }, { t:'まず速い回線に変える', ok:false } ] } },
+{ id:'a2', title:'常駐機を1台に決める', teach:[
+'24時間動かす機械は1台に絞るのが型じゃ。お主の布陣では、メモリ64GBの Quadro RTX 3000 機が本命。Jellyfin・Immich・Syncthing はそこへ集約する。',
+'強いGPUの機（2080 Ti）は「使うときだけ起こす」役。常駐させると電気代と騒音がかさむ。役割分担は、ローカルAI道場で決めた配置と同じ考え方じゃ。'],
+retry:'常駐は1台（64GB機）に集約。強い機は起こして使う。',
+quiz:{ q:'常駐機の決め方は？', choices:[
+{ t:'一番強いGPUの機を常駐させる', ok:false }, { t:'メモリの大きい機にサービスを集約する', ok:true }, { t:'全部のPCに分散させる', ok:false } ] } },
+{ id:'a3', title:'台帳とMagicDNS', teach:[
+'端末が増えるほど効くのが台帳じゃ。端末名・役割・Tailscale の IP（100.x.x.x）を、メモサイトに1枚で残す。「あの機、何だっけ」が消える。',
+'Tailscale の MagicDNS を有効にすると、IP の代わりに端末名で呼べる。Jellyfin へは「サーバー機の名前:8096」で届く。名前で呼べることは、運用の第一歩じゃ。'],
+retry:'台帳＝端末名・役割・100.x の一覧。MagicDNS で名前アクセス。',
+quiz:{ q:'MagicDNS でできることは？', choices:[
+{ t:'端末名でアクセスできる', ok:true }, { t:'通信速度が上がる', ok:false }, { t:'電気代が下がる', ok:false } ] } },
+{ id:'a4', title:'公開範囲のルール', teach:[
+'ルールは1つ：サービスは tailnet の中だけに公開する。ルーターのポート開放はゼロのまま。Jellyfin も Immich も、Tailscale 経由でだけ届く形が正解じゃ。',
+'「家族にも見せたい」場合も、いきなりインターネット公開はしない。相手の端末を tailnet に招待するのが、安全側の答えじゃ。'],
+retry:'公開は tailnet 内だけ。ポート開放ゼロを維持。',
+quiz:{ q:'家族に写真を見せたいときの安全な方法は？', choices:[
+{ t:'Immich をポート開放して公開する', ok:false }, { t:'相手の端末を tailnet に招待する', ok:true }, { t:'URL を知っている人だけに送る', ok:false } ] } },
+]},
+{ name:'初級編 守りを固める', desc:'入口のID、ACL、SSH、更新。セキュリティ道場の実地編。', lessons:[
+{ id:'b1', title:'入口はTailscaleのID', teach:[
+'tailnet の入口は、突き詰めればログインID 1つじゃ。だから ID の多要素認証（MFA）は必須。ここが破られると、全部の機械に届いてしまう。',
+'管理画面の端末一覧を定期的に見て、心当たりのない端末がないか確かめる。使わなくなった端末は削除。これがセキュリティ道場で言う「入口を数えられる」状態じゃ。'],
+retry:'入口＝ID。MFA必須＋端末一覧の定期確認。',
+quiz:{ q:'tailnet の守りで一番効くのは？', choices:[
+{ t:'IDの多要素認証（MFA）', ok:true }, { t:'パスワードを長くするだけ', ok:false }, { t:'端末名を分かりにくくする', ok:false } ] } },
+{ id:'b2', title:'ACLで届く範囲を絞る', teach:[
+'初期状態の Tailscale は、tailnet 内の全端末が互いに届く。便利だが、1台が乗っ取られると横移動されてしまう。',
+'ACL（アクセス制御）で「自分のスマホとPC → サーバー機だけ可」「サーバー機 → 他へは不可」のように絞る。タグ（tag:server など）を付けると書きやすい。最初は緩めに、効き目を見ながら締めるのがコツじゃ。'],
+retry:'ACL＝誰がどこへ届けるかの表。横移動を塞ぐ。',
+quiz:{ q:'ACL の目的は？', choices:[
+{ t:'通信を暗号化すること', ok:false }, { t:'端末同士の届く範囲を絞ること', ok:true }, { t:'端末の名前を決めること', ok:false } ] } },
+{ id:'b3', title:'SSHの型', teach:[
+'各PCへの SSH は、Tailscale 経由だけに限定するのが型じゃ。LAN や WAN に SSH のポートを開けておく必要はない。',
+'認証は鍵だけにし、パスワード認証は切る。NixOS なら services.openssh の設定で一括管理できる。Tailscale SSH（tailscale ssh）を使えば、鍵管理そのものも Tailscale に任せられる。'],
+retry:'SSH は tailnet 経由＋鍵認証のみ。パスワード認証オフ。',
+quiz:{ q:'SSH の設定で正しいのは？', choices:[
+{ t:'パスワード認証のみで運用する', ok:false }, { t:'WAN にポートを開ける', ok:false }, { t:'鍵認証のみ＋Tailscale経由', ok:true } ] } },
+{ id:'b4', title:'NixOSの更新と切り戻し', teach:[
+'NixOS の強みは「世代」。更新で壊れても、前の世代に戻せば復旧できる。だから更新を怖がらず、定期的に回せる。',
+'型はこうじゃ：常駐機から先に更新 → 数日様子見 → 他の機へ。flake.lock の更新は git で記録が残る。いきなり全機一斉更新はしない。'],
+retry:'更新は常駐機から順に。壊れたら世代切り戻し。',
+quiz:{ q:'更新で壊れたときの NixOS の復旧方法は？', choices:[
+{ t:'再インストールする', ok:false }, { t:'前の世代に切り戻す', ok:true }, { t:'バックアップから全復元する', ok:false } ] } },
+]},
+{ name:'中級編 見える化する', desc:'死活・DNS・端末・資源。異常に気づける状態を作る。', lessons:[
+{ id:'c1', title:'死活監視（Uptime Kuma）', teach:[
+'見える化の第一歩は「落ちたら分かること」。Uptime Kuma は、サービスの生死を定期チェックして一覧にしてくれる軽い道具じゃ。常駐機に入れる。',
+'Jellyfin・Immich・AdGuard を登録し、落ちたらスマホへ通知する。自分が使おうとして初めて「落ちている」と分かるのが、一番まずい形じゃ。'],
+retry:'Uptime Kuma＝落ちたら分かる係。まずここから。',
+quiz:{ q:'死活監視の目的は？', choices:[
+{ t:'落ちたことにすぐ気づけるようにする', ok:true }, { t:'サービスを速くする', ok:false }, { t:'バックアップを取る', ok:false } ] } },
+{ id:'c2', title:'DNSログで通信を見る', teach:[
+'AdGuard Home のクエリログは、家中の「誰が・どこへ」の記録じゃ。普段の顔ぶれを知っておくと、知らない宛先が目立つようになる。',
+'全部を読む必要はない。週に一度、新しい宛先の上位だけ眺める。それで十分「平常との違い探し」になる。セキュリティ道場の実地編じゃ。'],
+retry:'DNSログ＝家中の宛先記録。平常を知り、違いに気づく。',
+quiz:{ q:'DNS ログの見方で正しいのは？', choices:[
+{ t:'全部を毎日精読する', ok:false }, { t:'平常を覚えて、新しい宛先に気づく', ok:true }, { t:'ログは取らない方が安全', ok:false } ] } },
+{ id:'c3', title:'資源の可視化（ディスクと端末）', teach:[
+'Immich の天敵はディスク満杯じゃ。写真が増え続ける以上、残量は見える場所に置く。Prometheus＋node_exporter＋Grafana が本格派だが、まずは常駐機の残量アラートだけでもよい。',
+'NetAlertX を入れると、LAN に新しい端末が現れたら教えてくれる。「未知の端末検知」は、セキュリティ道場の卒業条件の1つじゃったな。'],
+retry:'残量と未知端末を見える場所に。満杯は写真の天敵。',
+quiz:{ q:'Immich 運用で特に見張るべき資源は？', choices:[
+{ t:'CPU使用率', ok:false }, { t:'ディスク残量', ok:true }, { t:'メモリの速度', ok:false } ] } },
+{ id:'c4', title:'通知を集約する（ntfy）', teach:[
+'監視が増えると通知も増える。バラバラだと、人は見なくなる。ntfy を常駐機に立てると、スマホへの通知を1か所に集約できる（これも tailnet 内だけに公開）。',
+'通知は「落ちた」「ディスク残りわずか」「未知の端末」の3種に絞る。鳴らしすぎると、人は通知を切る生き物じゃ。'],
+retry:'通知は ntfy に集約、大事な3種に絞る。',
+quiz:{ q:'通知設計のコツは？', choices:[
+{ t:'全部の出来事を通知する', ok:false }, { t:'大事な3種に絞って集約する', ok:true }, { t:'通知は使わない', ok:false } ] } },
+]},
+{ name:'上級編 広げて続ける', desc:'バックアップ、追加サービス、外出先の型、月1の運用。', lessons:[
+{ id:'d1', title:'バックアップ（Syncthingの限界）', teach:[
+'大事な線引きじゃ：Syncthing は同期であって、バックアップではない。1台で写真を消すと、全端末から消える。間違って消したときに戻す力はない。',
+'restic のような世代バックアップで、Immich の写真フォルダと各サービスのデータ・設定を、別の機械（と時々は外付けディスク）に残す。3-2-1（3部・2種類の媒体・1つは別場所）の簡易版で十分じゃ。'],
+retry:'同期≠バックアップ。restic で世代を持ち、別の場所へ。',
+quiz:{ q:'Syncthing がバックアップにならない理由は？', choices:[
+{ t:'速度が遅いから', ok:false }, { t:'消したら全端末で消えるから', ok:true }, { t:'容量が足りないから', ok:false } ] } },
+{ id:'d2', title:'次のサービス候補', teach:[
+'足すなら1つずつ。候補はこのあたりじゃ：Vaultwarden（パスワード管理の集約）、Paperless-ngx（紙の書類を検索可能に）、Navidrome（音楽配信）。どれも常駐機に置き、tailnet 内だけに公開する。',
+'新しいサービスは、監視（Uptime Kuma）とバックアップ（restic）の対象に入れてから常用入りさせる。「入れただけ」のサービスが一番危ない。'],
+retry:'追加は1つずつ。監視とバックアップに入れてから常用。',
+quiz:{ q:'新しいサービスを常用する前の条件は？', choices:[
+{ t:'監視とバックアップの対象に入れる', ok:true }, { t:'家族に自慢する', ok:false }, { t:'ポートを開放する', ok:false } ] } },
+{ id:'d3', title:'外出先での型', teach:[
+'外出先では、スマホの Immich 自動アップロードが Wi-Fi 接続時に回っているか、時々確かめる。撮った写真が家に届いている状態こそ、安心の正体じゃ。',
+'exit node や subnet router は「境界を広げる設定」。便利な場面もあるが、意味を言えないうちは触らない。共有リンクを tailnet の外に配るのも、公開と同じだと心得る。セキュリティ道場で話した通りじゃ。'],
+retry:'自動アップロードの確認。境界を広げる設定は慎重に。',
+quiz:{ q:'外出先で時々確かめるべきことは？', choices:[
+{ t:'回線速度', ok:false }, { t:'Immich の自動アップロードが届いているか', ok:true }, { t:'家の電気代', ok:false } ] } },
+{ id:'d4', title:'卒業：運用の型', teach:[
+'卒業じゃ。運用の型は月1チェックに集約される：①端末一覧の確認 ②更新（常駐機から） ③バックアップの復元テスト ④ディスク残量。この4つが回れば、ホームラボは「作品」から「道具」になる。',
+'手順と台帳はメモサイトに残す。広げる順序はいつも同じ：守る → 見える化 → 自動化 → サービス追加。次のサービスを足したくなったら、この道場の地図に戻ってくるのじゃ。'],
+retry:'月1の4点チェック。順序は 守る→見える化→自動化→追加。',
+quiz:{ q:'月1チェックに入らないものは？', choices:[
+{ t:'端末一覧の確認', ok:false }, { t:'バックアップの復元テスト', ok:false }, { t:'新しいサービスの追加', ok:true } ] } },
+]},
+];
+
+/* ============ エンジン ============ */
+const SAVE_KEY = 'homelabDojoSaveV1';
+const TOTAL = LEVELS.reduce((a,l)=>a+l.lessons.length,0);
+let done = {};
+try{ const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); if(s && s.done) done = s.done;}catch(e){}
+let soundOn = true, typing = null, advanceFn = null;
+let cur = { level:0, lesson:0, pages:[], page:0};
+
+const $ = id => document.getElementById(id);
+const bgEl=$('bg'), charEl=$('char'), nameEl=$('namebox'), textEl=$('text'),
+boxEl=$('textbox'), chEl=$('choices'), nextEl=$('nextmark');
+
+function beep(freq, dur, delay, vol){
+if(!soundOn) return;
+try{
+const ctx = beep.ctx || (beep.ctx = new (window.AudioContext||window.webkitAudioContext)());
+if(ctx.state === 'suspended') ctx.resume();
+const o = ctx.createOscillator(), g = ctx.createGain();
+o.type='square'; o.frequency.value = freq || 660;
+g.gain.value = vol || 0.03;
+o.connect(g); g.connect(ctx.destination);
+const t = ctx.currentTime + (delay||0);
+o.start(t); o.stop(t + (dur||0.06));
+}catch(e){}
+}
+function save(){
+try{ localStorage.setItem(SAVE_KEY, JSON.stringify({done})); toast();}catch(e){}
+}
+function toast(){
+const t=$('toast'); t.classList.add('show');
+clearTimeout(toast.tm); toast.tm=setTimeout(()=>t.classList.remove('show'), 900);
+}
+function doneCount(){ return Object.keys(done).filter(k=>done[k]).length;}
+function renderProgress(now){
+$('pDone').textContent = doneCount();
+$('bDone').style.width = (doneCount()/TOTAL*100) + '%';
+if(now) $('pNow').textContent = now;
+}
+function setScene(bg, char, name){
+bgEl.className = 'bg ' + bg;
+charEl.innerHTML = CHARS[char] || '';
+charEl.style.display = char && char!== 'none'? '': 'none';
+if(name){ nameEl.textContent = name; nameEl.style.display='';} else nameEl.style.display='none';
+}
+function typeText(txt, onDoneTyping){ speak(txt);
+clearInterval(typing);
+textEl.textContent=''; nextEl.style.display='none';
+boxEl.scrollTop = 0;
+advanceFn = null;
+let i=0;
+typing = setInterval(()=>{
+i++;
+textEl.textContent = txt.slice(0, i);
+boxEl.scrollTop = boxEl.scrollHeight;
+const ch = txt.charAt(i-1);
+if(ch && ch!== ' ' && ch!== '\n' && i % 2 === 1){
+beep(980 + Math.random()*520, 0.018, 0, 0.012);
+}
+if(i >= txt.length){
+clearInterval(typing); typing=null;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+}
+}, 26);
+boxEl.onclick = ()=>{
+if(typing){
+clearInterval(typing); typing=null;
+textEl.textContent = txt; boxEl.scrollTop = boxEl.scrollHeight;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+} else if(advanceFn){
+const f = advanceFn; advanceFn = null; f();
+}
+};
+}
+document.addEventListener('keydown', e=>{
+if(!typing && advanceFn && (e.key === ' ' || e.key === 'Enter')){
+e.preventDefault();
+const f = advanceFn; advanceFn = null; f();
+}
+});
+function showChoices(items){
+chEl.innerHTML='';
+items.forEach(it=>{
+const b=document.createElement('button');
+b.className='choice' + (it.done? ' done': '');
+b.textContent=it.t;
+b.onclick=()=>{ beep(520,.06); setTimeout(()=>beep(780,.07),70); chEl.classList.remove('show'); it.fn();};
+chEl.appendChild(b);
+});
+chEl.classList.add('show');
+const dg = $('diagram');
+if(dg && dg.style.display === 'block'){
+$('screen').classList.add('diagmenu');
+requestAnimationFrame(()=>{
+const sr = $('screen').getBoundingClientRect();
+const dr = dg.getBoundingClientRect();
+chEl.style.top = Math.max(0, Math.round(dr.bottom - sr.top + 8)) + 'px';
+});
+} else { $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+}
+function hideChoices(){ chEl.classList.remove('show'); chEl.innerHTML=''; chEl.style.top=''; $('screen').classList.remove('diagmenu'); }
+
+
+/* ============ 図解（8bit風SVG・黒板） ============ */
+function _cm(x,y,ch,fill){ return '<rect x="'+(x+3)+'" y="'+(y+3)+'" width="30" height="30" fill="#000" opacity=".45"/><rect x="'+x+'" y="'+y+'" width="30" height="30" fill="'+fill+'" stroke="#dfe6ff" stroke-width="2"/><text x="'+(x+15)+'" y="'+(y+21)+'" font-size="14" fill="#05060f" text-anchor="middle" font-weight="bold">'+ch+'</text>'; }
+function _ar(x1,y1,x2,y2,col){ col=col||'#8fa3d9'; var pts; if(Math.abs(x2-x1)>=Math.abs(y2-y1)){ pts = x2>x1 ? [[x2,y2],[x2-10,y2-6],[x2-10,y2+6]] : [[x2,y2],[x2+10,y2-6],[x2+10,y2+6]]; } else { pts = y2>y1 ? [[x2,y2],[x2-6,y2-10],[x2+6,y2-10]] : [[x2,y2],[x2-6,y2+10],[x2+6,y2+10]]; } return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+col+'" stroke-width="4"/><polygon points="'+pts.map(function(p){return p.join(',');}).join(' ')+'" fill="'+col+'"/>'; }
+function _ln(x1,y1,x2,y2,col){ return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+(col||'#8fa3d9')+'" stroke-width="3"/>'; }
+function _tx(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'" text-anchor="middle">'+str+'</text>'; }
+function _txl(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'">'+str+'</text>'; }
+function _bx(x,y,w,h,label,fill){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'" stroke="#8fa3d9" stroke-width="2"/><text x="'+(x+w/2)+'" y="'+(y+h/2+5)+'" font-size="12" fill="#fff" text-anchor="middle">'+label+'</text>'; }
+function _tag(x,y,str,col){ var w=str.length*12+12; return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="20" fill="'+col+'"/><text x="'+(x+w/2)+'" y="'+(y+14)+'" font-size="11" fill="#05060f" text-anchor="middle" font-weight="bold">'+str+'</text>'; }
+function _svg(inner){ return '<svg viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'+inner+'</svg>'; }
+var BL='#4a6bff', YL='#ffd94a', GN='#7ee787', RD='#ff7b72', PU='#b18cff', GY='#5a6b9e', DM='#8fa3d9';
+const DIAG = {
+a1: _svg(_tx(180,16,'いまの布陣：3サービス＋スマホ',DM,12)
+ + _bx(8,34,104,38,'Jellyfin 動画','#1b2a6e') + _bx(128,34,104,38,'Immich 写真','#1b2a6e') + _bx(248,34,104,38,'Syncthing','#1b2a6e')
+ + _ar(60,72,140,96) + _ar(180,72,180,96) + _ar(300,72,220,96)
+ + _bx(105,96,150,26,'スマホ','#1b2a6e')),
+a2: _svg(_tx(180,16,'常駐は1台に集約',DM,12)
+ + _bx(8,30,120,34,'2080Ti機','#1b2a6e') + _bx(8,76,120,34,'他のPC','#1b2a6e')
+ + _ar(128,47,196,60,GN) + _ar(128,93,196,80,GN)
+ + _bx(200,42,152,56,'64GB機（常駐）','#1b2a6e')
+ + _tx(276,116,'サービスはここへ',YL,11)),
+a3: _svg(_tx(180,16,'台帳とMagicDNS',DM,12)
+ + _txl(24,48,'・常駐機　名前：honmaru　100.64.x.x',DM,12)
+ + _txl(24,72,'・スマホ　名前：pixel　100.64.x.x',DM,12)
+ + _txl(24,96,'・呼ぶときは IP でなく 名前で',YL,12)),
+a4: _svg(_tx(180,16,'公開は tailnet 内だけ',DM,12)
+ + _bx(4,48,70,34,'スマホ','#1b2a6e') + _ar(74,65,110,65,GN)
+ + _bx(114,34,180,62,'自宅LAN（サービス群）','#1b2a6e')
+ + _tx(180,116,'ルーターのポート開放はゼロ',YL,12)),
+b1: _svg(_tx(180,16,'入口は ID ひとつ',DM,12)
+ + _bx(8,44,100,40,'ログインID','#1b2a6e') + _tx(124,70,'＋',YL,16)
+ + _bx(140,44,80,40,'MFA','#1b2a6e') + _ar(220,64,256,64,GN)
+ + _bx(260,44,92,40,'tailnet','#1b2a6e')
+ + _tx(180,108,'端末一覧を定期確認',DM,11)),
+b2: _svg(_tx(180,16,'ACLで絞る',DM,12)
+ + _bx(8,28,104,32,'スマホ','#1b2a6e') + _bx(8,70,104,32,'自分のPC','#1b2a6e')
+ + _ar(112,44,216,58,GN) + _ar(112,86,216,72,GN)
+ + _bx(216,44,136,44,'サーバー機','#1b2a6e')
+ + _tx(180,120,'サーバー機 → 他のPC は不可',YL,11)),
+b3: _svg(_tx(180,16,'SSHの型',DM,12)
+ + _bx(8,44,96,40,'自分の端末','#1b2a6e') + _ar(104,64,140,64)
+ + _bx(140,44,80,40,'Tailscale','#1b2a6e') + _ar(220,64,256,64)
+ + _bx(256,44,96,40,'各PC・鍵認証','#1b2a6e')
+ + _tx(180,108,'パスワード認証はオフ',YL,11)),
+b4: _svg(_tx(180,16,'NixOSの世代と切り戻し',DM,12)
+ + _cm(40,44,'1',BL) + _cm(130,44,'2',BL) + _cm(220,44,'3',BL)
+ + _ar(74,59,126,59) + _ar(164,59,216,59)
+ + _ar(235,88,58,88,YL)
+ + _tx(145,108,'壊れたら前の世代へ',YL,11)),
+c1: _svg(_tx(180,16,'死活監視 Uptime Kuma',DM,12)
+ + _txl(30,46,'✓ Jellyfin',GN,13) + _txl(30,70,'✓ Immich',GN,13) + _txl(30,94,'✓ AdGuard',GN,13)
+ + _ar(140,68,216,68,YL)
+ + _bx(216,44,128,52,'落ちたら通知','#1b2a6e')),
+c2: _svg(_tx(180,16,'DNSログ＝誰がどこへ',DM,12)
+ + _bx(8,44,96,40,'家の端末','#1b2a6e') + _ar(104,64,140,64)
+ + _bx(140,44,96,40,'AdGuard','#1b2a6e') + _ar(236,64,272,64)
+ + _bx(272,44,80,40,'ログ','#1b2a6e')
+ + _tx(180,108,'平常を知ると異常が目立つ',YL,11)),
+c3: _svg(_tx(180,16,'資源の見える化',DM,12)
+ + _bx(8,34,164,38,'ディスク残量アラート','#1b2a6e') + _bx(188,34,164,38,'未知端末の検知','#1b2a6e')
+ + _bx(96,84,168,34,'Grafana で眺める','#1b2a6e')),
+c4: _svg(_tx(180,16,'通知は集約して絞る',DM,12)
+ + _bx(8,24,120,26,'落下','#1b2a6e') + _bx(8,56,120,26,'残量わずか','#1b2a6e') + _bx(8,88,120,26,'未知端末','#1b2a6e')
+ + _ar(128,37,170,58) + _ar(128,69,170,68) + _ar(128,101,170,78)
+ + _bx(170,48,80,40,'ntfy','#1b2a6e') + _ar(250,68,286,68,GN)
+ + _bx(286,48,66,40,'スマホ','#1b2a6e')),
+d1: _svg(_tx(180,16,'同期 ≠ バックアップ',DM,12)
+ + _bx(8,30,100,34,'PC','#1b2a6e') + _bx(8,76,100,34,'スマホ','#1b2a6e')
+ + _ar(50,64,50,74) + _ar(66,74,66,64)
+ + _tx(58,120,'同期：消えると全部',DM,10)
+ + _ln(180,24,180,110,DM)
+ + _bx(216,24,120,24,'今日','#1b2a6e') + _bx(216,54,120,24,'昨日','#1b2a6e') + _bx(216,84,120,24,'先週','#1b2a6e')
+ + _tx(276,122,'restic：世代で残す',YL,10)),
+d2: _svg(_tx(180,16,'次のサービス候補',DM,12)
+ + _bx(8,40,104,40,'Vaultwarden','#1b2a6e') + _bx(128,40,104,40,'Paperless','#1b2a6e') + _bx(248,40,104,40,'Navidrome','#1b2a6e')
+ + _tx(180,104,'足すのは1つずつ・監視とバックアップ入りが条件',YL,11)),
+d3: _svg(_tx(180,16,'外出先の型',DM,12)
+ + _bx(8,44,96,40,'スマホ(外出)','#1b2a6e') + _ar(104,64,150,64,GN)
+ + _bx(150,44,80,40,'Tailscale','#1b2a6e') + _ar(230,64,266,64,GN)
+ + _bx(266,44,86,40,'家のImmich','#1b2a6e')
+ + _tx(180,108,'自動アップロードが届いているか確認',YL,11)),
+d4: _svg(_tx(180,16,'広げる順序はいつも同じ',DM,12)
+ + _bx(4,40,82,38,'守る','#1b2a6e') + _bx(94,40,82,38,'見える化','#1b2a6e') + _bx(184,40,82,38,'自動化','#1b2a6e') + _bx(274,40,82,38,'追加','#1b2a6e')
+ + _ar(86,59,94,59) + _ar(176,59,184,59) + _ar(266,59,274,59)
+ + _tx(180,104,'月1チェック：端末・更新・復元・残量',YL,11)),
+};
+function showDiagFor(id){
+const d = $('diagram');
+if(DIAG[id]){ d.innerHTML = DIAG[id]; d.style.display = 'block'; }
+else d.style.display = 'none';
+}
+function hideDiag(){ $('diagram').style.display = 'none'; $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+
+/* ============ 画面遷移 ============ */
+function goLevels(){
+hideChoices();
+hideDiag();
+setScene('bg-room','none','');
+renderProgress('レベル選択');
+const dc = doneCount();
+const intro = dc === 0
+? '「よく来た。わしがラボ仙人じゃ」\nテーマは「自宅サーバーの守りと可視化」。全' + TOTAL + '課。\n好きな編からでよい。分かるまで、何度でも付き合うぞ。'
+: '「戻ったか。現在の理解済みは ' + dc + ' / ' + TOTAL + ' 課じゃ」\n続きをやるもよし、済んだ課を復習するもよし。';
+typeText(intro, ()=>{
+showChoices(LEVELS.map((lv, i)=>{
+const c = lv.lessons.filter(l=>done[l.id]).length;
+return { t: lv.name + '（' + c + '/' + lv.lessons.length + ' 済）', done: c === lv.lessons.length,
+fn: ()=>goLessons(i)};
+}));
+});
+}
+function goLessons(li){
+hideChoices();
+hideDiag();
+const lv = LEVELS[li];
+cur.level = li;
+setScene('bg-room','sennin','ラボ仙人');
+renderProgress(lv.name);
+typeText('\n' + lv.desc + '\n課を選ぶのじゃ。✔ は理解済み。復習は何度でもできるぞ。', ()=>{
+showChoices(
+lv.lessons.map((ls, i)=>({ t: ls.title, done:!!done[ls.id], fn: ()=>startLesson(li, i, false)}))
+.concat([{ t:'レベル選択に戻る', fn: goLevels}])
+);
+});
+}
+function startLesson(li, idx, withRetry){
+hideChoices();
+const ls = LEVELS[li].lessons[idx];
+cur.level = li; cur.lesson = idx;
+cur.pages = ls.teach.slice();
+if(withRetry) cur.pages.push('\n' + ls.retry);
+cur.page = 0;
+setScene('bg-term','sennin','ラボ仙人');
+renderProgress(LEVELS[li].name + '：' + ls.title);
+showDiagFor(ls.id);
+teachPage();
+}
+function teachPage(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+const isLast = cur.page >= cur.pages.length - 1;
+typeText('\n' + cur.pages[cur.page], ()=>{
+if(isLast){ showCheck();}
+else { advanceFn = ()=>{ cur.page++; teachPage();};}
+});
+}
+function showCheck(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+showChoices([
+{ t:'これは分かった！（確認問題へ）', fn: showQuiz},
+{ t:'分からない（もう一度聞く）', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'レッスン一覧に戻る', fn: ()=>goLessons(cur.level)}
+]);
+}
+function showQuiz(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+setScene('bg-term','sennin','ラボ仙人');
+typeText('\n' + ls.quiz.q, ()=>{
+showChoices(ls.quiz.choices.map(c=>({
+t: c.t,
+fn: ()=>{ if(c.ok) completeLesson(); else wrongAnswer();}
+})));
+});
+}
+function wrongAnswer(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+beep(220,.12); setTimeout(()=>beep(180,.14),120);
+typeText('「むむ、違うぞ。焦らなくてよい」\n' + ls.retry, ()=>{
+showChoices([
+{ t:'もう一度説明を聞く', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'もう一度問題に挑む', fn: showQuiz}
+]);
+});
+}
+function completeLesson(){
+hideDiag();
+const li = cur.level, idx = cur.lesson;
+const ls = LEVELS[li].lessons[idx];
+done[ls.id] = true; save();
+[523,659,784,1046].forEach((f,i)=>beep(f,.1,i*0.11));
+renderProgress(LEVELS[li].name + '：' + ls.title + ' ✔');
+const dc = doneCount();
+const levelDone = LEVELS[li].lessons.every(l=>done[l.id]);
+let msg = '「うむ、分かったようじゃな」\n理解済み ✔（合計 ' + dc + ' / ' + TOTAL + ' 課）';
+if(dc >= TOTAL){
+setScene('bg-way','sennin','ラボ仙人');
+msg += '\n\n――全課目、修了じゃ！\nここから先は実地あるのみ。Doom を開いて、指で覚えていくのじゃ。卒業おめでとう！';
+} else if(levelDone){
+msg += '\nは全課修了じゃ。よくやった。';
+}
+typeText(msg, ()=>{
+const items = [];
+if(dc < TOTAL){
+if(idx + 1 < LEVELS[li].lessons.length){
+items.push({ t:'次の例題へ（' + LEVELS[li].lessons[idx+1].title + '）', fn: ()=>startLesson(li, idx+1, false)});
+} else if(li + 1 < LEVELS.length){
+items.push({ t:'次の編へ（' + LEVELS[li+1].name + '）', fn: ()=>goLessons(li+1)});
+}
+}
+items.push({ t:'レッスン一覧に戻る', fn: ()=>goLessons(li)});
+items.push({ t:'レベル選択に戻る', fn: goLevels});
+showChoices(items);
+});
+}
+
+/* ============ ボタン類 ============ */
+$('btnEnter').onclick = ()=>{ beep(660,.06); $('title').style.display='none'; goLevels();};
+$('btnLevels').onclick = ()=>{ $('title').style.display='none'; goLevels();};
+$('btnReset').onclick = ()=>{
+done = {}; save(); renderProgress('タイトル');
+$('title').style.display='flex';
+};
+$('btnSound').onclick = (e)=>{
+soundOn =!soundOn;
+e.target.textContent = soundOn? '🔊 音ON': '🔇 音OFF';
+if(soundOn) beep(700,.06);
+};
+renderProgress('タイトル');
+
+let ttsOn = false;
+try{ ttsOn = localStorage.getItem('advTtsV1') === '1'; }catch(e){}
+const btnTts = document.getElementById('btnTts');
+function updTtsBtn(){ if(btnTts) btnTts.textContent = ttsOn ? '🗣 読上ON' : '🗣 読上OFF'; }
+function speak(txt){
+  if(!ttsOn || !('speechSynthesis' in window)) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(String(txt).replace(/\n+/g, ' '));
+    u.lang = 'ja-JP'; u.rate = 1.0;
+    const vs = speechSynthesis.getVoices();
+    const jv = vs.find(v => v.lang && v.lang.toLowerCase().indexOf('ja') === 0) || vs[0];
+    if(jv) u.voice = jv;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+if(btnTts) btnTts.onclick = () => {
+  ttsOn = !ttsOn;
+  try{ localStorage.setItem('advTtsV1', ttsOn ? '1' : '0'); }catch(e){}
+  updTtsBtn();
+  if(ttsOn){ speak(textEl.textContent); setTimeout(checkVoices, 800); }
+  else if('speechSynthesis' in window) speechSynthesis.cancel();
+};
+function checkVoices(){
+  if(!ttsOn || !btnTts || !('speechSynthesis' in window)) return;
+  if(speechSynthesis.getVoices().length === 0) btnTts.textContent = '🗣 音声なし';
+  else updTtsBtn();
+}
+if('speechSynthesis' in window) speechSynthesis.onvoiceschanged = checkVoices;
+updTtsBtn();
+setTimeout(checkVoices, 800);
+</script>
+</body>
+</html>
