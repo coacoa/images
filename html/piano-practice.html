@@ -51,8 +51,8 @@ border:2px solid #000;border-top:none;border-radius:0 0 4px 4px;z-index:2;
 display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding-bottom:6px}
 .sol{font-size:13px;color:#334;font-weight:700}
 .key.black .sol{color:#aab;font-size:10px}
-.pck{font-size:11px;color:#fff;background:#3355ff;border-radius:3px;padding:0 5px;font-weight:700}
-.key.black .pck{font-size:9px;background:#7a4ae0;padding:0 3px}
+.pck{font-size:12px;color:#222;background:linear-gradient(#f7f7fa,#cfcfda);border:1px solid #888;border-bottom:3px solid #777;border-radius:4px;padding:1px 6px;font-weight:700}
+.key.black .pck{font-size:10px;background:linear-gradient(#4c4c58,#23232c);color:#fff;border-color:#000;border-bottom-color:#000;padding:0 4px}
 body.hide-sol .sol{display:none}
 body.hide-key .pck{display:none}
 .key.white.active{background:linear-gradient(var(--accent),#e8b93a)}
@@ -63,6 +63,16 @@ animation:pulse 0.9s ease-in-out infinite}
 @keyframes pulse{50%{box-shadow:inset 0 0 0 4px #7aa2ff, inset 0 -26px 0 rgba(122,162,255,.55)}}
 .key.good{background:linear-gradient(var(--good),#4a9e5f) !important}
 .key.bad{background:linear-gradient(var(--bad),#a03a32) !important}
+.kbd-wrap{margin-top:8px}
+.kbd{position:relative;background:var(--panel);border:2px solid var(--dim);border-radius:6px;padding:6px 2px}
+.kbd-row{position:relative;height:36px}
+.kcap{position:absolute;top:50%;transform:translate(-50%,-50%);height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;border-radius:5px;border:1px solid #888;border-bottom:3px solid #666;background:linear-gradient(#f7f7fa,#cfcfda);color:#222}
+.kcap.blk{background:linear-gradient(#4c4c58,#23232c);color:#fff;border-color:#000;border-bottom-color:#000;font-size:12px}
+.kcap.sub{border-style:dashed;opacity:.8}
+.kcap.active{background:linear-gradient(var(--accent),#e8b93a);color:#222;border-color:#a8842a}
+.kcap.target{box-shadow:0 0 0 3px var(--blue),0 0 10px rgba(51,85,255,.8)}
+.kbd-note{font-size:11px;color:var(--dim);margin-top:4px}
+body.hide-key .kbd-wrap{display:none}
 footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
 label.chk{font-size:13px;display:inline-flex;gap:4px;align-items:center;cursor:pointer}
 .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
@@ -70,9 +80,11 @@ border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;op
 .toast.show{opacity:1}
 @media (orientation:portrait) and (max-width:760px){
 .piano{height:210px}
+.kbd-row{height:30px}
+.kcap{height:24px;font-size:11px}
 .sol{font-size:10px}
-.pck{font-size:8px;padding:0 3px}
-.key.black .pck{display:none}
+.pck{font-size:9px;padding:0 3px}
+.key.black .pck{font-size:8px;padding:0 2px}
 #nowNote{font-size:24px;min-width:90px}
 .logo{font-size:16px}
 }
@@ -112,6 +124,7 @@ border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;op
 </div>
 
 <div class="piano" id="piano"><div class="whites" id="whites"></div></div>
+<div class="kbd-wrap" id="kbdWrap"><div class="kbd" id="kbd"></div><div class="kbd-note">PCキーボードの配置：白いキーは白鍵、黒いキーは黒鍵に対応。弾くと鍵盤と連動して光ります（お手本練習では次のキーも光ります）。</div></div>
 
 <footer>
 弾き方：下段 Z X C V B N M が下のオクターブの白鍵（S D・G H J が黒鍵）、上段 Q W E R T Y U が上のオクターブ（2 3・5 6 7 が黒鍵）。
@@ -159,6 +172,38 @@ let demoTimers = [];
 const activeVoices = {};
 const keyEls = {};
 const $ = id => document.getElementById(id);
+
+/* ===== PCキーボード配置ストリップ（鍵盤と横幅を揃えて重ねる） ===== */
+const KBD = [
+{ type:'black', items:[[13,8],[15,9],[18,11],[20,12],[22,13]] },
+{ type:'white', items:[[12,7],[14,8],[16,9],[17,10],[19,11],[21,12],[23,13],[24,14]] },
+{ type:'black', items:[[1,1],[3,2],[6,4],[8,5],[10,6]] },
+{ type:'white', items:[[0,0],[2,1],[4,2],[5,3],[7,4],[9,5],[11,6]] },
+];
+function buildKbd(){
+const wrap = $('kbd'); if(!wrap) return;
+wrap.innerHTML = '';
+KBD.forEach(row => {
+const r = document.createElement('div'); r.className = 'kbd-row';
+row.items.forEach(([off, pos]) => {
+const d = document.createElement('div');
+d.className = 'kcap' + (row.type === 'black' ? ' blk' : '');
+d.dataset.off = off;
+d.textContent = OFFSET_LABEL[off] || '';
+d.style.left = (row.type === 'black' ? (pos / 15 * 100) : ((pos + 0.5) / 15 * 100)) + '%';
+d.style.width = (row.type === 'black' ? 5 : 6) + '%';
+r.appendChild(d);
+});
+wrap.appendChild(r);
+});
+const comma = document.createElement('div');
+comma.className = 'kcap sub'; comma.dataset.off = 12; comma.textContent = ',';
+comma.style.left = ((7 + 0.5) / 15 * 100) + '%'; comma.style.width = '6%';
+wrap.children[3].appendChild(comma);
+}
+function capSync(off, on){
+document.querySelectorAll('.kcap[data-off="' + off + '"]').forEach(el => el.classList.toggle('active', on));
+}
 
 /* ===== 音（Web Audio 合成） ===== */
 let actx = null, master = null;
@@ -241,12 +286,14 @@ updateTarget();
 function noteOn(midi){
 soundOn(midi);
 const el = keyEls[midi]; if(el) el.classList.add('active');
+capSync(midi - baseMidi, true);
 $('nowNote').textContent = noteLabel(midi);
 if(mode === 'practice' && song && !finished) practiceHit(midi);
 }
 function noteOff(midi){
 soundOff(midi);
 const el = keyEls[midi]; if(el) el.classList.remove('active');
+capSync(midi - baseMidi, false);
 }
 window.addEventListener('pointerup', () => {
 for(const m in activeVoices) noteOff(+m);
@@ -293,6 +340,10 @@ if(mode === 'practice' && song && !finished && idx < song.notes.length){
 const el = keyEls[song.notes[idx]];
 if(el) el.classList.add('target');
 }
+document.querySelectorAll('.kcap.target').forEach(el => el.classList.remove('target'));
+if(mode === 'practice' && song && !finished && idx < song.notes.length){
+document.querySelectorAll('.kcap[data-off="' + (song.notes[idx] - baseMidi) + '"]').forEach(el => el.classList.add('target'));
+}
 const total = song ? song.notes.length : 0;
 $('prog').style.width = total ? (idx / total * 100) + '%' : '0%';
 $('progText').textContent = idx + ' / ' + total;
@@ -338,9 +389,9 @@ stopDemo();
 song.notes.forEach((m, i) => {
 demoTimers.push(setTimeout(() => {
 soundOn(m);
-const el = keyEls[m]; if(el) el.classList.add('active');
+const el = keyEls[m]; if(el) el.classList.add('active'); capSync(m - baseMidi, true);
 $('nowNote').textContent = noteLabel(m);
-setTimeout(() => { soundOff(m); if(el) el.classList.remove('active'); }, 380);
+setTimeout(() => { soundOff(m); if(el) el.classList.remove('active'); capSync(m - baseMidi, false); }, 380);
 }, i * 430));
 });
 $('msg').textContent = 'お手本を再生中… 聴き終わったら、光るキーを自分で押してね。';
@@ -370,6 +421,7 @@ $('octUp').onclick = () => shiftOctave(12);
 $('chkSol').onchange = e => document.body.classList.toggle('hide-sol', !e.target.checked);
 $('chkKey').onchange = e => document.body.classList.toggle('hide-key', !e.target.checked);
 
+buildKbd();
 renderPiano();
 renderSongs();
 </script>
