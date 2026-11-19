@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<!-- build: 2026-11-19 12:04:43 JST -->
+<!-- build: 2026-11-19 12:31:48 JST -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>キーバインド道場 ― i3×Tatami 8bit風ADV</title>
@@ -188,6 +188,13 @@ footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
 .gal-diag svg{width:100%;height:auto;display:block}
 </style>
 <div id="galleryWrap">
+<div style="margin-bottom:10px"><button class="sbtn" id="btnListen">🎧 リスニング（全シーン読み上げ）</button>
+<div id="listenPanel" style="display:none;text-align:left;margin-top:10px;background:#070a1c;border:2px solid #2c3a75;padding:10px 12px">
+<div style="margin-bottom:8px"><button class="sbtn" id="btnPlay">▶ ブラウザ音声で再生</button> <span id="listenStatus" style="font-size:12px;color:#9fb7ff"></span></div>
+<div style="height:8px;background:#1a2350;border:1px solid #2c3a75;margin-bottom:8px"><div id="listenFill" style="height:100%;width:0%;background:#ffd94a"></div></div>
+<div style="font-size:12px;color:#9fb7ff;margin-bottom:8px">PCでは Read Aloud 拡張機能で、この下のテキストをそのまま読み上げられます。全シーンを順に並べているので、分岐や結末のネタバレを含みます。</div>
+<div id="listenText" style="color:#fff;font-size:15px;line-height:1.7"></div>
+</div></div>
 <button class="sbtn" id="btnGallery">🖼 図解一覧（復習用）を表示</button>
 <div id="gallery"></div>
 </div>
@@ -218,6 +225,132 @@ var show = gal.style.display !== 'block';
 if (show && !built) { build(); built = true; }
 gal.style.display = show ? 'block' : 'none';
 btn.textContent = show ? '🖼 図解一覧（復習用）を隠す' : '🖼 図解一覧（復習用）を表示';
+};
+})();
+</script>
+<script>
+(function(){
+var btnMain = document.getElementById('btnListen');
+var panel = document.getElementById('listenPanel');
+var btn = document.getElementById('btnPlay');
+var st = document.getElementById('listenStatus');
+var fill = document.getElementById('listenFill');
+var lt = document.getElementById('listenText');
+if(!btnMain || !panel || !btn) return;
+var playing = false, items = [], idx = 0, curId = 0, watchdog = null, tickTimer = null, itemStart = 0, started = false, attempts = 0, built = false;
+function nodeLabel(id, nd){
+  if(nd.title) return nd.title;
+  if(nd.ending) return 'エンディング';
+  var t = String(nd.text || '').split('\n')[0];
+  return t.length > 22 ? t.slice(0, 22) + '…' : (t || id);
+}
+function buildItems(){
+  var arr = [];
+  Object.keys(NODES).forEach(function(id){
+    var nd = NODES[id]; if(!nd) return;
+    arr.push(nodeLabel(id, nd));
+    var tx = String(nd.text || '');
+    if(nd.name) tx = nd.name + '。' + tx;
+    if(tx) arr.push(tx);
+  });
+  return arr;
+}
+function buildText(){
+  lt.innerHTML = '';
+  Object.keys(NODES).forEach(function(id){
+    var nd = NODES[id]; if(!nd) return;
+    var h = document.createElement('div');
+    h.style.cssText = 'color:#ffd94a;font-weight:bold;margin:14px 0 6px';
+    h.textContent = nodeLabel(id, nd);
+    lt.appendChild(h);
+    var p = document.createElement('div');
+    p.style.cssText = 'margin:0 0 8px;white-space:pre-wrap';
+    p.textContent = (nd.name ? '【' + nd.name + '】' : '') + String(nd.text || '');
+    lt.appendChild(p);
+  });
+}
+function pickVoice(){
+  var vs = speechSynthesis.getVoices();
+  for(var i = 0; i < vs.length; i++){ if(vs[i].lang && vs[i].lang.toLowerCase().indexOf('ja') === 0) return vs[i]; }
+  return vs[0] || null;
+}
+function fmt(sec){ var m = Math.floor(sec / 60), s = sec % 60; return m + ':' + (s < 10 ? '0' : '') + s; }
+function setBar(){ if(fill && items.length) fill.style.width = Math.round(idx / items.length * 100) + '%'; }
+function status(){
+  if(!st || !playing) return;
+  var el = Math.floor((Date.now() - itemStart) / 1000);
+  st.textContent = (started ? '再生中 ' : '準備中… ') + (idx + 1) + '/' + items.length + '（' + fmt(el) + '）' + (items[idx] || '').slice(0, 18);
+}
+function clearTimers(){
+  if(watchdog){ clearTimeout(watchdog); watchdog = null; }
+  if(tickTimer){ clearInterval(tickTimer); tickTimer = null; }
+}
+function stop(msg){
+  playing = false; curId++; clearTimers();
+  try{ speechSynthesis.cancel(); }catch(e){}
+  btn.textContent = '▶ ブラウザ音声で再生';
+  if(st) st.textContent = msg || '';
+  if(fill) fill.style.width = '0%';
+}
+function armWatchdog(text){
+  if(watchdog) clearTimeout(watchdog);
+  var est = Math.min(45000, Math.max(7000, text.length * 260 + 4000));
+  watchdog = setTimeout(function(){
+    if(!playing) return;
+    curId++;
+    try{ speechSynthesis.cancel(); }catch(e){}
+    idx++; next();
+  }, est);
+}
+function trySpeak(text, useVoice){
+  var my = ++curId;
+  started = false; itemStart = Date.now(); setBar(); status();
+  try{ speechSynthesis.resume(); }catch(e){}
+  var u = new SpeechSynthesisUtterance(String(text).replace(/\n+/g, ' '));
+  u.lang = 'ja-JP'; u.rate = 1.0;
+  var v = useVoice ? pickVoice() : null;
+  if(v) u.voice = v;
+  u.onstart = function(){ if(my === curId){ started = true; status(); } };
+  u.onend = function(){ if(my === curId && playing){ idx++; next(); } };
+  u.onerror = function(){
+    if(my !== curId || !playing) return;
+    if(speechSynthesis.getVoices().length === 0){ stop('音声が見つかりません（この端末では読み上げできません）'); return; }
+    if(useVoice && attempts === 0){ attempts++; trySpeak(text, false); return; }
+    idx++; next();
+  };
+  armWatchdog(text);
+  try{ speechSynthesis.speak(u); }catch(e){ setTimeout(function(){ if(my === curId && playing){ idx++; next(); } }, 300); }
+}
+function next(){
+  if(!playing) return;
+  if(idx >= items.length){ stop('読み上げ終了（全' + items.length + '項目）'); if(fill) fill.style.width = '100%'; return; }
+  attempts = 0;
+  trySpeak(items[idx], true);
+}
+btnMain.onclick = function(){
+  if(panel.style.display !== 'none'){
+    panel.style.display = 'none';
+    btnMain.textContent = '🎧 リスニング（全シーン読み上げ）';
+    if(playing) stop('停止しました');
+    return;
+  }
+  if(typeof NODES === 'undefined'){ return; }
+  if(!built){ buildText(); built = true; }
+  panel.style.display = 'block';
+  btnMain.textContent = '🎧 リスニングを閉じる';
+};
+btn.onclick = function(){
+  if(!('speechSynthesis' in window)){ if(st) st.textContent = 'このブラウザは読み上げに未対応です'; return; }
+  if(playing){ stop('停止しました'); return; }
+  if(typeof NODES === 'undefined'){ if(st) st.textContent = 'データ読み込みに失敗しました'; return; }
+  items = buildItems(); idx = 0; playing = true; itemStart = Date.now();
+  btn.textContent = '⏹ 停止';
+  if(st) st.textContent = '準備中…';
+  if(fill) fill.style.width = '0%';
+  try{ speechSynthesis.cancel(); }catch(e){}
+  clearTimers();
+  tickTimer = setInterval(status, 500);
+  setTimeout(next, 200);
 };
 })();
 </script>
