@@ -173,7 +173,7 @@ bashの基礎からfish二刀流、ghosttyとvtermの線引き、tmuxまで、�
 .gal-diag svg{width:100%;height:auto;display:block}
 </style>
 <div id="galleryWrap">
-<div style="margin-bottom:10px"><button class="sbtn" id="btnListen">🎧 リスニング（全レッスン読み上げ）</button> <span id="listenStatus" style="font-size:12px;color:#9fb7ff"></span></div>
+<div style="margin-bottom:10px"><button class="sbtn" id="btnListen">🎧 リスニング（全レッスン読み上げ）</button> <span id="listenStatus" style="font-size:12px;color:#9fb7ff"></span><div style="height:8px;background:#1a2350;border:1px solid #2c3a75;margin-top:6px"><div id="listenFill" style="height:100%;width:0%;background:#ffd94a"></div></div></div>
 <button class="sbtn" id="btnGallery">🖼 図解一覧（復習用）を表示</button>
 <div id="gallery"></div>
 </div>
@@ -181,12 +181,13 @@ bashの基礎からfish二刀流、ghosttyとvtermの線引き、tmuxまで、�
 (function(){
 var btn = document.getElementById('btnListen');
 var st = document.getElementById('listenStatus');
+var fill = document.getElementById('listenFill');
 if(!btn || typeof LEVELS === 'undefined') return;
-var playing = false, items = [], idx = 0;
+var playing = false, items = [], idx = 0, curId = 0, watchdog = null, tickTimer = null, itemStart = 0, started = false, attempts = 0;
 function buildItems(){
   var arr = [];
   LEVELS.forEach(function(ch, ci){
-    arr.push('\u7b2c' + (ci + 1) + '\u7ae0\u3002' + ch.name);
+    arr.push('第' + (ci + 1) + '章。' + ch.name);
     ch.lessons.forEach(function(ls){
       arr.push(ls.title);
       (ls.teach || []).forEach(function(t){ arr.push(t); });
@@ -199,34 +200,70 @@ function pickVoice(){
   for(var i = 0; i < vs.length; i++){ if(vs[i].lang && vs[i].lang.toLowerCase().indexOf('ja') === 0) return vs[i]; }
   return vs[0] || null;
 }
-function stop(msg){
-  playing = false;
-  try{ speechSynthesis.cancel(); }catch(e){}
-  btn.textContent = '\ud83c\udfa7 \u30ea\u30b9\u30cb\u30f3\u30b0\uff08\u5168\u30ec\u30c3\u30b9\u30f3\u8aad\u307f\u4e0a\u3052\uff09';
-  if(st) st.textContent = msg || '';
+function fmt(sec){ var m = Math.floor(sec / 60), s = sec % 60; return m + ':' + (s < 10 ? '0' : '') + s; }
+function setBar(){ if(fill && items.length) fill.style.width = Math.round(idx / items.length * 100) + '%'; }
+function status(){
+  if(!st || !playing) return;
+  var el = Math.floor((Date.now() - itemStart) / 1000);
+  st.textContent = (started ? '再生中 ' : '準備中… ') + (idx + 1) + '/' + items.length + '（' + fmt(el) + '）' + (items[idx] || '').slice(0, 18);
 }
-function next(){
-  if(!playing) return;
-  if(idx >= items.length){ stop('\u8aad\u307f\u4e0a\u3052\u7d42\u4e86\uff08\u5168' + items.length + '\u9805\u76ee\uff09'); return; }
-  var text = items[idx];
-  if(st) st.textContent = '\u518d\u751f\u4e2d ' + (idx + 1) + '/' + items.length + '\uff1a' + text.slice(0, 20);
+function clearTimers(){
+  if(watchdog){ clearTimeout(watchdog); watchdog = null; }
+  if(tickTimer){ clearInterval(tickTimer); tickTimer = null; }
+}
+function stop(msg){
+  playing = false; curId++; clearTimers();
+  try{ speechSynthesis.cancel(); }catch(e){}
+  btn.textContent = '🎧 リスニング（全レッスン読み上げ）';
+  if(st) st.textContent = msg || '';
+  if(fill) fill.style.width = '0%';
+}
+function armWatchdog(text){
+  if(watchdog) clearTimeout(watchdog);
+  var est = Math.min(45000, Math.max(7000, text.length * 260 + 4000));
+  watchdog = setTimeout(function(){
+    if(!playing) return;
+    curId++;
+    try{ speechSynthesis.cancel(); }catch(e){}
+    idx++; next();
+  }, est);
+}
+function trySpeak(text, useVoice){
+  var my = ++curId;
+  started = false; itemStart = Date.now(); setBar(); status();
+  try{ speechSynthesis.resume(); }catch(e){}
   var u = new SpeechSynthesisUtterance(String(text).replace(/\n+/g, ' '));
   u.lang = 'ja-JP'; u.rate = 1.0;
-  var v = pickVoice(); if(v) u.voice = v;
-  u.onend = function(){ idx++; next(); };
+  var v = useVoice ? pickVoice() : null;
+  if(v) u.voice = v;
+  u.onstart = function(){ if(my === curId){ started = true; status(); } };
+  u.onend = function(){ if(my === curId && playing){ idx++; next(); } };
   u.onerror = function(){
-    if(!playing) return;
-    if(speechSynthesis.getVoices().length === 0){ stop('\u97f3\u58f0\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093\uff08\u3053\u306e\u7aef\u672b\u3067\u306f\u8aad\u307f\u4e0a\u3052\u3067\u304d\u307e\u305b\u3093\uff09'); return; }
+    if(my !== curId || !playing) return;
+    if(speechSynthesis.getVoices().length === 0){ stop('音声が見つかりません（この端末では読み上げできません）'); return; }
+    if(useVoice && attempts === 0){ attempts++; trySpeak(text, false); return; }
     idx++; next();
   };
   speechSynthesis.speak(u);
+  armWatchdog(text);
+}
+function next(){
+  if(!playing) return;
+  if(idx >= items.length){ stop('読み上げ終了（全' + items.length + '項目）'); if(fill) fill.style.width = '100%'; return; }
+  attempts = 0;
+  trySpeak(items[idx], true);
 }
 btn.onclick = function(){
-  if(!('speechSynthesis' in window)){ if(st) st.textContent = '\u3053\u306e\u30d6\u30e9\u30a6\u30b6\u306f\u8aad\u307f\u4e0a\u3052\u306b\u672a\u5bfe\u5fdc\u3067\u3059'; return; }
-  if(playing){ stop('\u505c\u6b62\u3057\u307e\u3057\u305f'); return; }
-  items = buildItems(); idx = 0; playing = true;
-  btn.textContent = '\u23f9 \u30ea\u30b9\u30cb\u30f3\u30b0\u3092\u505c\u6b62';
-  next();
+  if(!('speechSynthesis' in window)){ if(st) st.textContent = 'このブラウザは読み上げに未対応です'; return; }
+  if(playing){ stop('停止しました'); return; }
+  items = buildItems(); idx = 0; playing = true; itemStart = Date.now();
+  btn.textContent = '⏹ リスニングを停止';
+  if(st) st.textContent = '準備中…';
+  if(fill) fill.style.width = '0%';
+  try{ speechSynthesis.cancel(); }catch(e){}
+  clearTimers();
+  tickTimer = setInterval(status, 500);
+  setTimeout(next, 200);
 };
 })();
 </script>
