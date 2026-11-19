@@ -3,7 +3,7 @@ set -euo pipefail
 shopt -s nullglob
 
 # ============================================================
-# make_index.sh v2
+# make_index.sh v3
 # カレントディレクトリの *.html から index.html を生成する。
 # v1 からの変更点：
 # - リンク文字はファイル名でなく、各ページの <title> を使う（一番の変更点）
@@ -11,6 +11,8 @@ shopt -s nullglob
 # - 日付は git の最終コミット日を優先（Actions の checkout 日時で全部同じになる問題の対策）
 # - index.html 自身を正しく除外（v1 は ./index.html が混入していた）
 # - キーワード検索つき（小さいJSのみ、外部依存なし）
+# v3 での変更点：
+# - 道場・ゲームのカテゴリ（00）を先頭に追加し、一覧のいちばん上に表示する
 # ============================================================
 
 OUTPUT="index.html"
@@ -41,6 +43,7 @@ extract_title() {
 # 上から順に判定するので、具体的なものを上に置く。自由に編集してよい
 category_of() {
   case "$1" in
+    *dojo*|*ashinoko*|*mayonaka*)            echo "00|道場・ゲーム" ;;
     *nixos*|*linux*|*debian*|*alpine*)        echo "01|NixOS・Linux" ;;
     *openwrt*|*ddwrt*)                        echo "02|OpenWrt" ;;
     *network*|*lan*|*wifi*|*mdns*|*wireguard*|*nmap*|*_ap_*|*ssh*|*nat*)
