@@ -140,7 +140,7 @@ footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
 <div class="logo">キーバインド道場<small>― 8bit風ADV：i3×Tatami の試問 ―</small></div>
 <div class="btns">
 <button class="sbtn" id="btnLog">📜 ログ</button>
-<button class="sbtn" id="btnSound">🔊 音ON</button>
+<button class="sbtn" id="btnSound">🔊 音ON</button><button class="sbtn" id="btnTts">🗣 読上OFF</button>
 <button class="sbtn" id="btnTitle">🏠 タイトル</button>
 <button class="sbtn" id="btnReset">🗑 セーブ消去</button>
 </div>
@@ -501,7 +501,7 @@ $('bEmacs').style.width = Math.min(100, state.stats.e*16) + '%';
 $('bVim').style.width = Math.min(100, state.stats.v*16) + '%';
 $('bNix').style.width = Math.min(100, state.stats.n*14) + '%';
 }
-function typeText(txt, done){
+function typeText(txt, done){ speak(txt);
 clearInterval(typing);
 fullText = txt; textEl.textContent=''; nextEl.style.display='none';
 boxEl.scrollTop = 0;
@@ -672,6 +672,28 @@ $('logModal').classList.add('show');
 $('logModal').onclick = ()=> $('logModal').classList.remove('show');
 renderParams();
 goTitle();
+
+let ttsOn = false;
+try{ ttsOn = localStorage.getItem('advTtsV1') === '1'; }catch(e){}
+const btnTts = document.getElementById('btnTts');
+function updTtsBtn(){ if(btnTts) btnTts.textContent = ttsOn ? '🗣 読上ON' : '🗣 読上OFF'; }
+function speak(txt){
+  if(!ttsOn || !('speechSynthesis' in window)) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(String(txt).replace(/\n+/g, ' '));
+    u.lang = 'ja-JP'; u.rate = 1.0;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+if(btnTts) btnTts.onclick = () => {
+  ttsOn = !ttsOn;
+  try{ localStorage.setItem('advTtsV1', ttsOn ? '1' : '0'); }catch(e){}
+  updTtsBtn();
+  if(ttsOn) speak(textEl.textContent);
+  else if('speechSynthesis' in window) speechSynthesis.cancel();
+};
+updTtsBtn();
 </script>
 </body>
 </html>

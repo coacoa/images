@@ -130,7 +130,7 @@ border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-si
 <header>
 <div class="logo">ローカルAI道場<small>― Ollamaと手持ちGPU 全16課 ―</small></div>
 <div class="btns">
-<button class="sbtn" id="btnSound">🔊 音ON</button>
+<button class="sbtn" id="btnSound">🔊 音ON</button><button class="sbtn" id="btnTts">🗣 読上OFF</button>
 <button class="sbtn" id="btnLevels">🏠 レベル選択</button>
 <button class="sbtn" id="btnReset">🗑 進捗リセット</button>
 </div>
@@ -380,7 +380,7 @@ charEl.innerHTML = CHARS[char] || '';
 charEl.style.display = char && char!== 'none'? '': 'none';
 if(name){ nameEl.textContent = name; nameEl.style.display='';} else nameEl.style.display='none';
 }
-function typeText(txt, onDoneTyping){
+function typeText(txt, onDoneTyping){ speak(txt);
 clearInterval(typing);
 textEl.textContent=''; nextEl.style.display='none';
 boxEl.scrollTop = 0;
@@ -634,6 +634,28 @@ e.target.textContent = soundOn? '🔊 音ON': '🔇 音OFF';
 if(soundOn) beep(700,.06);
 };
 renderProgress('タイトル');
+
+let ttsOn = false;
+try{ ttsOn = localStorage.getItem('advTtsV1') === '1'; }catch(e){}
+const btnTts = document.getElementById('btnTts');
+function updTtsBtn(){ if(btnTts) btnTts.textContent = ttsOn ? '🗣 読上ON' : '🗣 読上OFF'; }
+function speak(txt){
+  if(!ttsOn || !('speechSynthesis' in window)) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(String(txt).replace(/\n+/g, ' '));
+    u.lang = 'ja-JP'; u.rate = 1.0;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+if(btnTts) btnTts.onclick = () => {
+  ttsOn = !ttsOn;
+  try{ localStorage.setItem('advTtsV1', ttsOn ? '1' : '0'); }catch(e){}
+  updTtsBtn();
+  if(ttsOn) speak(textEl.textContent);
+  else if('speechSynthesis' in window) speechSynthesis.cancel();
+};
+updTtsBtn();
 </script>
 </body>
 </html>
