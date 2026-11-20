@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<!-- build: 2026-11-20 20:28:46 JST -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>同期のしくみ道場 ― ホワイトリスト共有の仕組み</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{
+--tb:29%;
+--ink:#dfe6ff; --dim:#8fa3d9; --blue:#3355ff; --panel:#0a0e24;
+--win:#101736; --accent:#ffd94a; --good:#7ee787; --bad:#ff7b72;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+body{margin:0;background:#05060f;color:var(--ink);
+font-family:"DotGothic16","Hiragino Kaku Gothic ProN","Noto Sans JP",monospace,sans-serif;
+-webkit-font-smoothing:none;font-smooth:never;
+display:flex;justify-content:center;padding:14px 10px 40px}
+.cab{width:100%;max-width:760px}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{font-weight:900;letter-spacing:2px;font-size:18px;color:#fff;
+text-shadow:2px 2px 0 var(--blue), 4px 4px 0 #101736}
+.logo small{display:block;font-size:11px;color:var(--dim);letter-spacing:1px;text-shadow:none}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer}
+.sbtn{background:var(--win);color:var(--ink);border:2px solid var(--dim);
+padding:4px 10px;font-size:12px;border-radius:4px}
+.sbtn:hover{border-color:#fff;color:#fff}
+.params{display:flex;gap:14px;background:var(--panel);border:2px solid var(--dim);
+padding:6px 12px;font-size:12px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.params b{color:var(--accent)}
+.bar{display:inline-block;width:120px;height:10px;background:#1a2148;vertical-align:middle;margin-left:4px;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--good);display:block}
+.screen{position:relative;border:6px solid var(--dim);border-radius:6px;overflow:hidden;
+aspect-ratio:16/10;background:#000;image-rendering:pixelated}
+.screen::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+background:repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 3px, transparent 3px 6px)}
+.bg{position:absolute;inset:0;transition:opacity.4s}
+.bg-room{background:linear-gradient(#0d1440 0 55%, #182257 55% 100%)}
+.bg-room::before{content:"";position:absolute;right:8%;top:8%;width:110px;height:130px;
+background:linear-gradient(#1b2a63,#0d1440);border:6px solid #05081a;
+box-shadow:0 0 0 4px #26398a, inset 0 0 0 3px #26398a}
+.bg-term{background:radial-gradient(ellipse at 50% 40%, #06280f 0%, #02140a 70%)}
+.bg-term::before{content:"localStorage ❄ GMストレージ ❄ whitelist_all.json ❄ ☁同期 ❄ 和集合マージ ❄";
+position:absolute;inset:6%;color:#2f9e44;font-size:13px;line-height:2.1;opacity:.55;
+font-family:ui-monospace,Menlo,monospace;word-break:break-all}
+.bg-way{background:linear-gradient(#1b1040 0%, #4a2a7a 55%, #c65b8f 82%, #ffb36b 100%)}
+.stars{position:absolute;inset:0;z-index:1;
+background-image:radial-gradient(2px 2px at 12% 18%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 32% 8%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 55% 22%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 74% 10%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 88% 26%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 44% 30%, #9fb4ff 50%, transparent 51%)}
+.char{position:absolute;bottom:var(--tb);left:50%;transform:translateX(-50%);z-index:2;
+filter:drop-shadow(0 0 10px rgba(60,100,255,.75))}
+.char svg{display:block}
+.ground{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:1;
+background:linear-gradient(transparent, rgba(3,5,16,.92) 30%)}
+.namebox{position:absolute;left:14px;bottom:calc(var(--tb) + 8px);z-index:8;color:#ffffff;
+background:var(--win);border:3px solid var(--dim);padding:2px 14px;font-weight:700;font-size:16px;
+letter-spacing:.06em;text-shadow:2px 2px 0 #000}
+.textbox{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:7;color:#ffffff;
+background:rgba(4,6,20,.97);border-top:4px solid var(--dim);
+padding:12px 16px;font-size:18px;line-height:1.8;letter-spacing:.06em;
+text-shadow:2px 2px 0 #000;
+cursor:pointer;white-space:pre-wrap;overflow-y:auto;overflow-x:hidden;
+scrollbar-width:thin;scrollbar-color:#3355ff #0a0e24}
+.textbox::-webkit-scrollbar{width:10px}
+.textbox::-webkit-scrollbar-track{background:#0a0e24}
+.textbox::-webkit-scrollbar-thumb{background:#3355ff;border:2px solid #04061a}
+.textbox.next{position:absolute;right:12px;bottom:6px;color:var(--accent);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.choices{position:absolute;top:0;left:0;right:0;bottom:calc(var(--tb) + 46px);z-index:9;display:none;flex-direction:column;
+align-items:center;justify-content:center;gap:12px;background:rgba(3,5,16,.78);padding:16px;overflow-y:auto}
+.choices.show{display:flex}
+.choice{width:min(92%,520px);background:#05081f;color:#ffffff;font-weight:700;
+border:3px solid #d5ddff;padding:12px 16px;font-size:18px;letter-spacing:.08em;
+text-shadow:2px 2px 0 #000;text-align:left;border-radius:4px}
+.choice:hover{border-color:var(--accent);color:#fff;background:#1b2a6e}
+.choice::before{content:"▶ ";color:var(--accent)}
+.choice.done{border-color:var(--good)}
+.choice.done::before{content:"✔ ";color:var(--good)}
+.title{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
+justify-content:center;gap:14px;background:radial-gradient(ellipse at 50% 35%, #14205e 0%, #05060f 75%);text-align:center;padding:16px}
+.title h1{margin:0;font-size:clamp(26px,6vw,44px);letter-spacing:3px;color:#fff;
+text-shadow:3px 3px 0 var(--blue), 6px 6px 0 #101736}
+.title p{color:#d5ddff;font-size:14px;margin:0;line-height:1.9}
+.tbtn{background:#05081f;color:#fff;font-weight:700;border:3px solid #d5ddff;padding:10px 26px;font-size:17px;letter-spacing:.08em;border-radius:4px}
+.tbtn:hover{border-color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
+border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;opacity:0;transition:opacity.3s;z-index:50;pointer-events:none}
+.toast.show{opacity:1}
+#diagram{transition:width .25s}
+.screen.diagmenu #diagram{width:min(430px,74%)}
+.screen.diagmenu .choices{bottom:calc(var(--tb) + 8px);flex-direction:row;flex-wrap:wrap;align-content:flex-start;justify-content:center;gap:8px}
+.screen.diagmenu .choice{flex:1 1 28%;width:auto;margin:0;text-align:center;font-size:14px;padding:10px 8px;line-height:1.5}
+
+#diagram{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:min(560px,94%);z-index:5;background:rgba(3,4,16,.88);border:2px solid var(--dim);padding:6px;display:none}
+#diagram svg{width:100%;height:auto;display:block}
+
+footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
+kbd{display:inline-block;background:#21262d;border:1px solid var(--dim);border-bottom-width:2px;
+border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+@media (max-width:560px){.textbox{font-size:15px}.char{bottom:var(--tb)}}
+
+/* ===== スマホ縦長対応：画面を縦に取り、本文ボックスの割合を広げる ===== */
+@media (orientation:portrait) and (max-width:760px){
+:root{--tb:46%}
+.screen{aspect-ratio:auto;height:80vh;height:80dvh}
+.textbox{font-size:16px;line-height:1.75}
+.char svg{width:100px;height:127px}
+.choice{font-size:16px;padding:10px 14px}
+.choices{overflow-y:auto}
+.title h1{font-size:25px}
+.title p{font-size:13px}
+.params{gap:8px;font-size:11px}
+.bar{width:80px}
+}
+
+/* ===== 選択肢が上に隠れる問題の修正：中央寄せのまま、溢れたら先頭からスクロール ===== */
+.choices{justify-content:flex-start;overflow-y:auto}
+.choice:first-child{margin-top:auto}
+.choice:last-child{margin-bottom:auto}
+</style>
+</head>
+<body>
+<div class="cab">
+<header>
+<div class="logo">同期のしくみ道場<small>― ホワイトリスト共有の仕組み 全16課 ―</small></div>
+<div class="btns">
+<button class="sbtn" id="btnSound">🔊 音ON</button><button class="sbtn" id="btnTts">🗣 読上OFF</button>
+<button class="sbtn" id="btnLevels">🏠 レベル選択</button>
+<button class="sbtn" id="btnReset">🗑 進捗リセット</button>
+</div>
+</header>
+
+<div class="params">
+<span>理解済み <b id="pDone">0</b> / 16 課<span class="bar"><i id="bDone" style="width:0%"></i></span></span>
+<span style="color:var(--dim)">現在：<span id="pNow">タイトル</span></span>
+<span style="margin-left:auto;color:var(--dim)">💾 進捗は自動保存（localStorage）</span>
+</div>
+
+<div class="screen" id="screen">
+<div class="bg bg-room" id="bg"></div>
+<div class="stars"></div>
+<div class="ground"></div>
+<div class="char" id="char"></div>
+<div id="diagram"></div>
+<div class="namebox" id="namebox" style="display:none"></div>
+<div class="textbox" id="textbox"><span id="text"></span><span class="next" id="nextmark" style="display:none">▼</span></div>
+<div class="choices" id="choices"></div>
+<div class="title" id="title">
+<h1>同期のしくみ道場</h1>
+<p>テーマは「ホワイトリスト・フィルターの共有の仕組み」。<br>
+localStorageの分裂から、GMストレージとマスター同期まで全16課。<br>
+「分かった！」で次へ、「分からない」で何度でもやり直し。</p>
+<button class="tbtn" id="btnEnter">▶ 道場に入る</button>
+<p>進捗（理解済み ✔）はブラウザに自動保存されます</p>
+</div>
+</div>
+
+<footer>
+遊び方：説明を読んだら「これは分かった！」か「分からない」を選ぶだけ。分かったら確認問題が1問出て、正解でその課は理解済み ✔。
+間違えてもペナルティなし、補足説明を読んで何度でも挑めます。本文クリックで文字送り、長い文は自動スクロール＋手動スクロール可。
+各課では保存と同期の流れを図で描いて、仕組みを見える化します。題材は実際に使っているホワイトリスト・フィルター（v19／v2.5）の仕組みそのものです。手元のブラウザでパネルを開きながら進めると一番効きます。
+</footer>
+<style>
+#galleryWrap{margin:16px 0 4px;text-align:center}
+#gallery{display:none;text-align:left;margin-top:12px}
+.gal-item{background:#070a1c;border:2px solid #2c3a75;padding:10px 12px;margin:0 0 12px}
+.gal-cap{color:#ffd94a;font-size:14px;margin-bottom:8px}
+.gal-diag svg{width:100%;height:auto;display:block}
+</style>
+<div id="galleryWrap">
+<div style="margin-bottom:10px"><button class="sbtn" id="btnListen">🎧 リスニング（全レッスン読み上げ）</button>
+<div id="listenPanel" style="display:none;text-align:left;margin-top:10px;background:#070a1c;border:2px solid #2c3a75;padding:10px 12px">
+<div style="margin-bottom:8px"><button class="sbtn" id="btnPlay">▶ ブラウザ音声で再生</button> <button class="sbtn" id="btnStop">⏹ 停止</button> <span id="listenStatus" style="font-size:12px;color:#9fb7ff"></span></div>
+<div style="height:8px;background:#1a2350;border:1px solid #2c3a75;margin-bottom:8px"><div id="listenFill" style="height:100%;width:0%;background:#ffd94a"></div></div>
+<div style="font-size:12px;color:#9fb7ff;margin-bottom:8px">PCでは Read Aloud 拡張機能で、この下のテキストをそのまま読み上げられます。</div>
+<div id="listenText" style="color:#fff;font-size:15px;line-height:1.7"></div>
+</div></div>
+<button class="sbtn" id="btnGallery">🖼 図解一覧（復習用）を表示</button>
+<div id="gallery"></div>
+</div>
+<script>
+(function(){
+var btnMain = document.getElementById('btnListen');
+var panel = document.getElementById('listenPanel');
+var btn = document.getElementById('btnPlay');
+var btnStop = document.getElementById('btnStop');
+var st = document.getElementById('listenStatus');
+var fill = document.getElementById('listenFill');
+var lt = document.getElementById('listenText');
+if(!btnMain || !panel || !btn) return;
+var playing = false, items = [], idx = 0, curId = 0, watchdog = null, tickTimer = null, itemStart = 0, started = false, attempts = 0, built = false, paused = false;
+function buildItems(){
+  var arr = [];
+  LEVELS.forEach(function(ch, ci){
+    arr.push('第' + (ci + 1) + '章。' + ch.name);
+    ch.lessons.forEach(function(ls){
+      arr.push(ls.title);
+      (ls.teach || []).forEach(function(t){ arr.push(t); });
+    });
+  });
+  return arr;
+}
+function buildText(){
+  lt.innerHTML = '';
+  LEVELS.forEach(function(ch, ci){
+    var h = document.createElement('div');
+    h.style.cssText = 'color:#ffd94a;font-weight:bold;margin:14px 0 6px';
+    h.textContent = '第' + (ci + 1) + '章 ' + ch.name;
+    lt.appendChild(h);
+    ch.lessons.forEach(function(ls){
+      var t = document.createElement('div');
+      t.style.cssText = 'font-weight:bold;margin:10px 0 4px';
+      t.textContent = ls.title;
+      lt.appendChild(t);
+      (ls.teach || []).forEach(function(tx){
+        var p = document.createElement('div');
+        p.style.cssText = 'margin:0 0 8px;white-space:pre-wrap';
+        p.textContent = tx;
+        lt.appendChild(p);
+      });
+    });
+  });
+}
+function pickVoice(){
+  var vs = speechSynthesis.getVoices();
+  for(var i = 0; i < vs.length; i++){ if(vs[i].lang && vs[i].lang.toLowerCase().indexOf('ja') === 0) return vs[i]; }
+  return vs[0] || null;
+}
+function fmt(sec){ var m = Math.floor(sec / 60), s = sec % 60; return m + ':' + (s < 10 ? '0' : '') + s; }
+function setBar(){ if(fill && items.length) fill.style.width = Math.round(idx / items.length * 100) + '%'; }
+function status(){
+  if(!st || !playing) return;
+  var el = Math.floor((Date.now() - itemStart) / 1000);
+  st.textContent = (started ? '再生中 ' : '準備中… ') + (idx + 1) + '/' + items.length + '（' + fmt(el) + '）' + (items[idx] || '').slice(0, 18);
+}
+function clearTimers(){
+  if(watchdog){ clearTimeout(watchdog); watchdog = null; }
+  if(tickTimer){ clearInterval(tickTimer); tickTimer = null; }
+}
+function stop(msg){
+  playing = false; paused = false; curId++; clearTimers();
+  try{ speechSynthesis.cancel(); }catch(e){}
+  btn.textContent = '▶ ブラウザ音声で再生';
+  if(st) st.textContent = msg || '';
+  if(fill) fill.style.width = '0%';
+}
+function armWatchdog(text){
+  if(watchdog) clearTimeout(watchdog);
+  var est = Math.min(45000, Math.max(7000, text.length * 260 + 4000));
+  watchdog = setTimeout(function(){
+    if(!playing) return;
+    curId++;
+    try{ speechSynthesis.cancel(); }catch(e){}
+    idx++; next();
+  }, est);
+}
+function trySpeak(text, useVoice){
+  var my = ++curId;
+  started = false; itemStart = Date.now(); setBar(); status();
+  try{ speechSynthesis.resume(); }catch(e){}
+  var u = new SpeechSynthesisUtterance(String(text).replace(/\n+/g, ' '));
+  u.lang = 'ja-JP'; u.rate = 1.0;
+  var v = useVoice ? pickVoice() : null;
+  if(v) u.voice = v;
+  u.onstart = function(){ if(my === curId){ started = true; status(); } };
+  u.onend = function(){ if(my === curId && playing){ idx++; next(); } };
+  u.onerror = function(){
+    if(my !== curId || !playing) return;
+    if(speechSynthesis.getVoices().length === 0){ stop('音声が見つかりません（この端末では読み上げできません）'); return; }
+    if(useVoice && attempts === 0){ attempts++; trySpeak(text, false); return; }
+    idx++; next();
+  };
+  armWatchdog(text);
+  try{ speechSynthesis.speak(u); }catch(e){ setTimeout(function(){ if(my === curId && playing){ idx++; next(); } }, 300); }
+}
+function next(){
+  if(!playing || paused) return;
+  if(idx >= items.length){ stop('読み上げ終了（全' + items.length + '項目）'); if(fill) fill.style.width = '100%'; return; }
+  attempts = 0;
+  trySpeak(items[idx], true);
+}
+if(btnStop) btnStop.onclick = function(){ if(playing) stop('停止しました'); };
+btnMain.onclick = function(){
+  if(panel.style.display !== 'none'){
+    panel.style.display = 'none';
+    btnMain.textContent = '🎧 リスニング（全レッスン読み上げ）';
+    if(playing) stop('停止しました');
+    return;
+  }
+  if((typeof LEVELS === 'undefined' && typeof NODES === 'undefined')){ return; }
+  if(!built){ buildText(); built = true; }
+  panel.style.display = 'block';
+  btnMain.textContent = '🎧 リスニングを閉じる';
+};
+btn.onclick = function(){
+  if(!('speechSynthesis' in window)){ if(st) st.textContent = 'このブラウザは読み上げに未対応です'; return; }
+  if(playing && !paused){
+    paused = true; curId++; clearTimers();
+    try{ speechSynthesis.cancel(); }catch(e){}
+    btn.textContent = '▶ 再開';
+    if(st) st.textContent = '一時停止中 ' + (idx + 1) + '/' + items.length + '（再開はこの項目の頭から）';
+    return;
+  }
+  if(playing && paused){
+    paused = false;
+    btn.textContent = '⏸ 一時停止';
+    if(st) st.textContent = '再開します';
+    attempts = 0;
+    clearTimers();
+    tickTimer = setInterval(status, 500);
+    trySpeak(items[idx], true);
+    return;
+  }
+  if((typeof LEVELS === 'undefined' && typeof NODES === 'undefined')){ if(st) st.textContent = 'データ読み込みに失敗しました'; return; }
+  items = buildItems(); idx = 0; playing = true; itemStart = Date.now();
+  btn.textContent = '⏸ 一時停止';
+  if(st) st.textContent = '準備中…';
+  if(fill) fill.style.width = '0%';
+  try{ speechSynthesis.cancel(); }catch(e){}
+  clearTimers();
+  tickTimer = setInterval(status, 500);
+  setTimeout(next, 200);
+};
+})();
+</script>
+<script>
+(function(){
+var btn = document.getElementById('btnGallery');
+var gal = document.getElementById('gallery');
+var built = false;
+function build(){
+var html = '';
+if (typeof LEVELS !== 'undefined' && typeof DIAG !== 'undefined') {
+LEVELS.forEach(function(lv, li){
+lv.lessons.forEach(function(ls, i){
+if (DIAG[ls.id]) html += '<div class="gal-item"><div class="gal-cap">第' + (li+1) + '章 第' + (i+1) + '課：' + ls.title + '</div><div class="gal-diag">' + DIAG[ls.id] + '</div></div>';
+});
+});
+} else if (typeof DIAG !== 'undefined') {
+Object.keys(DIAG).forEach(function(k){
+var cap = k;
+if (typeof NODES !== 'undefined' && NODES[k] && NODES[k].title) cap = NODES[k].title;
+html += '<div class="gal-item"><div class="gal-cap">' + cap + '</div><div class="gal-diag">' + DIAG[k] + '</div></div>';
+});
+}
+gal.innerHTML = html || '<div class="gal-cap">図解はありません</div>';
+}
+btn.onclick = function(){
+var show = gal.style.display !== 'block';
+if (show && !built) { build(); built = true; }
+gal.style.display = show ? 'block' : 'none';
+btn.textContent = show ? '🖼 図解一覧（復習用）を隠す' : '🖼 図解一覧（復習用）を表示';
+};
+})();
+</script>
+</div>
+
+<div class="toast" id="toast">💾 保存しました</div>
+
+<script>
+"use strict";
+/* ============ シルエット ============ */
+function sil(extra){
+return '<svg width="150" height="190" viewBox="0 0 120 150">'
++ '<circle cx="60" cy="34" r="17" fill="#141f52"/>'
++ '<path d="M22 150 C22 96 40 66 60 66 C80 66 98 96 98 150 Z" fill="#141f52"/>'
++ (extra || '') + '</svg>';
+}
+const CHARS = {
+sennin: sil('<path d="M28 26 L60 2 L92 26 L84 30 L60 14 L36 30 Z" fill="#141f52"/>'
++ '<path d="M48 44 L72 44 L66 92 L54 92 Z" fill="#141f52"/>'),
+ore: sil(''),
+none: ''
+};
+
+/* ============ カリキュラム ============ */
+/* teach: 説明ページ（クリックで送る） / retry: 補足説明 / quiz: 確認問題 */
+const LEVELS = [
+{ name:'第1章 なぜバラバラだったか', desc:'localStorageの正体と、ブラウザ×サイトで分裂する理由。', lessons:[
+{ id:'s1', title:'データの住所は「ブラウザ×サイト」', teach:[
+'フィルターの許可リストは、サーバーでもアカウントでもなく「今使っているブラウザの中」に保存されておる。\nしかも旧版の保存先 localStorage は、サイトごとに別の箱に分かれておる。',
+'たとえるなら、部屋（サイト）ごとに鍵付きの引き出しがある状態じゃ。\nYouTube の引き出しに「このチャンネルは許可」と書いても、Googleニュースの引き出しは空のまま。\nこれが「同じはずなのに出てくる」の正体じゃ。'],
+retry:'保存先 localStorage はブラウザ×サイトごとの別箱。サイトが違えばリストも別。',
+quiz:{ q:'旧版で、YouTubeで許可したチャンネルがGoogleニュースで効かなかった理由は？', choices:[
+{ t:'サイトごとに別の保存箱（localStorage）だったから', ok:true }, { t:'Googleアカウントが違うから', ok:false }, { t:'YouTubeの仕様変更のせい', ok:false } ] } },
+{ id:'s2', title:'オリジンという壁', teach:[
+'サイトの住所の単位を「オリジン」と言う。www.youtube.com と news.google.com は別のオリジンじゃ。\nlocalStorage はオリジンをまたいで読み書きできない。これがブラウザの安全の決まりじゃ。',
+'だから旧版の書き出しファイルが whitelist_ホスト名.json とサイト別になっていたのも必然じゃ。\n箱がサイトごとに分かれている以上、出入りもサイトごとになる。'],
+retry:'オリジン＝サイトの住所単位。localStorage はオリジンを越えられない。',
+quiz:{ q:'localStorage がサイトをまたいで共有できない理由は？', choices:[
+{ t:'ファイル名が違うから', ok:false }, { t:'オリジンごとに分けられているブラウザの決まりだから', ok:true }, { t:'Violentmonkeyの不具合', ok:false } ] } },
+{ id:'s3', title:'箱の数は掛け算で増える', teach:[
+'ブラウザが3つ、対象サイトが7つあれば、箱は 3×7＝21個。\n新しいブラウザを入れるたび、箱はサイトの数だけ増える。',
+'移し替えの作業も同じだけ増える。\n「ブラウザ複数・アカウント複数だとどうしようもない」という感覚は正しくて、これは根性ではなく構造の問題じゃ。'],
+retry:'箱の数＝ブラウザ数×サイト数。作業量は掛け算で増える。',
+quiz:{ q:'管理が破綻した根本原因は？', choices:[
+{ t:'許可したチャンネルが多すぎたこと', ok:false }, { t:'BlockTubeの使い方が悪かったこと', ok:false }, { t:'保存の箱がブラウザ×サイトで分裂していたこと', ok:true } ] } },
+{ id:'s4', title:'アカウントとは無関係', teach:[
+'YouTubeの「チャンネルをおすすめしない」は Googleアカウント側の仕組み。アカウントごとに効く。\n一方このフィルターは、ブラウザの中で画面（DOM）を見て出し分けし、保存もブラウザの中じゃ。',
+'だからアカウントを切り替えても、ログアウトしていても、フィルターの効き方は変わらない。\n逆に言うと、アカウント側の設定とフィルターは二重管理になりやすい。寄せるならブラウザ側に寄せるのが筋じゃ。'],
+retry:'アカウントのおすすめ管理と、ブラウザ内フィルターは別物。フィルターはアカウント無関係。',
+quiz:{ q:'このフィルターがGoogleアカウントを切り替えても同じに効く理由は？', choices:[
+{ t:'アカウント情報を読み取っているから', ok:false }, { t:'判定も保存もブラウザの中で完結しているから', ok:true }, { t:'YouTubeと連携しているから', ok:false } ] } },
+]},
+{ name:'第2章 GMストレージへの引っ越し', desc:'v19の変更点。保存先を共通の箱へ移す。', lessons:[
+{ id:'s5', title:'GMストレージという共通の箱', teach:[
+'Violentmonkey には、スクリプト専用の保存領域「GMストレージ」がある。\nlocalStorage と違い、サイトではなくスクリプトに紐づく。',
+'つまり同じスクリプトなら、YouTubeでもニュースでもnoteでも、読み書きするのは同じ1つの箱。\nブラウザの中では、サイトの壁が消える。'],
+retry:'GMストレージはスクリプト単位の共通の箱。全サイトで同じリストを見られる。',
+quiz:{ q:'GMストレージが localStorage と決定的に違う点は？', choices:[
+{ t:'容量が無限なこと', ok:false }, { t:'クラウドに保存されること', ok:false }, { t:'サイトごとでなくスクリプトごとに1つで、全サイト共通なこと', ok:true } ] } },
+{ id:'s6', title:'v19で変えたのは保存先だけ', teach:[
+'v19（版2.4→2.5）の改修は、保存の読み書きを localStorage から GMストレージに差し替えただけじゃ。\nパネルの見た目、許可・非表示の判定、サイトごとの名前の取り方は、v18と変えておらん。',
+'「気に入っていた物を土台にする」という決め方に沿った改修じゃ。\n変わったのは住所だけ、中身は同じ。だから操作の覚え直しは要らない。'],
+retry:'v19の変更は保存先のみ。パネルと判定はv18のまま。',
+quiz:{ q:'v19で変更されたのは何か？', choices:[
+{ t:'保存先（localStorage→GMストレージ）だけ', ok:true }, { t:'パネルのデザイン', ok:false }, { t:'ホワイトリストの判定方式', ok:false } ] } },
+{ id:'s7', title:'旧データの自動引っ越し', teach:[
+'引っ越しの仕掛けは単純じゃ。GM側が空なら、まず旧 localStorage を覗き、あれば GM へ写してから使う。\nだからサイトを一度開くたびに、そのサイトの旧リストが共通の箱へ合流していく。',
+'書き込みは GM と localStorage の両方に行う（控えを残す形）。\nサイトを巡回し終えるまでは、共通リストは「育ち途中」な点だけ覚えておくとよい。'],
+retry:'初回読み取りで旧データをGMへ自動コピー。サイト巡回で順次マージされる。',
+quiz:{ q:'旧リストが共通化されるタイミングは？', choices:[
+{ t:'スクリプトを入れた瞬間に全部まとめて', ok:false }, { t:'各サイトを一度開いたとき（読み取り時に自動で取り込む）', ok:true }, { t:'手動で書き出ししたときだけ', ok:false } ] } },
+{ id:'s8', title:'GMでも越えられない壁', teach:[
+'GMストレージで消えるのは「サイトの壁」だけ。「ブラウザの壁」は残る。\nGMストレージも結局はそのブラウザの中の箱だからじゃ。',
+'PCが違えば当然別だし、同じPCでもブラウザやプロファイルが違えば別。\nブラウザをまたぐ共有には、もう一段の仕掛け（次の章のマスター）が要る。'],
+retry:'GMで消えるのはサイトの壁だけ。ブラウザ・PCの壁は残る。',
+quiz:{ q:'GMストレージ化しても残る問題は？', choices:[
+{ t:'サイトごとに分かれること', ok:false }, { t:'ブラウザやPCが違うとリストが別なこと', ok:true }, { t:'保存容量が足りないこと', ok:false } ] } },
+]},
+{ name:'第3章 マスター同期の仕組み', desc:'whitelist_all.jsonの配布と和集合マージ。', lessons:[
+{ id:'s9', title:'マスター＝Pagesの1ファイル', teach:[
+'ブラウザをまたぐ共有の実体は、GitHub Pages に置いた whitelist_all.json という1つのファイルじゃ。\nこれが「マスター（配布元）」。住所は coacoa.github.io/images/html/whitelist_all.json 。',
+'各ブラウザのスクリプトは、この住所を決め打ちで知っておる（スクリプト内の SYNC_URL）。\nだからアカウントもログインも関係なく、どのブラウザからでも同じマスターを取りに行ける。'],
+retry:'マスターはPages上の whitelist_all.json 1ファイル。全環境がここを見に行く。',
+quiz:{ q:'マスターの置き場所は？', choices:[
+{ t:'各ブラウザのGMストレージ', ok:false }, { t:'Googleドライブ', ok:false }, { t:'GitHub Pages の whitelist_all.json', ok:true } ] } },
+{ id:'s10', title:'取得のタイミングと☁', teach:[
+'スクリプトは対象サイトを開いたときにマスターを取りに行く。ただし毎回ではなく、前回から6時間あいていれば、じゃ。\nすぐ反映したいときは、パネルの ☁ ボタンを押せばその場で取り直す。',
+'取得に失敗しても実害はない。手元のリストでそのまま動き続け、次に成功したときに合流する。\n「同期できない＝フィルターが壊れる」ではないのが大事な設計じゃ。'],
+retry:'自動取得は6時間間隔、☁で即時。失敗しても手元リストで継続。',
+quiz:{ q:'マスターを取りに行く間隔と、急ぐときの手段は？', choices:[
+{ t:'6時間間隔の自動取得／急ぐときは☁ボタン', ok:true }, { t:'1分ごと／ページ再読み込み', ok:false }, { t:'週1回／再インストール', ok:false } ] } },
+{ id:'s11', title:'和集合マージ（足し算だけ）', teach:[
+'取り込んだマスターは、手元のリストと「和集合」で合体する。\n手元 {A, B} と マスター {B, C} なら結果は {A, B, C}。重なる B は1つじゃ。',
+'この方式の良い所は「消えない」こと。どの環境で足した許可も、合流すれば全体に残る。\n代わりに弱点もある。次の課で扱う「削除が戻る」現象じゃ。'],
+retry:'マージは和集合＝足し算だけ。消えない代わりに、消し方に作法が要る。',
+quiz:{ q:'和集合マージの性質として正しいのは？', choices:[
+{ t:'新しい方で全部上書きされる', ok:false }, { t:'足し算だけなので、取り込んでも項目は消えない', ok:true }, { t:'古い方で全部上書きされる', ok:false } ] } },
+{ id:'s12', title:'削除が戻るときの直し方', teach:[
+'手元で項目を消しても、マスターに残っていれば、次の同期で和集合により戻ってくる。\nこれは不具合ではなく、足し算だけの方式の必然じゃ。',
+'削除を全体に広げる正しい手順は「マスター側を直す」こと。\n消した状態のリストを書き出して whitelist_all.json を差し替える。配布元が正になれば、全環境が正になる。'],
+retry:'削除はマスター側を直すのが正。和集合は「戻る」のが仕様。',
+quiz:{ q:'消したはずの項目が同期で戻ってきた。直し方は？', choices:[
+{ t:'全ブラウザで同じ項目を消す', ok:false }, { t:'スクリプトを入れ直す', ok:false }, { t:'マスター（whitelist_all.json）側からも消して差し替える', ok:true } ] } },
+]},
+{ name:'第4章 運用の実践', desc:'新しい環境の入れ方、広げ方、トラブル切り分け。', lessons:[
+{ id:'s13', title:'新しい環境への入れ方', teach:[
+'新しいPC・ブラウザでの初期設定は2つだけじゃ。\n1. Violentmonkey を入れる\n2. スクリプト（v2.5）を入れる',
+'あとは対象サイトを開けば、マスターを自動で取り込んで同じ状態になる。\nGoogleアカウントの切り替えは無関係。プロファイルが別のブラウザなら、その分だけ同じ2手順を繰り返す。'],
+retry:'初期設定は VM＋スクリプトの2つ。あとは開けば自動で揃う。',
+quiz:{ q:'新しいブラウザで同じ状態にする手順は？', choices:[
+{ t:'旧ブラウザからlocalStorageをコピーする', ok:false }, { t:'Googleアカウントを同期する', ok:false }, { t:'Violentmonkeyとスクリプトを入れ、対象サイトを開く', ok:true } ] } },
+{ id:'s14', title:'広げる手順（同期→書き出し→差し替え）', teach:[
+'どれかの環境で増えた分を全体へ広げる手順は3つじゃ。\n1. 一番揃っているブラウザで ☁ 同期（マスターを全部取り込む）\n2. 📤 書き出し\n3. whitelist_all.json を差し替えて push',
+'順番が大事で、先に同期してから書き出すと、他の環境の追加分を取りこぼさない。\n書き出しファイル名とマスター名が同じ（whitelist_all.json）なのは、この差し替えを楽にするためじゃ。'],
+retry:'広げる手順は「同期→書き出し→差し替えpush」。同期を先にするのがコツ。',
+quiz:{ q:'全体へ広げるとき、先に同期する理由は？', choices:[
+{ t:'他の環境の追加分を取りこぼさず書き出すため', ok:true }, { t:'ファイルサイズを小さくするため', ok:false }, { t:'Pagesの反映を速くするため', ok:false } ] } },
+{ id:'s15', title:'書き出し役を決める', teach:[
+'実務のコツは「書き出し役のブラウザを1つ決める」ことじゃ。普段一番使うブラウザを役にして、追加はなるべくそこでやる。',
+'あちこちで追加して、あちこちから書き出すと、どれが最新か分からなくなる。\nマスターは常に「最後に差し替えた物が正」。役を決めれば、この混乱が消える。'],
+retry:'書き出し役は1つに決める。マスターは最後の差し替えが正。',
+quiz:{ q:'運用が混乱しないコツは？', choices:[
+{ t:'全ブラウザから毎回書き出す', ok:false }, { t:'書き出し役のブラウザを1つ決める', ok:true }, { t:'マスターを複数に分ける', ok:false } ] } },
+{ id:'s16', title:'トラブル切り分けと卒業', teach:[
+'切り分けは3型じゃ。\n同期されない → ☁を押す／マスターのURLが開けるか見る／6時間ルールを思い出す。\nパネルが二重に出る → 旧版スクリプトが残っているので無効化。\n消した物が戻る → 第12課の通り、マスター側を直す。',
+'卒業じゃ。仕組みの合言葉は「箱はGMで1つ、配布はマスター1枚、広げるのは人の手で1回」。\nこの3つが見えていれば、ブラウザが何台増えても作業は増えない。'],
+retry:'合言葉：箱はGMで1つ、配布はマスター1枚、広げるのは人の手で1回。',
+quiz:{ q:'この同期の仕組みの合言葉は？', choices:[
+{ t:'全部アカウントで同期する', ok:false }, { t:'ブラウザごとに丁寧に移す', ok:false }, { t:'箱はGMで1つ、配布はマスター1枚、広げるのは人の手で1回', ok:true } ] } },
+]},
+];
+
+/* ============ エンジン ============ */
+const SAVE_KEY = 'syncDojoSaveV1';
+const TOTAL = LEVELS.reduce((a,l)=>a+l.lessons.length,0);
+let done = {};
+try{ const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); if(s && s.done) done = s.done;}catch(e){}
+let soundOn = true, typing = null, advanceFn = null;
+let cur = { level:0, lesson:0, pages:[], page:0};
+
+const $ = id => document.getElementById(id);
+const bgEl=$('bg'), charEl=$('char'), nameEl=$('namebox'), textEl=$('text'),
+boxEl=$('textbox'), chEl=$('choices'), nextEl=$('nextmark');
+
+function beep(freq, dur, delay, vol){
+if(!soundOn) return;
+try{
+const ctx = beep.ctx || (beep.ctx = new (window.AudioContext||window.webkitAudioContext)());
+if(ctx.state === 'suspended') ctx.resume();
+const o = ctx.createOscillator(), g = ctx.createGain();
+o.type='square'; o.frequency.value = freq || 660;
+g.gain.value = vol || 0.03;
+o.connect(g); g.connect(ctx.destination);
+const t = ctx.currentTime + (delay||0);
+o.start(t); o.stop(t + (dur||0.06));
+}catch(e){}
+}
+function save(){
+try{ localStorage.setItem(SAVE_KEY, JSON.stringify({done})); toast();}catch(e){}
+}
+function toast(){
+const t=$('toast'); t.classList.add('show');
+clearTimeout(toast.tm); toast.tm=setTimeout(()=>t.classList.remove('show'), 900);
+}
+function doneCount(){ return Object.keys(done).filter(k=>done[k]).length;}
+function renderProgress(now){
+$('pDone').textContent = doneCount();
+$('bDone').style.width = (doneCount()/TOTAL*100) + '%';
+if(now) $('pNow').textContent = now;
+}
+function setScene(bg, char, name){
+bgEl.className = 'bg ' + bg;
+charEl.innerHTML = CHARS[char] || '';
+charEl.style.display = char && char!== 'none'? '': 'none';
+if(name){ nameEl.textContent = name; nameEl.style.display='';} else nameEl.style.display='none';
+}
+function typeText(txt, onDoneTyping){ speak(txt);
+clearInterval(typing);
+textEl.textContent=''; nextEl.style.display='none';
+boxEl.scrollTop = 0;
+advanceFn = null;
+let i=0;
+typing = setInterval(()=>{
+i++;
+textEl.textContent = txt.slice(0, i);
+boxEl.scrollTop = boxEl.scrollHeight;
+const ch = txt.charAt(i-1);
+if(ch && ch!== ' ' && ch!== '\n' && i % 2 === 1){
+beep(980 + Math.random()*520, 0.018, 0, 0.012);
+}
+if(i >= txt.length){
+clearInterval(typing); typing=null;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+}
+}, 26);
+boxEl.onclick = ()=>{
+if(typing){
+clearInterval(typing); typing=null;
+textEl.textContent = txt; boxEl.scrollTop = boxEl.scrollHeight;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+} else if(advanceFn){
+const f = advanceFn; advanceFn = null; f();
+}
+};
+}
+document.addEventListener('keydown', e=>{
+if(!typing && advanceFn && (e.key === ' ' || e.key === 'Enter')){
+e.preventDefault();
+const f = advanceFn; advanceFn = null; f();
+}
+});
+function showChoices(items){
+chEl.innerHTML='';
+items.forEach(it=>{
+const b=document.createElement('button');
+b.className='choice' + (it.done? ' done': '');
+b.textContent=it.t;
+b.onclick=()=>{ beep(520,.06); setTimeout(()=>beep(780,.07),70); chEl.classList.remove('show'); it.fn();};
+chEl.appendChild(b);
+});
+chEl.classList.add('show');
+const dg = $('diagram');
+if(dg && dg.style.display === 'block'){
+$('screen').classList.add('diagmenu');
+requestAnimationFrame(()=>{
+const sr = $('screen').getBoundingClientRect();
+const dr = dg.getBoundingClientRect();
+chEl.style.top = Math.max(0, Math.round(dr.bottom - sr.top + 8)) + 'px';
+});
+} else { $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+}
+function hideChoices(){ chEl.classList.remove('show'); chEl.innerHTML=''; chEl.style.top=''; $('screen').classList.remove('diagmenu'); }
+
+
+/* ============ 図解（8bit風SVG・黒板） ============ */
+function _cm(x,y,ch,fill){ return '<rect x="'+(x+3)+'" y="'+(y+3)+'" width="30" height="30" fill="#000" opacity=".45"/><rect x="'+x+'" y="'+y+'" width="30" height="30" fill="'+fill+'" stroke="#dfe6ff" stroke-width="2"/><text x="'+(x+15)+'" y="'+(y+21)+'" font-size="14" fill="#05060f" text-anchor="middle" font-weight="bold">'+ch+'</text>'; }
+function _ar(x1,y1,x2,y2,col){ col=col||'#8fa3d9'; var pts; if(Math.abs(x2-x1)>=Math.abs(y2-y1)){ pts = x2>x1 ? [[x2,y2],[x2-10,y2-6],[x2-10,y2+6]] : [[x2,y2],[x2+10,y2-6],[x2+10,y2+6]]; } else { pts = y2>y1 ? [[x2,y2],[x2-6,y2-10],[x2+6,y2-10]] : [[x2,y2],[x2-6,y2+10],[x2+6,y2+10]]; } return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+col+'" stroke-width="4"/><polygon points="'+pts.map(function(p){return p.join(',');}).join(' ')+'" fill="'+col+'"/>'; }
+function _ln(x1,y1,x2,y2,col){ return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+(col||'#8fa3d9')+'" stroke-width="3"/>'; }
+function _tx(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'" text-anchor="middle">'+str+'</text>'; }
+function _txl(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'">'+str+'</text>'; }
+function _bx(x,y,w,h,label,fill){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'" stroke="#8fa3d9" stroke-width="2"/><text x="'+(x+w/2)+'" y="'+(y+h/2+5)+'" font-size="12" fill="#fff" text-anchor="middle">'+label+'</text>'; }
+function _tag(x,y,str,col){ var w=str.length*12+12; return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="20" fill="'+col+'"/><text x="'+(x+w/2)+'" y="'+(y+14)+'" font-size="11" fill="#05060f" text-anchor="middle" font-weight="bold">'+str+'</text>'; }
+function _svg(inner){ return '<svg viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'+inner+'</svg>'; }
+var BL='#4a6bff', YL='#ffd94a', GN='#7ee787', RD='#ff7b72', PU='#b18cff', GY='#5a6b9e', DM='#8fa3d9';
+const DIAG = {
+s1: _svg(_tx(180,24,'localStorage＝サイトごとの箱',DM,12)
+ + _bx(15,50,100,40,'YouTube箱','#1b2a6e') + _bx(130,50,100,40,'ニュース箱','#1b2a6e') + _bx(245,50,100,40,'note箱','#1b2a6e')
+ + _tx(180,115,'許可は箱ごとに別々',YL,12)),
+s2: _svg(_tx(180,24,'オリジン＝サイトの住所単位',DM,12)
+ + _bx(15,48,135,42,'YouTube','#1b2a6e') + _bx(210,48,135,42,'Googleニュース','#1b2a6e')
+ + _bx(168,40,24,62,'壁','#5a2a2a')
+ + _tx(180,118,'localStorageは壁を越えられない',YL,12)),
+s3: _svg(_tx(180,22,'箱の数＝ブラウザ数 × サイト数',DM,12)
+ + _bx(30,40,90,30,'箱','#1b2a6e') + _bx(135,40,90,30,'箱','#1b2a6e') + _bx(240,40,90,30,'箱','#1b2a6e')
+ + _bx(30,80,90,30,'箱','#1b2a6e') + _bx(135,80,90,30,'箱','#1b2a6e') + _bx(240,80,90,30,'箱','#1b2a6e')
+ + _tx(180,124,'3 × 7 ＝ 21個… 作業も掛け算',YL,12)),
+s4: _svg(_tx(180,22,'2つの仕組みは別物',DM,12)
+ + _bx(10,45,165,50,'アカウント側（おすすめ）','#1b2a6e') + _bx(185,45,165,50,'ブラウザ内（フィルター）','#1b2a6e')
+ + _tx(180,115,'フィルターはアカウント無関係',YL,12)),
+s5: _svg(_tx(180,22,'GMストレージ＝スクリプトの共通の箱',DM,12)
+ + _tag(28,38,'YouTube',BL) + _tag(140,38,'ニュース',BL) + _tag(252,38,'note',BL)
+ + _ar(70,58,150,82,YL) + _ar(180,58,180,82,YL) + _ar(290,58,210,82,YL)
+ + _bx(105,84,150,34,'GMストレージ','#1b2a6e')),
+s6: _svg(_tx(180,24,'v19の変更は「住所」だけ',DM,12)
+ + _bx(15,48,130,42,'localStorage','#1b2a6e') + _ar(150,69,205,69,YL) + _bx(210,48,135,42,'GMストレージ','#1b2a6e')
+ + _tx(180,112,'パネル・判定は v18 のまま',GN,12)),
+s7: _svg(_tx(180,24,'旧データの自動引っ越し',DM,12)
+ + _bx(15,48,130,42,'旧localStorage','#1b2a6e') + _ar(150,69,205,69,GN) + _bx(210,48,135,42,'GMストレージ','#1b2a6e')
+ + _tx(180,112,'サイトを開くごとに合流していく',YL,12)),
+s8: _svg(_tx(180,24,'ブラウザの壁は残る',DM,12)
+ + _bx(25,45,130,48,'ブラウザAのGM','#1b2a6e') + _bx(205,45,130,48,'ブラウザBのGM','#1b2a6e')
+ + _bx(168,38,24,62,'壁','#5a2a2a')
+ + _tx(180,115,'サイトの壁だけが消えた',YL,12)),
+s9: _svg(_tx(180,20,'マスター＝配布元の1ファイル',DM,12)
+ + _bx(95,30,170,30,'whitelist_all.json','#1b2a6e')
+ + _ar(120,60,70,88,YL) + _ar(180,60,180,88,YL) + _ar(240,60,290,88,YL)
+ + _bx(15,90,110,30,'ブラウザA','#14204d') + _bx(125,90,110,30,'ブラウザB','#14204d') + _bx(235,90,110,30,'スマホ','#14204d')),
+s10: _svg(_tx(180,24,'取得のタイミング',DM,12)
+ + _bx(8,48,104,40,'サイトを開く','#1b2a6e') + _ar(112,68,126,68,YL)
+ + _bx(128,48,104,40,'6hあけば取得','#1b2a6e') + _ar(232,68,246,68,YL)
+ + _bx(248,48,104,40,'☁なら即時','#1b2a6e')
+ + _tx(180,112,'失敗しても手元リストで継続',GN,12)),
+s11: _svg(_tx(180,24,'和集合マージ＝足し算だけ',DM,12)
+ + _bx(10,48,100,40,'手元 {A,B}','#1b2a6e') + _tx(125,74,'＋',YL,14)
+ + _bx(140,48,110,40,'マスター {B,C}','#1b2a6e') + _ar(255,68,272,68,GN)
+ + _bx(275,48,80,40,'{A,B,C}','#1b2a6e')
+ + _tx(180,112,'重なりは1つ、消えることはない',YL,12)),
+s12: _svg(_tx(180,24,'削除が戻るのは仕様',DM,12)
+ + _bx(15,48,140,40,'マスターに残っている','#1b2a6e') + _ar(160,68,205,68,RD)
+ + _bx(210,48,135,40,'同期で手元に復活','#5a2a2a')
+ + _tx(180,112,'直す場所はマスター側',YL,12)),
+s13: _svg(_tx(180,24,'新しい環境の初期設定は2つ',DM,12)
+ + _bx(8,48,104,40,'1 VMを入れる','#1b2a6e') + _ar(112,68,126,68,YL)
+ + _bx(128,48,104,40,'2 スクリプト','#1b2a6e') + _ar(232,68,246,68,YL)
+ + _bx(248,48,104,40,'開けば揃う','#1b2a6e')
+ + _tx(180,112,'アカウントの作業は不要',GN,12)),
+s14: _svg(_tx(180,24,'広げる手順（順番が大事）',DM,12)
+ + _bx(8,48,104,40,'☁ 同期','#1b2a6e') + _ar(112,68,126,68,YL)
+ + _bx(128,48,104,40,'📤 書き出し','#1b2a6e') + _ar(232,68,246,68,YL)
+ + _bx(248,48,104,40,'差し替えpush','#1b2a6e')
+ + _tx(180,112,'先に同期＝取りこぼし防止',YL,12)),
+s15: _svg(_tx(180,24,'書き出し役は1つに決める',DM,12)
+ + _bx(25,48,95,40,'ブラウザA','#14204d') + _bx(132,48,95,40,'ブラウザB','#1b2a6e') + _bx(239,48,95,40,'ブラウザC','#14204d')
+ + _tag(140,26,'書き出し役',GN)
+ + _tx(180,112,'マスターは最後の差し替えが正',YL,12)),
+s16: _svg(_tx(180,20,'トラブル切り分け 3型',DM,12)
+ + _txl(25,48,'同期されない → ☁を押す／URL確認',YL,12)
+ + _txl(25,74,'パネルが二重 → 旧版を無効化',YL,12)
+ + _txl(25,100,'消した物が戻る → マスターを直す',YL,12)),
+};
+function showDiagFor(id){
+const d = $('diagram');
+if(DIAG[id]){ d.innerHTML = DIAG[id]; d.style.display = 'block'; }
+else d.style.display = 'none';
+}
+function hideDiag(){ $('diagram').style.display = 'none'; $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+
+/* ============ 画面遷移 ============ */
+function goLevels(){
+hideChoices();
+hideDiag();
+setScene('bg-room','none','');
+renderProgress('レベル選択');
+const dc = doneCount();
+const intro = dc === 0
+? '「よく来た。わしがどうき仙人じゃ」\nテーマは「フィルター共有の仕組み」。全' + TOTAL + '課。\n好きな編からでよい。分かるまで、何度でも付き合うぞ。'
+: '「戻ったか。現在の理解済みは ' + dc + ' / ' + TOTAL + ' 課じゃ」\n続きをやるもよし、済んだ課を復習するもよし。';
+typeText(intro, ()=>{
+showChoices(LEVELS.map((lv, i)=>{
+const c = lv.lessons.filter(l=>done[l.id]).length;
+return { t: lv.name + '（' + c + '/' + lv.lessons.length + ' 済）', done: c === lv.lessons.length,
+fn: ()=>goLessons(i)};
+}));
+});
+}
+function goLessons(li){
+hideChoices();
+hideDiag();
+const lv = LEVELS[li];
+cur.level = li;
+setScene('bg-room','sennin','どうき仙人');
+renderProgress(lv.name);
+typeText('\n' + lv.desc + '\n課を選ぶのじゃ。✔ は理解済み。復習は何度でもできるぞ。', ()=>{
+showChoices(
+lv.lessons.map((ls, i)=>({ t: ls.title, done:!!done[ls.id], fn: ()=>startLesson(li, i, false)}))
+.concat([{ t:'レベル選択に戻る', fn: goLevels}])
+);
+});
+}
+function startLesson(li, idx, withRetry){
+hideChoices();
+const ls = LEVELS[li].lessons[idx];
+cur.level = li; cur.lesson = idx;
+cur.pages = ls.teach.slice();
+if(withRetry) cur.pages.push('\n' + ls.retry);
+cur.page = 0;
+setScene('bg-term','sennin','どうき仙人');
+renderProgress(LEVELS[li].name + '：' + ls.title);
+showDiagFor(ls.id);
+teachPage();
+}
+function teachPage(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+const isLast = cur.page >= cur.pages.length - 1;
+typeText('\n' + cur.pages[cur.page], ()=>{
+if(isLast){ showCheck();}
+else { advanceFn = ()=>{ cur.page++; teachPage();};}
+});
+}
+function showCheck(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+showChoices([
+{ t:'これは分かった！（確認問題へ）', fn: showQuiz},
+{ t:'分からない（もう一度聞く）', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'レッスン一覧に戻る', fn: ()=>goLessons(cur.level)}
+]);
+}
+function showQuiz(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+setScene('bg-term','sennin','どうき仙人');
+typeText('\n' + ls.quiz.q, ()=>{
+showChoices(ls.quiz.choices.map(c=>({
+t: c.t,
+fn: ()=>{ if(c.ok) completeLesson(); else wrongAnswer();}
+})));
+});
+}
+function wrongAnswer(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+beep(220,.12); setTimeout(()=>beep(180,.14),120);
+typeText('「むむ、違うぞ。焦らなくてよい」\n' + ls.retry, ()=>{
+showChoices([
+{ t:'もう一度説明を聞く', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'もう一度問題に挑む', fn: showQuiz}
+]);
+});
+}
+function completeLesson(){
+hideDiag();
+const li = cur.level, idx = cur.lesson;
+const ls = LEVELS[li].lessons[idx];
+done[ls.id] = true; save();
+[523,659,784,1046].forEach((f,i)=>beep(f,.1,i*0.11));
+renderProgress(LEVELS[li].name + '：' + ls.title + ' ✔');
+const dc = doneCount();
+const levelDone = LEVELS[li].lessons.every(l=>done[l.id]);
+let msg = '「うむ、分かったようじゃな」\n理解済み ✔（合計 ' + dc + ' / ' + TOTAL + ' 課）';
+if(dc >= TOTAL){
+setScene('bg-way','sennin','どうき仙人');
+msg += '\n\n――全課目、修了じゃ！\nここから先は実地あるのみ。Doom を開いて、指で覚えていくのじゃ。卒業おめでとう！';
+} else if(levelDone){
+msg += '\nは全課修了じゃ。よくやった。';
+}
+typeText(msg, ()=>{
+const items = [];
+if(dc < TOTAL){
+if(idx + 1 < LEVELS[li].lessons.length){
+items.push({ t:'次の例題へ（' + LEVELS[li].lessons[idx+1].title + '）', fn: ()=>startLesson(li, idx+1, false)});
+} else if(li + 1 < LEVELS.length){
+items.push({ t:'次の編へ（' + LEVELS[li+1].name + '）', fn: ()=>goLessons(li+1)});
+}
+}
+items.push({ t:'レッスン一覧に戻る', fn: ()=>goLessons(li)});
+items.push({ t:'レベル選択に戻る', fn: goLevels});
+showChoices(items);
+});
+}
+
+/* ============ ボタン類 ============ */
+$('btnEnter').onclick = ()=>{ beep(660,.06); $('title').style.display='none'; goLevels();};
+$('btnLevels').onclick = ()=>{ $('title').style.display='none'; goLevels();};
+$('btnReset').onclick = ()=>{
+done = {}; save(); renderProgress('タイトル');
+$('title').style.display='flex';
+};
+$('btnSound').onclick = (e)=>{
+soundOn =!soundOn;
+e.target.textContent = soundOn? '🔊 音ON': '🔇 音OFF';
+if(soundOn) beep(700,.06);
+};
+renderProgress('タイトル');
+
+let ttsOn = false;
+try{ ttsOn = localStorage.getItem('advTtsV1') === '1'; }catch(e){}
+const btnTts = document.getElementById('btnTts');
+function updTtsBtn(){ if(btnTts) btnTts.textContent = ttsOn ? '🗣 読上ON' : '🗣 読上OFF'; }
+function speak(txt){
+  if(!ttsOn || !('speechSynthesis' in window)) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(String(txt).replace(/\n+/g, ' '));
+    u.lang = 'ja-JP'; u.rate = 1.0;
+    const vs = speechSynthesis.getVoices();
+    const jv = vs.find(v => v.lang && v.lang.toLowerCase().indexOf('ja') === 0) || vs[0];
+    if(jv) u.voice = jv;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+if(btnTts) btnTts.onclick = () => {
+  ttsOn = !ttsOn;
+  try{ localStorage.setItem('advTtsV1', ttsOn ? '1' : '0'); }catch(e){}
+  updTtsBtn();
+  if(ttsOn){ speak(textEl.textContent); setTimeout(checkVoices, 800); }
+  else if('speechSynthesis' in window) speechSynthesis.cancel();
+};
+function checkVoices(){
+  if(!ttsOn || !btnTts || !('speechSynthesis' in window)) return;
+  if(speechSynthesis.getVoices().length === 0) btnTts.textContent = '🗣 音声なし';
+  else updTtsBtn();
+}
+if('speechSynthesis' in window) speechSynthesis.onvoiceschanged = checkVoices;
+updTtsBtn();
+setTimeout(checkVoices, 800);
+</script>
+</body>
+</html>
