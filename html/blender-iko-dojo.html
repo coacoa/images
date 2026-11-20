@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<!-- build: 2026-11-20 16:27:56 JST -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blender移行道場 ― VSE 2.7xからデフォルト＆5.xへ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{
+--tb:29%;
+--ink:#dfe6ff; --dim:#8fa3d9; --blue:#3355ff; --panel:#0a0e24;
+--win:#101736; --accent:#ffd94a; --good:#7ee787; --bad:#ff7b72;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+body{margin:0;background:#05060f;color:var(--ink);
+font-family:"DotGothic16","Hiragino Kaku Gothic ProN","Noto Sans JP",monospace,sans-serif;
+-webkit-font-smoothing:none;font-smooth:never;
+display:flex;justify-content:center;padding:14px 10px 40px}
+.cab{width:100%;max-width:760px}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{font-weight:900;letter-spacing:2px;font-size:18px;color:#fff;
+text-shadow:2px 2px 0 var(--blue), 4px 4px 0 #101736}
+.logo small{display:block;font-size:11px;color:var(--dim);letter-spacing:1px;text-shadow:none}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer}
+.sbtn{background:var(--win);color:var(--ink);border:2px solid var(--dim);
+padding:4px 10px;font-size:12px;border-radius:4px}
+.sbtn:hover{border-color:#fff;color:#fff}
+.params{display:flex;gap:14px;background:var(--panel);border:2px solid var(--dim);
+padding:6px 12px;font-size:12px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.params b{color:var(--accent)}
+.bar{display:inline-block;width:120px;height:10px;background:#1a2148;vertical-align:middle;margin-left:4px;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--good);display:block}
+.screen{position:relative;border:6px solid var(--dim);border-radius:6px;overflow:hidden;
+aspect-ratio:16/10;background:#000;image-rendering:pixelated}
+.screen::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+background:repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 3px, transparent 3px 6px)}
+.bg{position:absolute;inset:0;transition:opacity.4s}
+.bg-room{background:linear-gradient(#0d1440 0 55%, #182257 55% 100%)}
+.bg-room::before{content:"";position:absolute;right:8%;top:8%;width:110px;height:130px;
+background:linear-gradient(#1b2a63,#0d1440);border:6px solid #05081a;
+box-shadow:0 0 0 4px #26398a, inset 0 0 0 3px #26398a}
+.bg-term{background:radial-gradient(ellipse at 50% 40%, #06280f 0%, #02140a 70%)}
+.bg-term::before{content:"$ git add ❄ git commit ❄ git pull --rebase ❄ git log --graph ❄ rebase --continue ❄ PR ❄";
+position:absolute;inset:6%;color:#2f9e44;font-size:13px;line-height:2.1;opacity:.55;
+font-family:ui-monospace,Menlo,monospace;word-break:break-all}
+.bg-way{background:linear-gradient(#1b1040 0%, #4a2a7a 55%, #c65b8f 82%, #ffb36b 100%)}
+.stars{position:absolute;inset:0;z-index:1;
+background-image:radial-gradient(2px 2px at 12% 18%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 32% 8%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 55% 22%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 74% 10%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 88% 26%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 44% 30%, #9fb4ff 50%, transparent 51%)}
+.char{position:absolute;bottom:var(--tb);left:50%;transform:translateX(-50%);z-index:2;
+filter:drop-shadow(0 0 10px rgba(60,100,255,.75))}
+.char svg{display:block}
+.ground{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:1;
+background:linear-gradient(transparent, rgba(3,5,16,.92) 30%)}
+.namebox{position:absolute;left:14px;bottom:calc(var(--tb) + 8px);z-index:8;color:#ffffff;
+background:var(--win);border:3px solid var(--dim);padding:2px 14px;font-weight:700;font-size:16px;
+letter-spacing:.06em;text-shadow:2px 2px 0 #000}
+.textbox{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:7;color:#ffffff;
+background:rgba(4,6,20,.97);border-top:4px solid var(--dim);
+padding:12px 16px;font-size:18px;line-height:1.8;letter-spacing:.06em;
+text-shadow:2px 2px 0 #000;
+cursor:pointer;white-space:pre-wrap;overflow-y:auto;overflow-x:hidden;
+scrollbar-width:thin;scrollbar-color:#3355ff #0a0e24}
+.textbox::-webkit-scrollbar{width:10px}
+.textbox::-webkit-scrollbar-track{background:#0a0e24}
+.textbox::-webkit-scrollbar-thumb{background:#3355ff;border:2px solid #04061a}
+.textbox.next{position:absolute;right:12px;bottom:6px;color:var(--accent);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.choices{position:absolute;top:0;left:0;right:0;bottom:calc(var(--tb) + 46px);z-index:9;display:none;flex-direction:column;
+align-items:center;justify-content:center;gap:12px;background:rgba(3,5,16,.78);padding:16px;overflow-y:auto}
+.choices.show{display:flex}
+.choice{width:min(92%,520px);background:#05081f;color:#ffffff;font-weight:700;
+border:3px solid #d5ddff;padding:12px 16px;font-size:18px;letter-spacing:.08em;
+text-shadow:2px 2px 0 #000;text-align:left;border-radius:4px}
+.choice:hover{border-color:var(--accent);color:#fff;background:#1b2a6e}
+.choice::before{content:"▶ ";color:var(--accent)}
+.choice.done{border-color:var(--good)}
+.choice.done::before{content:"✔ ";color:var(--good)}
+.title{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
+justify-content:center;gap:14px;background:radial-gradient(ellipse at 50% 35%, #14205e 0%, #05060f 75%);text-align:center;padding:16px}
+.title h1{margin:0;font-size:clamp(26px,6vw,44px);letter-spacing:3px;color:#fff;
+text-shadow:3px 3px 0 var(--blue), 6px 6px 0 #101736}
+.title p{color:#d5ddff;font-size:14px;margin:0;line-height:1.9}
+.tbtn{background:#05081f;color:#fff;font-weight:700;border:3px solid #d5ddff;padding:10px 26px;font-size:17px;letter-spacing:.08em;border-radius:4px}
+.tbtn:hover{border-color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
+border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;opacity:0;transition:opacity.3s;z-index:50;pointer-events:none}
+.toast.show{opacity:1}
+#diagram{transition:width .25s}
+.screen.diagmenu #diagram{width:min(430px,74%)}
+.screen.diagmenu .choices{bottom:calc(var(--tb) + 8px);flex-direction:row;flex-wrap:wrap;align-content:flex-start;justify-content:center;gap:8px}
+.screen.diagmenu .choice{flex:1 1 28%;width:auto;margin:0;text-align:center;font-size:14px;padding:10px 8px;line-height:1.5}
+
+#diagram{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:min(560px,94%);z-index:5;background:rgba(3,4,16,.88);border:2px solid var(--dim);padding:6px;display:none}
+#diagram svg{width:100%;height:auto;display:block}
+
+footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
+kbd{display:inline-block;background:#21262d;border:1px solid var(--dim);border-bottom-width:2px;
+border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+@media (max-width:560px){.textbox{font-size:15px}.char{bottom:var(--tb)}}
+
+/* ===== スマホ縦長対応：画面を縦に取り、本文ボックスの割合を広げる ===== */
+@media (orientation:portrait) and (max-width:760px){
+:root{--tb:46%}
+.screen{aspect-ratio:auto;height:80vh;height:80dvh}
+.textbox{font-size:16px;line-height:1.75}
+.char svg{width:100px;height:127px}
+.choice{font-size:16px;padding:10px 14px}
+.choices{overflow-y:auto}
+.title h1{font-size:25px}
+.title p{font-size:13px}
+.params{gap:8px;font-size:11px}
+.bar{width:80px}
+}
+
+/* ===== 選択肢が上に隠れる問題の修正：中央寄せのまま、溢れたら先頭からスクロール ===== */
+.choices{justify-content:flex-start;overflow-y:auto}
+.choice:first-child{margin-top:auto}
+.choice:last-child{margin-bottom:auto}
+</style>
+</head>
+<body>
+<div class="cab">
+<header>
+<div class="logo">Blender移行道場<small>― VSE／デフォルトキー／FilmCraft 全16課 ―</small></div>
+<div class="btns">
+<button class="sbtn" id="btnSound">🔊 音ON</button><button class="sbtn" id="btnTts">🗣 読上OFF</button>
+<button class="sbtn" id="btnLevels">🏠 レベル選択</button>
+<button class="sbtn" id="btnReset">🗑 進捗リセット</button>
+</div>
+</header>
+
+<div class="params">
+<span>理解済み <b id="pDone">0</b> / 16 課<span class="bar"><i id="bDone" style="width:0%"></i></span></span>
+<span style="color:var(--dim)">現在：<span id="pNow">タイトル</span></span>
+<span style="margin-left:auto;color:var(--dim)">💾 進捗は自動保存（localStorage）</span>
+</div>
+
+<div class="screen" id="screen">
+<div class="bg bg-room" id="bg"></div>
+<div class="stars"></div>
+<div class="ground"></div>
+<div class="char" id="char"></div>
+<div id="diagram"></div>
+<div class="namebox" id="namebox" style="display:none"></div>
+<div class="textbox" id="textbox"><span id="text"></span><span class="next" id="nextmark" style="display:none">▼</span></div>
+<div class="choices" id="choices"></div>
+<div class="title" id="title">
+<h1>Blender移行道場</h1>
+<p>テーマは「4.4＋2.7xから、5.x＋デフォルトへの無理ない移行」。<br>
+切り替え手順と10分ドリル、5.0/5.1のVSEの変化、FilmCraft併用の置き場まで全16課。<br>
+「分かった！」で次へ、「分からない」で何度でもやり直し。</p>
+<button class="tbtn" id="btnEnter">▶ 道場に入る</button>
+<p>進捗（理解済み ✔）はブラウザに自動保存されます</p>
+</div>
+</div>
+
+<footer>
+遊び方：説明を読んだら「これは分かった！」か「分からない」を選ぶだけ。分かったら確認問題が1問出て、正解でその課は理解済み ✔。
+間違えてもペナルティなし、補足説明を読んで何度でも挑めます。本文クリックで文字送り、長い文は自動スクロール＋手動スクロール可。
+キーの表記は Blender デフォルト（Blenderプリセット）の VSE を前提に書いてあります。手元の 4.4＋2.7x と並べて開き、10分ドリルを回しながら進めると一番効きます。FilmCraft は alpha のため、記述は2026年時点の公開情報に基づきます。
+</footer>
+<style>
+#galleryWrap{margin:16px 0 4px;text-align:center}
+#gallery{display:none;text-align:left;margin-top:12px}
+.gal-item{background:#070a1c;border:2px solid #2c3a75;padding:10px 12px;margin:0 0 12px}
+.gal-cap{color:#ffd94a;font-size:14px;margin-bottom:8px}
+.gal-diag svg{width:100%;height:auto;display:block}
+</style>
+<div id="galleryWrap">
+<div style="margin-bottom:10px"><button class="sbtn" id="btnListen">🎧 リスニング（全レッスン読み上げ）</button>
+<div id="listenPanel" style="display:none;text-align:left;margin-top:10px;background:#070a1c;border:2px solid #2c3a75;padding:10px 12px">
+<div style="margin-bottom:8px"><button class="sbtn" id="btnPlay">▶ ブラウザ音声で再生</button> <button class="sbtn" id="btnStop">⏹ 停止</button> <span id="listenStatus" style="font-size:12px;color:#9fb7ff"></span></div>
+<div style="height:8px;background:#1a2350;border:1px solid #2c3a75;margin-bottom:8px"><div id="listenFill" style="height:100%;width:0%;background:#ffd94a"></div></div>
+<div style="font-size:12px;color:#9fb7ff;margin-bottom:8px">PCでは Read Aloud 拡張機能で、この下のテキストをそのまま読み上げられます。</div>
+<div id="listenText" style="color:#fff;font-size:15px;line-height:1.7"></div>
+</div></div>
+<button class="sbtn" id="btnGallery">🖼 図解一覧（復習用）を表示</button>
+<div id="gallery"></div>
+</div>
+<script>
+(function(){
+var btnMain = document.getElementById('btnListen');
+var panel = document.getElementById('listenPanel');
+var btn = document.getElementById('btnPlay');
+var btnStop = document.getElementById('btnStop');
+var st = document.getElementById('listenStatus');
+var fill = document.getElementById('listenFill');
+var lt = document.getElementById('listenText');
+if(!btnMain || !panel || !btn) return;
+var playing = false, items = [], idx = 0, curId = 0, watchdog = null, tickTimer = null, itemStart = 0, started = false, attempts = 0, built = false, paused = false;
+function buildItems(){
+  var arr = [];
+  LEVELS.forEach(function(ch, ci){
+    arr.push('第' + (ci + 1) + '章。' + ch.name);
+    ch.lessons.forEach(function(ls){
+      arr.push(ls.title);
+      (ls.teach || []).forEach(function(t){ arr.push(t); });
+    });
+  });
+  return arr;
+}
+function buildText(){
+  lt.innerHTML = '';
+  LEVELS.forEach(function(ch, ci){
+    var h = document.createElement('div');
+    h.style.cssText = 'color:#ffd94a;font-weight:bold;margin:14px 0 6px';
+    h.textContent = '第' + (ci + 1) + '章 ' + ch.name;
+    lt.appendChild(h);
+    ch.lessons.forEach(function(ls){
+      var t = document.createElement('div');
+      t.style.cssText = 'font-weight:bold;margin:10px 0 4px';
+      t.textContent = ls.title;
+      lt.appendChild(t);
+      (ls.teach || []).forEach(function(tx){
+        var p = document.createElement('div');
+        p.style.cssText = 'margin:0 0 8px;white-space:pre-wrap';
+        p.textContent = tx;
+        lt.appendChild(p);
+      });
+    });
+  });
+}
+function pickVoice(){
+  var vs = speechSynthesis.getVoices();
+  for(var i = 0; i < vs.length; i++){ if(vs[i].lang && vs[i].lang.toLowerCase().indexOf('ja') === 0) return vs[i]; }
+  return vs[0] || null;
+}
+function fmt(sec){ var m = Math.floor(sec / 60), s = sec % 60; return m + ':' + (s < 10 ? '0' : '') + s; }
+function setBar(){ if(fill && items.length) fill.style.width = Math.round(idx / items.length * 100) + '%'; }
+function status(){
+  if(!st || !playing) return;
+  var el = Math.floor((Date.now() - itemStart) / 1000);
+  st.textContent = (started ? '再生中 ' : '準備中… ') + (idx + 1) + '/' + items.length + '（' + fmt(el) + '）' + (items[idx] || '').slice(0, 18);
+}
+function clearTimers(){
+  if(watchdog){ clearTimeout(watchdog); watchdog = null; }
+  if(tickTimer){ clearInterval(tickTimer); tickTimer = null; }
+}
+function stop(msg){
+  playing = false; paused = false; curId++; clearTimers();
+  try{ speechSynthesis.cancel(); }catch(e){}
+  btn.textContent = '▶ ブラウザ音声で再生';
+  if(st) st.textContent = msg || '';
+  if(fill) fill.style.width = '0%';
+}
+function armWatchdog(text){
+  if(watchdog) clearTimeout(watchdog);
+  var est = Math.min(45000, Math.max(7000, text.length * 260 + 4000));
+  watchdog = setTimeout(function(){
+    if(!playing) return;
+    curId++;
+    try{ speechSynthesis.cancel(); }catch(e){}
+    idx++; next();
+  }, est);
+}
+function trySpeak(text, useVoice){
+  var my = ++curId;
+  started = false; itemStart = Date.now(); setBar(); status();
+  try{ speechSynthesis.resume(); }catch(e){}
+  var u = new SpeechSynthesisUtterance(String(text).replace(/\n+/g, ' '));
+  u.lang = 'ja-JP'; u.rate = 1.0;
+  var v = useVoice ? pickVoice() : null;
+  if(v) u.voice = v;
+  u.onstart = function(){ if(my === curId){ started = true; status(); } };
+  u.onend = function(){ if(my === curId && playing){ idx++; next(); } };
+  u.onerror = function(){
+    if(my !== curId || !playing) return;
+    if(speechSynthesis.getVoices().length === 0){ stop('音声が見つかりません（この端末では読み上げできません）'); return; }
+    if(useVoice && attempts === 0){ attempts++; trySpeak(text, false); return; }
+    idx++; next();
+  };
+  armWatchdog(text);
+  try{ speechSynthesis.speak(u); }catch(e){ setTimeout(function(){ if(my === curId && playing){ idx++; next(); } }, 300); }
+}
+function next(){
+  if(!playing || paused) return;
+  if(idx >= items.length){ stop('読み上げ終了（全' + items.length + '項目）'); if(fill) fill.style.width = '100%'; return; }
+  attempts = 0;
+  trySpeak(items[idx], true);
+}
+if(btnStop) btnStop.onclick = function(){ if(playing) stop('停止しました'); };
+btnMain.onclick = function(){
+  if(panel.style.display !== 'none'){
+    panel.style.display = 'none';
+    btnMain.textContent = '🎧 リスニング（全レッスン読み上げ）';
+    if(playing) stop('停止しました');
+    return;
+  }
+  if((typeof LEVELS === 'undefined' && typeof NODES === 'undefined')){ return; }
+  if(!built){ buildText(); built = true; }
+  panel.style.display = 'block';
+  btnMain.textContent = '🎧 リスニングを閉じる';
+};
+btn.onclick = function(){
+  if(!('speechSynthesis' in window)){ if(st) st.textContent = 'このブラウザは読み上げに未対応です'; return; }
+  if(playing && !paused){
+    paused = true; curId++; clearTimers();
+    try{ speechSynthesis.cancel(); }catch(e){}
+    btn.textContent = '▶ 再開';
+    if(st) st.textContent = '一時停止中 ' + (idx + 1) + '/' + items.length + '（再開はこの項目の頭から）';
+    return;
+  }
+  if(playing && paused){
+    paused = false;
+    btn.textContent = '⏸ 一時停止';
+    if(st) st.textContent = '再開します';
+    attempts = 0;
+    clearTimers();
+    tickTimer = setInterval(status, 500);
+    trySpeak(items[idx], true);
+    return;
+  }
+  if((typeof LEVELS === 'undefined' && typeof NODES === 'undefined')){ if(st) st.textContent = 'データ読み込みに失敗しました'; return; }
+  items = buildItems(); idx = 0; playing = true; itemStart = Date.now();
+  btn.textContent = '⏸ 一時停止';
+  if(st) st.textContent = '準備中…';
+  if(fill) fill.style.width = '0%';
+  try{ speechSynthesis.cancel(); }catch(e){}
+  clearTimers();
+  tickTimer = setInterval(status, 500);
+  setTimeout(next, 200);
+};
+})();
+</script>
+<script>
+(function(){
+var btn = document.getElementById('btnGallery');
+var gal = document.getElementById('gallery');
+var built = false;
+function build(){
+var html = '';
+if (typeof LEVELS !== 'undefined' && typeof DIAG !== 'undefined') {
+LEVELS.forEach(function(lv, li){
+lv.lessons.forEach(function(ls, i){
+if (DIAG[ls.id]) html += '<div class="gal-item"><div class="gal-cap">第' + (li+1) + '章 第' + (i+1) + '課：' + ls.title + '</div><div class="gal-diag">' + DIAG[ls.id] + '</div></div>';
+});
+});
+} else if (typeof DIAG !== 'undefined') {
+Object.keys(DIAG).forEach(function(k){
+var cap = k;
+if (typeof NODES !== 'undefined' && NODES[k] && NODES[k].title) cap = NODES[k].title;
+html += '<div class="gal-item"><div class="gal-cap">' + cap + '</div><div class="gal-diag">' + DIAG[k] + '</div></div>';
+});
+}
+gal.innerHTML = html || '<div class="gal-cap">図解はありません</div>';
+}
+btn.onclick = function(){
+var show = gal.style.display !== 'block';
+if (show && !built) { build(); built = true; }
+gal.style.display = show ? 'block' : 'none';
+btn.textContent = show ? '🖼 図解一覧（復習用）を隠す' : '🖼 図解一覧（復習用）を表示';
+};
+})();
+</script>
+</div>
+
+<div class="toast" id="toast">💾 保存しました</div>
+
+<script>
+"use strict";
+/* ============ シルエット ============ */
+function sil(extra){
+return '<svg width="150" height="190" viewBox="0 0 120 150">'
++ '<circle cx="60" cy="34" r="17" fill="#141f52"/>'
++ '<path d="M22 150 C22 96 40 66 60 66 C80 66 98 96 98 150 Z" fill="#141f52"/>'
++ (extra || '') + '</svg>';
+}
+const CHARS = {
+sennin: sil('<path d="M28 26 L60 2 L92 26 L84 30 L60 14 L36 30 Z" fill="#141f52"/>'
++ '<path d="M48 44 L72 44 L66 92 L54 92 Z" fill="#141f52"/>'),
+ore: sil(''),
+none: ''
+};
+
+/* ============ カリキュラム ============ */
+/* teach: 説明ページ（クリックで送る） / retry: 補足説明 / quiz: 確認問題 */
+const LEVELS = [
+{ name:'入門編 なぜデフォルトへ移るか', desc:'2.7xの正体、最大の違い、変わらない核。移行の全体像をつかむ。', lessons:[
+{ id:'b1', title:'全体像：置き換えず併用で移る', teach:[
+'今の主力は Blender 4.4＋VSE、キーマップは 2.7x。この組み合わせで作業は回っている。移行は「壊れたから」ではなく、「先のバージョンで迷わないため」じゃ。',
+'やり方は置き換えではなく併用じゃ。5.1（以降）を別に入れ、練習と短い作品からデフォルトキーマップで触る。4.4 はそのまま残す。卒業の目安は「5.x で短編を1本、カットから書き出しまで通せる」ことじゃ。'],
+retry:'移行＝置き換えではなく併用開始。4.4は残し、5.xで短編1本を通せたら卒業。',
+quiz:{ q:'移行の進め方として正しいのは？', choices:[
+{ t:'4.4を消して5.1だけにする', ok:false }, { t:'キーマップを全部自作し直す', ok:false }, { t:'5.1を併用し、短編からデフォルトに慣れる', ok:true } ] } },
+{ id:'b2', title:'2.7xキーマップの正体', teach:[
+'2.7x は Preferences（環境設定）→ Keymap のプリセット名「Blender 27x」。2.7時代の操作のまま新版を使えるよう用意された互換プリセットじゃ。今の Blender 5.x にも選択肢として残っている（逃げ道はある）。',
+'ただし公式マニュアルも新しいチュートリアルも、原則「デフォルト（Blender）」前提で書かれている。キーが違うたびに読み替えが発生し、新機能の解説ほど読み替えが効かなくなる。これが移行する一番の理由じゃ。'],
+retry:'2.7xは互換プリセットで今も選べる。でも解説はデフォルト前提。読み替えの累積が移行理由。',
+quiz:{ q:'2.7xが今も選べるのに移行する主理由は？', choices:[
+{ t:'マニュアルや新教程がデフォルト前提だから', ok:true }, { t:'2.7xでは保存できないから', ok:false }, { t:'5.xでは動画が開けないから', ok:false } ] } },
+{ id:'b3', title:'最大の違いは「選択」', teach:[
+'デフォルトと2.7xで一番大きい違いは選択ボタンじゃ。2.7x＝右クリック選択、デフォルト＝左クリック選択。右クリックは「コンテキストメニュー（その場の操作一覧）」に変わる。',
+'最初の数日は、つい右クリックを押してメニューが出て驚く。これが最大の書き換えポイントで、逆に言えばここを越えれば山は越えたも同然じゃ。3D側も同じ作法なので、VSEだけの問題ではない。'],
+retry:'左クリック＝選択、右クリック＝メニュー。この1点が最大の書き換え。',
+quiz:{ q:'デフォルトで右クリックの役割は？', choices:[
+{ t:'選択', ok:false }, { t:'コンテキストメニュー', ok:true }, { t:'削除', ok:false } ] } },
+{ id:'b4', title:'VSEの核は変わらない', teach:[
+'朗報じゃ。VSEの編集の核になるキーは、2.7xでもデフォルトでもほぼ共通： G＝移動、K＝分割、Shift+K＝ホールド分割、S＝スリップ、Shift+S＝スナップ、Shift+D＝複製、X＝削除、Shift+A＝追加、Space＝再生。',
+'つまり覚え直しは「全部」ではなく「選択と周辺の作法」が中心。手が覚えたカット編集のリズム（再生→止める→K→Gで詰める）は、そのまま持っていける。'],
+retry:'G／K／S／Shift+S など核は共通。覚え直しは選択と周辺だけ。',
+quiz:{ q:'デフォルトでも変わらないVSEのキーは？', choices:[
+{ t:'右クリックで選択', ok:false }, { t:'K＝分割、G＝移動', ok:true }, { t:'Space＝ファイル保存', ok:false } ] } },
+]},
+{ name:'実践編 デフォルトへの切り替え手順', desc:'設定を持ち込まない、切り替える、ドリルで慣らす、1個だけ戻す。', lessons:[
+{ id:'c1', title:'安全な始め方（設定を持ち込まない）', teach:[
+'Blenderはバージョンごとに設定フォルダが分かれる。5.1を初めて起動すると「前バージョンの設定を読み込む」ボタンが出るが、押すと2.7xキーマップごと引っ越してしまう。移行練習では、ここは押さずに新規設定で始めるのが正解じゃ。',
+'もし押してしまった後でも大丈夫。Preferences → Keymap でプリセットを「Blender」に変えればデフォルトに戻る。アドオンも一緒に引っ越す場合があるので、最初は素の状態で触るのが安全じゃ。'],
+retry:'初回は設定を読み込まない。押しても Keymap で Blender に戻せばよい。',
+quiz:{ q:'5.1初回起動で、移行練習に正しいのは？', choices:[
+{ t:'設定を読み込んで2.7xごと引っ越す', ok:false }, { t:'設定を読み込まず新規で始める', ok:true }, { t:'4.4の設定フォルダを手でコピーする', ok:false } ] } },
+{ id:'c2', title:'切り替えの実手順（4ステップ）', teach:[
+'手順は4つだけじゃ： 1. Edit → Preferences を開く 2. 左の Keymap を選ぶ 3. 上のプリセットを「Blender」にする 4. Save Preferences で保存する。これで次回起動からもデフォルトのままになる。',
+'ついでに Keymap 画面の Spacebar Action も確認じゃ。VSEでは Space＝再生が要。もし Space でツール一覧が出る設定になっていたら、再生寄りの設定に直しておくと迷わない。'],
+retry:'Preferences → Keymap → プリセット Blender → Save Preferences。Space＝再生も確認。',
+quiz:{ q:'プリセットを変えた後に必要なのは？', choices:[
+{ t:'Save Preferences で保存する', ok:true }, { t:'PCを再起動する', ok:false }, { t:'プロジェクトを作り直す', ok:false } ] } },
+{ id:'c3', title:'10分ドリルで手を慣らす', teach:[
+'覚える場所は本番の長い動画ではなく、練習用の短い素材じゃ。10分ドリル：素材を置く → Spaceで再生 → Kで2か所切る → いらない所を X で消す → Gで詰める → Shift+Sで頭を合わせる。これを毎日1周。',
+'迷ったらキーを探さず、F3のメニュー検索で機能名（例：Split）から探す。「キー→機能」ではなく「機能名→キー」を引く習慣が、デフォルト移行の本当の卒業証書じゃ。'],
+retry:'短い素材で 再生→K→X→G→Shift+S の1周。迷ったら F3 で機能名検索。',
+quiz:{ q:'キーが分からないときの正しい引き方は？', choices:[
+{ t:'2.7xに戻して確認する', ok:false }, { t:'F3で機能名から検索する', ok:true }, { t:'マウスだけで何とかする', ok:false } ] } },
+{ id:'c4', title:'つまずき対処（1個だけ戻す）', teach:[
+'どうしても体に合わないキーが1つ2つ出たら、そのキーだけ Keymap 編集で戻してよい。全部を2.7xに戻すのと、1個だけ直すのは全然違う。前者は移行の放棄、後者は立派なカスタマイズじゃ。',
+'直す前に Keymap の書き出し（Export）で今の状態をファイルに保存しておくこと。壊しても書き戻せる（Import）保険になる。保険をかけてから触るのが、設定いじりの鉄則じゃ。'],
+retry:'合わないキーは1個だけ直す。触る前に Export で保険。',
+quiz:{ q:'合わないキーが出たときの対処は？', choices:[
+{ t:'全部2.7xに戻す', ok:false }, { t:'我慢して一切触らない', ok:false }, { t:'そのキーだけ直し、事前に書き出して保険をかける', ok:true } ] } },
+]},
+{ name:'発展編 Blender 5.x VSEの新しさ', desc:'5.0の整理と新機能、5.1のBlade進化、互換の注意と通しテスト。', lessons:[
+{ id:'d1', title:'5.0：プロパティの置き場所が動いた', teach:[
+'5.0のVSEは中身の整理が大きい。ストリップのプロパティとモディファイアは、プロパティエディター側で扱う形に寄せられた。4.4の感覚でサイドバーだけ探し回ると迷子になる。',
+'もう1つは Sequencer Scene の考え方：シーケンサーが参照するシーンが、ウィンドウのアクティブシーンから独立した。シーンストリップを使う編集ほど効いてくる変更じゃ。まずは「置き場所が動いた」と知っておけば、現場で慌てない。'],
+retry:'5.0は置き場所の整理が主。プロパティはエディター側、シーンは独立。',
+quiz:{ q:'5.0で迷子になりやすい点は？', choices:[
+{ t:'ストリップのプロパティの置き場所が変わった', ok:true }, { t:'保存形式が動画だけになった', ok:false }, { t:'VSE自体が無くなった', ok:false } ] } },
+{ id:'d2', title:'5.0：効く新機能3つ', teach:[
+'実務で効くのはこの辺りじゃ： 1. Compositorストリップモディファイア＝ストリップごとにコンポジットのノードをかけられる。 2. リタイミング（速度変更）で音程を保てるようになり、早回しでも声が変になりにくい（新規ストリップで既定ON）。',
+'3. ハンドルの扱い：ストリップの端が素材の範囲で止まるのが既定になり、Cキーで旧来の自由な伸ばし方に切り替える。4.4感覚で端を引っ張って「伸びない」と思ったら、Cを思い出すのじゃ。'],
+retry:'Compositorモディファイア／リタイミング音程保持／端のクランプは C で切替。',
+quiz:{ q:'端が素材の範囲で止まるときの切替キーは？', choices:[
+{ t:'K', ok:false }, { t:'G', ok:false }, { t:'C', ok:true } ] } },
+{ id:'d3', title:'5.1：Bladeのボックスとリップル', teach:[
+'5.1では Blade（分割）にボックスジェスチャが付いた。範囲を囲むように切ると、後ろのストリップを詰めるリップル切りまで一気にできる。Shiftを押しながらだと、隙間を残す通常の切り方になる。',
+'スナップも進化し、Shift+Sで複数ストリップの間隔を保ったまま再生ヘッドへ寄せられる。速度ストリップは「乗算」モードで負の値を入れると逆再生。どれも「切って、詰めて、整える」の手数を減らす変更じゃ。'],
+retry:'5.1は Bladeのボックス＋リップル、Shift+Sの間隔保持、負の速度で逆再生。',
+quiz:{ q:'5.1のBladeボックスジェスチャでできるのは？', choices:[
+{ t:'範囲で切って後ろを詰めるリップル切り', ok:true }, { t:'自動で字幕を作る', ok:false }, { t:'音量を自動調整する', ok:false } ] } },
+{ id:'d4', title:'互換の注意と通しテスト', teach:[
+'4.4の .blend は5.xで開けるが、5.xで保存したファイルを4.4で開くのは前提にしないこと。本番ファイルはコピーを開いて試し、元は4.4用に残す。これが併用の大原則じゃ。',
+'スクリプトやアドオンは別物。5.0でVSEのPython API名が変わった（sequences→strips等）ため、古いアドオンが止まることがある。移行の判定は「短編1本を通しで作る」テスト：カット→字幕（テキストストリップ）→書き出しまで止まらなければ、その形式の本番は移せる。'],
+retry:'本番はコピーで試す。判定は短編1本の通しテスト。',
+quiz:{ q:'本番ファイルの正しい試し方は？', choices:[
+{ t:'元ファイルを直接5.xで上書き保存', ok:false }, { t:'コピーを5.xで開き、元は4.4用に残す', ok:true }, { t:'試さず一斉に移行する', ok:false } ] } },
+]},
+{ name:'併用編 FilmCraftと将来の置き場', desc:'Premiere式の文法、役割の分割、受け渡し、移行ロードマップ。', lessons:[
+{ id:'f1', title:'FilmCraftとは何か', teach:[
+'FilmCraftは ArtCraft 系の動画編集ソフトで、Adobe Premiere Pro の作業作法を Rust で再実装したオープンソース（MIT/Apache）。パネル配置もショートカットも Premiere 式。Linuxネイティブ版と、ブラウザで動く版がある。',
+'ただし現時点では alpha じゃ。開発側の自己評価でも「実務に使える度」は半分程度（2026年時点）。実験には面白いが、今の主力（Blender VSE）を即置き換える段階ではない。ここを冷静に見られるかが大事じゃ。'],
+retry:'FilmCraft＝Premiere式のOSS。ただし alpha で実務度は半分程度。即置き換えはまだ早い。',
+quiz:{ q:'FilmCraftの現時点の正しい位置づけは？', choices:[
+{ t:'alpha。実験と様子見が正解', ok:true }, { t:'完成済みで即主力にできる', ok:false }, { t:'Blenderの公式後継', ok:false } ] } },
+{ id:'f2', title:'Premiere式の文法を覚える価値', teach:[
+'FilmCraftの操作は Blender式（G/K）と別系統じゃ。ソースモニターで素材に I（イン）/O（アウト）を打って範囲を決め、タイムラインへ送る。再生は J/K/L（逆転/停止/再生）、切るのはレーザーツール（C）や Ctrl+K、選ぶのは選択ツール（V）。',
+'この文法を覚える価値は、世の Premiere 系チュートリアルと用語がそのまま読めるようになること。ソフト自体の将来とは別に、「Premiere式」は業界の共通語として残る。'],
+retry:'I/Oで範囲、JKLで再生、Cで切る。Premiere式は共通語として覚える価値あり。',
+quiz:{ q:'FilmCraft（Premiere式）で範囲を決めるキーは？', choices:[
+{ t:'G / K', ok:false }, { t:'I / O', ok:true }, { t:'X / C', ok:false } ] } },
+{ id:'f3', title:'併用の分け方と受け渡し', teach:[
+'直接の互換はない：.blend は FilmCraft で開けず、Premiereの .prproj も FilmCraft ではまだ開けない。だから併用は「プロジェクトの受け渡し」ではなく「役割の分割」で考える。',
+'分け方の例：主力＝Blender（既存の車ゲーム動画、字幕、透過合成）。実験＝FilmCraft（短い新規カット、Premiere式の練習）。受け渡しが必要なら、書き出したマスター動画＋音声WAV＋字幕SRTで渡す。素材フォルダと命名を両者で共通にしておくと、迷子にならない。'],
+retry:'互換なし前提で役割を分ける。受け渡しはマスター動画＋WAV＋SRT。',
+quiz:{ q:'2つのソフト間の受け渡しの現実解は？', choices:[
+{ t:'.blendをそのまま開く', ok:false }, { t:'.prprojに変換する', ok:false }, { t:'マスター動画＋WAV＋SRTで渡す', ok:true } ] } },
+{ id:'f4', title:'移行ロードマップと卒業', teach:[
+'道順を固定する：段階1＝4.4主力＋5.1でデフォルト練習（この道場の実践編）。段階2＝短編の本番を5.xで作り始める。段階3＝FilmCraftは月1本の実験作に限定し、困ったときに検索で答えが見つかるかを見る。',
+'乗り換え判断の物差しは「機能があるか」ではなく「詰まったときに直せるか」。卒業は、この道順を自分の言葉で1枚に書けたときじゃ。焦って全部を一度に移すのが、一番の遠回りになる。'],
+retry:'段階を踏む。物差しは機能ではなく「詰まったときに直せるか」。',
+quiz:{ q:'乗り換え判断の物差しは？', choices:[
+{ t:'機能の多さ', ok:false }, { t:'詰まったときに直せるかどうか', ok:true }, { t:'見た目のかっこよさ', ok:false } ] } },
+]},
+];
+
+/* ============ エンジン ============ */
+const SAVE_KEY = 'blenderIkoDojoSaveV1';
+const TOTAL = LEVELS.reduce((a,l)=>a+l.lessons.length,0);
+let done = {};
+try{ const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); if(s && s.done) done = s.done;}catch(e){}
+let soundOn = true, typing = null, advanceFn = null;
+let cur = { level:0, lesson:0, pages:[], page:0};
+
+const $ = id => document.getElementById(id);
+const bgEl=$('bg'), charEl=$('char'), nameEl=$('namebox'), textEl=$('text'),
+boxEl=$('textbox'), chEl=$('choices'), nextEl=$('nextmark');
+
+function beep(freq, dur, delay, vol){
+if(!soundOn) return;
+try{
+const ctx = beep.ctx || (beep.ctx = new (window.AudioContext||window.webkitAudioContext)());
+if(ctx.state === 'suspended') ctx.resume();
+const o = ctx.createOscillator(), g = ctx.createGain();
+o.type='square'; o.frequency.value = freq || 660;
+g.gain.value = vol || 0.03;
+o.connect(g); g.connect(ctx.destination);
+const t = ctx.currentTime + (delay||0);
+o.start(t); o.stop(t + (dur||0.06));
+}catch(e){}
+}
+function save(){
+try{ localStorage.setItem(SAVE_KEY, JSON.stringify({done})); toast();}catch(e){}
+}
+function toast(){
+const t=$('toast'); t.classList.add('show');
+clearTimeout(toast.tm); toast.tm=setTimeout(()=>t.classList.remove('show'), 900);
+}
+function doneCount(){ return Object.keys(done).filter(k=>done[k]).length;}
+function renderProgress(now){
+$('pDone').textContent = doneCount();
+$('bDone').style.width = (doneCount()/TOTAL*100) + '%';
+if(now) $('pNow').textContent = now;
+}
+function setScene(bg, char, name){
+bgEl.className = 'bg ' + bg;
+charEl.innerHTML = CHARS[char] || '';
+charEl.style.display = char && char!== 'none'? '': 'none';
+if(name){ nameEl.textContent = name; nameEl.style.display='';} else nameEl.style.display='none';
+}
+function typeText(txt, onDoneTyping){ speak(txt);
+clearInterval(typing);
+textEl.textContent=''; nextEl.style.display='none';
+boxEl.scrollTop = 0;
+advanceFn = null;
+let i=0;
+typing = setInterval(()=>{
+i++;
+textEl.textContent = txt.slice(0, i);
+boxEl.scrollTop = boxEl.scrollHeight;
+const ch = txt.charAt(i-1);
+if(ch && ch!== ' ' && ch!== '\n' && i % 2 === 1){
+beep(980 + Math.random()*520, 0.018, 0, 0.012);
+}
+if(i >= txt.length){
+clearInterval(typing); typing=null;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+}
+}, 26);
+boxEl.onclick = ()=>{
+if(typing){
+clearInterval(typing); typing=null;
+textEl.textContent = txt; boxEl.scrollTop = boxEl.scrollHeight;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+} else if(advanceFn){
+const f = advanceFn; advanceFn = null; f();
+}
+};
+}
+document.addEventListener('keydown', e=>{
+if(!typing && advanceFn && (e.key === ' ' || e.key === 'Enter')){
+e.preventDefault();
+const f = advanceFn; advanceFn = null; f();
+}
+});
+function showChoices(items){
+chEl.innerHTML='';
+items.forEach(it=>{
+const b=document.createElement('button');
+b.className='choice' + (it.done? ' done': '');
+b.textContent=it.t;
+b.onclick=()=>{ beep(520,.06); setTimeout(()=>beep(780,.07),70); chEl.classList.remove('show'); it.fn();};
+chEl.appendChild(b);
+});
+chEl.classList.add('show');
+const dg = $('diagram');
+if(dg && dg.style.display === 'block'){
+$('screen').classList.add('diagmenu');
+requestAnimationFrame(()=>{
+const sr = $('screen').getBoundingClientRect();
+const dr = dg.getBoundingClientRect();
+chEl.style.top = Math.max(0, Math.round(dr.bottom - sr.top + 8)) + 'px';
+});
+} else { $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+}
+function hideChoices(){ chEl.classList.remove('show'); chEl.innerHTML=''; chEl.style.top=''; $('screen').classList.remove('diagmenu'); }
+
+
+/* ============ 図解（8bit風SVG・黒板） ============ */
+function _cm(x,y,ch,fill){ return '<rect x="'+(x+3)+'" y="'+(y+3)+'" width="30" height="30" fill="#000" opacity=".45"/><rect x="'+x+'" y="'+y+'" width="30" height="30" fill="'+fill+'" stroke="#dfe6ff" stroke-width="2"/><text x="'+(x+15)+'" y="'+(y+21)+'" font-size="14" fill="#05060f" text-anchor="middle" font-weight="bold">'+ch+'</text>'; }
+function _ar(x1,y1,x2,y2,col){ col=col||'#8fa3d9'; var pts; if(Math.abs(x2-x1)>=Math.abs(y2-y1)){ pts = x2>x1 ? [[x2,y2],[x2-10,y2-6],[x2-10,y2+6]] : [[x2,y2],[x2+10,y2-6],[x2+10,y2+6]]; } else { pts = y2>y1 ? [[x2,y2],[x2-6,y2-10],[x2+6,y2-10]] : [[x2,y2],[x2-6,y2+10],[x2+6,y2+10]]; } return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+col+'" stroke-width="4"/><polygon points="'+pts.map(function(p){return p.join(',');}).join(' ')+'" fill="'+col+'"/>'; }
+function _ln(x1,y1,x2,y2,col){ return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+(col||'#8fa3d9')+'" stroke-width="3"/>'; }
+function _tx(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'" text-anchor="middle">'+str+'</text>'; }
+function _txl(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'">'+str+'</text>'; }
+function _bx(x,y,w,h,label,fill){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'" stroke="#8fa3d9" stroke-width="2"/><text x="'+(x+w/2)+'" y="'+(y+h/2+5)+'" font-size="12" fill="#fff" text-anchor="middle">'+label+'</text>'; }
+function _tag(x,y,str,col){ var w=str.length*12+12; return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="20" fill="'+col+'"/><text x="'+(x+w/2)+'" y="'+(y+14)+'" font-size="11" fill="#05060f" text-anchor="middle" font-weight="bold">'+str+'</text>'; }
+function _svg(inner){ return '<svg viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'+inner+'</svg>'; }
+var BL='#4a6bff', YL='#ffd94a', GN='#7ee787', RD='#ff7b72', PU='#b18cff', GY='#5a6b9e', DM='#8fa3d9';
+const DIAG = {
+b1: _svg(_tx(180,18,'移行＝置き換えではなく併用',YL,13)
+ + _bx(15,45,100,40,'4.4 主力','#1b2a6e') + _bx(245,45,100,40,'5.1 練習','#2a2050')
+ + _ar(115,65,245,65,GN) + _tx(180,105,'短編1本を通せたら卒業',DM,12)),
+b2: _svg(_txl(8,22,'プリセット：Blender 27x（互換）',DM,12)
+ + _tag(8,36,'Blender 27x',YL) + _tag(150,36,'Blender＝デフォルト',GN)
+ + _txl(8,84,'公式マニュアル・新教程',DM,12) + _txl(8,104,'＝ デフォルト前提で書かれている',YL,12)),
+b3: _svg(_bx(15,40,155,44,'左クリック','#1b2a6e') + _tx(92,102,'選択',GN,13)
+ + _bx(190,40,155,44,'右クリック','#3a2a6e') + _tx(267,102,'コンテキストメニュー',YL,13)
+ + _tx(180,20,'最大の違いは選択ボタン',YL,12)),
+b4: _svg(_tx(180,18,'VSEの核は共通',YL,13)
+ + _cm(20,40,'G',BL) + _cm(95,40,'K',BL) + _cm(170,40,'S',BL) + _cm(245,40,'X',RD)
+ + _tx(35,92,'移動',DM,11) + _tx(110,92,'分割',DM,11) + _tx(185,92,'スリップ',DM,11) + _tx(260,92,'削除',DM,11)
+ + _tx(180,118,'Shift+D 複製／Shift+S スナップ／Space 再生',DM,11)),
+c1: _svg(_tx(180,18,'5.1 初回起動',YL,13)
+ + _bx(60,40,240,40,'前バージョンの設定を読み込む？','#3a2a6e')
+ + _tx(110,105,'押さない＝新規で開始',GN,13) + _tx(265,105,'押した→Keymapで戻す',DM,12)),
+c2: _svg(_bx(2,45,84,40,'Preferences','#1b2a6e') + _ar(86,65,94,65,YL)
+ + _bx(94,45,84,40,'Keymap','#1b2a6e') + _ar(178,65,186,65,YL)
+ + _bx(186,45,84,40,'Blender','#2a2050') + _ar(270,65,278,65,YL)
+ + _bx(278,45,80,40,'Save','#1b2a6e')
+ + _tx(180,20,'切り替え 4ステップ',YL,13) + _tx(180,110,'Space＝再生も確認',DM,12)),
+c3: _svg(_tx(180,18,'10分ドリル（毎日1周）',YL,13)
+ + _bx(8,48,76,36,'Space 再生','#1b2a6e') + _ar(84,66,94,66,GN)
+ + _bx(94,48,76,36,'K で切る','#1b2a6e') + _ar(170,66,180,66,GN)
+ + _bx(180,48,76,36,'X で消す','#1b2a6e') + _ar(256,66,266,66,GN)
+ + _bx(266,48,86,36,'G で詰める','#1b2a6e')
+ + _tx(180,108,'迷ったら F3 で機能名検索',YL,12)),
+c4: _svg(_tx(180,18,'直すのは1個だけ',YL,13)
+ + _bx(30,45,130,40,'Export（保険）','#1b2a6e') + _ar(160,65,200,65,GN)
+ + _bx(200,45,130,40,'キー1個を編集','#2a2050')
+ + _tx(180,108,'壊れたら Import で戻せる',DM,12)),
+d1: _svg(_tx(180,18,'5.0 置き場所の整理',YL,13)
+ + _bx(15,48,150,40,'サイドバー探し','#3a2a6e') + _ar(165,68,195,68,RD)
+ + _bx(195,48,150,40,'プロパティエディター','#1b2a6e')
+ + _tx(180,110,'シーンも独立（Sequencer Scene）',DM,12)),
+d2: _svg(_bx(8,42,108,44,'Compositor','#1b2a6e') + _bx(126,42,108,44,'音程保持','#1b2a6e') + _bx(244,42,108,44,'端クランプ','#1b2a6e')
+ + _tx(62,106,'モディファイア',DM,11) + _tx(180,106,'リタイミング',DM,11) + _tx(298,106,'C で切替',YL,11)
+ + _tx(180,20,'5.0 実務の新機能',YL,13)),
+d3: _svg(_tx(180,18,'5.1 Blade ボックス＋リップル',YL,13)
+ + '<rect x="30" y="48" width="300" height="26" fill="#1b2a6e" stroke="#8fa3d9" stroke-width="2"/>'
+ + '<rect x="120" y="48" width="90" height="26" fill="#5a2320" stroke="#ff7b72" stroke-width="2"/>'
+ + _ar(215,90,300,90,GN) + _tx(255,108,'後ろが詰まる',GN,12)
+ + _tx(80,66,'',DM,11) + _txl(38,66,'囲んで切る',YL,11)),
+d4: _svg(_bx(8,48,100,40,'コピーで開く','#1b2a6e') + _ar(108,68,124,68,YL)
+ + _bx(124,48,112,40,'短編を通す','#2a2050') + _ar(236,68,252,68,YL)
+ + _bx(252,48,100,40,'本番へ移す','#1b2a6e')
+ + _tx(180,20,'互換テストの型',YL,13) + _tx(180,110,'元ファイルは 4.4 用に残す',DM,12)),
+f1: _svg(_tx(180,18,'FilmCraft（ArtCraft系）',YL,13)
+ + _bx(60,42,240,40,'Premiere式を Rust で再実装','#1b2a6e')
+ + _tag(150,95,'alpha',RD) + _tx(255,108,'実務度は半分程度',DM,12)),
+f2: _svg(_tx(180,18,'Premiere式の文法',YL,13)
+ + _cm(30,42,'I',GN) + _cm(80,42,'O',GN) + _cm(150,42,'J',BL) + _cm(200,42,'K',BL) + _cm(250,42,'L',BL)
+ + _tx(55,92,'範囲',DM,11) + _tx(205,92,'再生系',DM,11)
+ + _tx(180,118,'C レーザー／V 選択／Ctrl+K カット',DM,11)),
+f3: _svg(_bx(8,42,150,44,'Blender＝主力','#1b2a6e') + _bx(202,42,150,44,'FilmCraft＝実験','#2a2050')
+ + _ar(158,64,202,64,YL)
+ + _tx(180,108,'受け渡し：動画＋WAV＋SRT',YL,12) + _tx(180,20,'役割の分割で併用',YL,12)),
+f4: _svg(_bx(8,48,104,40,'段階1 練習','#1b2a6e') + _ar(112,68,122,68,GN)
+ + _bx(122,48,112,40,'段階2 短編本番','#2a2050') + _ar(234,68,244,68,GN)
+ + _bx(244,48,108,40,'段階3 月1実験','#1b2a6e')
+ + _tx(180,20,'移行ロードマップ',YL,13) + _tx(180,110,'物差し＝詰まっても直せるか',DM,12)),
+};
+function showDiagFor(id){
+const d = $('diagram');
+if(DIAG[id]){ d.innerHTML = DIAG[id]; d.style.display = 'block'; }
+else d.style.display = 'none';
+}
+function hideDiag(){ $('diagram').style.display = 'none'; $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+
+/* ============ 画面遷移 ============ */
+function goLevels(){
+hideChoices();
+hideDiag();
+setScene('bg-room','none','');
+renderProgress('レベル選択');
+const dc = doneCount();
+const intro = dc === 0
+? '「よく来た。わしがブレンド仙人じゃ」\nテーマは「Blender VSEのキーマップ移行と併用」。全' + TOTAL + '課。\n好きな編からでよい。分かるまで、何度でも付き合うぞ。'
+: '「戻ったか。現在の理解済みは ' + dc + ' / ' + TOTAL + ' 課じゃ」\n続きをやるもよし、済んだ課を復習するもよし。';
+typeText(intro, ()=>{
+showChoices(LEVELS.map((lv, i)=>{
+const c = lv.lessons.filter(l=>done[l.id]).length;
+return { t: lv.name + '（' + c + '/' + lv.lessons.length + ' 済）', done: c === lv.lessons.length,
+fn: ()=>goLessons(i)};
+}));
+});
+}
+function goLessons(li){
+hideChoices();
+hideDiag();
+const lv = LEVELS[li];
+cur.level = li;
+setScene('bg-room','sennin','ブレンド仙人');
+renderProgress(lv.name);
+typeText('\n' + lv.desc + '\n課を選ぶのじゃ。✔ は理解済み。復習は何度でもできるぞ。', ()=>{
+showChoices(
+lv.lessons.map((ls, i)=>({ t: ls.title, done:!!done[ls.id], fn: ()=>startLesson(li, i, false)}))
+.concat([{ t:'レベル選択に戻る', fn: goLevels}])
+);
+});
+}
+function startLesson(li, idx, withRetry){
+hideChoices();
+const ls = LEVELS[li].lessons[idx];
+cur.level = li; cur.lesson = idx;
+cur.pages = ls.teach.slice();
+if(withRetry) cur.pages.push('\n' + ls.retry);
+cur.page = 0;
+setScene('bg-term','sennin','ブレンド仙人');
+renderProgress(LEVELS[li].name + '：' + ls.title);
+showDiagFor(ls.id);
+teachPage();
+}
+function teachPage(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+const isLast = cur.page >= cur.pages.length - 1;
+typeText('\n' + cur.pages[cur.page], ()=>{
+if(isLast){ showCheck();}
+else { advanceFn = ()=>{ cur.page++; teachPage();};}
+});
+}
+function showCheck(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+showChoices([
+{ t:'これは分かった！（確認問題へ）', fn: showQuiz},
+{ t:'分からない（もう一度聞く）', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'レッスン一覧に戻る', fn: ()=>goLessons(cur.level)}
+]);
+}
+function showQuiz(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+setScene('bg-term','sennin','ブレンド仙人');
+typeText('\n' + ls.quiz.q, ()=>{
+showChoices(ls.quiz.choices.map(c=>({
+t: c.t,
+fn: ()=>{ if(c.ok) completeLesson(); else wrongAnswer();}
+})));
+});
+}
+function wrongAnswer(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+beep(220,.12); setTimeout(()=>beep(180,.14),120);
+typeText('「むむ、違うぞ。焦らなくてよい」\n' + ls.retry, ()=>{
+showChoices([
+{ t:'もう一度説明を聞く', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'もう一度問題に挑む', fn: showQuiz}
+]);
+});
+}
+function completeLesson(){
+hideDiag();
+const li = cur.level, idx = cur.lesson;
+const ls = LEVELS[li].lessons[idx];
+done[ls.id] = true; save();
+[523,659,784,1046].forEach((f,i)=>beep(f,.1,i*0.11));
+renderProgress(LEVELS[li].name + '：' + ls.title + ' ✔');
+const dc = doneCount();
+const levelDone = LEVELS[li].lessons.every(l=>done[l.id]);
+let msg = '「うむ、分かったようじゃな」\n理解済み ✔（合計 ' + dc + ' / ' + TOTAL + ' 課）';
+if(dc >= TOTAL){
+setScene('bg-way','sennin','ブレンド仙人');
+msg += '\n\n――全課目、修了じゃ！\nここから先は実地あるのみ。5.xで短編を1本、通して作ってみるのじゃ。卒業おめでとう！';
+} else if(levelDone){
+msg += '\nは全課修了じゃ。よくやった。';
+}
+typeText(msg, ()=>{
+const items = [];
+if(dc < TOTAL){
+if(idx + 1 < LEVELS[li].lessons.length){
+items.push({ t:'次の例題へ（' + LEVELS[li].lessons[idx+1].title + '）', fn: ()=>startLesson(li, idx+1, false)});
+} else if(li + 1 < LEVELS.length){
+items.push({ t:'次の編へ（' + LEVELS[li+1].name + '）', fn: ()=>goLessons(li+1)});
+}
+}
+items.push({ t:'レッスン一覧に戻る', fn: ()=>goLessons(li)});
+items.push({ t:'レベル選択に戻る', fn: goLevels});
+showChoices(items);
+});
+}
+
+/* ============ ボタン類 ============ */
+$('btnEnter').onclick = ()=>{ beep(660,.06); $('title').style.display='none'; goLevels();};
+$('btnLevels').onclick = ()=>{ $('title').style.display='none'; goLevels();};
+$('btnReset').onclick = ()=>{
+done = {}; save(); renderProgress('タイトル');
+$('title').style.display='flex';
+};
+$('btnSound').onclick = (e)=>{
+soundOn =!soundOn;
+e.target.textContent = soundOn? '🔊 音ON': '🔇 音OFF';
+if(soundOn) beep(700,.06);
+};
+renderProgress('タイトル');
+
+let ttsOn = false;
+try{ ttsOn = localStorage.getItem('advTtsV1') === '1'; }catch(e){}
+const btnTts = document.getElementById('btnTts');
+function updTtsBtn(){ if(btnTts) btnTts.textContent = ttsOn ? '🗣 読上ON' : '🗣 読上OFF'; }
+function speak(txt){
+  if(!ttsOn || !('speechSynthesis' in window)) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(String(txt).replace(/\n+/g, ' '));
+    u.lang = 'ja-JP'; u.rate = 1.0;
+    const vs = speechSynthesis.getVoices();
+    const jv = vs.find(v => v.lang && v.lang.toLowerCase().indexOf('ja') === 0) || vs[0];
+    if(jv) u.voice = jv;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+if(btnTts) btnTts.onclick = () => {
+  ttsOn = !ttsOn;
+  try{ localStorage.setItem('advTtsV1', ttsOn ? '1' : '0'); }catch(e){}
+  updTtsBtn();
+  if(ttsOn){ speak(textEl.textContent); setTimeout(checkVoices, 800); }
+  else if('speechSynthesis' in window) speechSynthesis.cancel();
+};
+function checkVoices(){
+  if(!ttsOn || !btnTts || !('speechSynthesis' in window)) return;
+  if(speechSynthesis.getVoices().length === 0) btnTts.textContent = '🗣 音声なし';
+  else updTtsBtn();
+}
+if('speechSynthesis' in window) speechSynthesis.onvoiceschanged = checkVoices;
+updTtsBtn();
+setTimeout(checkVoices, 800);
+</script>
+</body>
+</html>
