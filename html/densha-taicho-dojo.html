@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<!-- build: 2026-11-21 11:27:20 JST -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>電車おでかけ体調道場 ― 多汗・アレルギー・胃腸に合わせた外出の作法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{
+--tb:29%;
+--ink:#dfe6ff; --dim:#8fa3d9; --blue:#3355ff; --panel:#0a0e24;
+--win:#101736; --accent:#ffd94a; --good:#7ee787; --bad:#ff7b72;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+body{margin:0;background:#05060f;color:var(--ink);
+font-family:"DotGothic16","Hiragino Kaku Gothic ProN","Noto Sans JP",monospace,sans-serif;
+-webkit-font-smoothing:none;font-smooth:never;
+display:flex;justify-content:center;padding:14px 10px 40px}
+.cab{width:100%;max-width:760px}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{font-weight:900;letter-spacing:2px;font-size:18px;color:#fff;
+text-shadow:2px 2px 0 var(--blue), 4px 4px 0 #101736}
+.logo small{display:block;font-size:11px;color:var(--dim);letter-spacing:1px;text-shadow:none}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer}
+.sbtn{background:var(--win);color:var(--ink);border:2px solid var(--dim);
+padding:4px 10px;font-size:12px;border-radius:4px}
+.sbtn:hover{border-color:#fff;color:#fff}
+.params{display:flex;gap:14px;background:var(--panel);border:2px solid var(--dim);
+padding:6px 12px;font-size:12px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.params b{color:var(--accent)}
+.bar{display:inline-block;width:120px;height:10px;background:#1a2148;vertical-align:middle;margin-left:4px;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--good);display:block}
+.screen{position:relative;border:6px solid var(--dim);border-radius:6px;overflow:hidden;
+aspect-ratio:16/10;background:#000;image-rendering:pixelated}
+.screen::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+background:repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 3px, transparent 3px 6px)}
+.bg{position:absolute;inset:0;transition:opacity.4s}
+.bg-room{background:linear-gradient(#0d1440 0 55%, #182257 55% 100%)}
+.bg-room::before{content:"";position:absolute;right:8%;top:8%;width:110px;height:130px;
+background:linear-gradient(#1b2a63,#0d1440);border:6px solid #05081a;
+box-shadow:0 0 0 4px #26398a, inset 0 0 0 3px #26398a}
+.bg-term{background:radial-gradient(ellipse at 50% 40%, #06280f 0%, #02140a 70%)}
+.bg-term::before{content:"多汗 ❄ アレルギー ❄ 湿疹 ❄ 胃腸 ❄ 押さえ拭き ❄ 早めの出発 ❄";
+position:absolute;inset:6%;color:#2f9e44;font-size:13px;line-height:2.1;opacity:.55;
+font-family:ui-monospace,Menlo,monospace;word-break:break-all}
+.bg-way{background:linear-gradient(#1b1040 0%, #4a2a7a 55%, #c65b8f 82%, #ffb36b 100%)}
+.stars{position:absolute;inset:0;z-index:1;
+background-image:radial-gradient(2px 2px at 12% 18%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 32% 8%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 55% 22%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 74% 10%, #cdd8ff 50%, transparent 51%),
+radial-gradient(2px 2px at 88% 26%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 44% 30%, #9fb4ff 50%, transparent 51%)}
+.char{position:absolute;bottom:var(--tb);left:50%;transform:translateX(-50%);z-index:2;
+filter:drop-shadow(0 0 10px rgba(60,100,255,.75))}
+.char svg{display:block}
+.ground{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:1;
+background:linear-gradient(transparent, rgba(3,5,16,.92) 30%)}
+.namebox{position:absolute;left:14px;bottom:calc(var(--tb) + 8px);z-index:8;color:#ffffff;
+background:var(--win);border:3px solid var(--dim);padding:2px 14px;font-weight:700;font-size:16px;
+letter-spacing:.06em;text-shadow:2px 2px 0 #000}
+.textbox{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:7;color:#ffffff;
+background:rgba(4,6,20,.97);border-top:4px solid var(--dim);
+padding:12px 16px;font-size:18px;line-height:1.8;letter-spacing:.06em;
+text-shadow:2px 2px 0 #000;
+cursor:pointer;white-space:pre-wrap;overflow-y:auto;overflow-x:hidden;
+scrollbar-width:thin;scrollbar-color:#3355ff #0a0e24}
+.textbox::-webkit-scrollbar{width:10px}
+.textbox::-webkit-scrollbar-track{background:#0a0e24}
+.textbox::-webkit-scrollbar-thumb{background:#3355ff;border:2px solid #04061a}
+.textbox.next{position:absolute;right:12px;bottom:6px;color:var(--accent);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.choices{position:absolute;top:0;left:0;right:0;bottom:calc(var(--tb) + 46px);z-index:9;display:none;flex-direction:column;
+align-items:center;justify-content:center;gap:12px;background:rgba(3,5,16,.78);padding:16px;overflow-y:auto}
+.choices.show{display:flex}
+.choice{width:min(92%,520px);background:#05081f;color:#ffffff;font-weight:700;
+border:3px solid #d5ddff;padding:12px 16px;font-size:18px;letter-spacing:.08em;
+text-shadow:2px 2px 0 #000;text-align:left;border-radius:4px}
+.choice:hover{border-color:var(--accent);color:#fff;background:#1b2a6e}
+.choice::before{content:"▶ ";color:var(--accent)}
+.choice.done{border-color:var(--good)}
+.choice.done::before{content:"✔ ";color:var(--good)}
+.title{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
+justify-content:center;gap:14px;background:radial-gradient(ellipse at 50% 35%, #14205e 0%, #05060f 75%);text-align:center;padding:16px}
+.title h1{margin:0;font-size:clamp(26px,6vw,44px);letter-spacing:3px;color:#fff;
+text-shadow:3px 3px 0 var(--blue), 6px 6px 0 #101736}
+.title p{color:#d5ddff;font-size:14px;margin:0;line-height:1.9}
+.tbtn{background:#05081f;color:#fff;font-weight:700;border:3px solid #d5ddff;padding:10px 26px;font-size:17px;letter-spacing:.08em;border-radius:4px}
+.tbtn:hover{border-color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
+border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;opacity:0;transition:opacity.3s;z-index:50;pointer-events:none}
+.toast.show{opacity:1}
+#diagram{transition:width .25s}
+.screen.diagmenu #diagram{width:min(430px,74%)}
+.screen.diagmenu .choices{bottom:calc(var(--tb) + 8px);flex-direction:row;flex-wrap:wrap;align-content:flex-start;justify-content:center;gap:8px}
+.screen.diagmenu .choice{flex:1 1 28%;width:auto;margin:0;text-align:center;font-size:14px;padding:10px 8px;line-height:1.5}
+
+#diagram{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:min(560px,94%);z-index:5;background:rgba(3,4,16,.88);border:2px solid var(--dim);padding:6px;display:none}
+#diagram svg{width:100%;height:auto;display:block}
+
+footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
+kbd{display:inline-block;background:#21262d;border:1px solid var(--dim);border-bottom-width:2px;
+border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+@media (max-width:560px){.textbox{font-size:15px}.char{bottom:var(--tb)}}
+
+/* ===== スマホ縦長対応：画面を縦に取り、本文ボックスの割合を広げる ===== */
+@media (orientation:portrait) and (max-width:760px){
+:root{--tb:46%}
+.screen{aspect-ratio:auto;height:80vh;height:80dvh}
+.textbox{font-size:16px;line-height:1.75}
+.char svg{width:100px;height:127px}
+.choice{font-size:16px;padding:10px 14px}
+.choices{overflow-y:auto}
+.title h1{font-size:25px}
+.title p{font-size:13px}
+.params{gap:8px;font-size:11px}
+.bar{width:80px}
+}
+
+/* ===== 選択肢が上に隠れる問題の修正：中央寄せのまま、溢れたら先頭からスクロール ===== */
+.choices{justify-content:flex-start;overflow-y:auto}
+.choice:first-child{margin-top:auto}
+.choice:last-child{margin-bottom:auto}
+</style>
+</head>
+<body>
+<div class="cab">
+<header>
+<div class="logo">電車おでかけ体調道場<small>― 自分の体質に合わせた外出の作法 全16課 ―</small></div>
+<div class="btns">
+<button class="sbtn" id="btnSound">🔊 音ON</button><button class="sbtn" id="btnTts">🗣 読上OFF</button>
+<button class="sbtn" id="btnLevels">🏠 レベル選択</button>
+<button class="sbtn" id="btnReset">🗑 進捗リセット</button>
+</div>
+</header>
+
+<div class="params">
+<span>理解済み <b id="pDone">0</b> / 16 課<span class="bar"><i id="bDone" style="width:0%"></i></span></span>
+<span style="color:var(--dim)">現在：<span id="pNow">タイトル</span></span>
+<span style="margin-left:auto;color:var(--dim)">💾 進捗は自動保存（localStorage）</span>
+</div>
+
+<div class="screen" id="screen">
+<div class="bg bg-room" id="bg"></div>
+<div class="stars"></div>
+<div class="ground"></div>
+<div class="char" id="char"></div>
+<div id="diagram"></div>
+<div class="namebox" id="namebox" style="display:none"></div>
+<div class="textbox" id="textbox"><span id="text"></span><span class="next" id="nextmark" style="display:none">▼</span></div>
+<div class="choices" id="choices"></div>
+<div class="title" id="title">
+<h1>電車おでかけ体調道場</h1>
+<p>テーマは「自分の体質（多汗・アレルギー・湿疹・胃腸）に合わせた、電車で出かけるときの作法」。<br>
+悪循環の地図から、出発前の仕込み、移動中の応急、翌日の立て直しまで全16課。<br>
+「分かった！」で次へ、「分からない」で何度でもやり直し。</p>
+<button class="tbtn" id="btnEnter">▶ 道場に入る</button>
+<p>進捗（理解済み ✔）はブラウザに自動保存されます</p>
+</div>
+</div>
+
+<footer>
+遊び方：説明を読んだら「これは分かった！」か「分からない」を選ぶだけ。分かったら確認問題が1問出て、正解でその課は理解済み ✔。
+間違えてもペナルティなし、補足説明を読んで何度でも挑めます。本文クリックで文字送り、長い文は自動スクロール＋手動スクロール可。
+各課では悪循環の輪と、それを切る場所を図で描いて見える化します。これは一般的な生活情報で、医療の代わりにはなりません。目の痛みや見えにくさ、湿疹の広がりなど強い症状があるときは、眼科・皮膚科・消化器科に相談してください。
+</footer>
+<style>
+#galleryWrap{margin:16px 0 4px;text-align:center}
+#gallery{display:none;text-align:left;margin-top:12px}
+.gal-item{background:#070a1c;border:2px solid #2c3a75;padding:10px 12px;margin:0 0 12px}
+.gal-cap{color:#ffd94a;font-size:14px;margin-bottom:8px}
+.gal-diag svg{width:100%;height:auto;display:block}
+</style>
+<div id="galleryWrap">
+<div style="margin-bottom:10px"><button class="sbtn" id="btnListen">🎧 リスニング（全レッスン読み上げ）</button>
+<div id="listenPanel" style="display:none;text-align:left;margin-top:10px;background:#070a1c;border:2px solid #2c3a75;padding:10px 12px">
+<div style="margin-bottom:8px"><button class="sbtn" id="btnPlay">▶ ブラウザ音声で再生</button> <button class="sbtn" id="btnStop">⏹ 停止</button> <span id="listenStatus" style="font-size:12px;color:#9fb7ff"></span></div>
+<div style="height:8px;background:#1a2350;border:1px solid #2c3a75;margin-bottom:8px"><div id="listenFill" style="height:100%;width:0%;background:#ffd94a"></div></div>
+<div style="font-size:12px;color:#9fb7ff;margin-bottom:8px">PCでは Read Aloud 拡張機能で、この下のテキストをそのまま読み上げられます。</div>
+<div id="listenText" style="color:#fff;font-size:15px;line-height:1.7"></div>
+</div></div>
+<button class="sbtn" id="btnGallery">🖼 図解一覧（復習用）を表示</button>
+<div id="gallery"></div>
+</div>
+<script>
+(function(){
+var btnMain = document.getElementById('btnListen');
+var panel = document.getElementById('listenPanel');
+var btn = document.getElementById('btnPlay');
+var btnStop = document.getElementById('btnStop');
+var st = document.getElementById('listenStatus');
+var fill = document.getElementById('listenFill');
+var lt = document.getElementById('listenText');
+if(!btnMain || !panel || !btn) return;
+var playing = false, items = [], idx = 0, curId = 0, watchdog = null, tickTimer = null, itemStart = 0, started = false, attempts = 0, built = false, paused = false;
+function buildItems(){
+  var arr = [];
+  LEVELS.forEach(function(ch, ci){
+    arr.push('第' + (ci + 1) + '章。' + ch.name);
+    ch.lessons.forEach(function(ls){
+      arr.push(ls.title);
+      (ls.teach || []).forEach(function(t){ arr.push(t); });
+    });
+  });
+  return arr;
+}
+function buildText(){
+  lt.innerHTML = '';
+  LEVELS.forEach(function(ch, ci){
+    var h = document.createElement('div');
+    h.style.cssText = 'color:#ffd94a;font-weight:bold;margin:14px 0 6px';
+    h.textContent = '第' + (ci + 1) + '章 ' + ch.name;
+    lt.appendChild(h);
+    ch.lessons.forEach(function(ls){
+      var t = document.createElement('div');
+      t.style.cssText = 'font-weight:bold;margin:10px 0 4px';
+      t.textContent = ls.title;
+      lt.appendChild(t);
+      (ls.teach || []).forEach(function(tx){
+        var p = document.createElement('div');
+        p.style.cssText = 'margin:0 0 8px;white-space:pre-wrap';
+        p.textContent = tx;
+        lt.appendChild(p);
+      });
+    });
+  });
+}
+function pickVoice(){
+  var vs = speechSynthesis.getVoices();
+  for(var i = 0; i < vs.length; i++){ if(vs[i].lang && vs[i].lang.toLowerCase().indexOf('ja') === 0) return vs[i]; }
+  return vs[0] || null;
+}
+function fmt(sec){ var m = Math.floor(sec / 60), s = sec % 60; return m + ':' + (s < 10 ? '0' : '') + s; }
+function setBar(){ if(fill && items.length) fill.style.width = Math.round(idx / items.length * 100) + '%'; }
+function status(){
+  if(!st || !playing) return;
+  var el = Math.floor((Date.now() - itemStart) / 1000);
+  st.textContent = (started ? '再生中 ' : '準備中… ') + (idx + 1) + '/' + items.length + '（' + fmt(el) + '）' + (items[idx] || '').slice(0, 18);
+}
+function clearTimers(){
+  if(watchdog){ clearTimeout(watchdog); watchdog = null; }
+  if(tickTimer){ clearInterval(tickTimer); tickTimer = null; }
+}
+function stop(msg){
+  playing = false; paused = false; curId++; clearTimers();
+  try{ speechSynthesis.cancel(); }catch(e){}
+  btn.textContent = '▶ ブラウザ音声で再生';
+  if(st) st.textContent = msg || '';
+  if(fill) fill.style.width = '0%';
+}
+function armWatchdog(text){
+  if(watchdog) clearTimeout(watchdog);
+  var est = Math.min(45000, Math.max(7000, text.length * 260 + 4000));
+  watchdog = setTimeout(function(){
+    if(!playing) return;
+    curId++;
+    try{ speechSynthesis.cancel(); }catch(e){}
+    idx++; next();
+  }, est);
+}
+function trySpeak(text, useVoice){
+  var my = ++curId;
+  started = false; itemStart = Date.now(); setBar(); status();
+  try{ speechSynthesis.resume(); }catch(e){}
+  var u = new SpeechSynthesisUtterance(String(text).replace(/\n+/g, ' '));
+  u.lang = 'ja-JP'; u.rate = 1.0;
+  var v = useVoice ? pickVoice() : null;
+  if(v) u.voice = v;
+  u.onstart = function(){ if(my === curId){ started = true; status(); } };
+  u.onend = function(){ if(my === curId && playing){ idx++; next(); } };
+  u.onerror = function(){
+    if(my !== curId || !playing) return;
+    if(speechSynthesis.getVoices().length === 0){ stop('音声が見つかりません（この端末では読み上げできません）'); return; }
+    if(useVoice && attempts === 0){ attempts++; trySpeak(text, false); return; }
+    idx++; next();
+  };
+  armWatchdog(text);
+  try{ speechSynthesis.speak(u); }catch(e){ setTimeout(function(){ if(my === curId && playing){ idx++; next(); } }, 300); }
+}
+function next(){
+  if(!playing || paused) return;
+  if(idx >= items.length){ stop('読み上げ終了（全' + items.length + '項目）'); if(fill) fill.style.width = '100%'; return; }
+  attempts = 0;
+  trySpeak(items[idx], true);
+}
+if(btnStop) btnStop.onclick = function(){ if(playing) stop('停止しました'); };
+btnMain.onclick = function(){
+  if(panel.style.display !== 'none'){
+    panel.style.display = 'none';
+    btnMain.textContent = '🎧 リスニング（全レッスン読み上げ）';
+    if(playing) stop('停止しました');
+    return;
+  }
+  if((typeof LEVELS === 'undefined' && typeof NODES === 'undefined')){ return; }
+  if(!built){ buildText(); built = true; }
+  panel.style.display = 'block';
+  btnMain.textContent = '🎧 リスニングを閉じる';
+};
+btn.onclick = function(){
+  if(!('speechSynthesis' in window)){ if(st) st.textContent = 'このブラウザは読み上げに未対応です'; return; }
+  if(playing && !paused){
+    paused = true; curId++; clearTimers();
+    try{ speechSynthesis.cancel(); }catch(e){}
+    btn.textContent = '▶ 再開';
+    if(st) st.textContent = '一時停止中 ' + (idx + 1) + '/' + items.length + '（再開はこの項目の頭から）';
+    return;
+  }
+  if(playing && paused){
+    paused = false;
+    btn.textContent = '⏸ 一時停止';
+    if(st) st.textContent = '再開します';
+    attempts = 0;
+    clearTimers();
+    tickTimer = setInterval(status, 500);
+    trySpeak(items[idx], true);
+    return;
+  }
+  if((typeof LEVELS === 'undefined' && typeof NODES === 'undefined')){ if(st) st.textContent = 'データ読み込みに失敗しました'; return; }
+  items = buildItems(); idx = 0; playing = true; itemStart = Date.now();
+  btn.textContent = '⏸ 一時停止';
+  if(st) st.textContent = '準備中…';
+  if(fill) fill.style.width = '0%';
+  try{ speechSynthesis.cancel(); }catch(e){}
+  clearTimers();
+  tickTimer = setInterval(status, 500);
+  setTimeout(next, 200);
+};
+})();
+</script>
+<script>
+(function(){
+var btn = document.getElementById('btnGallery');
+var gal = document.getElementById('gallery');
+var built = false;
+function build(){
+var html = '';
+if (typeof LEVELS !== 'undefined' && typeof DIAG !== 'undefined') {
+LEVELS.forEach(function(lv, li){
+lv.lessons.forEach(function(ls, i){
+if (DIAG[ls.id]) html += '<div class="gal-item"><div class="gal-cap">第' + (li+1) + '章 第' + (i+1) + '課：' + ls.title + '</div><div class="gal-diag">' + DIAG[ls.id] + '</div></div>';
+});
+});
+} else if (typeof DIAG !== 'undefined') {
+Object.keys(DIAG).forEach(function(k){
+var cap = k;
+if (typeof NODES !== 'undefined' && NODES[k] && NODES[k].title) cap = NODES[k].title;
+html += '<div class="gal-item"><div class="gal-cap">' + cap + '</div><div class="gal-diag">' + DIAG[k] + '</div></div>';
+});
+}
+gal.innerHTML = html || '<div class="gal-cap">図解はありません</div>';
+}
+btn.onclick = function(){
+var show = gal.style.display !== 'block';
+if (show && !built) { build(); built = true; }
+gal.style.display = show ? 'block' : 'none';
+btn.textContent = show ? '🖼 図解一覧（復習用）を隠す' : '🖼 図解一覧（復習用）を表示';
+};
+})();
+</script>
+</div>
+
+<div class="toast" id="toast">💾 保存しました</div>
+
+<script>
+"use strict";
+/* ============ シルエット ============ */
+function sil(extra){
+return '<svg width="150" height="190" viewBox="0 0 120 150">'
++ '<circle cx="60" cy="34" r="17" fill="#141f52"/>'
++ '<path d="M22 150 C22 96 40 66 60 66 C80 66 98 96 98 150 Z" fill="#141f52"/>'
++ (extra || '') + '</svg>';
+}
+const CHARS = {
+sennin: sil('<path d="M28 26 L60 2 L92 26 L84 30 L60 14 L36 30 Z" fill="#141f52"/>'
++ '<path d="M48 44 L72 44 L66 92 L54 92 Z" fill="#141f52"/>'),
+ore: sil(''),
+none: ''
+};
+
+/* ============ カリキュラム ============ */
+/* teach: 説明ページ（クリックで送る） / retry: 補足説明 / quiz: 確認問題 */
+const LEVELS = [
+{ name:'第1章 自分の体質の地図', desc:'多汗・アレルギー・湿疹・胃腸がどう連鎖するかを知る。', lessons:[
+{ id:'t1', title:'悪循環の全体像', teach:[
+'まず地図じゃ。多汗で汗をかく→汗の刺激で湿疹とかゆみ→目をこすり顔が荒れる→ストレスと睡眠の乱れ→アレルギーも胃腸も不安定に→外出が億劫になる。輪はこうつながっておる。',
+'大事なのは、輪は「どこか1か所」を切れば弱まることじゃ。全部を治そうとしない。一番安く切れる輪から切るのが、この道場の作戦じゃ。'],
+retry:'悪循環は1か所切れば弱まる。一番安い輪から切る。',
+quiz:{ q:'悪循環への正しい向き合い方は？', choices:[
+{ t:'全部を一度に治そうとする', ok:false }, { t:'一番安く切れる輪を1つ切る', ok:true }, { t:'外出自体をやめる', ok:false } ] } },
+{ id:'t2', title:'汗の引き金を知る', teach:[
+'多汗の汗は、体温調節だけでなく緊張や自律神経でも出る。「暑くないのにかく」のはそのためじゃ。',
+'引き金はだいたい決まっておる：急ぐ、焦る、人混み、暑さ、重ね着のしすぎ。\nつまり汗対策の半分は「汗止め」ではなく「引き金を減らす設計」じゃ。'],
+retry:'汗の引き金は急ぐ・焦る・人混み・暑さ。設計で減らせる。',
+quiz:{ q:'汗対策の半分を占めるものは？', choices:[
+{ t:'強い制汗剤を探すこと', ok:false }, { t:'引き金（急ぐ・焦る等）を減らす設計', ok:true }, { t:'水分を控えること', ok:false } ] } },
+{ id:'t3', title:'目と顔は一組', teach:[
+'アレルギーで目がかゆい→こする→目の周りの皮膚と顔の湿疹が荒れる→荒れた皮膚はもっとかゆい。この小さな輪が顔の不調の中心じゃ。',
+'だから「目を守る」ことは「顔を守る」ことでもある。眼鏡やマスクは花粉よけであると同時に、「手が顔に行く」のを止める壁にもなる。'],
+retry:'目をこすらない工夫が、顔の湿疹も守る。眼鏡・マスクは壁。',
+quiz:{ q:'眼鏡やマスクが効く理由として正しいのは？', choices:[
+{ t:'花粉よけに加え、手が顔に行くのを止める壁になる', ok:true }, { t:'顔を温めて汗を出すから', ok:false }, { t:'見た目で気分が上がるから', ok:false } ] } },
+{ id:'t4', title:'胃腸は両方向に振れる', teach:[
+'胃腸は普段、食後1時間ほどの下痢パターン（胃結腸反射）がある一方で、緊張・水分不足・リズムの変化が重なると便秘側にも振れる。両方向ありうるのがこの体質じゃ。',
+'どっちに振れても共通の土台は同じ：水分をこまめに、トイレを我慢しない、食べ過ぎない、お腹を冷やさない。\n振れる方向を当てるより、土台を固定する方が効く。'],
+retry:'胃腸は下痢にも便秘にも振れる。土台は水分・我慢しない・食べ過ぎない。',
+quiz:{ q:'胃腸対策で両方向に効く土台は？', choices:[
+{ t:'水分を控えて腸を休める', ok:false }, { t:'トイレは家まで我慢する', ok:false }, { t:'水分こまめ・トイレ我慢しない・食べ過ぎない', ok:true } ] } },
+]},
+{ name:'第2章 出発前の仕込み', desc:'家でできる仕込みが、当日の半分を決める。', lessons:[
+{ id:'t5', title:'当日の土台づくり', teach:[
+'当日の朝は4つだけ：水分をとる、朝食は軽く消化のよい物、出発前にトイレを済ませる、前日の睡眠を削らない（これは前夜の仕事じゃ）。',
+'空腹も満腹も胃腸には負担じゃ。「軽く入れて、済ませて出る」が合言葉じゃ。'],
+retry:'朝は水分・軽い朝食・トイレを済ませて出る。',
+quiz:{ q:'出発前の朝食の正解は？', choices:[
+{ t:'抜いて胃腸を空にする', ok:false }, { t:'軽く消化のよい物をとる', ok:true }, { t:'しっかり食べて力をつける', ok:false } ] } },
+{ id:'t6', title:'皮膚の仕込み', teach:[
+'保湿は出発前に済ませる。汗で流れる前に、土台を作っておくのが先じゃ。',
+'制汗剤は「夜寝る前に塗る」と効きやすいのが定説じゃ（汗が少ない時間に成分がなじむ）。当日の朝は塗り直し程度でよい。\nそして爪を短くしておく。掻いてしまう前提で、傷を浅くする備えじゃ。新しい化粧品や薬を外出当日に試すのは厳禁じゃ。'],
+retry:'保湿は出発前、制汗剤は前夜、爪は短く。当日に新しい物は試さない。',
+quiz:{ q:'制汗剤を塗るタイミングの定説は？', choices:[
+{ t:'汗をかいてから塗る', ok:false }, { t:'出発直前に厚く塗る', ok:false }, { t:'夜寝る前に塗ると効きやすい', ok:true } ] } },
+{ id:'t7', title:'目の仕込み', teach:[
+'抗アレルギーの目薬は、かゆくなってからより出発前にさす方が効く（予防の薬じゃ）。内服薬がある日は、眠くなりにくいタイプを選ぶ。移動と付き添いのある日に眠気は敵じゃ。',
+'外出の日はコンタクトより眼鏡が向く。乾燥した電車の風と花粉から目を守り、こする手も止めてくれる。'],
+retry:'目薬は出発前に。内服は眠くなりにくい物を。外出は眼鏡の日。',
+quiz:{ q:'外出の日に眼鏡が向く理由は？', choices:[
+{ t:'風と花粉から守り、こする手も止めるから', ok:true }, { t:'目薬が要らなくなるから', ok:false }, { t:'汗が止まるから', ok:false } ] } },
+{ id:'t8', title:'定番の荷物セット', teach:[
+'荷物は固定メニューじゃ：タオル2枚、替えのインナー1枚、目薬、ティッシュ、水、扇子かハンディ扇風機、腹巻き（着用）、帽子かマスク。',
+'このセットを1つの袋にまとめて固定しておくと、出発の摩擦が下がる。\n「準備が面倒で出かけない」を防ぐ仕掛けでもある。これは外出習慣の道場と同じ考え方じゃ。'],
+retry:'荷物は定番セットを袋に固定。準備の摩擦を下げる。',
+quiz:{ q:'荷物を固定セットにする効き目は？', choices:[
+{ t:'忘れ物が減るだけ', ok:false }, { t:'準備の摩擦が下がり、出かけやすくなる', ok:true }, { t:'荷物が軽くなる', ok:false } ] } },
+]},
+{ name:'第3章 移動中の作法', desc:'駅まで・電車内・荒れてきたときの応急。', lessons:[
+{ id:'t9', title:'駅までの歩き方', teach:[
+'駅までの最大の工夫は「早めに出て、ゆっくり歩く」。焦りは汗の一番の引き金じゃ。1本早い電車を狙う余裕が、そのまま汗の量を減らす。',
+'日陰側を歩く、上着は脱ぎ着できる重ね着で調整、首元を冷やすと汗が引きやすい。\n歩くこと自体は胃腸の動きにも味方する。敵は速さと焦りだけじゃ。'],
+retry:'早めに出てゆっくり。焦りを消すことが汗対策になる。',
+quiz:{ q:'駅までの歩き方で一番効くのは？', choices:[
+{ t:'早めに出て、ゆっくり歩く', ok:true }, { t:'汗をかく前に走って着く', ok:false }, { t:'厚着して汗を出し切る', ok:false } ] } },
+{ id:'t10', title:'汗をかいたら', teach:[
+'かいた汗は、タオルで押さえるように拭く。ゴシゴシこするのは湿疹への刺激そのものじゃ。',
+'汗が引くまでは顔に触らない。引いた後に必要なら替えインナーに着替える。\n冷たい飲み物で一気に冷やすと胃腸に響くことがあるので、常温〜冷水を少しずつが無難じゃ。'],
+retry:'汗は押さえ拭き。引くまで顔に触らない。冷たい物は少しずつ。',
+quiz:{ q:'汗の拭き方として正しいのは？', choices:[
+{ t:'タオルで強くこすって落とす', ok:false }, { t:'乾くまで放置する', ok:false }, { t:'タオルで押さえるように拭く', ok:true } ] } },
+{ id:'t11', title:'電車の中の作法', teach:[
+'座る工夫：始発に近い駅から乗る、混む時間帯を避ける、優先席付近で待つ。座れれば体も冷え、汗も引く。',
+'席の選び方にもコツがある。エアコンの風が目に直接当たる席は乾燥してかゆみを呼ぶので避ける。\nスマホを長く見続けると目が疲れてかゆみが増すので、遠くを見る休憩をはさむことじゃ。'],
+retry:'座る工夫＋風が目に当たらない席。目の休憩もはさむ。',
+quiz:{ q:'電車の席選びで避けたいのは？', choices:[
+{ t:'窓側の席', ok:false }, { t:'エアコンの風が目に直接当たる席', ok:true }, { t:'優先席の近くの席', ok:false } ] } },
+{ id:'t12', title:'荒れてきたときの応急', teach:[
+'目や顔が荒れてきたら、応急は4つ：冷やす（冷たいタオルやおしぼり）、人工涙液で目を潤す、水分をとる、掻かない・こすらない。',
+'胃腸が気になってきたら、トイレは我慢しない。駅や百貨店のトイレの場所を先に知っておくと、焦り自体が減る。\n焦りが減れば汗も減る。応急は連鎖で効くんじゃ。'],
+retry:'応急は冷やす・潤す・水分・掻かない。トイレは我慢しない。',
+quiz:{ q:'目がかゆくなったときの応急として正しいのは？', choices:[
+{ t:'目をこすってすっきりさせる', ok:false }, { t:'冷やして、人工涙液で潤す', ok:true }, { t:'熱いタオルで温める', ok:false } ] } },
+]},
+{ name:'第4章 到着後と立て直し', desc:'食事の席、帰り道、翌日の1行メモ。', lessons:[
+{ id:'t13', title:'食事の席での作法', teach:[
+'食事の席では食べ過ぎないのが第一。胃腸がデリケートな日に満腹は、その後の不調の予約じゃ。温かい汁物は味方になる。',
+'顔がほてってきたら冷たいおしぼりを当てる。熱と汗が湿疹を押してくるからじゃ。\nお酒は汗も胃腸も刺激するので、飲むなら量を先に決めておく。'],
+retry:'食べ過ぎない、温かい汁物、ほてったら冷やす。酒は量を先に決める。',
+quiz:{ q:'食事の席での第一の作法は？', choices:[
+{ t:'食べ過ぎないこと', ok:true }, { t:'冷たい物を多くとること', ok:false }, { t:'早く食べて休むこと', ok:false } ] } },
+{ id:'t14', title:'帰り道と帰宅後', teach:[
+'帰りは疲れとほてりで汗が再燃しやすい。始発駅から乗るなら座る工夫を、混む時間なら1本待つ余裕を。',
+'帰宅後は、汗を流すシャワーが効く。ただしぬるめ・短め・流す中心で、終えたらすぐ保湿。\n頻回で長いシャワーは皮膚のバリアを削るので、「帰宅後の1回を丁寧に」が正解じゃ。'],
+retry:'帰宅後はぬるめ短めのシャワー1回＋保湿。頻回は逆効果。',
+quiz:{ q:'帰宅後のシャワーの正解は？', choices:[
+{ t:'熱めで長く、しっかり洗う', ok:false }, { t:'ぬるめ・短め・流す中心で、後に保湿', ok:true }, { t:'かゆい所だけ何度も洗う', ok:false } ] } },
+{ id:'t15', title:'翌日の立て直しと1行メモ', teach:[
+'翌日は睡眠を優先して立て直す。症状が残った日は、原因を当てに行くのではなく「引き金」を1行だけメモする：急いだ／目をこすった／水分が足りなかった、のように。',
+'これは日記ではなく、外出の仕込みを良くするための材料じゃ。1行で十分。\n次の外出のとき、その1行だけ見返せば仕込みが更新される。'],
+retry:'翌日は睡眠優先。引き金を1行メモして次の仕込みに使う。',
+quiz:{ q:'1行メモに書くべきなのは？', choices:[
+{ t:'症状の詳しい記録', ok:false }, { t:'反省と後悔', ok:false }, { t:'引き金になったこと1つ', ok:true } ] } },
+{ id:'t16', title:'卒業：自分の取扱説明書', teach:[
+'卒業は「自分の取扱説明書」を1枚にすることじゃ。引き金リストと、効いた対策だけを書く。\n悪循環は気合いでなく、この1枚の更新で少しずつ切れていく。',
+'最後に受診の目安：目の痛みや見えにくさ、湿疹のじゅくじゅく・広がり、汗で日常生活に支障が大きいときは、眼科・皮膚科・消化器科に相談するのが正解じゃ。\nこの道場は一般的な生活情報で、医療の代わりにはならん。その線引きも取扱説明書の一部じゃ。'],
+retry:'卒業は取扱説明書1枚。強い症状は受診が正解。',
+quiz:{ q:'この道場の卒業条件は？', choices:[
+{ t:'引き金と効いた対策を1枚にまとめること', ok:true }, { t:'症状がゼロになること', ok:false }, { t:'外出を完璧にこなすこと', ok:false } ] } },
+]},
+];
+
+/* ============ エンジン ============ */
+const SAVE_KEY = 'denshaTaichoDojoSaveV1';
+const TOTAL = LEVELS.reduce((a,l)=>a+l.lessons.length,0);
+let done = {};
+try{ const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); if(s && s.done) done = s.done;}catch(e){}
+let soundOn = true, typing = null, advanceFn = null;
+let cur = { level:0, lesson:0, pages:[], page:0};
+
+const $ = id => document.getElementById(id);
+const bgEl=$('bg'), charEl=$('char'), nameEl=$('namebox'), textEl=$('text'),
+boxEl=$('textbox'), chEl=$('choices'), nextEl=$('nextmark');
+
+function beep(freq, dur, delay, vol){
+if(!soundOn) return;
+try{
+const ctx = beep.ctx || (beep.ctx = new (window.AudioContext||window.webkitAudioContext)());
+if(ctx.state === 'suspended') ctx.resume();
+const o = ctx.createOscillator(), g = ctx.createGain();
+o.type='square'; o.frequency.value = freq || 660;
+g.gain.value = vol || 0.03;
+o.connect(g); g.connect(ctx.destination);
+const t = ctx.currentTime + (delay||0);
+o.start(t); o.stop(t + (dur||0.06));
+}catch(e){}
+}
+function save(){
+try{ localStorage.setItem(SAVE_KEY, JSON.stringify({done})); toast();}catch(e){}
+}
+function toast(){
+const t=$('toast'); t.classList.add('show');
+clearTimeout(toast.tm); toast.tm=setTimeout(()=>t.classList.remove('show'), 900);
+}
+function doneCount(){ return Object.keys(done).filter(k=>done[k]).length;}
+function renderProgress(now){
+$('pDone').textContent = doneCount();
+$('bDone').style.width = (doneCount()/TOTAL*100) + '%';
+if(now) $('pNow').textContent = now;
+}
+function setScene(bg, char, name){
+bgEl.className = 'bg ' + bg;
+charEl.innerHTML = CHARS[char] || '';
+charEl.style.display = char && char!== 'none'? '': 'none';
+if(name){ nameEl.textContent = name; nameEl.style.display='';} else nameEl.style.display='none';
+}
+function typeText(txt, onDoneTyping){ speak(txt);
+clearInterval(typing);
+textEl.textContent=''; nextEl.style.display='none';
+boxEl.scrollTop = 0;
+advanceFn = null;
+let i=0;
+typing = setInterval(()=>{
+i++;
+textEl.textContent = txt.slice(0, i);
+boxEl.scrollTop = boxEl.scrollHeight;
+const ch = txt.charAt(i-1);
+if(ch && ch!== ' ' && ch!== '\n' && i % 2 === 1){
+beep(980 + Math.random()*520, 0.018, 0, 0.012);
+}
+if(i >= txt.length){
+clearInterval(typing); typing=null;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+}
+}, 26);
+boxEl.onclick = ()=>{
+if(typing){
+clearInterval(typing); typing=null;
+textEl.textContent = txt; boxEl.scrollTop = boxEl.scrollHeight;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+} else if(advanceFn){
+const f = advanceFn; advanceFn = null; f();
+}
+};
+}
+document.addEventListener('keydown', e=>{
+if(!typing && advanceFn && (e.key === ' ' || e.key === 'Enter')){
+e.preventDefault();
+const f = advanceFn; advanceFn = null; f();
+}
+});
+function showChoices(items){
+chEl.innerHTML='';
+items.forEach(it=>{
+const b=document.createElement('button');
+b.className='choice' + (it.done? ' done': '');
+b.textContent=it.t;
+b.onclick=()=>{ beep(520,.06); setTimeout(()=>beep(780,.07),70); chEl.classList.remove('show'); it.fn();};
+chEl.appendChild(b);
+});
+chEl.classList.add('show');
+const dg = $('diagram');
+if(dg && dg.style.display === 'block'){
+$('screen').classList.add('diagmenu');
+requestAnimationFrame(()=>{
+const sr = $('screen').getBoundingClientRect();
+const dr = dg.getBoundingClientRect();
+chEl.style.top = Math.max(0, Math.round(dr.bottom - sr.top + 8)) + 'px';
+});
+} else { $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+}
+function hideChoices(){ chEl.classList.remove('show'); chEl.innerHTML=''; chEl.style.top=''; $('screen').classList.remove('diagmenu'); }
+
+
+/* ============ 図解（8bit風SVG・黒板） ============ */
+function _cm(x,y,ch,fill){ return '<rect x="'+(x+3)+'" y="'+(y+3)+'" width="30" height="30" fill="#000" opacity=".45"/><rect x="'+x+'" y="'+y+'" width="30" height="30" fill="'+fill+'" stroke="#dfe6ff" stroke-width="2"/><text x="'+(x+15)+'" y="'+(y+21)+'" font-size="14" fill="#05060f" text-anchor="middle" font-weight="bold">'+ch+'</text>'; }
+function _ar(x1,y1,x2,y2,col){ col=col||'#8fa3d9'; var pts; if(Math.abs(x2-x1)>=Math.abs(y2-y1)){ pts = x2>x1 ? [[x2,y2],[x2-10,y2-6],[x2-10,y2+6]] : [[x2,y2],[x2+10,y2-6],[x2+10,y2+6]]; } else { pts = y2>y1 ? [[x2,y2],[x2-6,y2-10],[x2+6,y2-10]] : [[x2,y2],[x2-6,y2+10],[x2+6,y2+10]]; } return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+col+'" stroke-width="4"/><polygon points="'+pts.map(function(p){return p.join(',');}).join(' ')+'" fill="'+col+'"/>'; }
+function _ln(x1,y1,x2,y2,col){ return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+(col||'#8fa3d9')+'" stroke-width="3"/>'; }
+function _tx(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'" text-anchor="middle">'+str+'</text>'; }
+function _txl(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#dfe6ff')+'">'+str+'</text>'; }
+function _bx(x,y,w,h,label,fill){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'" stroke="#8fa3d9" stroke-width="2"/><text x="'+(x+w/2)+'" y="'+(y+h/2+5)+'" font-size="12" fill="#fff" text-anchor="middle">'+label+'</text>'; }
+function _tag(x,y,str,col){ var w=str.length*12+12; return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="20" fill="'+col+'"/><text x="'+(x+w/2)+'" y="'+(y+14)+'" font-size="11" fill="#05060f" text-anchor="middle" font-weight="bold">'+str+'</text>'; }
+function _svg(inner){ return '<svg viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'+inner+'</svg>'; }
+var BL='#4a6bff', YL='#ffd94a', GN='#7ee787', RD='#ff7b72', PU='#b18cff', GY='#5a6b9e', DM='#8fa3d9';
+const DIAG = {
+t1: _svg(_tx(180,20,'悪循環の輪（どこか1か所を切る）',DM,12)
+ + _bx(15,42,78,36,'多汗','#1b2a6e') + _ar(93,60,110,60,RD)
+ + _bx(112,42,78,36,'湿疹・かゆみ','#1b2a6e') + _ar(190,60,207,60,RD)
+ + _bx(209,42,66,36,'ストレス','#1b2a6e') + _ar(275,60,292,60,RD)
+ + _bx(294,42,52,36,'胃腸','#1b2a6e')
+ + _tx(180,102,'輪は1か所切れば弱まる',YL,12)),
+t2: _svg(_tx(180,22,'汗の引き金',DM,12)
+ + _tag(25,44,'急ぐ',RD) + _tag(95,44,'焦る',RD) + _tag(165,44,'人混み',RD) + _tag(250,44,'暑さ',RD)
+ + _ar(180,66,180,82,YL)
+ + _bx(110,84,140,32,'汗が出る','#1b2a6e')),
+t3: _svg(_tx(180,22,'目と顔の小さな輪',DM,12)
+ + _bx(10,46,100,38,'目がかゆい','#1b2a6e') + _ar(112,65,140,65,RD)
+ + _bx(142,46,80,38,'こする','#5a2a2a') + _ar(224,65,252,65,RD)
+ + _bx(254,46,96,38,'顔が荒れる','#1b2a6e')
+ + _tx(180,108,'壁：眼鏡・マスクで手を止める',GN,12)),
+t4: _svg(_tx(180,22,'胃腸は両方向に振れる',DM,12)
+ + _bx(110,36,140,30,'その日の条件','#1b2a6e')
+ + _ar(140,66,90,86,YL) + _ar(220,66,270,86,YL)
+ + _bx(25,88,130,30,'普段：下痢側','#14204d') + _bx(205,88,130,30,'緊張時：便秘側','#14204d')),
+t5: _svg(_tx(180,22,'当日の朝の土台',DM,12)
+ + _tag(30,46,'水分',BL) + _tag(105,46,'軽い朝食',BL) + _tag(200,46,'トイレ済ませる',BL)
+ + _tx(180,92,'前日の睡眠を削らない',YL,12)
+ + _tx(180,112,'軽く入れて、済ませて出る',GN,12)),
+t6: _svg(_tx(180,22,'皮膚の仕込みの順番',DM,12)
+ + _bx(12,48,100,38,'前夜：制汗剤','#1b2a6e') + _ar(112,67,128,67,YL)
+ + _bx(130,48,100,38,'朝：保湿','#1b2a6e') + _ar(230,67,246,67,YL)
+ + _bx(248,48,100,38,'爪は短く','#1b2a6e')
+ + _tx(180,110,'当日に新しい物は試さない',RD,12)),
+t7: _svg(_tx(180,22,'目の仕込み',DM,12)
+ + _tag(30,46,'目薬は出発前',GN) + _tag(160,46,'内服は眠くない物',BL)
+ + _tag(120,80,'外出は眼鏡の日',YL)
+ + _tx(180,114,'眼鏡＝風・花粉・手への壁',DM,12)),
+t8: _svg(_tx(180,20,'定番の荷物セット（袋に固定）',DM,12)
+ + _tag(18,42,'タオル×2',BL) + _tag(108,42,'替えインナー',BL) + _tag(222,42,'目薬',BL)
+ + _tag(18,76,'水',BL) + _tag(70,76,'扇子・扇風機',BL) + _tag(190,76,'ティッシュ',BL) + _tag(280,76,'帽子',BL)
+ + _tx(180,114,'準備の摩擦を下げて出やすく',GN,12)),
+t9: _svg(_tx(180,22,'駅までの歩き方',DM,12)
+ + _bx(8,48,104,38,'早めに出る','#1b2a6e') + _ar(112,67,126,67,GN)
+ + _bx(128,48,104,38,'ゆっくり歩く','#1b2a6e') + _ar(232,67,246,67,GN)
+ + _bx(248,48,104,38,'日陰側','#1b2a6e')
+ + _tx(180,110,'焦りを消す＝汗を減らす',YL,12)),
+t10: _svg(_tx(180,22,'汗をかいたら',DM,12)
+ + _bx(12,48,104,38,'押さえ拭き','#1b2a6e') + _ar(116,67,132,67,YL)
+ + _bx(134,48,104,38,'顔に触らない','#1b2a6e') + _ar(238,67,254,67,YL)
+ + _bx(256,48,92,38,'引くのを待つ','#1b2a6e')
+ + _tx(180,110,'こすり拭きは湿疹への刺激',RD,12)),
+t11: _svg(_tx(180,22,'電車の中の作法',DM,12)
+ + _tag(25,44,'始発に近い駅',BL) + _tag(140,44,'優先席付近',BL) + _tag(245,44,'混む時間を避ける',BL)
+ + _tx(180,84,'風が目に当たる席は避ける',YL,12)
+ + _tx(180,108,'スマホは休み休み、目を休める',DM,12)),
+t12: _svg(_tx(180,22,'荒れてきたときの応急 4つ',DM,12)
+ + _tag(35,44,'冷やす',GN) + _tag(115,44,'人工涙液',GN) + _tag(215,44,'水分',GN)
+ + _tag(115,78,'掻かない・こすらない',RD)
+ + _tx(180,112,'トイレは我慢しない（場所を先に知る）',YL,12)),
+t13: _svg(_tx(180,22,'食事の席の作法',DM,12)
+ + _tag(25,46,'食べ過ぎない',YL) + _tag(140,46,'温かい汁物',GN) + _tag(245,46,'酒は量を決める',BL)
+ + _tx(180,92,'ほてったら冷たいおしぼりで冷やす',YL,12)),
+t14: _svg(_tx(180,22,'帰宅後の立て直し',DM,12)
+ + _bx(12,48,104,38,'シャワー1回','#1b2a6e') + _ar(116,67,132,67,GN)
+ + _bx(134,48,104,38,'ぬるめ・短め','#1b2a6e') + _ar(238,67,254,67,GN)
+ + _bx(256,48,92,38,'すぐ保湿','#1b2a6e')
+ + _tx(180,110,'頻回で長いシャワーは逆効果',RD,12)),
+t15: _svg(_tx(180,22,'翌日の1行メモ',DM,12)
+ + _bx(60,40,240,44,'引き金：急いだ／こすった／水分不足','#1b2a6e')
+ + _tx(180,104,'日記ではなく、次回の仕込みの材料',YL,12)),
+t16: _svg(_tx(180,22,'卒業：自分の取扱説明書',DM,12)
+ + _bx(70,36,220,40,'引き金リスト＋効いた対策','#1b2a6e')
+ + _tag(85,92,'強い症状は受診が正解',RD)
+ + _tx(180,118,'1枚の更新で輪を切っていく',GN,12)),
+};
+function showDiagFor(id){
+const d = $('diagram');
+if(DIAG[id]){ d.innerHTML = DIAG[id]; d.style.display = 'block'; }
+else d.style.display = 'none';
+}
+function hideDiag(){ $('diagram').style.display = 'none'; $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+
+/* ============ 画面遷移 ============ */
+function goLevels(){
+hideChoices();
+hideDiag();
+setScene('bg-room','none','');
+renderProgress('レベル選択');
+const dc = doneCount();
+const intro = dc === 0
+? '「よく来た。わしがからだ仙人じゃ」\nテーマは「自分の体質に合わせた外出の作法」。全' + TOTAL + '課。\n好きな編からでよい。分かるまで、何度でも付き合うぞ。'
+: '「戻ったか。現在の理解済みは ' + dc + ' / ' + TOTAL + ' 課じゃ」\n続きをやるもよし、済んだ課を復習するもよし。';
+typeText(intro, ()=>{
+showChoices(LEVELS.map((lv, i)=>{
+const c = lv.lessons.filter(l=>done[l.id]).length;
+return { t: lv.name + '（' + c + '/' + lv.lessons.length + ' 済）', done: c === lv.lessons.length,
+fn: ()=>goLessons(i)};
+}));
+});
+}
+function goLessons(li){
+hideChoices();
+hideDiag();
+const lv = LEVELS[li];
+cur.level = li;
+setScene('bg-room','sennin','からだ仙人');
+renderProgress(lv.name);
+typeText('\n' + lv.desc + '\n課を選ぶのじゃ。✔ は理解済み。復習は何度でもできるぞ。', ()=>{
+showChoices(
+lv.lessons.map((ls, i)=>({ t: ls.title, done:!!done[ls.id], fn: ()=>startLesson(li, i, false)}))
+.concat([{ t:'レベル選択に戻る', fn: goLevels}])
+);
+});
+}
+function startLesson(li, idx, withRetry){
+hideChoices();
+const ls = LEVELS[li].lessons[idx];
+cur.level = li; cur.lesson = idx;
+cur.pages = ls.teach.slice();
+if(withRetry) cur.pages.push('\n' + ls.retry);
+cur.page = 0;
+setScene('bg-term','sennin','からだ仙人');
+renderProgress(LEVELS[li].name + '：' + ls.title);
+showDiagFor(ls.id);
+teachPage();
+}
+function teachPage(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+const isLast = cur.page >= cur.pages.length - 1;
+typeText('\n' + cur.pages[cur.page], ()=>{
+if(isLast){ showCheck();}
+else { advanceFn = ()=>{ cur.page++; teachPage();};}
+});
+}
+function showCheck(){
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+showChoices([
+{ t:'これは分かった！（確認問題へ）', fn: showQuiz},
+{ t:'分からない（もう一度聞く）', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'レッスン一覧に戻る', fn: ()=>goLessons(cur.level)}
+]);
+}
+function showQuiz(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+setScene('bg-term','sennin','からだ仙人');
+typeText('\n' + ls.quiz.q, ()=>{
+showChoices(ls.quiz.choices.map(c=>({
+t: c.t,
+fn: ()=>{ if(c.ok) completeLesson(); else wrongAnswer();}
+})));
+});
+}
+function wrongAnswer(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+beep(220,.12); setTimeout(()=>beep(180,.14),120);
+typeText('「むむ、違うぞ。焦らなくてよい」\n' + ls.retry, ()=>{
+showChoices([
+{ t:'もう一度説明を聞く', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'もう一度問題に挑む', fn: showQuiz}
+]);
+});
+}
+function completeLesson(){
+hideDiag();
+const li = cur.level, idx = cur.lesson;
+const ls = LEVELS[li].lessons[idx];
+done[ls.id] = true; save();
+[523,659,784,1046].forEach((f,i)=>beep(f,.1,i*0.11));
+renderProgress(LEVELS[li].name + '：' + ls.title + ' ✔');
+const dc = doneCount();
+const levelDone = LEVELS[li].lessons.every(l=>done[l.id]);
+let msg = '「うむ、分かったようじゃな」\n理解済み ✔（合計 ' + dc + ' / ' + TOTAL + ' 課）';
+if(dc >= TOTAL){
+setScene('bg-way','sennin','からだ仙人');
+msg += '\n\n――全課目、修了じゃ！\nここから先は実地あるのみ。Doom を開いて、指で覚えていくのじゃ。卒業おめでとう！';
+} else if(levelDone){
+msg += '\nは全課修了じゃ。よくやった。';
+}
+typeText(msg, ()=>{
+const items = [];
+if(dc < TOTAL){
+if(idx + 1 < LEVELS[li].lessons.length){
+items.push({ t:'次の例題へ（' + LEVELS[li].lessons[idx+1].title + '）', fn: ()=>startLesson(li, idx+1, false)});
+} else if(li + 1 < LEVELS.length){
+items.push({ t:'次の編へ（' + LEVELS[li+1].name + '）', fn: ()=>goLessons(li+1)});
+}
+}
+items.push({ t:'レッスン一覧に戻る', fn: ()=>goLessons(li)});
+items.push({ t:'レベル選択に戻る', fn: goLevels});
+showChoices(items);
+});
+}
+
+/* ============ ボタン類 ============ */
+$('btnEnter').onclick = ()=>{ beep(660,.06); $('title').style.display='none'; goLevels();};
+$('btnLevels').onclick = ()=>{ $('title').style.display='none'; goLevels();};
+$('btnReset').onclick = ()=>{
+done = {}; save(); renderProgress('タイトル');
+$('title').style.display='flex';
+};
+$('btnSound').onclick = (e)=>{
+soundOn =!soundOn;
+e.target.textContent = soundOn? '🔊 音ON': '🔇 音OFF';
+if(soundOn) beep(700,.06);
+};
+renderProgress('タイトル');
+
+let ttsOn = false;
+try{ ttsOn = localStorage.getItem('advTtsV1') === '1'; }catch(e){}
+const btnTts = document.getElementById('btnTts');
+function updTtsBtn(){ if(btnTts) btnTts.textContent = ttsOn ? '🗣 読上ON' : '🗣 読上OFF'; }
+function speak(txt){
+  if(!ttsOn || !('speechSynthesis' in window)) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(String(txt).replace(/\n+/g, ' '));
+    u.lang = 'ja-JP'; u.rate = 1.0;
+    const vs = speechSynthesis.getVoices();
+    const jv = vs.find(v => v.lang && v.lang.toLowerCase().indexOf('ja') === 0) || vs[0];
+    if(jv) u.voice = jv;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+if(btnTts) btnTts.onclick = () => {
+  ttsOn = !ttsOn;
+  try{ localStorage.setItem('advTtsV1', ttsOn ? '1' : '0'); }catch(e){}
+  updTtsBtn();
+  if(ttsOn){ speak(textEl.textContent); setTimeout(checkVoices, 800); }
+  else if('speechSynthesis' in window) speechSynthesis.cancel();
+};
+function checkVoices(){
+  if(!ttsOn || !btnTts || !('speechSynthesis' in window)) return;
+  if(speechSynthesis.getVoices().length === 0) btnTts.textContent = '🗣 音声なし';
+  else updTtsBtn();
+}
+if('speechSynthesis' in window) speechSynthesis.onvoiceschanged = checkVoices;
+updTtsBtn();
+setTimeout(checkVoices, 800);
+</script>
+</body>
+</html>
