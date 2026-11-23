@@ -1,0 +1,1095 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<!-- build: 2026-11-24 00:00:39 JST -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<link rel="icon" href="data:," />
+<title>Wayland移行道場 ― xinputが効かない理由とHyprland攻略</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --ink:#ffffff;
+    --accent:#39d0c4;
+    --accent2:#ffd94d;
+    --bad:#ff6b6b;
+    --panel:#10151d;
+    --panel2:#171e29;
+    --line:#2c3949;
+    --btn:#1d2836;
+    --btn-on:#0f4f4a;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:#07090d;
+    color:var(--ink);
+    font-family:"DotGothic16","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+    display:flex; justify-content:center;
+    min-height:100vh;
+  }
+  button{ font-family:inherit; min-height:44px; cursor:pointer; }
+  #frame{
+    width:100%; max-width:760px;
+    display:flex; flex-direction:column;
+    background:var(--panel);
+    border-left:2px solid var(--line); border-right:2px solid var(--line);
+    min-height:100vh;
+  }
+  /* ---------- header ---------- */
+  header{
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    padding:10px 12px;
+    background:var(--panel2);
+    border-bottom:2px solid var(--line);
+  }
+  header h1{
+    font-size:20px; margin:0; letter-spacing:.04em; flex:1 1 auto; min-width:180px;
+  }
+  header h1 .sub{ display:block; font-size:12px; color:var(--accent); margin-top:2px; letter-spacing:.02em; }
+  .hbtn{
+    background:var(--btn); color:var(--ink); border:2px solid var(--line);
+    border-radius:6px; padding:6px 10px; font-size:14px; min-height:44px;
+  }
+  .hbtn.on{ background:var(--btn-on); border-color:var(--accent); }
+  /* ---------- ticker ---------- */
+  #ticker{
+    overflow:hidden; white-space:nowrap; background:#0a0e14;
+    border-bottom:2px solid var(--line); padding:4px 0; font-size:12px; color:var(--accent);
+  }
+  #ticker span{ display:inline-block; padding-left:100%; animation:tick 30s linear infinite; }
+  @keyframes tick{ from{ transform:translateX(0);} to{ transform:translateX(-100%);} }
+  @media (prefers-reduced-motion: reduce){ #ticker span{ animation:none; padding-left:8px; } }
+  /* ---------- stage ---------- */
+  #stage{ position:relative; background:#0a0f16; }
+  #scene{
+    position:relative; height:210px; overflow:hidden;
+    background:
+      linear-gradient(#0a1420 0 62%, #12202e 62% 100%);
+  }
+  #scene::after{
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 2px, transparent 2px 4px);
+  }
+  .stars{ position:absolute; inset:0; }
+  .moon{
+    position:absolute; top:16px; right:22px; width:34px; height:34px;
+    background:var(--accent2); border-radius:50%;
+    box-shadow:0 0 0 4px rgba(255,217,77,.18);
+    image-rendering:pixelated;
+  }
+  .ground{
+    position:absolute; left:0; right:0; bottom:0; height:14px;
+    background:repeating-linear-gradient(90deg,#1d3a34 0 16px,#17302b 16px 32px);
+    border-top:3px solid #2b574c;
+  }
+  .chara{ position:absolute; bottom:12px; width:92px; height:118px; }
+  .chara svg{ width:100%; height:100%; image-rendering:pixelated; }
+  #charaL{ left:8%; }
+  #charaR{ right:8%; transform:scaleX(-1); }
+  .chara .name{
+    position:absolute; top:-22px; left:50%; transform:translateX(-50%);
+    font-size:12px; color:var(--accent2); white-space:nowrap;
+  }
+  #charaR .name{ transform:translateX(-50%) scaleX(-1); color:var(--accent); }
+  .chara.dim{ filter:brightness(.45); }
+  /* diagram blackboard */
+  #diagPanel{
+    display:none; margin:10px 12px 0; padding:10px;
+    background:#06110c; border:3px solid #4a3b22; border-radius:4px;
+  }
+  #diagPanel.show{ display:block; }
+  #diagPanel .dtitle{ font-size:13px; color:var(--accent2); margin:0 0 6px; }
+  #diagPanel svg{ width:100%; height:auto; display:block; }
+  body.diagmenu #diagPanel{ margin-bottom:2px; }
+  body.diagmenu #scene{ height:120px; }
+  body.diagmenu .chara{ height:76px; width:60px; }
+  /* ---------- message box ---------- */
+  #msgBox{
+    margin:10px 12px 0; padding:12px 14px;
+    background:#05070a; border:3px solid var(--line); border-radius:6px;
+    height:196px; overflow-y:auto;
+    font-size:18px; line-height:1.65; color:#fff;
+    scroll-behavior:auto;
+  }
+  #msgBox .who{ color:var(--accent2); font-weight:bold; }
+  #msgBox .who.me{ color:var(--accent); }
+  #msgBox p{ margin:0 0 10px; }
+  #msgBox code{
+    font-family:ui-monospace,Menlo,Consolas,monospace; font-size:15px;
+    background:#14202e; color:#aef3ec; padding:1px 5px; border-radius:4px;
+    word-break:break-all;
+  }
+  #msgBox pre{
+    font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13.5px; line-height:1.5;
+    background:#0d1622; border:1px solid var(--line); border-radius:6px;
+    padding:10px; overflow-x:auto; color:#d9f7f2; margin:0 0 10px; white-space:pre;
+  }
+  #nextMark{ text-align:right; color:var(--accent); font-size:14px; height:18px; }
+  /* ---------- choices ---------- */
+  #choices{ display:flex; flex-direction:column; gap:8px; padding:10px 12px 4px; }
+  body.diagmenu #choices{ flex-direction:row; flex-wrap:wrap; }
+  body.diagmenu #choices button{ flex:1 1 140px; }
+  #choices button{
+    background:var(--btn); color:#fff; font-weight:bold; font-size:16px;
+    border:2px solid var(--line); border-radius:6px; padding:10px 12px; text-align:left;
+  }
+  #choices button:hover, #choices button:focus-visible{ border-color:var(--accent); outline:none; }
+  #choices button.good{ border-color:var(--accent); background:var(--btn-on); }
+  #choices button.wrong{ border-color:var(--bad); }
+  /* ---------- menu ---------- */
+  #menu{ padding:12px; display:none; }
+  #menu.show{ display:block; }
+  #menu h2{ font-size:17px; margin:14px 0 8px; color:var(--accent); }
+  #menu h2:first-child{ margin-top:0; }
+  .lessonBtn{
+    display:flex; width:100%; align-items:center; gap:10px;
+    background:var(--btn); color:#fff; border:2px solid var(--line);
+    border-radius:6px; padding:10px 12px; font-size:15px; margin-bottom:8px; text-align:left;
+  }
+  .lessonBtn .no{ color:var(--accent); font-size:13px; white-space:nowrap; }
+  .lessonBtn .done{ margin-left:auto; color:var(--accent2); font-size:16px; white-space:nowrap; }
+  .lessonBtn:hover{ border-color:var(--accent); }
+  #progressLine{ font-size:14px; color:var(--accent2); padding:0 12px; }
+  /* ---------- footer / panels ---------- */
+  footer{ padding:8px 12px 16px; margin-top:auto; }
+  .wideBtn{
+    display:block; width:100%; background:var(--panel2); color:#fff;
+    border:2px solid var(--line); border-radius:6px; padding:10px; font-size:15px; margin-top:8px;
+  }
+  .wideBtn:hover{ border-color:var(--accent); }
+  .panel{
+    display:none; margin-top:10px; background:#05070a; border:2px solid var(--line);
+    border-radius:6px; padding:12px 14px; font-size:15.5px; line-height:1.7; max-height:50vh; overflow-y:auto;
+  }
+  .panel.show{ display:block; }
+  .panel h3{ font-size:15px; color:var(--accent); margin:14px 0 6px; }
+  .panel h3:first-child{ margin-top:0; }
+  .panel p{ margin:0 0 8px; }
+  .panel .who{ color:var(--accent2); font-weight:bold; }
+  .panel code{ font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13px; background:#14202e; color:#aef3ec; padding:1px 5px; border-radius:4px; word-break:break-all; }
+  .panel pre{ font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12.5px; line-height:1.5; background:#0d1622; border:1px solid var(--line); border-radius:6px; padding:8px; overflow-x:auto; color:#d9f7f2; }
+  #listenCtrl{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+  #listenCtrl button{ background:var(--btn); color:#fff; border:2px solid var(--line); border-radius:6px; padding:8px 14px; font-size:15px; }
+  #listenBarWrap{ height:10px; background:#14202e; border-radius:5px; overflow:hidden; margin-bottom:8px; }
+  #listenBar{ height:100%; width:0%; background:var(--accent); }
+  #listenStatus{ font-size:13px; color:var(--accent2); }
+  .galItem{ border:1px solid var(--line); border-radius:6px; padding:10px; margin-bottom:10px; background:#06110c; }
+  .galItem .gtitle{ font-size:13px; color:var(--accent2); margin:0 0 6px; }
+  .galItem svg{ width:100%; height:auto; display:block; }
+  .note{ font-size:12.5px; color:#b9c7d6; line-height:1.6; padding:10px 12px 0; }
+  @media (max-width:560px){
+    #scene{ height:170px; }
+    body.diagmenu #scene{ height:96px; }
+    .chara{ width:70px; height:92px; }
+    #msgBox{ height:224px; font-size:18px; }
+    header h1{ font-size:17px; }
+  }
+</style>
+</head>
+<body>
+<div id="frame">
+  <header>
+    <h1>Wayland移行道場<span class="sub">X11（LXQt＋i3）から Hyprland へ ― 「できない」を攻略する</span></h1>
+    <button class="hbtn" id="soundBtn" type="button">🔊 音ON</button>
+    <button class="hbtn" id="ttsBtn" type="button">🗣 読上OFF</button>
+    <button class="hbtn" id="menuBtn" type="button">📜 課一覧</button>
+  </header>
+  <div id="ticker" aria-hidden="true"><span>XINPUT IS DEAD ON WAYLAND ★ LIBINPUT ★ HYPRCTL ★ XWAYLAND ★ WL-COPY ★ GRIM ★ KEYD ★ FCITX5 ★ NIXOS ★ TATAMI ★ MOD1 = ALT ★</span></div>
+
+  <div id="stage">
+    <div id="diagPanel"><p class="dtitle" id="diagTitle"></p><div id="diagBody"></div></div>
+    <div id="scene">
+      <div class="stars" id="stars"></div>
+      <div class="moon"></div>
+      <div class="chara" id="charaL"><span class="name">ウェイランド仙人</span></div>
+      <div class="chara" id="charaR"><span class="name">あおい</span></div>
+      <div class="ground"></div>
+    </div>
+  </div>
+
+  <div id="progressLine"></div>
+  <div id="msgBox" aria-live="polite"></div>
+  <div id="nextMark"></div>
+  <div id="choices"></div>
+
+  <div id="menu"></div>
+
+  <footer>
+    <button class="wideBtn" id="listenBtn" type="button">🎧 聞くモード（全課の文章を並べる）</button>
+    <div class="panel" id="listenPanel">
+      <div id="listenCtrl">
+        <button id="listenPlay" type="button">▶ ブラウザ音声で再生</button>
+        <button id="listenStop" type="button">⏹ 停止</button>
+      </div>
+      <div id="listenBarWrap"><div id="listenBar"></div></div>
+      <div id="listenStatus">未再生</div>
+      <div id="listenBody"></div>
+    </div>
+    <button class="wideBtn" id="galleryBtn" type="button">🖼 図解ギャラリー</button>
+    <div class="panel" id="galleryPanel"><div id="galleryBody"></div></div>
+    <p class="note">非公式の学習用チュートリアルです。設定例は NixOS ＋ Hyprland を前提にしています。実際の適用前に、X11（i3）セッションに戻れる状態で試してください。進捗はこのブラウザに保存されます。</p>
+  </footer>
+</div>
+
+<script>
+"use strict";
+/* ================= キャラクター（シルエット） ================= */
+(function(){
+  var sensei =
+   '<svg viewBox="0 0 46 59" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'
+   +'<rect x="14" y="2" width="18" height="6" fill="#39d0c4"/>'
+   +'<rect x="10" y="8" width="26" height="4" fill="#39d0c4"/>'
+   +'<rect x="15" y="12" width="16" height="12" fill="#e8c39e"/>'
+   +'<rect x="17" y="16" width="3" height="3" fill="#111"/><rect x="26" y="16" width="3" height="3" fill="#111"/>'
+   +'<rect x="13" y="24" width="20" height="8" fill="#f2f2f2"/>'
+   +'<rect x="11" y="30" width="24" height="16" fill="#20514c"/>'
+   +'<rect x="4" y="32" width="7" height="12" fill="#20514c"/><rect x="35" y="32" width="7" height="12" fill="#20514c"/>'
+   +'<rect x="13" y="46" width="8" height="11" fill="#14232e"/><rect x="25" y="46" width="8" height="11" fill="#14232e"/>'
+   +'</svg>';
+  var aoi =
+   '<svg viewBox="0 0 46 59" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'
+   +'<rect x="13" y="4" width="20" height="10" fill="#3a2a1c"/>'
+   +'<rect x="15" y="12" width="16" height="12" fill="#e8c39e"/>'
+   +'<rect x="17" y="16" width="3" height="3" fill="#111"/><rect x="26" y="16" width="3" height="3" fill="#111"/>'
+   +'<rect x="20" y="21" width="6" height="2" fill="#b06a4a"/>'
+   +'<rect x="11" y="26" width="24" height="15" fill="#31567d"/>'
+   +'<rect x="4" y="28" width="7" height="11" fill="#31567d"/><rect x="35" y="28" width="7" height="11" fill="#31567d"/>'
+   +'<rect x="13" y="41" width="8" height="14" fill="#22262e"/><rect x="25" y="41" width="8" height="14" fill="#22262e"/>'
+   +'<rect x="16" y="30" width="14" height="9" fill="#0d1622"/><rect x="18" y="32" width="10" height="5" fill="#39d0c4"/>'
+   +'</svg>';
+  document.getElementById('charaL').insertAdjacentHTML('beforeend', sensei);
+  document.getElementById('charaR').insertAdjacentHTML('beforeend', aoi);
+  var st = document.getElementById('stars'), s = '';
+  var pos = [[6,14],[15,30],[26,10],[38,22],[52,12],[64,28],[74,16],[86,34],[44,38],[20,44],[70,44],[92,10]];
+  for (var i=0;i<pos.length;i++){ s += '<rect x="'+pos[i][0]+'%" y="'+pos[i][1]+'" width="3" height="3" fill="#9fd8ff" opacity="0.7"/>'; }
+  st.innerHTML = '<svg width="100%" height="100%" preserveAspectRatio="none">'+s+'</svg>';
+})();
+</script>
+
+<script>
+"use strict";
+/* ================= 図解ヘルパ ================= */
+function svgWrap(body){
+  return '<svg viewBox="0 0 300 124" xmlns="http://www.w3.org/2000/svg">'
+    + '<defs><marker id="arw" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" fill="#39d0c4"/></marker></defs>'
+    + body + '</svg>';
+}
+function bx(x,y,w,h,fill,stroke){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="4" fill="'+(fill||'#14202e')+'" stroke="'+(stroke||'#39d0c4')+'" stroke-width="1.6"/>'; }
+function tx(x,y,s,size,fill,anchor){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||11)+'" fill="'+(fill||'#ffffff')+'" text-anchor="'+(anchor||'middle')+'" font-family="monospace">'+s+'</text>'; }
+function ar(x1,y1,x2,y2){ return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="#39d0c4" stroke-width="1.8" marker-end="url(#arw)"/>'; }
+function ln(x1,y1,x2,y2,c){ return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+(c||'#ff6b6b')+'" stroke-width="1.8"/>'; }
+function cross(x,y){ return ln(x-7,y-7,x+7,y+7)+ln(x-7,y+7,x+7,y-7); }
+
+/* ================= シナリオデータ ================= */
+var CHAPTERS = [
+  { title:"第1章　なぜ xinput が効かないのか", lessons:[
+  {
+    id:"l01", title:"X11とWaylandは「話し相手」が違う",
+    lines:[
+      ["仙人","よく来た。お主の悩みは分かっておる。LXQt＋i3 では <code>xinput list</code> でタッチパッドを見つけ、<code>xinput disable</code> で手軽にON/OFFできた。じゃが Wayland ではそれができない、とな。"],
+      ["あおい","そうなんです。Hyprland に移ったら、タッチパッドを止めるいつもの手が全部効かなくて……。"],
+      ["仙人","まず土台からじゃ。X11 の世界では、画面も入力も <b>Xサーバー</b> という一人の番頭が全部仕切っておった。アプリは全員、Xサーバーに「窓を描いてくれ」「キー入力をくれ」とお願いする形じゃ。"],
+      ["仙人","Wayland の世界に番頭はおらん。代わりに <b>コンポジタ</b>（Hyprland 自体）が画面合成と入力配送を直接やる。アプリはプロトコルでコンポジタと直接話す。設計思想からして別物なのじゃ。"],
+      ["仙人","つまり移行とは「窓マネージャを替える」話ではなく、<b>命令を出す相手そのものが替わる</b>話じゃ。ここを押さえれば、後の「できない」の大半は理由が見えてくる。"]
+    ],
+    extra:[
+      ["仙人","補足じゃ。X11＝「Xサーバーが中央にいる星型」、Wayland＝「コンポジタとアプリが直接つながる形」と絵で覚えよ。お主の i3 は Xサーバーの上で動く窓係、Hyprland は合成も入力も担う主役そのものじゃ。"]
+    ],
+    diagram: svgWrap(
+      bx(8,18,120,40)+tx(68,36,'X11',12,'#ffd94d')+tx(68,51,'アプリ → Xサーバー → 画面',9)
+      + bx(172,18,120,40,'#0f2a28')+tx(232,36,'Wayland',12,'#ffd94d')+tx(232,51,'アプリ ⇄ コンポジタ',9)
+      + bx(38,78,90,32)+tx(83,98,'i3 は窓係',10)
+      + bx(182,78,100,32,'#0f2a28')+tx(232,98,'Hyprland は主役',10)
+      + ar(83,58,83,76)+ar(232,58,232,76)
+    ),
+    check:{
+      q:"Wayland で入力や画面を仕切っているのは誰か？",
+      choices:["Xサーバー","コンポジタ（Hyprland 自体）","systemd"],
+      answer:1,
+      why:"正解はコンポジタ。Wayland には Xサーバーが存在せず、Hyprland が合成・入力配送・窓管理を全部担う。だから命令の宛先も Hyprland になる。"
+    }
+  },
+  {
+    id:"l02", title:"xinput が届かない理由",
+    lines:[
+      ["あおい","じゃあ <code>xinput disable</code> が効かないのはなぜですか？ コマンド自体は存在するのに。"],
+      ["仙人","<code>xinput</code> は「Xサーバーへの命令書」じゃ。Wayland セッションでは Xサーバー本人がおらん。おるのは互換用の <b>XWayland</b>（Xアプリを動かすための小さな Xサーバー）だけじゃ。"],
+      ["仙人","そのため <code>xinput list</code> で見えるのは、XWayland が見せている<b>仮想的なデバイス一覧</b>にすぎん。そこで disable しても、届くのは XWayland の中だけ。Wayland ネイティブなアプリやコンポジタ本体の入力処理には一切届かんのじゃ。"],
+      ["仙人","比喩で言えば、引っ越した先の住所に前の家の管理人宛ての手紙を出しておるようなものじゃ。コマンドがエラーにならなくても、相手が違う。"],
+      ["あおい","なるほど……「効かない」んじゃなくて「届いていない」んですね。"]
+    ],
+    extra:[
+      ["仙人","補足じゃ。XWayland 上の古い Xアプリ相手なら、xinput の設定が効く場面も残っておる。じゃがタッチパッド全体のON/OFFのような「機械そのもの」の制御は、コンポジタ側の領分じゃ。"]
+    ],
+    diagram: svgWrap(
+      bx(8,14,110,34)+tx(63,36,'xinput disable',10,'#ffd94d')
+      + ar(122,31,168,31)
+      + bx(172,14,120,34)+tx(232,30,'XWayland',11)+tx(232,43,'（互換用の小部屋）',8.5)
+      + cross(150,74)
+      + bx(172,66,120,40,'#3a1420','#ff6b6b')+tx(232,83,'Hyprland 本体',10.5)+tx(232,97,'入力はここが握る',8.5,'#ffb3b3')
+      + tx(70,88,'届かない！',12,'#ff6b6b')
+    ),
+    check:{
+      q:"Wayland 上で xinput の設定が届く範囲はどこまでか？",
+      choices:["PC全体の入力すべて","XWayland の中だけ","タッチパッドだけには届く"],
+      answer:1,
+      why:"xinput は Xサーバーへの命令。Wayland では XWayland という互換層の中にしか届かず、コンポジタ本体やネイティブアプリの入力には影響しない。"
+    }
+  },
+  {
+    id:"l03", title:"新しい支配者 libinput",
+    lines:[
+      ["仙人","では Wayland で入力を握っておるのは誰か。カーネルの evdev からイベントを受け取り、タッチパッドの加速やタップを解釈する <b>libinput</b> というライブラリじゃ。"],
+      ["仙人","X11 時代は xf86-input-libinput ドライバ越しに libinput を使うことも多かったが、Wayland ではコンポジタが libinput を<b>直接</b>抱え込む。Hyprland も例外ではない。"],
+      ["仙人","大事なのは、libinput には xinput のような「外から叩く単独コマンド」が無いことじゃ。設定は全部、<b>コンポジタの設定ファイル経由</b>で libinput に渡される。つまり設定の入口は Hyprland の設定ひとつ。"],
+      ["あおい","だから「xinput の代わりのコマンド」を探しても見つからなかったんですね。探す場所が違った。"]
+    ],
+    extra:[
+      ["仙人","補足じゃ。例外として <code>libinput list-devices</code> という確認用コマンドはある。デバイス名やカーネル名を調べるときに使う。ただしこれは「見るだけ」で、設定変更はできん。"]
+    ],
+    diagram: svgWrap(
+      bx(8,44,84,36)+tx(50,60,'キーボード',9.5)+tx(50,73,'タッチパッド',9.5)
+      + ar(96,62,128,62)
+      + bx(132,44,70,36,'#0f2a28')+tx(167,66,'libinput',11,'#ffd94d')
+      + ar(206,62,238,62)
+      + bx(242,44,52,36)+tx(268,66,'Hyprland',9.5)
+      + bx(132,6,70,26)+tx(167,23,'設定ファイル',9)
+      + ar(167,32,167,42)
+      + tx(150,106,'設定の入口はコンポジタだけ',10,'#ffd94d')
+    ),
+    check:{
+      q:"Wayland で libinput の設定を変える入口はどこか？",
+      choices:["xinput コマンド","libinput 専用の設定コマンド","コンポジタ（Hyprland）の設定"],
+      answer:2,
+      why:"libinput に設定変更コマンドはない。コンポジタが設定ファイルの内容を libinput に渡す設計なので、入口は Hyprland の設定だけ。"
+    }
+  },
+  {
+    id:"l04", title:"発想の転換 ― 「止める」場所が変わる",
+    lines:[
+      ["仙人","第1章のまとめじゃ。X11 の流儀は「デバイスを直接 disable する」。Wayland の流儀は「<b>コンポジタに、このデバイスのイベントを受け取るなと頼む</b>」。結果は同じでも、命令の相手と経路が違う。"],
+      ["仙人","この転換を済ませると、タッチパッドON/OFF は三つの作戦に整理できる。①設定ファイルで恒常的に無効化、②キーバインドでトグル、③マウス接続時だけ自動で無効化。全部 第2章で実践する。"],
+      ["あおい","「できない」じゃなくて「やり方が移った」だけなんですね。気持ちが楽になりました。"]
+    ],
+    extra:[
+      ["仙人","補足じゃ。この「X のツールの代わりはコンポジタ設定」という型は、画面設定（xrandr の代わり）やキーリマップでも繰り返し出てくる。型として覚えておくと移行全体が楽になるぞ。"]
+    ],
+    diagram: svgWrap(
+      bx(8,10,130,34)+tx(73,31,'X11: デバイスを直接止める',9.5)
+      + bx(162,10,130,34,'#0f2a28')+tx(227,31,'Wayland: 受け取りを止める',9.5)
+      + bx(20,66,74,40)+tx(57,82,'① 設定で',9.5)+tx(57,96,'恒常OFF',9.5)
+      + bx(113,66,74,40)+tx(150,82,'② キーで',9.5)+tx(150,96,'トグル',9.5)
+      + bx(206,66,74,40)+tx(243,82,'③ マウス時',9.5)+tx(243,96,'自動OFF',9.5)
+    ),
+    check:{
+      q:"Wayland でタッチパッドを止める、という操作の正しい理解はどれか？",
+      choices:["デバイスドライバを削除する","コンポジタにそのデバイスのイベントを受け取らないよう設定する","カーネルを再起動する"],
+      answer:1,
+      why:"Wayland では入力の受け取りはコンポジタの仕事。設定で「このデバイスを無効化」とコンポジタに伝えるのが正規の経路。"
+    }
+  }
+  ]},
+  { title:"第2章　Hyprland でタッチパッドを攻略する", lessons:[
+  {
+    id:"l05", title:"まずデバイス名を知る ― hyprctl devices",
+    lines:[
+      ["仙人","実践編じゃ。まず相手の名前を知ることから始める。Hyprland では <code>hyprctl devices</code> と打つと、接続中のマウス・キーボード・タッチパッドの一覧が出る。"],
+      ["仙人","ThinkPad ならタッチパッドは <code>synps/2-synaptics-touchpad</code> のような名前で出ることが多い（機種で違う）。この<b>名前が設定の鍵</b>になる。コピペで正確に写し取るのじゃ。"],
+      ["あおい","xinput list の代わりが hyprctl devices、ということですね。"],
+      ["仙人","その通り。ついでに <code>hyprctl monitors</code> や <code>hyprctl clients</code> も同じ作法じゃ。Hyprland の状態確認は hyprctl に集約されておる。"]
+    ],
+    extra:[
+      ["仙人","補足じゃ。名前が分からんときは <code>libinput list-devices</code> でも確認できる。Hyprland の device 設定で使うのは hyprctl devices に出る名前の方じゃ。"]
+    ],
+    diagram: svgWrap(
+      bx(14,16,272,60,'#0d1622','#2c3949')
+      + tx(24,36,'$ hyprctl devices',10,'#aef3ec','start')
+      + tx(24,54,'mice:',9.5,'#b9c7d6','start')
+      + tx(24,70,'  synps/2-synaptics-touchpad',9.5,'#ffd94d','start')
+      + tx(150,100,'この名前が設定の鍵になる',10.5,'#ffd94d')
+    ),
+    check:{
+      q:"Hyprland でタッチパッドのデバイス名を調べるコマンドは？",
+      choices:["xinput list","hyprctl devices","lsusb"],
+      answer:1,
+      why:"Hyprland のデバイス一覧は hyprctl devices で得る。ここに出る名前が device 設定の指定にそのまま使える。"
+    }
+  },
+  {
+    id:"l06", title:"本命 ― device ブロックで enabled = false",
+    lines:[
+      ["仙人","本命の技じゃ。Hyprland の設定に <b>device ブロック</b>を書き、対象デバイスだけ <code>enabled = false</code> にする。これでそのデバイスのイベントをコンポジタが受け取らなくなる。"],
+      ["仙人","書き方はこうじゃ（hyprland.conf の記法）。"],
+      ["仙人","<pre>device {\n  name = synps/2-synaptics-touchpad\n  enabled = false\n}</pre>"],
+      ["仙人","ポイントは、全体の input 設定とは別に<b>名前指名で個別設定</b>できることじゃ。キーボードには触らずタッチパッドだけを止められる。設定は再ログインか <code>hyprctl reload</code> で反映される。"],
+      ["あおい","これが xinput disable の正統な後継なんですね！"]
+    ],
+    extra:[
+      ["仙人","補足じゃ。device ブロックでは enabled 以外にも sensitivity や tap-to-click など個別の上書きができる。「全体設定＋デバイス別の例外」という二段構えで覚えよ。"]
+    ],
+    diagram: svgWrap(
+      bx(14,10,272,84,'#0d1622','#2c3949')
+      + tx(24,30,'device {',10.5,'#aef3ec','start')
+      + tx(24,48,'  name = synps/2-...-touchpad',10,'#ffffff','start')
+      + tx(24,66,'  enabled = false',10.5,'#ffd94d','start')
+      + tx(24,84,'}',10.5,'#aef3ec','start')
+      + tx(150,110,'名前指名で1台だけ止める',10.5,'#ffd94d')
+    ),
+    check:{
+      q:"タッチパッドだけを恒常的に無効化する正しい書き方は？",
+      choices:["input ブロックで touchpad を全部消す","device ブロックで name を指名し enabled = false","xinput の設定を XWayland に書く"],
+      answer:1,
+      why:"device ブロックでデバイス名を指名し enabled = false と書くのが Hyprland の正規の方法。他のデバイスには影響しない。"
+    }
+  },
+  {
+    id:"l07", title:"キーバインドでトグルする",
+    lines:[
+      ["あおい","恒常OFFは分かりました。でも ThinkPad では Fn キーひとつで切り替えるのが便利だったんです。あの手軽さは再現できますか？"],
+      ["仙人","できる。作戦は「小さなシェルスクリプト＋キーバインド」じゃ。スクリプトの中で <code>hyprctl keyword device[名前]:enabled true/false</code> を切り替える。状態は一時ファイルで覚えておくのが定番じゃ。"],
+      ["仙人","<pre># ~/.local/bin/toggletp.sh の骨格\nSTATE=/tmp/tp_state\nif [ -f $STATE ]; then\n  hyprctl keyword \"device[synps/2-synaptics-touchpad]:enabled\" true\n  rm $STATE\nelse\n  hyprctl keyword \"device[synps/2-synaptics-touchpad]:enabled\" false\n  touch $STATE\nfi</pre>"],
+      ["仙人","あとは設定にバインドを1行。お主の流儀に合わせれば <code>bind = ALT, F9, exec, ~/.local/bin/toggletp.sh</code> のような形じゃ。これで「押すたびにON/OFF」が復活する。"],
+      ["仙人","なお <code>hyprctl keyword</code> は<b>再起動すると戻る一時変更</b>じゃ。恒常設定は第6課の device ブロック、即時トグルは keyword、と使い分けよ。"]
+    ],
+    extra:[
+      ["仙人","補足じゃ。機種によっては Fn のタッチパッドキーが evdev のキーイベントとして届くこともある。その場合はそのキーを直接バインド先にすれば純正に近い操作感になる。届くかどうかは <code>wev</code> や <code>libinput debug-events</code> で確認できる。"]
+    ],
+    diagram: svgWrap(
+      bx(8,40,74,36)+tx(45,62,'キー押下',10)
+      + ar(86,58,118,58)
+      + bx(122,40,80,36,'#0f2a28')+tx(162,55,'スクリプト',10)+tx(162,68,'状態ファイル',8.5)
+      + ar(206,58,238,58)
+      + bx(242,40,52,36)+tx(268,62,'hyprctl',9.5)
+      + tx(150,20,'hyprctl keyword で即時切替',10.5,'#ffd94d')
+      + tx(150,100,'※ 再起動で戻る一時変更',9.5,'#ffb3b3')
+    ),
+    check:{
+      q:"hyprctl keyword による変更の性質はどれか？",
+      choices:["設定ファイルに自動で書き込まれる","その場限りの一時変更で、再起動すると戻る","NixOS の再ビルドが必要"],
+      answer:1,
+      why:"hyprctl keyword は実行中セッションへの一時変更。恒常化したい設定は設定ファイル（device ブロック）に書くのが役割分担。"
+    }
+  },
+  {
+    id:"l08", title:"マウスを挿したら自動でOFF",
+    lines:[
+      ["仙人","最後の作戦は自動化じゃ。考え方は二段ある。まず Hyprland の input 設定には、タイピング中にタッチパッドを止める <code>disable_while_typing</code> のような libinput 由来の項目がある。誤タップ対策はこれで足りることが多い。"],
+      ["仙人","「USBマウスが繋がっている間だけOFF」は、udev ルールか、マウスの有無を見て hyprctl keyword を叩くスクリプトで実現するのが定番じゃ。第7課のトグルスクリプトを流用できる。"],
+      ["あおい","つまり道具は第6課と第7課で揃っていて、あとは「いつ叩くか」の条件付けなんですね。"],
+      ["仙人","うむ。Wayland の攻略は大抵この形になる。<b>設定（恒常）・hyprctl（即時）・イベント（自動）</b>の三点セットじゃ。"]
+    ],
+    extra:[
+      ["仙人","補足じゃ。凝ったことをせずとも、ThinkPad の使い方なら「普段は device ブロックでOFF、マウス無しの外出時だけトグルでON」が一番事故が少ない、という人も多い。自動化は必要になってからでよい。"]
+    ],
+    diagram: svgWrap(
+      bx(8,44,86,36)+tx(51,66,'USBマウス接続',9.5)
+      + ar(98,62,130,62)
+      + bx(134,44,70,36,'#0f2a28')+tx(169,66,'udev / 監視',9.5)
+      + ar(208,62,240,62)
+      + bx(244,44,50,36)+tx(269,66,'OFF',10.5,'#ffd94d')
+      + tx(150,20,'条件が変わったら hyprctl を叩く',10.5,'#ffd94d')
+      + tx(150,104,'設定・即時・自動 の三点セット',10,'#ffd94d')
+    ),
+    check:{
+      q:"「マウス接続時だけタッチパッドOFF」を実現する定番の組み合わせは？",
+      choices:["xinput を cron で回す","udev等のイベントから hyprctl keyword を叩く","BIOS設定で切り替える"],
+      answer:1,
+      why:"イベント検出（udev など）→ hyprctl keyword で即時切替、という組み合わせが定番。第7課のトグルスクリプトが流用できる。"
+    }
+  }
+  ]},
+  { title:"第3章　NixOS で Hyprland 環境を作る", lessons:[
+  {
+    id:"l09", title:"有効化と「戻れる保険」",
+    lines:[
+      ["仙人","環境構築じゃ。NixOS では <code>programs.hyprland.enable = true;</code> を configuration.nix に書いてリビルドすれば、Hyprland 本体と必要な土台が入る。"],
+      ["仙人","大事なのは<b>いきなり X11 を消さない</b>ことじゃ。ディスプレイマネージャ（SDDM や greetd など）のログイン画面ではセッションを選べる。i3 セッションを残しておけば、詰まってもログインし直して i3 に戻れる。これが移行の保険になる。"],
+      ["仙人","お主は Tatami も試しておると聞いた。Tatami はセッカの NixOS モジュール（<code>sekka.nixosModules.tatami</code>）として既存 flake に足せるが、モジュール単体では Sekka のバイナリキャッシュ追加が手動で要るのと、Wayland セッションを出せるディスプレイマネージャが前提じゃったな。"],
+      ["あおい","はい。まずは素の Hyprland で仕組みを掴んで、保険付きで進めます。"]
+    ],
+    extra:[
+      ["仙人","補足じゃ。NixOS の良さは「世代を戻せば元通り」の点じゃ。ブートメニューで前の generation を選べば、Hyprland を入れる前の構成にも戻れる。移行実験と相性が良い。"]
+    ],
+    diagram: svgWrap(
+      bx(14,8,272,34,'#0d1622','#2c3949')
+      + tx(150,30,'programs.hyprland.enable = true;',10,'#aef3ec')
+      + ar(150,44,150,58)
+      + bx(30,62,100,40)+tx(80,86,'Hyprland',10.5,'#ffd94d')
+      + bx(170,62,100,40)+tx(220,86,'i3（保険）',10.5)
+      + tx(150,116,'ログイン画面でセッション選択',9.5,'#ffd94d')
+    ),
+    check:{
+      q:"移行初期に X11（i3）セッションを残しておく理由は？",
+      choices:["容量が余っているから","詰まったときにログインし直して戻れる保険になるから","法律で決まっているから"],
+      answer:1,
+      why:"ディスプレイマネージャでセッションを選べるうちは、Hyprland で詰まっても i3 に戻って作業できる。移行は保険付きで進めるのが鉄則。"
+    }
+  },
+  {
+    id:"l10", title:"設定ファイルの置き場と Nix での書き方",
+    lines:[
+      ["仙人","Hyprland の設定本体は <code>~/.config/hypr/hyprland.conf</code> じゃ。まずここに手で書いて試すのが一番速い。device ブロックもバインドもここに書く。"],
+      ["仙人","慣れてきたら Nix 側に寄せる。home-manager を使えば <code>wayland.windowManager.hyprland.settings</code> に Nix 式で書いて宣言的に管理できる。Tatami の流儀（home-manager を使わない構成）なら、設定ファイル自体をリポジトリで管理して配置する形になる。"],
+      ["仙人","順番が大事じゃ。<b>まず手書きで動かし、動いたものを Nix に写す</b>。最初から宣言的に書こうとすると、文法エラーと設定エラーの切り分けができなくなる。"],
+      ["あおい","dotfiles で管理している i3 設定と同じで、まず動く形を作るのが先ですね。"]
+    ],
+    extra:[
+      ["仙人","補足じゃ。設定を変えたら <code>hyprctl reload</code> で即反映できる。ログアウトし直す必要はない。エラーがあれば hyprctl が教えてくれるので、少しずつ書いて少しずつ reload が安全じゃ。"]
+    ],
+    diagram: svgWrap(
+      bx(8,40,110,40)+tx(63,57,'① 手で書く',10)+tx(63,71,'hyprland.conf',8.5)
+      + ar(122,60,156,60)
+      + bx(160,40,132,40,'#0f2a28')+tx(226,57,'② Nix に写す',10)+tx(226,71,'home-manager / 配置管理',8.5)
+      + tx(150,20,'hyprctl reload で即反映',10.5,'#ffd94d')
+      + tx(150,104,'動く形 → 宣言化 の順番',10,'#ffd94d')
+    ),
+    check:{
+      q:"Hyprland 設定を Nix 化する正しい順番は？",
+      choices:["最初から全部 Nix 式で書く","まず hyprland.conf で動かし、動いたものを Nix に写す","Nix に書いたら手書きは禁止"],
+      answer:1,
+      why:"手書きで動作確認 → 宣言化の順なら、エラーが文法の問題か設定の問題か切り分けられる。移行期は特にこの順番が効く。"
+    }
+  },
+  {
+    id:"l11", title:"i3 のキー操作を Hyprland に翻訳する",
+    lines:[
+      ["仙人","お主の i3 は Alt（Mod1）が修飾キー、h/j/k/l でフォーカス移動、ワークスペースは 1〜20 という独自の流儀じゃったな。良い知らせじゃ。Hyprland でも修飾キーは自由に決められる。<code>$mainMod = ALT</code> と置けば Alt 中心の世界はそのまま作れる。"],
+      ["仙人","翻訳の対応はこうじゃ。i3 の <code>bindsym</code> が Hyprland の <code>bind</code>。フォーカス移動は <code>movefocus</code>、ウィンドウ移動は <code>movewindow</code>、ワークスペース移動は <code>workspace</code> ディスパッチャに対応する。"],
+      ["仙人","<pre>bind = ALT, h, movefocus, l  の要領で\nbind = ALT SHIFT, h, movewindow, l\nbind = ALT, 1, workspace, 1</pre>"],
+      ["仙人","注意点は二つ。Hyprland 標準のワークスペースはまず 1〜10 で考えること（増やすのは後から）。それと Tatami の hyprland.lua も Alt 中心じゃったように、「Super 前提」の解説記事をそのまま写すと自分の手と合わなくなる。自分の i3 設定を正として翻訳するのじゃ。"]
+    ],
+    extra:[
+      ["仙人","補足じゃ。Hyprland の全バインド確認は <code>hyprctl binds</code> で出せる。Tatami なら Alt+K のキーバインド一覧があったな。移行中は「今の自分の設定を一覧で見る」コマンドが切り分けの要になる。"]
+    ],
+    diagram: svgWrap(
+      bx(8,26,120,30)+tx(68,45,'i3: bindsym',10.5)
+      + ar(132,41,166,41)
+      + bx(170,26,120,30,'#0f2a28')+tx(230,45,'Hyprland: bind',10.5)
+      + bx(8,72,120,30)+tx(68,91,'$mod = Mod1',10.5)
+      + ar(132,87,166,87)
+      + bx(170,72,120,30,'#0f2a28')+tx(230,91,'$mainMod = ALT',10.5)
+      + tx(150,14,'自分の i3 設定を「正」として翻訳',10,'#ffd94d')
+    ),
+    check:{
+      q:"i3（Alt中心）から Hyprland へキー設定を移すときの正しい姿勢は？",
+      choices:["ネットの Super 前提の設定をそのまま使う","$mainMod = ALT とし、自分の i3 設定を正として翻訳する","Alt は Wayland では使えないので諦める"],
+      answer:1,
+      why:"Hyprland の修飾キーは自由。Alt 中心の自分の操作体系はそのまま持ち込める。記事の設定を写すより、自分の i3 設定の翻訳が正解。"
+    }
+  },
+  {
+    id:"l12", title:"ターミナルとランチャー ― ghostty と rofi",
+    lines:[
+      ["あおい","日常の入口であるターミナルとランチャーはどうなりますか？ 今は ghostty と <code>rofi -show drun</code> です。"],
+      ["仙人","ghostty は Wayland ネイティブ対応じゃ、そのまま使える。バインドは <code>bind = ALT, Return, exec, ghostty</code> のように書くだけじゃ。"],
+      ["仙人","rofi は本家が X11 向けで、Wayland では互換の問題が出やすい。移行先の定番は Wayland 対応フォークの rofi や、wofi、fuzzel あたりじゃ。見た目と <code>-show drun</code> に近い使い勝手が欲しいならフォーク版 rofi が移行は楽じゃろう。"],
+      ["仙人","ここでも型は同じじゃ。<b>ネイティブ対応ならそのまま、ダメなら Wayland 対応の後継に乗り換える</b>。アプリ単位でこの判断を繰り返すのが移行作業の実態じゃ。"]
+    ],
+    extra:[
+      ["仙人","補足じゃ。クリップボード連携など、端末の細部は第14課で扱う。まず「起動して使える」状態を作り、細部は後から寄せていく順番でよい。"]
+    ],
+    diagram: svgWrap(
+      bx(14,20,120,36)+tx(74,42,'ghostty',11,'#ffd94d')
+      + tx(74,70,'Wayland対応 ◎ そのまま',9)
+      + bx(166,20,120,36)+tx(226,42,'rofi',11,'#ffd94d')
+      + tx(226,70,'Wayland版フォーク等へ',9)
+      + tx(150,100,'アプリ単位で「そのまま／後継へ」判断',10,'#ffd94d')
+    ),
+    check:{
+      q:"rofi の Wayland 移行で定番の判断はどれか？",
+      choices:["XWayland で無理やり使い続ける一択","Wayland 対応フォークや wofi/fuzzel など後継に乗り換える","ランチャーを諦める"],
+      answer:1,
+      why:"本家 rofi は X11 向け。Wayland では対応フォークや wofi、fuzzel への乗り換えが定番の判断。"
+    }
+  }
+  ]},
+  { title:"第4章　X11アプリと日常の困りごと", lessons:[
+  {
+    id:"l13", title:"XWayland ― 古いアプリはどうなるか",
+    lines:[
+      ["仙人","最終章じゃ。まず安心材料から。X11 しか知らない古いアプリは、<b>XWayland</b> という互換層の上でそのまま動く。Hyprland では標準で有効じゃ。"],
+      ["仙人","見分け方を覚えよ。<code>hyprctl clients</code> の出力で各ウィンドウの情報が見える。さらに古典的だが <code>xeyes</code> の目が追ってくるウィンドウは XWayland 経由、という判別法もある。"],
+      ["仙人","注意は表示まわりじゃ。XWayland のアプリは分数スケーリングでぼやけることがある。高精細モニタで文字が滲むアプリがあれば、それは XWayland 経由の合図。ネイティブ化できるアプリから順に替えていくのが現実解じゃ。"],
+      ["あおい","「全部ネイティブ化しないと始まらない」わけではないんですね。"]
+    ],
+    extra:[
+      ["仙人","補足じゃ。Electron 製アプリなどは起動オプションで Wayland ネイティブに寄せられるものも多い。ぼやけが気になるアプリから一つずつ、じゃな。"]
+    ],
+    diagram: svgWrap(
+      bx(8,30,90,44)+tx(53,48,'X11アプリ',10)+tx(53,62,'（古い作法）',8.5)
+      + ar(102,52,134,52)
+      + bx(138,30,80,44,'#0f2a28')+tx(178,55,'XWayland',10.5,'#ffd94d')
+      + ar(222,52,254,52)
+      + bx(258,30,38,44)+tx(277,55,'画面',10)
+      + tx(150,100,'互換で動く／ぼやけたらネイティブ化を検討',9.5,'#ffd94d')
+    ),
+    check:{
+      q:"XWayland 経由のアプリで起こりやすい表示の問題は？",
+      choices:["色が反転する","分数スケーリングで文字がぼやける","音が出なくなる"],
+      answer:1,
+      why:"XWayland のアプリはコンポジタのスケーリングと相性が悪く、高精細環境でぼやけることがある。ネイティブ対応アプリへの移行が現実解。"
+    }
+  },
+  {
+    id:"l14", title:"クリップボード・スクショ・画面共有",
+    lines:[
+      ["仙人","日常ツールの代替表じゃ。クリップボードは <code>xclip</code>／<code>xsel</code> の代わりに <b>wl-clipboard</b>（<code>wl-copy</code>／<code>wl-paste</code>）。書き方はほぼ同じで、パイプで渡す作法も同じじゃ。"],
+      ["仙人","スクリーンショットは <code>scrot</code> の代わりに <b>grim</b>、範囲選択は <b>slurp</b> と組み合わせる。<code>grim -g \"$(slurp)\"</code> が定番の形じゃ。"],
+      ["仙人","画面共有は仕組みごと変わる。アプリが直接画面を掴む X11 の作法は使えず、<b>xdg-desktop-portal</b> 経由でコンポジタに撮らせる。Hyprland 用の portal を入れておくことが、ブラウザ画面共有などの前提になる。"],
+      ["あおい","コマンド名は変わっても「パイプで渡す」「範囲を選んで撮る」という作法は生き残るんですね。"]
+    ],
+    extra:[
+      ["仙人","補足じゃ。XWayland アプリとネイティブアプリの間でコピペがうまく渡らない、というのは移行初期の定番トラブルじゃ。まず疑うのはクリップボードの橋渡しで、慌てて設定を壊さんことじゃ。"]
+    ],
+    diagram: svgWrap(
+      bx(8,12,130,30)+tx(73,31,'xclip / xsel',10)
+      + ar(142,27,168,27)
+      + bx(172,12,120,30,'#0f2a28')+tx(232,31,'wl-copy / wl-paste',9.5)
+      + bx(8,52,130,30)+tx(73,71,'scrot',10)
+      + ar(142,67,168,67)
+      + bx(172,52,120,30,'#0f2a28')+tx(232,71,'grim ＋ slurp',9.5)
+      + bx(8,92,130,24)+tx(73,108,'画面共有（直接）',9.5)
+      + ar(142,104,168,104)
+      + bx(172,92,120,24,'#0f2a28')+tx(232,108,'portal 経由',9.5)
+    ),
+    check:{
+      q:"Wayland で範囲スクリーンショットの定番の組み合わせは？",
+      choices:["scrot と xclip","grim と slurp","ffmpeg と xwd"],
+      answer:1,
+      why:"範囲選択が slurp、撮影が grim。grim -g \"$(slurp)\" の形が定番。クリップボードは wl-clipboard が後継。"
+    }
+  },
+  {
+    id:"l15", title:"キーリマップと日本語入力",
+    lines:[
+      ["仙人","効かなくなるものの代表がもう二つある。キーリマップの <code>xmodmap</code>／<code>setxkbmap</code> の個人設定と、<code>xcape</code> のような X 前提の小物じゃ。これらも Xサーバーへの命令なので Wayland では届かん。"],
+      ["仙人","代替は層で選ぶ。コンポジタ内の設定（Hyprland の input の <code>kb_options</code> 等）で済むものはそこで。層を問わず効かせたい強いリマップは、カーネル寄りの <b>keyd</b> のようなツールが Wayland でも X11 でも効くので移行に強い。"],
+      ["仙人","日本語入力は fcitx5 が Wayland 対応を進めておる。ただしアプリ側の対応（ネイティブ／XWayland）で挙動が変わるのが今の正直なところじゃ。「fcitx5 を入れて終わり」ではなく、使うアプリごとに一度は確認する心構えが要る。"],
+      ["あおい","入力まわりは一式で点検、ですね。第2章のタッチパッドと同じ「届く層で設定する」話だ。"]
+    ],
+    extra:[
+      ["仙人","補足じゃ。keyd のような低層リマップは強力な分、設定ミスでキーが打てなくなる事故もありうる。i3 セッションという保険がある状態で試すのじゃ（第9課）。"]
+    ],
+    diagram: svgWrap(
+      bx(8,14,120,30)+tx(68,33,'xmodmap / xcape',9.5)
+      + cross(150,29)
+      + tx(196,33,'届かない',10,'#ff6b6b')
+      + bx(8,66,130,40,'#0f2a28')+tx(73,82,'Hyprland の kb設定',9.5)+tx(73,97,'コンポジタ層',8.5)
+      + bx(162,66,130,40,'#0f2a28')+tx(227,82,'keyd',10)+tx(227,97,'カーネル寄りの層',8.5)
+      + tx(150,55,'「届く層」で設定し直す',10,'#ffd94d')
+    ),
+    check:{
+      q:"xmodmap のようなリマップが Wayland で効かないときの正しい代替は？",
+      choices:["xmodmap を管理者権限で実行する","コンポジタの設定か、keyd のような低層ツールで設定し直す","XWayland を再起動する"],
+      answer:1,
+      why:"xmodmap は Xサーバーへの命令なので届かない。設定は「届く層」――コンポジタ内設定か keyd のような evdev 層のツールでやり直す。"
+    }
+  },
+  {
+    id:"l16", title:"切り分けと卒業 ― 詰まったらまず見る場所",
+    lines:[
+      ["仙人","最後の課じゃ。Wayland で詰まったときの切り分けの型を渡す。一つ、アプリの問題かコンポジタの問題か。<code>hyprctl clients</code> でそのアプリが XWayland 経由かどうかを見る。二つ、設定の問題か。<code>hyprctl reload</code> のエラーと、Hyprland のログを見る。"],
+      ["仙人","三つ、セッション自体の問題か。ディスプレイマネージャのログと <code>journalctl</code> を見る。そして最後の保険はいつも同じじゃ。<b>i3 セッションでログインし直す</b>。戻れるからこそ、攻めた設定を試せる。"],
+      ["仙人","卒業試験代わりに、お主の当初の悩みへ答えを置く。「xinput でタッチパッドを止める」は、Wayland では「<code>hyprctl devices</code> で名前を知り、device ブロックで <code>enabled = false</code>、トグルは hyprctl keyword」。これが攻略の全図じゃ。"],
+      ["あおい","『できない』の正体は、命令の宛先が変わっただけでした。宛先さえ正せば、手は全部あるんですね。"],
+      ["仙人","うむ。これにて Wayland移行道場、全課終了じゃ。あとは実機で手を動かすのみ。詰まったら i3 に戻って一息つき、また来るがよい。"]
+    ],
+    extra:[
+      ["仙人","補足じゃ。切り分けの順番は「①XWayland経由か ②reloadのエラー ③journalctl ④i3に戻る」。慌てて設定を何箇所も同時に変えるのが一番の沼じゃ。一つずつじゃぞ。"]
+    ],
+    diagram: svgWrap(
+      bx(14,8,272,24,'#0d1622','#2c3949')+tx(150,24,'① hyprctl clients ― XWayland経由か？',9.5,'#aef3ec')
+      + bx(14,38,272,24,'#0d1622','#2c3949')+tx(150,54,'② hyprctl reload のエラーを見る',9.5,'#aef3ec')
+      + bx(14,68,272,24,'#0d1622','#2c3949')+tx(150,84,'③ journalctl ― セッションのログ',9.5,'#aef3ec')
+      + bx(14,98,272,20,'#0f2a28')+tx(150,112,'④ 最後の保険： i3 セッションに戻る',9.5,'#ffd94d')
+    ),
+    check:{
+      q:"Wayland で問題が起きたとき、最初に確認すべき切り分けはどれか？",
+      choices:["とりあえず設定を全部書き直す","そのアプリが XWayland 経由かどうかを hyprctl clients で見る","カーネルを入れ替える"],
+      answer:1,
+      why:"まず「アプリの問題か、コンポジタの問題か」を分ける。XWayland 経由かどうかで、対処の宛先がまったく変わるため。"
+    }
+  }
+  ]}
+];
+var ALL_LESSONS = [];
+CHAPTERS.forEach(function(c,ci){ c.lessons.forEach(function(l,li){ l.chapter = c.title; l.no = (ci*4+li+1); ALL_LESSONS.push(l); }); });
+</script>
+
+<script>
+"use strict";
+/* ================= エンジン ================= */
+var SAVE_KEY = "waylandDojoSaveV1";
+var TTS_KEY = "advTtsV1";
+var $ = function(id){ return document.getElementById(id);};
+var msgBox = $("msgBox"), choicesBox = $("choices"), nextMark = $("nextMark");
+var diagPanel = $("diagPanel"), diagTitle = $("diagTitle"), diagBody = $("diagBody");
+
+var save = { done:{}, sound:true};
+try{ var raw = localStorage.getItem(SAVE_KEY); if(raw){ var p = JSON.parse(raw); if(p && p.done) save = p;}}catch(e){}
+function persist(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(save));}catch(e){}}
+
+var ttsOn = false;
+try{ ttsOn = localStorage.getItem(TTS_KEY) === "1";}catch(e){}
+var jpVoice = null;
+function pickVoice(){
+if(!("speechSynthesis" in window)) return;
+var vs = speechSynthesis.getVoices();
+jpVoice = null;
+for(var i=0;i<vs.length;i++){ if(vs[i].lang && vs[i].lang.indexOf("ja") === 0){ jpVoice = vs[i]; break;}}
+updateTtsBtn();
+}
+function updateTtsBtn(){
+var b = $("ttsBtn");
+var has = ("speechSynthesis" in window) && jpVoice;
+b.textContent = ttsOn? "🗣 読上ON": (has || ("speechSynthesis" in window)? "🗣 読上OFF": "🗣 読上（音声なし）");
+b.classList.toggle("on", ttsOn);
+}
+function speak(text){
+if(!ttsOn ||!("speechSynthesis" in window)) return;
+var plain = text.replace(/<[^>]+>/g, "");
+if(!plain.trim()) return;
+speechSynthesis.cancel();
+var u = new SpeechSynthesisUtterance(plain);
+u.lang = "ja-JP"; u.rate = 1.0;
+if(jpVoice) u.voice = jpVoice;
+speechSynthesis.speak(u);
+}
+if("speechSynthesis" in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice;}
+$("ttsBtn").addEventListener("click", function(){
+ttsOn =!ttsOn;
+try{ localStorage.setItem(TTS_KEY, ttsOn? "1": "0");}catch(e){}
+if(!ttsOn && "speechSynthesis" in window) speechSynthesis.cancel();
+updateTtsBtn();
+});
+updateTtsBtn();
+
+/* ---- 効果音 ---- */
+var actx = null;
+function beep(freq, dur, type, vol){
+if(save.sound === false) return;
+try{
+if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+if(actx.state === "suspended") actx.resume();
+var o = actx.createOscillator(), g = actx.createGain();
+o.type = type || "square"; o.frequency.value = freq;
+g.gain.value = vol || 0.03;
+o.connect(g); g.connect(actx.destination);
+var t = actx.currentTime;
+o.start(t); g.gain.exponentialRampToValueAtTime(0.0001, t + (dur || 0.06));
+o.stop(t + (dur || 0.06));
+}catch(e){}
+}
+function jingle(ok){
+if(ok){ beep(660,0.09); setTimeout(function(){ beep(880,0.12);}, 95);}
+else { beep(196,0.16,"sawtooth",0.035);}
+}
+$("soundBtn").textContent = (save.sound === false)? "🔇 音OFF": "🔊 音ON";
+$("soundBtn").classList.toggle("on", save.sound!== false);
+$("soundBtn").addEventListener("click", function(){
+save.sound = (save.sound === false)? true: false;
+persist();
+this.textContent = save.sound? "🔊 音ON": "🔇 音OFF";
+this.classList.toggle("on", save.sound);
+if(save.sound) beep(880, 0.08);
+});
+
+/* ---- 表示 ---- */
+var typing = null;
+function setCharaDim(who){
+$("charaL").classList.toggle("dim", who === "あおい");
+$("charaR").classList.toggle("dim", who === "仙人");
+}
+function showDiagram(lesson){
+if(lesson && lesson.diagram){
+diagTitle.textContent = "第" + lesson.no + "課 " + lesson.title;
+diagBody.innerHTML = lesson.diagram;
+diagPanel.classList.add("show");
+} else {
+diagPanel.classList.remove("show");
+document.body.classList.remove("diagmenu");
+}
+}
+function nearBottom(){
+return (msgBox.scrollHeight - msgBox.scrollTop - msgBox.clientHeight) < 90;
+}
+function renderLines(lines, done){
+clearInterval(typing);
+msgBox.innerHTML = "";
+nextMark.textContent = "";
+var li = 0;
+function nextLine(){
+if(li >= lines.length){ typing = null; nextMark.textContent = ""; if(done) done(); return;}
+var who = lines[li][0], html = lines[li][1];
+setCharaDim(who);
+var p = document.createElement("p");
+var nameSpan = document.createElement("span");
+nameSpan.className = "who" + (who === "あおい"? " me": "");
+nameSpan.textContent = who + "：";
+p.appendChild(nameSpan);
+var body = document.createElement("span");
+p.appendChild(body);
+msgBox.appendChild(p);
+speak(who + "。" + html);
+var plain = html.replace(/<pre>[\s\S]*?<\/pre>/g, function(m){ return m;});
+var tokens = html.split(/(<[^>]+>)/g);
+var ti = 0, ci = 0, cur = "";
+var stick = true;
+typing = setInterval(function(){
+if(ti >= tokens.length){
+clearInterval(typing); typing = null;
+li++; setTimeout(nextLine, 260); return;
+}
+var tok = tokens[ti];
+if(tok.charAt(0) === "<"){ cur += tok; ti++; body.innerHTML = cur; return;}
+if(ci < tok.length){
+cur += tok.charAt(ci); ci++;
+body.innerHTML = cur;
+if(ci % 3 === 0) beep(1200, 0.015, "square", 0.006);
+if(stick && nearBottom()) msgBox.scrollTop = msgBox.scrollHeight;
+} else { ti++; ci = 0;}
+}, 14);
+msgBox.scrollTop = msgBox.scrollHeight;
+}
+nextLine();
+}
+function setChoices(items){
+choicesBox.innerHTML = "";
+document.body.classList.toggle("diagmenu", diagPanel.classList.contains("show") && items.length > 0);
+items.forEach(function(it){
+var b = document.createElement("button");
+b.type = "button"; b.textContent = it.label;
+b.addEventListener("click", function(){ beep(740, 0.05); it.onPick(b);});
+choicesBox.appendChild(b);
+});
+}
+function updateProgress(){
+var n = ALL_LESSONS.filter(function(l){ return save.done[l.id];}).length;
+$("progressLine").textContent = "進捗：" + n + " / " + ALL_LESSONS.length + " 課 習得" + (n === ALL_LESSONS.length? " ― 全課修了！🎉": "");
+}
+
+/* ---- 課の進行 ---- */
+var current = null;
+function startLesson(idx){
+current = ALL_LESSONS[idx];
+$("menu").classList.remove("show");
+showDiagram(current);
+renderLines(current.lines, function(){ askUnderstood(idx, false);});
+setChoices([]);
+}
+function askUnderstood(idx, again){
+var L = ALL_LESSONS[idx];
+setChoices([
+{ label:"✅ わかった（確認問題へ）", onPick:function(){ askCheck(idx);}},
+{ label:"❓ わからない（補足を聞く）", onPick:function(){
+showDiagram(L);
+renderLines(L.extra, function(){ askUnderstood(idx, true);});
+setChoices([]);
+}}
+]);
+}
+function askCheck(idx){
+var L = ALL_LESSONS[idx], c = L.check;
+showDiagram(L);
+renderLines([["仙人", "確認じゃ。" + c.q]], function(){
+var items = c.choices.map(function(text, ci){
+return { label: (ci+1) + ". " + text, onPick: function(btn){
+if(ci === c.answer){
+btn.classList.add("good"); jingle(true);
+save.done[L.id] = true; persist(); updateProgress();
+renderLines([["仙人", c.why], ["仙人", "第" + L.no + "課、習得じゃ！"]], function(){
+var items2 = [];
+if(idx + 1 < ALL_LESSONS.length){
+items2.push({ label:"▶ 次の課へ（第" + (idx+2) + "課）", onPick:function(){ startLesson(idx+1);}});
+} else {
+items2.push({ label:"🏆 修了の言葉を聞く", onPick:function(){ ending();}});
+}
+items2.push({ label:"📜 課一覧に戻る", onPick:function(){ showMenu();}});
+setChoices(items2);
+});
+setChoices([]);
+} else {
+btn.classList.add("wrong"); jingle(false);
+renderLines([["仙人", "惜しい。解説するぞ。"], ["仙人", c.why]], function(){ askCheck(idx);});
+setChoices([]);
+}
+}};
+});
+setChoices(items);
+});
+setChoices([]);
+}
+function ending(){
+showDiagram(null);
+renderLines([
+["仙人","全16課、修了じゃ。お主の当初の悩み――「LXQt＋i3 では xinput で手軽にできたのに、Wayland ではできない」――その正体は『命令の宛先が Xサーバーからコンポジタへ移った』ことじゃった。"],
+["仙人","タッチパッド攻略の全図をもう一度。<code>hyprctl devices</code> で名前を知る → device ブロックで <code>enabled = false</code> → トグルは <code>hyprctl keyword</code> とスクリプト → 保険に i3 セッションを残す。"],
+["あおい","『できない』じゃなくて『宛先が変わった』。この見方があれば、他の「できない」も自分で攻略できます。"],
+["仙人","うむ。それが Wayland 移行の一番の収穫じゃ。実機で手を動かし、詰まったら第16課の切り分けに戻るがよい。道場はいつでも開いておるぞ。"]
+], function(){
+setChoices([{ label:"📜 課一覧に戻る", onPick:function(){ showMenu();}}]);
+});
+setChoices([]);
+}
+function showMenu(){
+clearInterval(typing); typing = null;
+showDiagram(null);
+setChoices([]);
+var menu = $("menu");
+menu.innerHTML = "";
+CHAPTERS.forEach(function(ch){
+var h = document.createElement("h2"); h.textContent = ch.title; menu.appendChild(h);
+ch.lessons.forEach(function(L){
+var idx = ALL_LESSONS.indexOf(L);
+var b = document.createElement("button");
+b.type = "button"; b.className = "lessonBtn";
+b.innerHTML = '<span class="no">第' + L.no + '課</span><span>' + L.title + '</span>' + (save.done[L.id]? '<span class="done">✔ 習得</span>': '');
+b.addEventListener("click", function(){ startLesson(idx);});
+menu.appendChild(b);
+});
+});
+menu.classList.add("show");
+msgBox.innerHTML = "<p><span class='who'>仙人：</span>課を選ぶのじゃ。✔ は習得済み。どこから始めてもよいが、初めてなら第1課から順にどうぞ。</p>";
+speak("課を選ぶのじゃ。");
+updateProgress();
+}
+$("menuBtn").addEventListener("click", showMenu);
+
+/* ---- 起動 ---- */
+updateProgress();
+renderLines([
+["仙人","ようこそ Wayland移行道場へ。お主の悩みは聞いておる。LXQt＋i3 では <code>xinput disable</code> で ThinkPad のタッチパッドを手軽にON/OFFできたのに、NixOS＋Hyprland の Wayland ではそれができない、とな。"],
+["あおい","はい。コマンドが効かなくて、移行そのものが止まりそうでした。"],
+["仙人","安心せい。その「できない」には理由があり、攻略法がある。全16課、4章立てで、理由から実践（device ブロック、hyprctl、NixOS での構築、i3 設定の翻訳）まで一気に参る。"],
+["仙人","進め方は各課共通じゃ。説明 →「わかった／わからない」→ 確認問題が1問。正解で次の課へ進める。分からなければ補足を聞いてから同じ問題に戻るだけ、ペナルティはない。"]
+], function(){
+setChoices([
+{ label:"▶ 第1課から始める", onPick:function(){ startLesson(0);}},
+{ label:"📜 課一覧から選ぶ", onPick:function(){ showMenu();}}
+]);
+});
+</script>
+
+<script>
+"use strict";
+/* ================= 聞くモード ================= */
+(function(){
+  var btn = document.getElementById("listenBtn");
+  var panel = document.getElementById("listenPanel");
+  var body = document.getElementById("listenBody");
+  var playBtn = document.getElementById("listenPlay");
+  var stopBtn = document.getElementById("listenStop");
+  var bar = document.getElementById("listenBar");
+  var status = document.getElementById("listenStatus");
+  var built = false, items = [], idx = 0, playing = false, paused = false, uid = 0, tickTimer = null;
+
+  function collect(){
+    items = [];
+    if(typeof CHAPTERS === "undefined") return;
+    CHAPTERS.forEach(function(ch){
+      items.push({ head: ch.title });
+      ch.lessons.forEach(function(L){
+        L.lines.forEach(function(ln){ items.push({ who: ln[0], text: ln[1] }); });
+        L.extra.forEach(function(ln){ items.push({ who: ln[0], text: "（補足）" + ln[1] }); });
+        items.push({ who: "仙人", text: "確認問題。" + L.check.q + " 答えは「" + L.check.choices[L.check.answer] + "」。" + L.check.why });
+      });
+    });
+  }
+  function build(){
+    if(built) return; built = true;
+    collect();
+    var html = "";
+    items.forEach(function(it){
+      if(it.head){ html += "<h3>" + it.head + "</h3>"; }
+      else {
+        var plain = it.text.replace(/<pre>([\s\S]*?)<\/pre>/g, "$1").replace(/<[^>]+>/g, "");
+        html += "<p><span class='who'>" + it.who + "：</span>" + plain.replace(/\n/g, "<br>") + "</p>";
+      }
+    });
+    body.innerHTML = html;
+  }
+  function stopTimers(){ if(tickTimer){ clearInterval(tickTimer); tickTimer = null; } }
+  function reset(){
+    uid++; playing = false; paused = false; idx = 0;
+    if("speechSynthesis" in window) speechSynthesis.cancel();
+    stopTimers();
+    bar.style.width = "0%"; status.textContent = "未再生";
+    playBtn.textContent = "▶ ブラウザ音声で再生";
+  }
+  function speakNext(){
+    if(!playing) return;
+    var speechItems = items.filter(function(it){ return !it.head; });
+    if(idx >= speechItems.length){ reset(); status.textContent = "再生終了"; return; }
+    var it = speechItems[idx];
+    var plain = it.text.replace(/<pre>([\s\S]*?)<\/pre>/g, "$1").replace(/<[^>]+>/g, "");
+    var myUid = ++uid;
+    var u = new SpeechSynthesisUtterance(it.who + "。" + plain);
+    u.lang = "ja-JP"; u.rate = 1.0;
+    var vs = ("speechSynthesis" in window) ? speechSynthesis.getVoices() : [];
+    for(var i=0;i<vs.length;i++){ if(vs[i].lang && vs[i].lang.indexOf("ja") === 0){ u.voice = vs[i]; break; } }
+    u.onend = function(){ if(myUid === uid && playing && !paused){ idx++; speakNext(); } };
+    u.onerror = function(){ if(myUid === uid && playing && !paused){ idx++; speakNext(); } };
+    speechSynthesis.speak(u);
+    bar.style.width = Math.round((idx / speechItems.length) * 100) + "%";
+    status.textContent = "再生中 " + (idx+1) + " / " + speechItems.length;
+    stopTimers();
+    tickTimer = setInterval(function(){
+      if(myUid !== uid || !playing){ stopTimers(); return; }
+      if(!speechSynthesis.speaking && !speechSynthesis.pending && !paused){ idx++; speakNext(); }
+    }, 4000);
+  }
+  playBtn.addEventListener("click", function(){
+    if(!("speechSynthesis" in window)){ status.textContent = "このブラウザでは音声合成が使えません"; return; }
+    if(playing && !paused){
+      paused = true; uid++; speechSynthesis.cancel(); stopTimers();
+      playBtn.textContent = "▶ 再開";
+      status.textContent = "一時停止中 " + (idx+1) + " 件目";
+      return;
+    }
+    if(paused){
+      paused = false; playing = true;
+      playBtn.textContent = "⏸ 一時停止";
+      speakNext();
+      return;
+    }
+    playing = true; paused = false; idx = 0;
+    playBtn.textContent = "⏸ 一時停止";
+    speakNext();
+  });
+  stopBtn.addEventListener("click", reset);
+  btn.addEventListener("click", function(){
+    var show = !panel.classList.contains("show");
+    panel.classList.toggle("show", show);
+    if(show) build(); else reset();
+  });
+})();
+
+/* ================= 図解ギャラリー ================= */
+(function(){
+  var btn = document.getElementById("galleryBtn");
+  var panel = document.getElementById("galleryPanel");
+  var body = document.getElementById("galleryBody");
+  var built = false;
+  btn.addEventListener("click", function(){
+    var show = !panel.classList.contains("show");
+    panel.classList.toggle("show", show);
+    if(show && !built){
+      built = true;
+      if(typeof ALL_LESSONS === "undefined"){ body.innerHTML = "<p>データがありません。</p>"; return; }
+      var html = "";
+      ALL_LESSONS.forEach(function(L){
+        if(L.diagram){
+          html += '<div class="galItem"><p class="gtitle">第' + L.no + '課 ' + L.title + '</p>' + L.diagram + '</div>';
+        }
+      });
+      body.innerHTML = html || "<p>図解がありません。</p>";
+    }
+  });
+})();
+</script>
+</body>
+</html>
