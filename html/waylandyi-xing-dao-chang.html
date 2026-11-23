@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<!-- build: 2026-11-24 00:00:39 JST -->
+<!-- build: 2026-11-24 01:17:00 JST -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="dark" />
@@ -12,228 +12,173 @@
 <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet" />
 <style>
   :root{
+    --tb:29%;
     --ink:#ffffff;
+    --dim:#9fb4cc;
+    --panel:#10151d;
+    --win:#171e29;
+    --line:#2c3949;
     --accent:#39d0c4;
     --accent2:#ffd94d;
-    --bad:#ff6b6b;
-    --panel:#10151d;
-    --panel2:#171e29;
-    --line:#2c3949;
-    --btn:#1d2836;
-    --btn-on:#0f4f4a;
+    --good:#7ee787;
+    --bad:#ff7b72;
   }
-  *{ box-sizing:border-box; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body{ margin:0; padding:0; }
   body{
-    background:#07090d;
-    color:var(--ink);
+    background:#05070d; color:var(--ink);
     font-family:"DotGothic16","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
-    display:flex; justify-content:center;
+    display:flex; justify-content:center; padding:14px 10px 40px;
     min-height:100vh;
   }
-  button{ font-family:inherit; min-height:44px; cursor:pointer; }
-  #frame{
-    width:100%; max-width:760px;
-    display:flex; flex-direction:column;
-    background:var(--panel);
-    border-left:2px solid var(--line); border-right:2px solid var(--line);
-    min-height:100vh;
-  }
+  button{ font-family:inherit; cursor:pointer; }
+  .cab{ width:100%; max-width:760px; }
   /* ---------- header ---------- */
-  header{
-    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
-    padding:10px 12px;
-    background:var(--panel2);
-    border-bottom:2px solid var(--line);
-  }
-  header h1{
-    font-size:20px; margin:0; letter-spacing:.04em; flex:1 1 auto; min-width:180px;
-  }
-  header h1 .sub{ display:block; font-size:12px; color:var(--accent); margin-top:2px; letter-spacing:.02em; }
-  .hbtn{
-    background:var(--btn); color:var(--ink); border:2px solid var(--line);
-    border-radius:6px; padding:6px 10px; font-size:14px; min-height:44px;
-  }
-  .hbtn.on{ background:var(--btn-on); border-color:var(--accent); }
-  /* ---------- ticker ---------- */
-  #ticker{
-    overflow:hidden; white-space:nowrap; background:#0a0e14;
-    border-bottom:2px solid var(--line); padding:4px 0; font-size:12px; color:var(--accent);
-  }
-  #ticker span{ display:inline-block; padding-left:100%; animation:tick 30s linear infinite; }
-  @keyframes tick{ from{ transform:translateX(0);} to{ transform:translateX(-100%);} }
-  @media (prefers-reduced-motion: reduce){ #ticker span{ animation:none; padding-left:8px; } }
-  /* ---------- stage ---------- */
-  #stage{ position:relative; background:#0a0f16; }
-  #scene{
-    position:relative; height:210px; overflow:hidden;
-    background:
-      linear-gradient(#0a1420 0 62%, #12202e 62% 100%);
-  }
-  #scene::after{
-    content:""; position:absolute; inset:0; pointer-events:none;
-    background:repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 2px, transparent 2px 4px);
-  }
-  .stars{ position:absolute; inset:0; }
-  .moon{
-    position:absolute; top:16px; right:22px; width:34px; height:34px;
-    background:var(--accent2); border-radius:50%;
-    box-shadow:0 0 0 4px rgba(255,217,77,.18);
-    image-rendering:pixelated;
-  }
-  .ground{
-    position:absolute; left:0; right:0; bottom:0; height:14px;
-    background:repeating-linear-gradient(90deg,#1d3a34 0 16px,#17302b 16px 32px);
-    border-top:3px solid #2b574c;
-  }
-  .chara{ position:absolute; bottom:12px; width:92px; height:118px; }
-  .chara svg{ width:100%; height:100%; image-rendering:pixelated; }
+  header{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .logo{ font-weight:900; letter-spacing:2px; font-size:19px; color:#fff; text-shadow:2px 2px 0 #0f4f4a, 4px 4px 0 #10151d; }
+  .logo small{ display:block; font-size:11.5px; color:var(--accent); letter-spacing:1px; text-shadow:none; margin-top:2px; }
+  .btns{ display:flex; gap:6px; flex-wrap:wrap; }
+  .sbtn{ background:var(--win); color:var(--ink); border:2px solid var(--dim); padding:4px 10px; font-size:13px; border-radius:4px; min-height:36px; }
+  .sbtn:hover{ border-color:#fff; color:#fff; }
+  .sbtn.on{ background:#0f4f4a; border-color:var(--accent); color:#fff; }
+  /* ---------- params ---------- */
+  .params{ display:flex; gap:14px; background:var(--panel); border:2px solid var(--line); padding:6px 12px; font-size:12.5px; margin-bottom:10px; flex-wrap:wrap; align-items:center; }
+  .params b{ color:var(--accent2); }
+  .params .now{ color:var(--dim); }
+  .params .save-note{ margin-left:auto; color:var(--dim); }
+  .bar{ display:inline-block; width:120px; height:10px; background:#14202e; vertical-align:middle; margin-left:4px; position:relative; }
+  .bar i{ position:absolute; left:0; top:0; bottom:0; background:var(--good); display:block; width:0%; }
+  /* ---------- screen ---------- */
+  .screen{ position:relative; border:6px solid var(--line); border-radius:6px; overflow:hidden; aspect-ratio:16/10; background:linear-gradient(#0a1420 0 62%, #12202e 62% 100%); }
+  .screen::after{ content:""; position:absolute; inset:0; pointer-events:none; z-index:6; background:repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 3px, transparent 3px 6px); }
+  .stars{ position:absolute; inset:0; z-index:0; }
+  .moon{ position:absolute; top:16px; right:22px; width:34px; height:34px; background:var(--accent2); border-radius:50%; box-shadow:0 0 0 4px rgba(255,217,77,.18); z-index:0; }
+  .ground{ position:absolute; left:0; right:0; bottom:var(--tb); height:12px; z-index:1; background:repeating-linear-gradient(90deg,#1d3a34 0 16px,#17302b 16px 32px); border-top:3px solid #2b574c; }
+  .char{ position:absolute; bottom:calc(var(--tb) + 10px); width:92px; height:118px; z-index:2; }
+  .char svg{ width:100%; height:100%; display:block; }
   #charaL{ left:8%; }
   #charaR{ right:8%; transform:scaleX(-1); }
-  .chara .name{
-    position:absolute; top:-22px; left:50%; transform:translateX(-50%);
-    font-size:12px; color:var(--accent2); white-space:nowrap;
-  }
-  #charaR .name{ transform:translateX(-50%) scaleX(-1); color:var(--accent); }
-  .chara.dim{ filter:brightness(.45); }
-  /* diagram blackboard */
-  #diagPanel{
-    display:none; margin:10px 12px 0; padding:10px;
-    background:#06110c; border:3px solid #4a3b22; border-radius:4px;
-  }
-  #diagPanel.show{ display:block; }
-  #diagPanel .dtitle{ font-size:13px; color:var(--accent2); margin:0 0 6px; }
-  #diagPanel svg{ width:100%; height:auto; display:block; }
-  body.diagmenu #diagPanel{ margin-bottom:2px; }
-  body.diagmenu #scene{ height:120px; }
-  body.diagmenu .chara{ height:76px; width:60px; }
-  /* ---------- message box ---------- */
-  #msgBox{
-    margin:10px 12px 0; padding:12px 14px;
-    background:#05070a; border:3px solid var(--line); border-radius:6px;
-    height:196px; overflow-y:auto;
-    font-size:18px; line-height:1.65; color:#fff;
-    scroll-behavior:auto;
-  }
-  #msgBox .who{ color:var(--accent2); font-weight:bold; }
-  #msgBox .who.me{ color:var(--accent); }
-  #msgBox p{ margin:0 0 10px; }
-  #msgBox code{
-    font-family:ui-monospace,Menlo,Consolas,monospace; font-size:15px;
-    background:#14202e; color:#aef3ec; padding:1px 5px; border-radius:4px;
-    word-break:break-all;
-  }
-  #msgBox pre{
-    font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13.5px; line-height:1.5;
-    background:#0d1622; border:1px solid var(--line); border-radius:6px;
-    padding:10px; overflow-x:auto; color:#d9f7f2; margin:0 0 10px; white-space:pre;
-  }
-  #nextMark{ text-align:right; color:var(--accent); font-size:14px; height:18px; }
+  .char.dim{ filter:brightness(.45); }
+  /* ---------- diagram ---------- */
+  #diagram{ position:absolute; left:50%; top:4%; transform:translateX(-50%); width:min(560px,94%); z-index:5; background:rgba(3,10,8,.92); border:2px solid #4a3b22; padding:6px; display:none; }
+  #diagram.show{ display:block; }
+  #diagram .dtitle{ font-size:12.5px; color:var(--accent2); margin:0 0 4px; }
+  #diagram svg{ width:100%; height:auto; display:block; }
+  .screen.diagmenu #diagram{ width:min(430px,74%); }
+  /* ---------- namebox / textbox ---------- */
+  .namebox{ position:absolute; left:14px; bottom:calc(var(--tb) + 8px); z-index:8; color:#fff; background:var(--win); border:3px solid var(--line); padding:2px 14px; font-weight:700; font-size:16px; letter-spacing:.06em; text-shadow:2px 2px 0 #000; display:none; }
+  .textbox{ position:absolute; left:0; right:0; bottom:0; height:var(--tb); z-index:7; color:#fff; background:rgba(4,6,12,.97); border-top:4px solid var(--line); padding:12px 16px; font-size:18px; line-height:1.8; letter-spacing:.04em; text-shadow:1px 1px 0 #000; overflow-y:auto; overflow-x:hidden; scrollbar-width:thin; scrollbar-color:var(--accent) #0a0e14; }
+  .textbox p{ margin:0 0 10px; }
+  .textbox .who{ color:var(--accent2); font-weight:bold; }
+  .textbox .who.me{ color:var(--accent); }
+  .textbox code{ font-family:ui-monospace,Menlo,Consolas,monospace; font-size:15px; background:#14202e; color:#aef3ec; padding:1px 5px; border-radius:4px; word-break:break-all; text-shadow:none; }
+  .textbox pre{ font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13px; line-height:1.5; background:#0d1622; border:1px solid var(--line); border-radius:6px; padding:10px; overflow-x:auto; color:#d9f7f2; margin:0 0 10px; white-space:pre; text-shadow:none; }
+  .screen .next{ position:absolute; right:12px; bottom:6px; z-index:8; color:var(--accent); font-size:14px; display:none; animation:blink 1s steps(2) infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  @media (prefers-reduced-motion: reduce){ .screen .next{ animation:none; } }
   /* ---------- choices ---------- */
-  #choices{ display:flex; flex-direction:column; gap:8px; padding:10px 12px 4px; }
-  body.diagmenu #choices{ flex-direction:row; flex-wrap:wrap; }
-  body.diagmenu #choices button{ flex:1 1 140px; }
-  #choices button{
-    background:var(--btn); color:#fff; font-weight:bold; font-size:16px;
-    border:2px solid var(--line); border-radius:6px; padding:10px 12px; text-align:left;
-  }
-  #choices button:hover, #choices button:focus-visible{ border-color:var(--accent); outline:none; }
-  #choices button.good{ border-color:var(--accent); background:var(--btn-on); }
-  #choices button.wrong{ border-color:var(--bad); }
-  /* ---------- menu ---------- */
-  #menu{ padding:12px; display:none; }
-  #menu.show{ display:block; }
-  #menu h2{ font-size:17px; margin:14px 0 8px; color:var(--accent); }
-  #menu h2:first-child{ margin-top:0; }
-  .lessonBtn{
-    display:flex; width:100%; align-items:center; gap:10px;
-    background:var(--btn); color:#fff; border:2px solid var(--line);
-    border-radius:6px; padding:10px 12px; font-size:15px; margin-bottom:8px; text-align:left;
-  }
+  .choices{ position:absolute; top:0; left:0; right:0; bottom:calc(var(--tb) + 46px); z-index:9; display:none; flex-direction:column; align-items:center; justify-content:flex-start; gap:12px; background:rgba(3,5,16,.78); padding:16px; overflow-y:auto; }
+  .choices.show{ display:flex; }
+  .choice{ width:min(92%,520px); background:#0d1622; color:#fff; font-weight:700; border:3px solid var(--dim); padding:12px 16px; font-size:17px; letter-spacing:.05em; text-shadow:1px 1px 0 #000; text-align:left; border-radius:4px; min-height:44px; }
+  .choice:first-child{ margin-top:auto; }
+  .choice:last-child{ margin-bottom:auto; }
+  .choice:hover{ border-color:var(--accent2); background:#1b2a3e; }
+  .choice.good{ border-color:var(--good); background:#0f4f4a; }
+  .choice.wrong{ border-color:var(--bad); }
+  .screen.diagmenu .choices{ bottom:calc(var(--tb) + 8px); flex-direction:row; flex-wrap:wrap; align-content:flex-start; justify-content:center; gap:8px; }
+  .screen.diagmenu .choice{ flex:1 1 28%; width:auto; margin:0; text-align:center; font-size:14px; padding:10px 8px; line-height:1.5; }
+  /* ---------- lesson menu overlay ---------- */
+  .menu{ position:absolute; inset:0; z-index:10; display:none; background:rgba(3,5,16,.95); padding:14px; overflow-y:auto; }
+  .menu.show{ display:block; }
+  .menu h2{ font-size:16px; margin:14px 0 8px; color:var(--accent); }
+  .menu h2:first-child{ margin-top:0; }
+  .lessonBtn{ display:flex; width:100%; align-items:center; gap:10px; background:var(--win); color:#fff; border:2px solid var(--line); border-radius:6px; padding:10px 12px; font-size:15px; margin-bottom:8px; text-align:left; min-height:44px; }
   .lessonBtn .no{ color:var(--accent); font-size:13px; white-space:nowrap; }
-  .lessonBtn .done{ margin-left:auto; color:var(--accent2); font-size:16px; white-space:nowrap; }
+  .lessonBtn .done{ margin-left:auto; color:var(--accent2); font-size:15px; white-space:nowrap; }
   .lessonBtn:hover{ border-color:var(--accent); }
-  #progressLine{ font-size:14px; color:var(--accent2); padding:0 12px; }
   /* ---------- footer / panels ---------- */
-  footer{ padding:8px 12px 16px; margin-top:auto; }
-  .wideBtn{
-    display:block; width:100%; background:var(--panel2); color:#fff;
-    border:2px solid var(--line); border-radius:6px; padding:10px; font-size:15px; margin-top:8px;
-  }
-  .wideBtn:hover{ border-color:var(--accent); }
-  .panel{
-    display:none; margin-top:10px; background:#05070a; border:2px solid var(--line);
-    border-radius:6px; padding:12px 14px; font-size:15.5px; line-height:1.7; max-height:50vh; overflow-y:auto;
-  }
-  .panel.show{ display:block; }
-  .panel h3{ font-size:15px; color:var(--accent); margin:14px 0 6px; }
-  .panel h3:first-child{ margin-top:0; }
-  .panel p{ margin:0 0 8px; }
-  .panel .who{ color:var(--accent2); font-weight:bold; }
-  .panel code{ font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13px; background:#14202e; color:#aef3ec; padding:1px 5px; border-radius:4px; word-break:break-all; }
-  .panel pre{ font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12.5px; line-height:1.5; background:#0d1622; border:1px solid var(--line); border-radius:6px; padding:8px; overflow-x:auto; color:#d9f7f2; }
-  #listenCtrl{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
-  #listenCtrl button{ background:var(--btn); color:#fff; border:2px solid var(--line); border-radius:6px; padding:8px 14px; font-size:15px; }
-  #listenBarWrap{ height:10px; background:#14202e; border-radius:5px; overflow:hidden; margin-bottom:8px; }
-  #listenBar{ height:100%; width:0%; background:var(--accent); }
-  #listenStatus{ font-size:13px; color:var(--accent2); }
-  .galItem{ border:1px solid var(--line); border-radius:6px; padding:10px; margin-bottom:10px; background:#06110c; }
+  footer{ margin-top:12px; color:var(--dim); font-size:12.5px; line-height:1.9; }
+  #galleryWrap{ margin:16px 0 4px; text-align:center; }
+  #galleryWrap .rowbtn{ margin-bottom:10px; }
+  .panelbox{ display:none; text-align:left; margin:10px 0 12px; background:#070a14; border:2px solid var(--line); padding:12px 14px; font-size:15.5px; line-height:1.7; max-height:60vh; overflow-y:auto; color:#fff; }
+  .panelbox.show{ display:block; }
+  .panelbox h3{ font-size:15px; color:var(--accent2); margin:14px 0 6px; }
+  .panelbox h3:first-child{ margin-top:0; }
+  .panelbox p{ margin:0 0 8px; }
+  .panelbox .who{ color:var(--accent2); font-weight:bold; }
+  .panelbox .lt-lesson{ font-weight:bold; margin:10px 0 4px; }
+  #listenCtrl{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:8px; }
+  #listenBarWrap{ height:8px; background:#14202e; border:1px solid var(--line); margin-bottom:8px; }
+  #listenBar{ height:100%; width:0%; background:var(--accent2); }
+  #listenStatus{ font-size:12.5px; color:var(--dim); }
+  .listenHint{ font-size:12.5px; color:var(--dim); margin-bottom:8px; }
+  .galItem{ border:1px solid var(--line); padding:10px; margin-bottom:10px; background:#06110c; }
   .galItem .gtitle{ font-size:13px; color:var(--accent2); margin:0 0 6px; }
   .galItem svg{ width:100%; height:auto; display:block; }
-  .note{ font-size:12.5px; color:#b9c7d6; line-height:1.6; padding:10px 12px 0; }
-  @media (max-width:560px){
-    #scene{ height:170px; }
-    body.diagmenu #scene{ height:96px; }
-    .chara{ width:70px; height:92px; }
-    #msgBox{ height:224px; font-size:18px; }
-    header h1{ font-size:17px; }
+  /* ---------- portrait phones ---------- */
+  @media (orientation:portrait) and (max-width:760px){
+    :root{ --tb:46%; }
+    .screen{ aspect-ratio:auto; height:80vh; height:80dvh; }
+    .textbox{ font-size:16px; line-height:1.75; }
+    .char{ width:76px; height:97px; }
+    .choice{ font-size:16px; padding:10px 14px; }
+    .params{ gap:8px; font-size:11px; }
+    .bar{ width:80px; }
+    .logo{ font-size:17px; }
   }
 </style>
 </head>
 <body>
-<div id="frame">
+<div class="cab">
   <header>
-    <h1>Wayland移行道場<span class="sub">X11（LXQt＋i3）から Hyprland へ ― 「できない」を攻略する</span></h1>
-    <button class="hbtn" id="soundBtn" type="button">🔊 音ON</button>
-    <button class="hbtn" id="ttsBtn" type="button">🗣 読上OFF</button>
-    <button class="hbtn" id="menuBtn" type="button">📜 課一覧</button>
-  </header>
-  <div id="ticker" aria-hidden="true"><span>XINPUT IS DEAD ON WAYLAND ★ LIBINPUT ★ HYPRCTL ★ XWAYLAND ★ WL-COPY ★ GRIM ★ KEYD ★ FCITX5 ★ NIXOS ★ TATAMI ★ MOD1 = ALT ★</span></div>
-
-  <div id="stage">
-    <div id="diagPanel"><p class="dtitle" id="diagTitle"></p><div id="diagBody"></div></div>
-    <div id="scene">
-      <div class="stars" id="stars"></div>
-      <div class="moon"></div>
-      <div class="chara" id="charaL"><span class="name">ウェイランド仙人</span></div>
-      <div class="chara" id="charaR"><span class="name">あおい</span></div>
-      <div class="ground"></div>
+    <div class="logo">Wayland移行道場<small>X11（LXQt＋i3）から Hyprland へ ― 「できない」を攻略する</small></div>
+    <div class="btns">
+      <button class="sbtn" id="soundBtn" type="button">🔊 音ON</button>
+      <button class="sbtn" id="ttsBtn" type="button">🗣 読上OFF</button>
+      <button class="sbtn" id="menuBtn" type="button">📜 課一覧</button>
     </div>
+  </header>
+
+  <div class="params">
+    <span>習得 <b id="pDone">0</b> / <span id="pTotal">16</span> 課<span class="bar"><i id="bDone"></i></span></span>
+    <span class="now">現在：<span id="pNow">タイトル</span></span>
+    <span class="save-note">💾 進捗は自動保存</span>
   </div>
 
-  <div id="progressLine"></div>
-  <div id="msgBox" aria-live="polite"></div>
-  <div id="nextMark"></div>
-  <div id="choices"></div>
+  <div class="screen" id="screen">
+    <div class="stars" id="stars"></div>
+    <div class="moon"></div>
+    <div class="char" id="charaL"></div>
+    <div class="char" id="charaR"></div>
+    <div class="ground"></div>
+    <div id="diagram"><p class="dtitle" id="diagTitle"></p><div id="diagBody"></div></div>
+    <div class="namebox" id="namebox"></div>
+    <div class="textbox" id="msgBox" aria-live="polite"></div>
+    <span class="next" id="nextMark">▼</span>
+    <div class="choices" id="choices"></div>
+    <div class="menu" id="menu"></div>
+  </div>
 
-  <div id="menu"></div>
+  <footer>非公式の学習用チュートリアルです。設定例は NixOS ＋ Hyprland を前提にしています。実際の適用前に、X11（i3）セッションに戻れる状態で試してください。進捗はこのブラウザに保存されます。</footer>
 
-  <footer>
-    <button class="wideBtn" id="listenBtn" type="button">🎧 聞くモード（全課の文章を並べる）</button>
-    <div class="panel" id="listenPanel">
-      <div id="listenCtrl">
-        <button id="listenPlay" type="button">▶ ブラウザ音声で再生</button>
-        <button id="listenStop" type="button">⏹ 停止</button>
+  <div id="galleryWrap">
+    <div class="rowbtn"><button class="sbtn" id="listenBtn" type="button">🎧 リスニング（全レッスン読み上げ）</button>
+      <div class="panelbox" id="listenPanel">
+        <div id="listenCtrl">
+          <button class="sbtn" id="listenPlay" type="button">▶ ブラウザ音声で再生</button>
+          <button class="sbtn" id="listenStop" type="button">⏹ 停止</button>
+          <span id="listenStatus">未再生</span>
+        </div>
+        <div id="listenBarWrap"><div id="listenBar"></div></div>
+        <div class="listenHint">PCでは Read Aloud 拡張機能で、この下のテキストをそのまま読み上げられます。</div>
+        <div id="listenBody"></div>
       </div>
-      <div id="listenBarWrap"><div id="listenBar"></div></div>
-      <div id="listenStatus">未再生</div>
-      <div id="listenBody"></div>
     </div>
-    <button class="wideBtn" id="galleryBtn" type="button">🖼 図解ギャラリー</button>
-    <div class="panel" id="galleryPanel"><div id="galleryBody"></div></div>
-    <p class="note">非公式の学習用チュートリアルです。設定例は NixOS ＋ Hyprland を前提にしています。実際の適用前に、X11（i3）セッションに戻れる状態で試してください。進捗はこのブラウザに保存されます。</p>
-  </footer>
+    <button class="sbtn" id="galleryBtn" type="button">🖼 図解一覧（復習用）を表示</button>
+    <div class="panelbox" id="galleryPanel"><div id="galleryBody"></div></div>
+  </div>
 </div>
+
 
 <script>
 "use strict";
@@ -720,351 +665,433 @@ var ALL_LESSONS = [];
 CHAPTERS.forEach(function(c,ci){ c.lessons.forEach(function(l,li){ l.chapter = c.title; l.no = (ci*4+li+1); ALL_LESSONS.push(l); }); });
 </script>
 
+
 <script>
 "use strict";
 /* ================= エンジン ================= */
 var SAVE_KEY = "waylandDojoSaveV1";
 var TTS_KEY = "advTtsV1";
-var $ = function(id){ return document.getElementById(id);};
+var $ = function(id){ return document.getElementById(id); };
 var msgBox = $("msgBox"), choicesBox = $("choices"), nextMark = $("nextMark");
-var diagPanel = $("diagPanel"), diagTitle = $("diagTitle"), diagBody = $("diagBody");
+var diagPanel = $("diagram"), diagTitle = $("diagTitle"), diagBody = $("diagBody");
+var screenEl = $("screen"), namebox = $("namebox");
 
-var save = { done:{}, sound:true};
-try{ var raw = localStorage.getItem(SAVE_KEY); if(raw){ var p = JSON.parse(raw); if(p && p.done) save = p;}}catch(e){}
-function persist(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(save));}catch(e){}}
+var save = { done:{}, sound:true };
+try{ var raw = localStorage.getItem(SAVE_KEY); if(raw){ var p = JSON.parse(raw); if(p && p.done) save = p; } }catch(e){}
+function persist(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(save)); }catch(e){} }
 
+/* ---- 読み上げ（🗣 読上） ---- */
 var ttsOn = false;
-try{ ttsOn = localStorage.getItem(TTS_KEY) === "1";}catch(e){}
-var jpVoice = null;
-function pickVoice(){
-if(!("speechSynthesis" in window)) return;
-var vs = speechSynthesis.getVoices();
-jpVoice = null;
-for(var i=0;i<vs.length;i++){ if(vs[i].lang && vs[i].lang.indexOf("ja") === 0){ jpVoice = vs[i]; break;}}
-updateTtsBtn();
+try{ ttsOn = localStorage.getItem(TTS_KEY) === "1"; }catch(e){}
+function updTtsBtn(){
+  var b = $("ttsBtn");
+  b.textContent = ttsOn ? "🗣 読上ON" : "🗣 読上OFF";
+  b.classList.toggle("on", ttsOn);
 }
-function updateTtsBtn(){
-var b = $("ttsBtn");
-var has = ("speechSynthesis" in window) && jpVoice;
-b.textContent = ttsOn? "🗣 読上ON": (has || ("speechSynthesis" in window)? "🗣 読上OFF": "🗣 読上（音声なし）");
-b.classList.toggle("on", ttsOn);
+function pickVoice(){
+  if(!("speechSynthesis" in window)) return null;
+  var vs = speechSynthesis.getVoices();
+  for(var i = 0; i < vs.length; i++){ if(vs[i].lang && vs[i].lang.toLowerCase().indexOf("ja") === 0) return vs[i]; }
+  return vs[0] || null;
+}
+function plainOf(html){
+  return String(html).replace(/<pre>([\s\S]*?)<\/pre>/g, "$1").replace(/<[^>]+>/g, "");
 }
 function speak(text){
-if(!ttsOn ||!("speechSynthesis" in window)) return;
-var plain = text.replace(/<[^>]+>/g, "");
-if(!plain.trim()) return;
-speechSynthesis.cancel();
-var u = new SpeechSynthesisUtterance(plain);
-u.lang = "ja-JP"; u.rate = 1.0;
-if(jpVoice) u.voice = jpVoice;
-speechSynthesis.speak(u);
+  if(!ttsOn || !("speechSynthesis" in window)) return;
+  var plain = plainOf(text).replace(/\n+/g, " ").trim();
+  if(!plain) return;
+  try{
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(plain);
+    u.lang = "ja-JP"; u.rate = 1.0;
+    var v = pickVoice(); if(v) u.voice = v;
+    speechSynthesis.resume();
+    speechSynthesis.speak(u);
+  }catch(e){}
 }
-if("speechSynthesis" in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice;}
+function checkVoices(){
+  if(!ttsOn || !("speechSynthesis" in window)) return;
+  if(speechSynthesis.getVoices().length === 0) $("ttsBtn").textContent = "🗣 音声なし";
+  else updTtsBtn();
+}
+if("speechSynthesis" in window) speechSynthesis.onvoiceschanged = checkVoices;
 $("ttsBtn").addEventListener("click", function(){
-ttsOn =!ttsOn;
-try{ localStorage.setItem(TTS_KEY, ttsOn? "1": "0");}catch(e){}
-if(!ttsOn && "speechSynthesis" in window) speechSynthesis.cancel();
-updateTtsBtn();
+  ttsOn = !ttsOn;
+  try{ localStorage.setItem(TTS_KEY, ttsOn ? "1" : "0"); }catch(e){}
+  updTtsBtn();
+  if(ttsOn){ speak(msgBox.textContent); setTimeout(checkVoices, 800); }
+  else if("speechSynthesis" in window){ try{ speechSynthesis.cancel(); }catch(e){} }
 });
-updateTtsBtn();
+updTtsBtn();
+setTimeout(checkVoices, 800);
 
 /* ---- 効果音 ---- */
 var actx = null;
 function beep(freq, dur, type, vol){
-if(save.sound === false) return;
-try{
-if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
-if(actx.state === "suspended") actx.resume();
-var o = actx.createOscillator(), g = actx.createGain();
-o.type = type || "square"; o.frequency.value = freq;
-g.gain.value = vol || 0.03;
-o.connect(g); g.connect(actx.destination);
-var t = actx.currentTime;
-o.start(t); g.gain.exponentialRampToValueAtTime(0.0001, t + (dur || 0.06));
-o.stop(t + (dur || 0.06));
-}catch(e){}
+  if(save.sound === false) return;
+  try{
+    if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    if(actx.state === "suspended") actx.resume();
+    var o = actx.createOscillator(), g = actx.createGain();
+    o.type = type || "square"; o.frequency.value = freq;
+    g.gain.value = vol || 0.03;
+    o.connect(g); g.connect(actx.destination);
+    var t = actx.currentTime;
+    o.start(t); g.gain.exponentialRampToValueAtTime(0.0001, t + (dur || 0.06));
+    o.stop(t + (dur || 0.06));
+  }catch(e){}
 }
 function jingle(ok){
-if(ok){ beep(660,0.09); setTimeout(function(){ beep(880,0.12);}, 95);}
-else { beep(196,0.16,"sawtooth",0.035);}
+  if(ok){ beep(660, 0.09); setTimeout(function(){ beep(880, 0.12); }, 95); }
+  else { beep(196, 0.16, "sawtooth", 0.035); }
 }
-$("soundBtn").textContent = (save.sound === false)? "🔇 音OFF": "🔊 音ON";
-$("soundBtn").classList.toggle("on", save.sound!== false);
+$("soundBtn").textContent = (save.sound === false) ? "🔇 音OFF" : "🔊 音ON";
+$("soundBtn").classList.toggle("on", save.sound !== false);
 $("soundBtn").addEventListener("click", function(){
-save.sound = (save.sound === false)? true: false;
-persist();
-this.textContent = save.sound? "🔊 音ON": "🔇 音OFF";
-this.classList.toggle("on", save.sound);
-if(save.sound) beep(880, 0.08);
+  save.sound = (save.sound === false) ? true : false;
+  persist();
+  this.textContent = save.sound ? "🔊 音ON" : "🔇 音OFF";
+  this.classList.toggle("on", save.sound);
+  if(save.sound) beep(880, 0.08);
 });
 
 /* ---- 表示 ---- */
 var typing = null;
 function setCharaDim(who){
-$("charaL").classList.toggle("dim", who === "あおい");
-$("charaR").classList.toggle("dim", who === "仙人");
+  $("charaL").classList.toggle("dim", who === "あおい");
+  $("charaR").classList.toggle("dim", who === "仙人");
+  namebox.textContent = (who === "仙人") ? "ウェイランド仙人" : who;
+  namebox.style.display = "block";
 }
 function showDiagram(lesson){
-if(lesson && lesson.diagram){
-diagTitle.textContent = "第" + lesson.no + "課 " + lesson.title;
-diagBody.innerHTML = lesson.diagram;
-diagPanel.classList.add("show");
-} else {
-diagPanel.classList.remove("show");
-document.body.classList.remove("diagmenu");
-}
+  if(lesson && lesson.diagram){
+    diagTitle.textContent = "第" + lesson.no + "課 " + lesson.title;
+    diagBody.innerHTML = lesson.diagram;
+    diagPanel.classList.add("show");
+  } else {
+    diagPanel.classList.remove("show");
+    screenEl.classList.remove("diagmenu");
+  }
 }
 function nearBottom(){
-return (msgBox.scrollHeight - msgBox.scrollTop - msgBox.clientHeight) < 90;
+  return (msgBox.scrollHeight - msgBox.scrollTop - msgBox.clientHeight) < 90;
 }
 function renderLines(lines, done){
-clearInterval(typing);
-msgBox.innerHTML = "";
-nextMark.textContent = "";
-var li = 0;
-function nextLine(){
-if(li >= lines.length){ typing = null; nextMark.textContent = ""; if(done) done(); return;}
-var who = lines[li][0], html = lines[li][1];
-setCharaDim(who);
-var p = document.createElement("p");
-var nameSpan = document.createElement("span");
-nameSpan.className = "who" + (who === "あおい"? " me": "");
-nameSpan.textContent = who + "：";
-p.appendChild(nameSpan);
-var body = document.createElement("span");
-p.appendChild(body);
-msgBox.appendChild(p);
-speak(who + "。" + html);
-var plain = html.replace(/<pre>[\s\S]*?<\/pre>/g, function(m){ return m;});
-var tokens = html.split(/(<[^>]+>)/g);
-var ti = 0, ci = 0, cur = "";
-var stick = true;
-typing = setInterval(function(){
-if(ti >= tokens.length){
-clearInterval(typing); typing = null;
-li++; setTimeout(nextLine, 260); return;
-}
-var tok = tokens[ti];
-if(tok.charAt(0) === "<"){ cur += tok; ti++; body.innerHTML = cur; return;}
-if(ci < tok.length){
-cur += tok.charAt(ci); ci++;
-body.innerHTML = cur;
-if(ci % 3 === 0) beep(1200, 0.015, "square", 0.006);
-if(stick && nearBottom()) msgBox.scrollTop = msgBox.scrollHeight;
-} else { ti++; ci = 0;}
-}, 14);
-msgBox.scrollTop = msgBox.scrollHeight;
-}
-nextLine();
+  clearInterval(typing);
+  msgBox.innerHTML = "";
+  nextMark.style.display = "none";
+  var li = 0;
+  function nextLine(){
+    if(li >= lines.length){ typing = null; nextMark.style.display = "block"; if(done) done(); return; }
+    var who = lines[li][0], html = lines[li][1];
+    setCharaDim(who);
+    var p = document.createElement("p");
+    var nameSpan = document.createElement("span");
+    nameSpan.className = "who" + (who === "あおい" ? " me" : "");
+    nameSpan.textContent = who + "：";
+    p.appendChild(nameSpan);
+    var body = document.createElement("span");
+    p.appendChild(body);
+    msgBox.appendChild(p);
+    speak(who + "。" + html);
+    var tokens = html.split(/(<[^>]+>)/g);
+    var ti = 0, ci = 0, cur = "";
+    var stick = true;
+    typing = setInterval(function(){
+      if(ti >= tokens.length){
+        clearInterval(typing); typing = null;
+        li++; setTimeout(nextLine, 260); return;
+      }
+      var tok = tokens[ti];
+      if(tok.charAt(0) === "<"){ cur += tok; ti++; body.innerHTML = cur; return; }
+      if(ci < tok.length){
+        cur += tok.charAt(ci); ci++;
+        body.innerHTML = cur;
+        if(ci % 3 === 0) beep(1200, 0.015, "square", 0.006);
+        if(stick && nearBottom()) msgBox.scrollTop = msgBox.scrollHeight;
+      } else { ti++; ci = 0; }
+    }, 14);
+    msgBox.scrollTop = msgBox.scrollHeight;
+  }
+  nextLine();
 }
 function setChoices(items){
-choicesBox.innerHTML = "";
-document.body.classList.toggle("diagmenu", diagPanel.classList.contains("show") && items.length > 0);
-items.forEach(function(it){
-var b = document.createElement("button");
-b.type = "button"; b.textContent = it.label;
-b.addEventListener("click", function(){ beep(740, 0.05); it.onPick(b);});
-choicesBox.appendChild(b);
-});
+  choicesBox.innerHTML = "";
+  choicesBox.classList.toggle("show", items.length > 0);
+  screenEl.classList.toggle("diagmenu", diagPanel.classList.contains("show") && items.length > 0);
+  items.forEach(function(it){
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "choice"; b.textContent = it.label;
+    b.addEventListener("click", function(){ beep(740, 0.05); it.onPick(b); });
+    choicesBox.appendChild(b);
+  });
 }
+function setNow(t){ $("pNow").textContent = t; }
 function updateProgress(){
-var n = ALL_LESSONS.filter(function(l){ return save.done[l.id];}).length;
-$("progressLine").textContent = "進捗：" + n + " / " + ALL_LESSONS.length + " 課 習得" + (n === ALL_LESSONS.length? " ― 全課修了！🎉": "");
+  var n = ALL_LESSONS.filter(function(l){ return save.done[l.id]; }).length;
+  $("pDone").textContent = n;
+  $("pTotal").textContent = ALL_LESSONS.length;
+  $("bDone").style.width = Math.round(n / ALL_LESSONS.length * 100) + "%";
 }
 
 /* ---- 課の進行 ---- */
 var current = null;
 function startLesson(idx){
-current = ALL_LESSONS[idx];
-$("menu").classList.remove("show");
-showDiagram(current);
-renderLines(current.lines, function(){ askUnderstood(idx, false);});
-setChoices([]);
+  current = ALL_LESSONS[idx];
+  $("menu").classList.remove("show");
+  setNow("第" + current.no + "課 " + current.title);
+  showDiagram(current);
+  renderLines(current.lines, function(){ askUnderstood(idx, false); });
+  setChoices([]);
 }
 function askUnderstood(idx, again){
-var L = ALL_LESSONS[idx];
-setChoices([
-{ label:"✅ わかった（確認問題へ）", onPick:function(){ askCheck(idx);}},
-{ label:"❓ わからない（補足を聞く）", onPick:function(){
-showDiagram(L);
-renderLines(L.extra, function(){ askUnderstood(idx, true);});
-setChoices([]);
-}}
-]);
+  var L = ALL_LESSONS[idx];
+  setChoices([
+    { label:"✅ わかった（確認問題へ）", onPick:function(){ askCheck(idx); } },
+    { label:"❓ わからない（補足を聞く）", onPick:function(){
+      showDiagram(L);
+      renderLines(L.extra, function(){ askUnderstood(idx, true); });
+      setChoices([]);
+    } }
+  ]);
 }
 function askCheck(idx){
-var L = ALL_LESSONS[idx], c = L.check;
-showDiagram(L);
-renderLines([["仙人", "確認じゃ。" + c.q]], function(){
-var items = c.choices.map(function(text, ci){
-return { label: (ci+1) + ". " + text, onPick: function(btn){
-if(ci === c.answer){
-btn.classList.add("good"); jingle(true);
-save.done[L.id] = true; persist(); updateProgress();
-renderLines([["仙人", c.why], ["仙人", "第" + L.no + "課、習得じゃ！"]], function(){
-var items2 = [];
-if(idx + 1 < ALL_LESSONS.length){
-items2.push({ label:"▶ 次の課へ（第" + (idx+2) + "課）", onPick:function(){ startLesson(idx+1);}});
-} else {
-items2.push({ label:"🏆 修了の言葉を聞く", onPick:function(){ ending();}});
-}
-items2.push({ label:"📜 課一覧に戻る", onPick:function(){ showMenu();}});
-setChoices(items2);
-});
-setChoices([]);
-} else {
-btn.classList.add("wrong"); jingle(false);
-renderLines([["仙人", "惜しい。解説するぞ。"], ["仙人", c.why]], function(){ askCheck(idx);});
-setChoices([]);
-}
-}};
-});
-setChoices(items);
-});
-setChoices([]);
+  var L = ALL_LESSONS[idx], c = L.check;
+  showDiagram(L);
+  renderLines([["仙人", "確認じゃ。" + c.q]], function(){
+    var items = c.choices.map(function(text, ci){
+      return { label: (ci + 1) + ". " + text, onPick: function(btn){
+        if(ci === c.answer){
+          btn.classList.add("good"); jingle(true);
+          save.done[L.id] = true; persist(); updateProgress();
+          renderLines([["仙人", c.why], ["仙人", "第" + L.no + "課、習得じゃ！"]], function(){
+            var items2 = [];
+            if(idx + 1 < ALL_LESSONS.length){
+              items2.push({ label:"▶ 次の課へ（第" + (idx + 2) + "課）", onPick:function(){ startLesson(idx + 1); } });
+            } else {
+              items2.push({ label:"🏆 修了の言葉を聞く", onPick:function(){ ending(); } });
+            }
+            items2.push({ label:"📜 課一覧に戻る", onPick:function(){ showMenu(); } });
+            setChoices(items2);
+          });
+          setChoices([]);
+        } else {
+          btn.classList.add("wrong"); jingle(false);
+          renderLines([["仙人", "惜しい。解説するぞ。"], ["仙人", c.why]], function(){ askCheck(idx); });
+          setChoices([]);
+        }
+      } };
+    });
+    setChoices(items);
+  });
+  setChoices([]);
 }
 function ending(){
-showDiagram(null);
-renderLines([
-["仙人","全16課、修了じゃ。お主の当初の悩み――「LXQt＋i3 では xinput で手軽にできたのに、Wayland ではできない」――その正体は『命令の宛先が Xサーバーからコンポジタへ移った』ことじゃった。"],
-["仙人","タッチパッド攻略の全図をもう一度。<code>hyprctl devices</code> で名前を知る → device ブロックで <code>enabled = false</code> → トグルは <code>hyprctl keyword</code> とスクリプト → 保険に i3 セッションを残す。"],
-["あおい","『できない』じゃなくて『宛先が変わった』。この見方があれば、他の「できない」も自分で攻略できます。"],
-["仙人","うむ。それが Wayland 移行の一番の収穫じゃ。実機で手を動かし、詰まったら第16課の切り分けに戻るがよい。道場はいつでも開いておるぞ。"]
-], function(){
-setChoices([{ label:"📜 課一覧に戻る", onPick:function(){ showMenu();}}]);
-});
-setChoices([]);
+  showDiagram(null);
+  setNow("修了");
+  renderLines([
+    ["仙人","全16課、修了じゃ。お主の当初の悩み――「LXQt＋i3 では xinput で手軽にできたのに、Wayland ではできない」――その正体は『命令の宛先が Xサーバーからコンポジタへ移った』ことじゃった。"],
+    ["仙人","タッチパッド攻略の全図をもう一度。<code>hyprctl devices</code> で名前を知る → device ブロックで <code>enabled = false</code> → トグルは <code>hyprctl keyword</code> とスクリプト → 保険に i3 セッションを残す。"],
+    ["あおい","『できない』じゃなくて『宛先が変わった』。この見方があれば、他の「できない」も自分で攻略できます。"],
+    ["仙人","うむ。それが Wayland 移行の一番の収穫じゃ。実機で手を動かし、詰まったら第16課の切り分けに戻るがよい。道場はいつでも開いておるぞ。"]
+  ], function(){
+    setChoices([{ label:"📜 課一覧に戻る", onPick:function(){ showMenu(); } }]);
+  });
+  setChoices([]);
 }
 function showMenu(){
-clearInterval(typing); typing = null;
-showDiagram(null);
-setChoices([]);
-var menu = $("menu");
-menu.innerHTML = "";
-CHAPTERS.forEach(function(ch){
-var h = document.createElement("h2"); h.textContent = ch.title; menu.appendChild(h);
-ch.lessons.forEach(function(L){
-var idx = ALL_LESSONS.indexOf(L);
-var b = document.createElement("button");
-b.type = "button"; b.className = "lessonBtn";
-b.innerHTML = '<span class="no">第' + L.no + '課</span><span>' + L.title + '</span>' + (save.done[L.id]? '<span class="done">✔ 習得</span>': '');
-b.addEventListener("click", function(){ startLesson(idx);});
-menu.appendChild(b);
-});
-});
-menu.classList.add("show");
-msgBox.innerHTML = "<p><span class='who'>仙人：</span>課を選ぶのじゃ。✔ は習得済み。どこから始めてもよいが、初めてなら第1課から順にどうぞ。</p>";
-speak("課を選ぶのじゃ。");
-updateProgress();
+  clearInterval(typing); typing = null;
+  showDiagram(null);
+  setChoices([]);
+  setNow("課一覧");
+  var menu = $("menu");
+  menu.innerHTML = "";
+  CHAPTERS.forEach(function(ch){
+    var h = document.createElement("h2"); h.textContent = ch.title; menu.appendChild(h);
+    ch.lessons.forEach(function(L){
+      var idx = ALL_LESSONS.indexOf(L);
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "lessonBtn";
+      b.innerHTML = '<span class="no">第' + L.no + '課</span><span>' + L.title + '</span>' + (save.done[L.id] ? '<span class="done">✔ 習得</span>' : '');
+      b.addEventListener("click", function(){ startLesson(idx); });
+      menu.appendChild(b);
+    });
+  });
+  menu.classList.add("show");
+  setCharaDim("仙人");
+  nextMark.style.display = "none";
+  msgBox.innerHTML = "<p><span class='who'>仙人：</span>課を選ぶのじゃ。✔ は習得済み。どこから始めてもよいが、初めてなら第1課から順にどうぞ。</p>";
+  speak("課を選ぶのじゃ。");
+  updateProgress();
 }
 $("menuBtn").addEventListener("click", showMenu);
 
 /* ---- 起動 ---- */
 updateProgress();
 renderLines([
-["仙人","ようこそ Wayland移行道場へ。お主の悩みは聞いておる。LXQt＋i3 では <code>xinput disable</code> で ThinkPad のタッチパッドを手軽にON/OFFできたのに、NixOS＋Hyprland の Wayland ではそれができない、とな。"],
-["あおい","はい。コマンドが効かなくて、移行そのものが止まりそうでした。"],
-["仙人","安心せい。その「できない」には理由があり、攻略法がある。全16課、4章立てで、理由から実践（device ブロック、hyprctl、NixOS での構築、i3 設定の翻訳）まで一気に参る。"],
-["仙人","進め方は各課共通じゃ。説明 →「わかった／わからない」→ 確認問題が1問。正解で次の課へ進める。分からなければ補足を聞いてから同じ問題に戻るだけ、ペナルティはない。"]
+  ["仙人","ようこそ Wayland移行道場へ。お主の悩みは聞いておる。LXQt＋i3 では <code>xinput disable</code> で ThinkPad のタッチパッドを手軽にON/OFFできたのに、NixOS＋Hyprland の Wayland ではそれができない、とな。"],
+  ["あおい","はい。コマンドが効かなくて、移行そのものが止まりそうでした。"],
+  ["仙人","安心せい。その「できない」には理由があり、攻略法がある。全16課、4章立てで、理由から実践（device ブロック、hyprctl、NixOS での構築、i3 設定の翻訳）まで一気に参る。"],
+  ["仙人","進め方は各課共通じゃ。説明 →「わかった／わからない」→ 確認問題が1問。正解で次の課へ進める。分からなければ補足を聞いてから同じ問題に戻るだけ、ペナルティはない。"]
 ], function(){
-setChoices([
-{ label:"▶ 第1課から始める", onPick:function(){ startLesson(0);}},
-{ label:"📜 課一覧から選ぶ", onPick:function(){ showMenu();}}
-]);
+  setChoices([
+    { label:"▶ 第1課から始める", onPick:function(){ startLesson(0); } },
+    { label:"📜 課一覧から選ぶ", onPick:function(){ showMenu(); } }
+  ]);
 });
 </script>
 
+
 <script>
 "use strict";
-/* ================= 聞くモード ================= */
+/* ================= リスニング（聞くモード） ================= */
 (function(){
-  var btn = document.getElementById("listenBtn");
+  var btnMain = document.getElementById("listenBtn");
   var panel = document.getElementById("listenPanel");
-  var body = document.getElementById("listenBody");
-  var playBtn = document.getElementById("listenPlay");
-  var stopBtn = document.getElementById("listenStop");
-  var bar = document.getElementById("listenBar");
-  var status = document.getElementById("listenStatus");
-  var built = false, items = [], idx = 0, playing = false, paused = false, uid = 0, tickTimer = null;
+  var lt = document.getElementById("listenBody");
+  var btn = document.getElementById("listenPlay");
+  var btnStop = document.getElementById("listenStop");
+  var fill = document.getElementById("listenBar");
+  var st = document.getElementById("listenStatus");
+  var built = false, items = [], idx = 0, playing = false, paused = false;
+  var started = false, attempts = 0, curId = 0, watchdog = null, tickTimer = null, itemStart = 0;
 
-  function collect(){
-    items = [];
-    if(typeof CHAPTERS === "undefined") return;
+  function plainOf(html){
+    return String(html).replace(/<pre>([\s\S]*?)<\/pre>/g, "$1").replace(/<[^>]+>/g, "").replace(/\n+/g, " ");
+  }
+  function buildText(){
+    lt.innerHTML = "";
     CHAPTERS.forEach(function(ch){
-      items.push({ head: ch.title });
+      var h = document.createElement("h3");
+      h.textContent = ch.title;
+      lt.appendChild(h);
       ch.lessons.forEach(function(L){
-        L.lines.forEach(function(ln){ items.push({ who: ln[0], text: ln[1] }); });
-        L.extra.forEach(function(ln){ items.push({ who: ln[0], text: "（補足）" + ln[1] }); });
-        items.push({ who: "仙人", text: "確認問題。" + L.check.q + " 答えは「" + L.check.choices[L.check.answer] + "」。" + L.check.why });
+        var t = document.createElement("div");
+        t.className = "lt-lesson";
+        t.textContent = "第" + L.no + "課 " + L.title;
+        lt.appendChild(t);
+        L.lines.forEach(function(ln){ addLine(ln[0], ln[1]); });
+        L.extra.forEach(function(ln){ addLine(ln[0], "（補足）" + ln[1]); });
+        addLine("仙人", "確認問題。" + L.check.q + " 答えは「" + L.check.choices[L.check.answer] + "」。" + L.check.why);
       });
     });
+    function addLine(who, html){
+      var p = document.createElement("p");
+      var w = document.createElement("span");
+      w.className = "who"; w.textContent = who + "：";
+      p.appendChild(w);
+      p.appendChild(document.createTextNode(plainOf(html)));
+      lt.appendChild(p);
+    }
   }
-  function build(){
-    if(built) return; built = true;
-    collect();
-    var html = "";
-    items.forEach(function(it){
-      if(it.head){ html += "<h3>" + it.head + "</h3>"; }
-      else {
-        var plain = it.text.replace(/<pre>([\s\S]*?)<\/pre>/g, "$1").replace(/<[^>]+>/g, "");
-        html += "<p><span class='who'>" + it.who + "：</span>" + plain.replace(/\n/g, "<br>") + "</p>";
-      }
+  function buildItems(){
+    var arr = [];
+    CHAPTERS.forEach(function(ch){
+      ch.lessons.forEach(function(L){
+        L.lines.forEach(function(ln){ arr.push(ln[0] + "。" + plainOf(ln[1])); });
+        L.extra.forEach(function(ln){ arr.push(ln[0] + "。補足。" + plainOf(ln[1])); });
+        arr.push("仙人。確認問題。" + L.check.q + " 答えは「" + L.check.choices[L.check.answer] + "」。" + L.check.why);
+      });
     });
-    body.innerHTML = html;
+    return arr;
   }
-  function stopTimers(){ if(tickTimer){ clearInterval(tickTimer); tickTimer = null; } }
-  function reset(){
-    uid++; playing = false; paused = false; idx = 0;
-    if("speechSynthesis" in window) speechSynthesis.cancel();
-    stopTimers();
-    bar.style.width = "0%"; status.textContent = "未再生";
-    playBtn.textContent = "▶ ブラウザ音声で再生";
+  function pickVoice(){
+    var vs = speechSynthesis.getVoices();
+    for(var i = 0; i < vs.length; i++){ if(vs[i].lang && vs[i].lang.toLowerCase().indexOf("ja") === 0) return vs[i]; }
+    return vs[0] || null;
   }
-  function speakNext(){
-    if(!playing) return;
-    var speechItems = items.filter(function(it){ return !it.head; });
-    if(idx >= speechItems.length){ reset(); status.textContent = "再生終了"; return; }
-    var it = speechItems[idx];
-    var plain = it.text.replace(/<pre>([\s\S]*?)<\/pre>/g, "$1").replace(/<[^>]+>/g, "");
-    var myUid = ++uid;
-    var u = new SpeechSynthesisUtterance(it.who + "。" + plain);
+  function fmt(sec){ var m = Math.floor(sec / 60), s = sec % 60; return m + ":" + (s < 10 ? "0" : "") + s; }
+  function setBar(){ if(fill && items.length) fill.style.width = Math.round(idx / items.length * 100) + "%"; }
+  function status(){
+    if(!st || !playing) return;
+    var el = Math.floor((Date.now() - itemStart) / 1000);
+    st.textContent = (started ? "再生中 " : "準備中… ") + (idx + 1) + "/" + items.length + "（" + fmt(el) + "）" + (items[idx] || "").slice(0, 18);
+  }
+  function clearTimers(){
+    if(watchdog){ clearTimeout(watchdog); watchdog = null; }
+    if(tickTimer){ clearInterval(tickTimer); tickTimer = null; }
+  }
+  function stop(msg){
+    playing = false; paused = false; curId++; clearTimers();
+    try{ speechSynthesis.cancel(); }catch(e){}
+    btn.textContent = "▶ ブラウザ音声で再生";
+    if(st) st.textContent = msg || "";
+    if(fill) fill.style.width = "0%";
+  }
+  function armWatchdog(text){
+    if(watchdog) clearTimeout(watchdog);
+    var est = Math.min(45000, Math.max(7000, text.length * 260 + 4000));
+    watchdog = setTimeout(function(){
+      if(!playing) return;
+      curId++;
+      try{ speechSynthesis.cancel(); }catch(e){}
+      idx++; next();
+    }, est);
+  }
+  function trySpeak(text, useVoice){
+    var my = ++curId;
+    started = false; itemStart = Date.now(); setBar(); status();
+    try{ speechSynthesis.resume(); }catch(e){}
+    var u = new SpeechSynthesisUtterance(String(text).replace(/\n+/g, " "));
     u.lang = "ja-JP"; u.rate = 1.0;
-    var vs = ("speechSynthesis" in window) ? speechSynthesis.getVoices() : [];
-    for(var i=0;i<vs.length;i++){ if(vs[i].lang && vs[i].lang.indexOf("ja") === 0){ u.voice = vs[i]; break; } }
-    u.onend = function(){ if(myUid === uid && playing && !paused){ idx++; speakNext(); } };
-    u.onerror = function(){ if(myUid === uid && playing && !paused){ idx++; speakNext(); } };
-    speechSynthesis.speak(u);
-    bar.style.width = Math.round((idx / speechItems.length) * 100) + "%";
-    status.textContent = "再生中 " + (idx+1) + " / " + speechItems.length;
-    stopTimers();
-    tickTimer = setInterval(function(){
-      if(myUid !== uid || !playing){ stopTimers(); return; }
-      if(!speechSynthesis.speaking && !speechSynthesis.pending && !paused){ idx++; speakNext(); }
-    }, 4000);
+    var v = useVoice ? pickVoice() : null;
+    if(v) u.voice = v;
+    u.onstart = function(){ if(my === curId){ started = true; status(); } };
+    u.onend = function(){ if(my === curId && playing){ idx++; next(); } };
+    u.onerror = function(){
+      if(my !== curId || !playing) return;
+      if(speechSynthesis.getVoices().length === 0){ stop("音声が見つかりません（この端末では読み上げできません）"); return; }
+      if(useVoice && attempts === 0){ attempts++; trySpeak(text, false); return; }
+      idx++; next();
+    };
+    armWatchdog(text);
+    try{ speechSynthesis.speak(u); }catch(e){ setTimeout(function(){ if(my === curId && playing){ idx++; next(); } }, 300); }
   }
-  playBtn.addEventListener("click", function(){
-    if(!("speechSynthesis" in window)){ status.textContent = "このブラウザでは音声合成が使えません"; return; }
-    if(playing && !paused){
-      paused = true; uid++; speechSynthesis.cancel(); stopTimers();
-      playBtn.textContent = "▶ 再開";
-      status.textContent = "一時停止中 " + (idx+1) + " 件目";
-      return;
-    }
-    if(paused){
-      paused = false; playing = true;
-      playBtn.textContent = "⏸ 一時停止";
-      speakNext();
-      return;
-    }
-    playing = true; paused = false; idx = 0;
-    playBtn.textContent = "⏸ 一時停止";
-    speakNext();
-  });
-  stopBtn.addEventListener("click", reset);
-  btn.addEventListener("click", function(){
+  function next(){
+    if(!playing || paused) return;
+    if(idx >= items.length){ stop("読み上げ終了（全" + items.length + "項目）"); if(fill) fill.style.width = "100%"; return; }
+    attempts = 0;
+    trySpeak(items[idx], true);
+  }
+  btnStop.addEventListener("click", function(){ if(playing) stop("停止しました"); });
+  btnMain.addEventListener("click", function(){
     var show = !panel.classList.contains("show");
     panel.classList.toggle("show", show);
-    if(show) build(); else reset();
+    btnMain.textContent = show ? "🎧 リスニングを閉じる" : "🎧 リスニング（全レッスン読み上げ）";
+    if(show){
+      if(typeof CHAPTERS === "undefined"){ if(st) st.textContent = "データ読み込みに失敗しました"; return; }
+      if(!built){ buildText(); built = true; }
+    } else if(playing){ stop("停止しました"); }
+  });
+  btn.addEventListener("click", function(){
+    if(!("speechSynthesis" in window)){ if(st) st.textContent = "このブラウザは読み上げに未対応です"; return; }
+    if(playing && !paused){
+      paused = true; curId++; clearTimers();
+      try{ speechSynthesis.cancel(); }catch(e){}
+      btn.textContent = "▶ 再開";
+      if(st) st.textContent = "一時停止中 " + (idx + 1) + "/" + items.length + "（再開はこの項目の頭から）";
+      return;
+    }
+    if(playing && paused){
+      paused = false;
+      btn.textContent = "⏸ 一時停止";
+      if(st) st.textContent = "再開します";
+      attempts = 0;
+      clearTimers();
+      tickTimer = setInterval(status, 500);
+      trySpeak(items[idx], true);
+      return;
+    }
+    if(typeof CHAPTERS === "undefined"){ if(st) st.textContent = "データ読み込みに失敗しました"; return; }
+    items = buildItems(); idx = 0; playing = true; itemStart = Date.now();
+    btn.textContent = "⏸ 一時停止";
+    if(st) st.textContent = "準備中…";
+    if(fill) fill.style.width = "0%";
+    try{ speechSynthesis.cancel(); }catch(e){}
+    clearTimers();
+    tickTimer = setInterval(status, 500);
+    setTimeout(next, 200);
   });
 })();
 
@@ -1077,6 +1104,7 @@ setChoices([
   btn.addEventListener("click", function(){
     var show = !panel.classList.contains("show");
     panel.classList.toggle("show", show);
+    btn.textContent = show ? "🖼 図解一覧を閉じる" : "🖼 図解一覧（復習用）を表示";
     if(show && !built){
       built = true;
       if(typeof ALL_LESSONS === "undefined"){ body.innerHTML = "<p>データがありません。</p>"; return; }
