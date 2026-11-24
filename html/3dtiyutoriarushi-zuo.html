@@ -119,10 +119,23 @@
     color:#e8edf1;padding:24px;font-size:14px;
   }
   .part-label{
-    position:absolute;left:12px;top:12px;z-index:5;
-    background:rgba(10,14,18,.78);color:#fff;border-radius:10px;padding:8px 12px;
-    font-size:13px;line-height:1.5;max-width:75%;backdrop-filter:blur(4px);
+    position:absolute;left:12px;top:12px;z-index:6;width:212px;pointer-events:none;
+    background:rgba(10,14,18,.82);color:#fff;border-radius:10px;padding:9px 12px;
+    font-size:13px;line-height:1.5;backdrop-filter:blur(4px);
+    box-shadow:0 6px 18px rgba(0,0,0,.35);
   }
+  @media (max-width:560px){ .part-label{width:168px;font-size:12px} }
+  #annoSvg{position:absolute;inset:0;width:100%;height:100%;z-index:5;pointer-events:none}
+  #annoLine{stroke:rgba(255,255,255,.85);stroke-width:1.5}
+  #annoDot{fill:var(--accent);stroke:#fff;stroke-width:1.5}
+  .done-badge{
+    position:absolute;left:50%;top:14px;z-index:7;transform:translate(-50%,-10px);
+    background:var(--teal);color:#fff;font-weight:700;font-size:13.5px;
+    border-radius:999px;padding:7px 16px;opacity:0;pointer-events:none;
+    transition:opacity .35s ease, transform .35s ease;white-space:nowrap;
+    box-shadow:0 6px 18px rgba(0,0,0,.3);
+  }
+  .done-badge.is-show{opacity:1;transform:translate(-50%,0)}
   .part-label b{display:block;font-size:15px}
   .part-label span{opacity:.85;font-size:12px}
   .hint{
@@ -256,7 +269,7 @@
     <h1>卓上扇風機の組み立てチュートリアル
       <span class="thin">Verge3D の e-learning デモと同じ操作感を、無料の Three.js でどこまで再現できるかの試作</span>
     </h1>
-    <p class="lead">モデルは Blender ではなく <strong>Three.js の図形（プリミティブ）の組み合わせ</strong>で作っています。本番ではここを <strong>Blender から書き出した glTF（.glb）</strong>に差し替えるだけで、ステップ解説・ハイライト・読み上げ・タイムラインはそのまま使えます。</p>
+    <p class="lead">モデルは Blender ではなく <strong>Three.js の図形（プリミティブ）の組み合わせ</strong>で作っていますが、ガードのワイヤーや羽根の形状、モーターの放熱スリットまで実物に寄せて作り直しました。見せ方もデモに近づけ、<strong>ステップごとにカメラが部品へ寄り、注釈コールアウトが部品を指します</strong>。本番ではここを <strong>Blender から書き出した glTF（.glb）</strong>に差し替えるだけで、ステップ解説・ハイライト・読み上げ・タイムラインはそのまま使えます。</p>
   </header>
 
   <div class="stage">
@@ -267,11 +280,14 @@
         <div class="vh-tools">
           <button class="tool-btn" id="btnSpin" aria-pressed="false" type="button">羽根を回す</button>
           <button class="tool-btn" id="btnAuto" aria-pressed="true" type="button">自動回転</button>
+          <button class="tool-btn" id="btnAnno" aria-pressed="true" type="button">注釈</button>
           <button class="tool-btn" id="btnReset" type="button">視点を戻す</button>
         </div>
       </div>
       <div id="viewport">
+        <svg id="annoSvg" aria-hidden="true"><line id="annoLine" x1="0" y1="0" x2="0" y2="0"/><circle id="annoDot" r="4" cx="0" cy="0"/></svg>
         <div class="part-label" id="partLabel"><b>読み込み中…</b><span>Three.js を準備しています</span></div>
+        <div class="done-badge" id="doneBadge">組み立て完了 — 「羽根を回す」で試運転できます</div>
         <div class="hint">部品や番号マーカーをクリックすると、そのステップへ移動します</div>
         <div id="fallback"><p>3Dの読み込みに失敗しました。<br>ネットワーク接続を確認して、ページを再読み込みしてください。<br>（Three.js 本体は CDN から読み込んでいます）</p></div>
         <!-- markers are injected here by JS -->
@@ -329,6 +345,8 @@
         <tr><th>Blender 連携</th><td>Blender 標準の glTF 書き出し → <code>GLTFLoader</code> で読込</td></tr>
         <tr><th>部品クリック＆ハイライト</th><td>Raycaster で部品を拾い、発光（emissive）を脈打たせる</td></tr>
         <tr><th>番号マーカー</th><td>3D座標を画面座標へ投影して HTML ボタンを重ねる</td></tr>
+        <tr><th>注釈（アノテーション）</th><td>部品に追随するコールアウト＋リーダーラインで、今見ている部品を指し示す</td></tr>
+        <tr><th>ステップごとのカメラワーク</th><td>ステップ移動に合わせてカメラが対象部品へ自動で寄る（イージング付き補間）</td></tr>
         <tr><th>組み立てアニメーション</th><td>部品ごとの「分解位置→組立位置」を補間。Blender で焼いた動きは <code>AnimationMixer</code></td></tr>
         <tr><th>タイムライン</th><td>スライダーの値で全工程の進み具合を直接スクラブ</td></tr>
         <tr><th>ステップ解説＋ボイスオーバー</th><td>HTML パネル ＋ speechSynthesis（道場シリーズと同じ仕組み）</td></tr>
@@ -346,7 +364,7 @@
         <li><b>フォルダごと GitHub Pages へ</b> — <code>index.html</code> と <code>model.glb</code> を同じフォルダに置いて push するだけ。Three.js 本体は CDN 参照のままでよい。</li>
         <li><b>題材を差し替える</b> — 扇風機でなくても、PC自作・自転車の輪行・家具の組み立てなど、「部品＋手順」があるものなら同じ型で作れる。</li>
       </ol>
-      <p class="note">試作の割り切り：質感（PBRマテリアル）や影の細かさは Verge3D のデモより簡素です。ただし教材としての骨格——手順・ハイライト・読み上げ・タイムライン——は全部そろっています。</p>
+      <p class="note">試作の割り切り：モデルはまだプリミティブの組み合わせで、実物の曲面の滑らかさには届きません。ただし質感は ACES トーンマッピングと金属／樹脂マテリアルで実物寄りに寄せ、教材としての骨格——手順・注釈・カメラワーク・ハイライト・読み上げ・タイムライン——はデモと揃えてあります。</p>
     </section>
   </div>
 
@@ -417,6 +435,11 @@
   var ttsState = document.getElementById("ttsState");
   var progressBar = document.getElementById("progressBar");
   var chipsWrap = document.getElementById("chips");
+  var btnAnno = document.getElementById("btnAnno");
+  var doneBadge = document.getElementById("doneBadge");
+  var annoSvg = document.getElementById("annoSvg");
+  var annoLine = document.getElementById("annoLine");
+  var annoDot = document.getElementById("annoDot");
 
   if (typeof THREE === "undefined") {
     /* CDNに届かない環境でも、解説パネルとステップ移動だけは使えるようにする */
@@ -483,6 +506,7 @@
   var spinning = false;
   var autoRotate = true;
   var ttsOn = false;
+  var annoVisible = true;
 
   /* ============ シーン ============ */
   var scene = new THREE.Scene();
@@ -494,7 +518,18 @@
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  /* 実物寄りの質感：sRGB出力＋ACESトーンマッピング */
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
   viewport.insertBefore(renderer.domElement, viewport.firstChild);
+
+  /* 色を sRGB として解釈させるマテリアル生成ヘルパー */
+  function std(params){
+    var m = new THREE.MeshStandardMaterial(params);
+    if (m.color && m.color.convertSRGBToLinear) m.color.convertSRGBToLinear();
+    return m;
+  }
 
   var controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
@@ -506,11 +541,32 @@
   controls.autoRotate = true;
   controls.autoRotateSpeed = 0.9;
 
+  /* ステップごとのカメラフォーカス（Verge3Dデモのカメラワーク再現） */
+  var FOCUS = {
+    base:  { pos:new THREE.Vector3(3.2, 1.9, 4.8), tgt:new THREE.Vector3(0, 0.45, 0) },
+    motor: { pos:new THREE.Vector3(3.4, 2.7, 3.6), tgt:new THREE.Vector3(0, 1.5, -0.2) },
+    rear:  { pos:new THREE.Vector3(2.4, 2.5, 5.4), tgt:new THREE.Vector3(0, 1.62, 0.3) },
+    blade: { pos:new THREE.Vector3(2.0, 2.1, 5.2), tgt:new THREE.Vector3(0, 1.62, 0.5) },
+    cap:   { pos:new THREE.Vector3(1.7, 2.0, 4.8), tgt:new THREE.Vector3(0, 1.62, 0.62) },
+    front: { pos:new THREE.Vector3(4.0, 2.5, 5.8), tgt:new THREE.Vector3(0, 1.6, 0.55) }
+  };
+  var camAnim = null;
+  function focusCamera(partId){
+    var f = FOCUS[partId]; if (!f) return;
+    camAnim = { t:0, dur:1.0, fp:camera.position.clone(), tp:f.pos.clone(), ft:controls.target.clone(), tt:f.tgt.clone() };
+  }
+  function focusHome(){
+    camAnim = { t:0, dur:0.9, fp:camera.position.clone(), tp:CAM_HOME.clone(), ft:controls.target.clone(), tt:new THREE.Vector3(0, 1.55, 0) };
+  }
+
   scene.add(new THREE.HemisphereLight(0xdfeaf2, 0x2a2f26, 0.85));
-  var key = new THREE.DirectionalLight(0xffffff, 0.95);
+  var key = new THREE.DirectionalLight(0xffffff, 1.15);
   key.position.set(5, 8, 4);
   key.castShadow = true;
-  key.shadow.mapSize.set(1024, 1024);
+  key.shadow.mapSize.set(2048, 2048);
+  key.shadow.camera.left = -7; key.shadow.camera.right = 7;
+  key.shadow.camera.top = 7; key.shadow.camera.bottom = -7;
+  key.shadow.camera.near = 1; key.shadow.camera.far = 30;
   scene.add(key);
   var rim = new THREE.DirectionalLight(0x9fd8d6, 0.35);
   rim.position.set(-6, 3, -5);
@@ -519,7 +575,7 @@
   /* 床（作業台） */
   var floor = new THREE.Mesh(
     new THREE.CylinderGeometry(3.4, 3.55, 0.18, 56),
-    new THREE.MeshStandardMaterial({ color:0x39424e, roughness:0.9, metalness:0.05 })
+    std({ color:0x39424e, roughness:0.9, metalness:0.05 })
   );
   floor.position.y = -0.09;
   floor.receiveShadow = true;
@@ -532,13 +588,14 @@
 
   /* ============ マテリアル ============ */
   var M = {
-    body:  new THREE.MeshStandardMaterial({ color:0xe8e4dc, roughness:0.45, metalness:0.08 }),
-    body2: new THREE.MeshStandardMaterial({ color:0xcfd6da, roughness:0.5,  metalness:0.15 }),
-    dark:  new THREE.MeshStandardMaterial({ color:0x2c333b, roughness:0.6,  metalness:0.3 }),
-    metal: new THREE.MeshStandardMaterial({ color:0x9aa7b1, roughness:0.3,  metalness:0.85 }),
-    accent:new THREE.MeshStandardMaterial({ color:0xd94f26, roughness:0.4,  metalness:0.1 }),
-    blade: new THREE.MeshStandardMaterial({ color:0x7fb5c9, roughness:0.25, metalness:0.05, transparent:true, opacity:0.82, side:THREE.DoubleSide }),
-    guard: new THREE.MeshStandardMaterial({ color:0xb9c4cc, roughness:0.35, metalness:0.8 })
+    body:  std({ color:0xf0ece4, roughness:0.38, metalness:0.05 }),
+    body2: std({ color:0xd6dade, roughness:0.42, metalness:0.2 }),
+    dark:  std({ color:0x2f343a, roughness:0.55, metalness:0.35 }),
+    panel: std({ color:0x1f2329, roughness:0.35, metalness:0.2 }),
+    chrome:std({ color:0xd2d7dc, roughness:0.22, metalness:0.95 }),
+    metal: std({ color:0x9aa7b1, roughness:0.3,  metalness:0.85 }),
+    blade: std({ color:0xa8c3cf, roughness:0.18, metalness:0.05, transparent:true, opacity:0.78, side:THREE.DoubleSide }),
+    guard: std({ color:0xb4bcc3, roughness:0.32, metalness:0.85 })
   };
 
   function mesh(geo, mat, x, y, z){
@@ -560,76 +617,119 @@
     fan.add(group);
   }
 
-  /* ① ベース */
+  /* ① ベース（段差のある台座＋操作パネル＋クロームの化粧リング） */
   (function(){
     var g = new THREE.Group();
-    g.add(mesh(new THREE.CylinderGeometry(1.25, 1.38, 0.22, 40), M.body, 0, 0.11, 0));
-    g.add(mesh(new THREE.CylinderGeometry(0.95, 1.1, 0.1, 40), M.body2, 0, 0.26, 0));
-    var panel = mesh(new THREE.BoxGeometry(0.9, 0.07, 0.5), M.dark, 0, 0.3, 0.62);
-    panel.rotation.x = -0.18; g.add(panel);
-    g.add(mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.1, 24), M.accent, -0.22, 0.36, 0.62));
-    g.add(mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.08, 24), M.dark, 0.18, 0.35, 0.62));
-    g.add(mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.08, 24), M.dark, 0.42, 0.35, 0.6));
-    registerPart("base", g, new THREE.Vector3(0, -1.5, 0));
+    g.add(mesh(new THREE.CylinderGeometry(1.3, 1.42, 0.16, 48), M.body, 0, 0.08, 0));
+    var trim = mesh(new THREE.TorusGeometry(1.33, 0.016, 8, 64), M.chrome, 0, 0.16, 0);
+    trim.rotation.x = Math.PI / 2; g.add(trim);
+    g.add(mesh(new THREE.CylinderGeometry(1.06, 1.24, 0.16, 48), M.body, 0, 0.24, 0));
+    g.add(mesh(new THREE.CylinderGeometry(0.52, 1.0, 0.26, 48), M.body, 0, 0.44, 0));
+    g.add(mesh(new THREE.CylinderGeometry(0.26, 0.3, 0.1, 32), M.dark, 0, 0.6, -0.02));
+    /* 前面の傾斜に沿わせた操作パネル：風量ボタン×3＋タイマーノブ */
+    var panel = mesh(new THREE.BoxGeometry(1.04, 0.045, 0.46), M.panel, 0, 0.52, 0.5);
+    panel.rotation.x = 0.35; g.add(panel);
+    [-0.32, -0.11, 0.10].forEach(function(bx){
+      var b = mesh(new THREE.CylinderGeometry(0.068, 0.072, 0.05, 24), M.dark, bx, 0.565, 0.56);
+      b.rotation.x = 0.35; g.add(b);
+    });
+    var knob = mesh(new THREE.CylinderGeometry(0.095, 0.1, 0.06, 28), M.body2, 0.33, 0.57, 0.545);
+    knob.rotation.x = 0.35; g.add(knob);
+    /* 前面の銘板 */
+    var plate = mesh(new THREE.BoxGeometry(0.34, 0.1, 0.02), M.chrome, 0, 0.3, 1.13);
+    plate.rotation.x = -0.2; g.add(plate);
+    registerPart("base", g, new THREE.Vector3(0, -1.6, 0));
   })();
 
-  /* ② 支柱・モーター */
+  /* ② 支柱・モーター（放熱スリット、首振りノブ、持ち手つき） */
   (function(){
     var g = new THREE.Group();
-    g.add(mesh(new THREE.CylinderGeometry(0.16, 0.2, 1.15, 24), M.body2, 0, 0.85, 0));
-    var housing = mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.95, 28), M.body, 0, 1.62, -0.1);
+    g.add(mesh(new THREE.CylinderGeometry(0.15, 0.18, 0.85, 24), M.body2, 0, 0.82, -0.02));
+    g.add(mesh(new THREE.SphereGeometry(0.2, 24, 18), M.body2, 0, 1.3, -0.04));
+    var neck = mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.34, 20), M.body2, 0, 1.45, -0.14);
+    neck.rotation.x = 0.35; g.add(neck);
+    var housing = mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.82, 36), M.body, 0, 1.62, -0.26);
     housing.rotation.x = Math.PI / 2; g.add(housing);
-    var back = mesh(new THREE.SphereGeometry(0.42, 28, 18), M.body, 0, 1.62, -0.58);
-    back.scale.z = 0.75; g.add(back);
-    g.add(mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.55, 16), M.metal, 0, 1.62, 0.55));
-    var knob = mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.16, 20), M.dark, 0, 2.12, -0.15);
-    g.add(knob);
-    registerPart("motor", g, new THREE.Vector3(-2.4, 0.7, -0.6));
+    var rearCap = mesh(new THREE.SphereGeometry(0.34, 36, 24), M.body, 0, 1.62, -0.66);
+    rearCap.scale.z = 0.72; g.add(rearCap);
+    g.add(mesh(new THREE.TorusGeometry(0.335, 0.02, 10, 48), M.chrome, 0, 1.62, 0.15));
+    /* 放熱バンド＋スリット */
+    var band = mesh(new THREE.CylinderGeometry(0.348, 0.348, 0.17, 36), M.dark, 0, 1.62, -0.5);
+    band.rotation.x = Math.PI / 2; g.add(band);
+    var slotGeo = new THREE.BoxGeometry(0.055, 0.02, 0.13);
+    for (var i = 0; i < 16; i++){
+      var a = (i / 16) * Math.PI * 2;
+      var slot = new THREE.Mesh(slotGeo, M.panel);
+      slot.position.set(Math.cos(a) * 0.345, 1.62 + Math.sin(a) * 0.345, -0.5);
+      slot.rotation.z = a - Math.PI / 2;
+      g.add(slot);
+    }
+    /* 首振りノブ */
+    g.add(mesh(new THREE.CylinderGeometry(0.07, 0.075, 0.13, 20), M.dark, 0, 2.02, -0.3));
+    g.add(mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.03, 20), M.body2, 0, 2.1, -0.3));
+    /* 持ち手 */
+    var handle = mesh(new THREE.TorusGeometry(0.27, 0.032, 10, 28, Math.PI), M.body2, 0, 1.94, -0.48);
+    handle.rotation.y = Math.PI / 2; g.add(handle);
+    /* モーター軸 */
+    var shaft = mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.42, 16), M.metal, 0, 1.62, 0.32);
+    shaft.rotation.x = Math.PI / 2; g.add(shaft);
+    registerPart("motor", g, new THREE.Vector3(-2.6, 0.8, -0.8));
   })();
 
-  /* ガード共通（輪＋放射スポーク＋同心リング） */
-  function buildGuard(dome){
+  /* ガード共通（実物のワイヤーガード：放射ワイヤー56本＋同心リング7本＋ドーム） */
+  function buildGuard(sign, depth){
     var g = new THREE.Group();
     var R = 1.18;
-    g.add(mesh(new THREE.TorusGeometry(R, 0.045, 12, 56), M.guard, 0, 0, 0));
-    [0.85, 0.55, 0.28].forEach(function(r){
-      var ring = mesh(new THREE.TorusGeometry(r, 0.016, 8, 48), M.guard, 0, 0, dome * (1 - r / R) * 0.55);
-      g.add(ring);
+    g.add(mesh(new THREE.TorusGeometry(R, 0.028, 10, 64), M.chrome, 0, 0, 0));
+    [1.05, 0.92, 0.79, 0.66, 0.53, 0.40, 0.27].forEach(function(r){
+      var z = sign * (1 - r / R) * depth;
+      g.add(mesh(new THREE.TorusGeometry(r, 0.0075, 6, 56), M.guard, 0, 0, z));
     });
-    for (var i = 0; i < 12; i++){
-      var a = (i / 12) * Math.PI * 2;
-      var spoke = mesh(new THREE.CylinderGeometry(0.014, 0.014, R, 6), M.guard,
-        Math.cos(a) * R / 2, Math.sin(a) * R / 2, dome * 0.16);
+    var spokeGeo = new THREE.CylinderGeometry(0.0068, 0.0068, R, 5);
+    for (var i = 0; i < 56; i++){
+      var a = (i / 56) * Math.PI * 2;
+      var spoke = new THREE.Mesh(spokeGeo, M.guard);
+      spoke.position.set(Math.cos(a) * R / 2, Math.sin(a) * R / 2, sign * depth * 0.16);
       spoke.rotation.z = a + Math.PI / 2;
-      spoke.rotation.y = dome * 0.28;
       g.add(spoke);
     }
+    var hub = mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.05, 28), M.guard, 0, 0, sign * depth * 0.9);
+    hub.rotation.x = Math.PI / 2; g.add(hub);
+    g.traverse(function(o){ if (o.isMesh) o.castShadow = false; });
     return g;
   }
 
   /* ③ 後ろガード */
   (function(){
-    var g = buildGuard(-1);
-    g.position.set(0, 1.62, 0.28);
-    g.add(mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.14, 24), M.dark, 0, 0, -0.08));
+    var g = buildGuard(-1, 0.3);
+    g.position.set(0, 1.62, 0.30);
+    var nut = mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.07, 20), M.dark, 0, 0, -0.3);
+    nut.rotation.x = Math.PI / 2; g.add(nut);
     var wrap = new THREE.Group(); wrap.add(g);
-    registerPart("rear", wrap, new THREE.Vector3(0, 0.9, 2.3));
+    registerPart("rear", wrap, new THREE.Vector3(0, 1.0, 2.2));
     parts.rear.inner = g;
   })();
 
-  /* ④ 羽根 */
+  /* ④ 羽根（輪郭をベジェで描いた成形ブレード×3、ピッチ付き） */
   var bladeGroup;
   (function(){
     var g = new THREE.Group();
     g.position.set(0, 1.62, 0.52);
     var spin = new THREE.Group();
-    spin.add(mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.18, 24), M.body2, 0, 0, 0));
-    spin.children[0].rotation.x = Math.PI / 2;
+    var hub = mesh(new THREE.CylinderGeometry(0.16, 0.17, 0.16, 28), M.body2, 0, 0, 0);
+    hub.rotation.x = Math.PI / 2; spin.add(hub);
+    var shape = new THREE.Shape();
+    shape.moveTo(0.10, -0.20);
+    shape.bezierCurveTo(0.38, -0.36, 0.80, -0.20, 0.94, 0.10);
+    shape.bezierCurveTo(1.02, 0.32, 0.74, 0.54, 0.44, 0.48);
+    shape.bezierCurveTo(0.20, 0.43, 0.07, 0.08, 0.10, -0.20);
+    var bladeGeo = new THREE.ExtrudeGeometry(shape, { depth:0.024, bevelEnabled:true, bevelThickness:0.005, bevelSize:0.005, bevelSegments:1, curveSegments:24 });
     for (var i = 0; i < 3; i++){
       var holder = new THREE.Group();
-      var blade = mesh(new THREE.CircleGeometry(0.78, 26, 0.35, 1.9), M.blade, 0.62, 0.1, 0);
-      blade.scale.set(1, 0.82, 1);
-      blade.rotation.set(-0.5, 0.35, 0.2);
+      var blade = new THREE.Mesh(bladeGeo, M.blade);
+      blade.castShadow = true;
+      blade.position.set(0.08, 0, 0);
+      blade.rotation.x = -0.55;
       holder.add(blade);
       holder.rotation.z = (i / 3) * Math.PI * 2;
       spin.add(holder);
@@ -637,34 +737,48 @@
     g.add(spin);
     bladeGroup = spin;
     var wrap = new THREE.Group(); wrap.add(g);
-    registerPart("blade", wrap, new THREE.Vector3(1.7, 1.1, 3.1));
+    registerPart("blade", wrap, new THREE.Vector3(1.8, 1.2, 3.0));
     parts.blade.inner = g;
   })();
 
-  /* ⑤ キャップ */
+  /* ⑤ キャップ（クロームのドーム＋台座リング） */
   (function(){
     var g = new THREE.Group();
-    g.position.set(0, 1.62, 0.68);
-    var cap = mesh(new THREE.SphereGeometry(0.21, 26, 18), M.accent, 0, 0, 0);
-    cap.scale.z = 0.8; g.add(cap);
-    g.add(mesh(new THREE.CylinderGeometry(0.1, 0.13, 0.1, 20), M.dark, 0, 0, -0.08)).children;
-    g.children[g.children.length-1].rotation.x = Math.PI / 2;
+    g.position.set(0, 1.62, 0.66);
+    var base = mesh(new THREE.CylinderGeometry(0.125, 0.135, 0.09, 28), M.body2, 0, 0, 0);
+    base.rotation.x = Math.PI / 2; g.add(base);
+    var dome = mesh(new THREE.SphereGeometry(0.125, 28, 20), M.chrome, 0, 0, 0.045);
+    dome.scale.z = 0.75; g.add(dome);
+    g.add(mesh(new THREE.TorusGeometry(0.128, 0.014, 8, 32), M.dark, 0, 0, -0.03));
     var wrap = new THREE.Group(); wrap.add(g);
-    registerPart("cap", wrap, new THREE.Vector3(-1.6, 1.6, 3.6));
+    registerPart("cap", wrap, new THREE.Vector3(-1.7, 1.7, 3.4));
     parts.cap.inner = g;
   })();
 
-  /* ⑥ 前ガード */
+  /* ⑥ 前ガード（クロームの締め付けリング＋中央バッジ） */
   (function(){
-    var g = buildGuard(1);
-    g.position.set(0, 1.62, 0.78);
-    var badge = mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.05, 28), M.accent, 0, 0, 0.34);
+    var g = buildGuard(1, 0.35);
+    g.position.set(0, 1.62, 0.74);
+    g.add(mesh(new THREE.TorusGeometry(1.21, 0.035, 10, 64), M.chrome, 0, 0, 0.01));
+    var badge = mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.03, 32), M.panel, 0, 0, 0.36);
     badge.rotation.x = Math.PI / 2; g.add(badge);
-    var ring = mesh(new THREE.TorusGeometry(1.21, 0.05, 12, 56), M.accent, 0, 0, 0.02);
-    g.add(ring);
+    g.add(mesh(new THREE.TorusGeometry(0.17, 0.012, 8, 40), M.chrome, 0, 0, 0.375));
     var wrap = new THREE.Group(); wrap.add(g);
-    registerPart("front", wrap, new THREE.Vector3(0, 0.4, 4.6));
+    registerPart("front", wrap, new THREE.Vector3(0, 0.5, 4.4));
     parts.front.inner = g;
+  })();
+
+  /* 電源コード（台座の後ろから床へ垂らす） */
+  (function(){
+    var pts = [
+      new THREE.Vector3(0.25, 0.2, -1.2),
+      new THREE.Vector3(0.75, 0.05, -1.95),
+      new THREE.Vector3(1.55, 0.03, -2.25),
+      new THREE.Vector3(2.35, 0.03, -1.75)
+    ];
+    var cord = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, 0.028, 8), M.dark);
+    cord.castShadow = true;
+    scene.add(cord);
   })();
 
   /* 部品の基準位置を記録（組立位置 = 現在位置） */
@@ -688,12 +802,12 @@
     parts[id].markerEl = b;
   });
   var markerAnchor = {
-    base:  new THREE.Vector3(1.15, 0.35, 0.3),
-    motor: new THREE.Vector3(-0.55, 2.0, -0.2),
-    rear:  new THREE.Vector3(0, 2.85, 0.3),
-    blade: new THREE.Vector3(0.95, 2.3, 0.55),
-    cap:   new THREE.Vector3(0, 1.62, 0.75),
-    front: new THREE.Vector3(-1.05, 2.3, 0.85)
+    base:  new THREE.Vector3(1.3, 0.45, 0.35),
+    motor: new THREE.Vector3(-0.55, 2.1, -0.3),
+    rear:  new THREE.Vector3(0, 2.9, 0.3),
+    blade: new THREE.Vector3(1.05, 2.35, 0.55),
+    cap:   new THREE.Vector3(0.3, 1.9, 0.8),
+    front: new THREE.Vector3(-1.15, 2.35, 0.85)
   };
 
   /* ============ ハイライト ============ */
@@ -794,6 +908,7 @@
     playing = false;
     updatePlayIcon();
     renderStep();
+    if (animate) focusCamera(STEPS[current].part);
     if (ttsOn) speak();
   }
 
@@ -832,6 +947,7 @@
       p.group.scale.setScalar(s);
     });
     tlRange.value = String(Math.round(progress));
+    doneBadge.classList.toggle("is-show", progress >= 599);
     if (progress >= 600) tlState.textContent = "完成！";
     else if (progress <= 0) tlState.textContent = "分解状態";
     else tlState.textContent = "組み立て中 " + Math.round(progress / 6) + "%";
@@ -847,12 +963,14 @@
     controls.autoRotate = autoRotate;
     btnAuto.setAttribute("aria-pressed", String(autoRotate));
   });
-  btnReset.addEventListener("click", function(){
-    camera.position.copy(CAM_HOME);
-    controls.target.set(0, 1.55, 0);
+  btnReset.addEventListener("click", function(){ focusHome(); });
+  btnAnno.addEventListener("click", function(){
+    annoVisible = !annoVisible;
+    btnAnno.setAttribute("aria-pressed", String(annoVisible));
   });
   /* 操作を始めたら自動回転を止める（邪魔にならないように） */
   renderer.domElement.addEventListener("pointerdown", function(){
+    camAnim = null;
     if (autoRotate){ autoRotate = false; controls.autoRotate = false; btnAuto.setAttribute("aria-pressed", "false"); }
   });
 
@@ -891,10 +1009,39 @@
     var w = viewport.clientWidth, h = viewport.clientHeight;
     if (!w || !h) return;
     renderer.setSize(w, h);
+    annoSvg.setAttribute("viewBox", "0 0 " + w + " " + h);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
   }
   window.addEventListener("resize", resize);
+
+  /* ============ 注釈コールアウト（部品に追随） ============ */
+  var ANNO_OFF = {
+    base:  { x:100,  y:30 },
+    motor: { x:-240, y:-100 },
+    rear:  { x:90,   y:-120 },
+    blade: { x:90,   y:-30 },
+    cap:   { x:-240, y:40 },
+    front: { x:-240, y:-90 }
+  };
+  var annoPt = { x:0, y:0, vis:false };
+  function updateCallout(){
+    var show = annoVisible && annoPt.vis;
+    partLabel.style.display = show ? "block" : "none";
+    annoSvg.style.display = show ? "block" : "none";
+    if (!show) return;
+    var W = viewport.clientWidth, H = viewport.clientHeight;
+    var bw = partLabel.offsetWidth, bh = partLabel.offsetHeight;
+    var off = ANNO_OFF[STEPS[current].part] || { x:80, y:-80 };
+    var bx = Math.max(8, Math.min(W - bw - 8, annoPt.x + off.x));
+    var by = Math.max(8, Math.min(H - bh - 8, annoPt.y + off.y));
+    partLabel.style.left = bx + "px";
+    partLabel.style.top = by + "px";
+    var ex = off.x < 0 ? bx + bw : bx;
+    annoLine.setAttribute("x1", annoPt.x); annoLine.setAttribute("y1", annoPt.y);
+    annoLine.setAttribute("x2", ex);       annoLine.setAttribute("y2", by + bh / 2);
+    annoDot.setAttribute("cx", annoPt.x);  annoDot.setAttribute("cy", annoPt.y);
+  }
 
   /* ============ メインループ ============ */
   var clock = new THREE.Clock();
@@ -912,7 +1059,7 @@
       progress += step;
       if (playing && progress >= 600){ playing = false; updatePlayIcon(); }
       var idx = Math.min(STEPS.length - 1, Math.max(0, Math.floor(progress / 100 - 0.001)));
-      if (playing && idx !== current){ current = idx; renderStep(); }
+      if (playing && idx !== current){ current = idx; renderStep(); focusCamera(STEPS[current].part); }
     }
     applyProgress();
 
@@ -930,12 +1077,30 @@
       /* 部品の現在のオフセットを加える */
       v3.add(parts[id].group.position).sub(parts[id].assembled);
       v3.project(camera);
-      if (v3.z > 1 || v3.z < -1){ el.classList.add("is-hidden"); return; }
+      if (v3.z > 1 || v3.z < -1){
+        el.classList.add("is-hidden");
+        if (id === STEPS[current].part) annoPt.vis = false;
+        return;
+      }
       el.classList.remove("is-hidden");
-      el.style.left = ((v3.x * 0.5 + 0.5) * viewport.clientWidth) + "px";
-      el.style.top = ((-v3.y * 0.5 + 0.5) * viewport.clientHeight) + "px";
+      var px = (v3.x * 0.5 + 0.5) * viewport.clientWidth;
+      var py = (-v3.y * 0.5 + 0.5) * viewport.clientHeight;
+      el.style.left = px + "px";
+      el.style.top = py + "px";
+      if (id === STEPS[current].part){ annoPt.x = px; annoPt.y = py; annoPt.vis = true; }
     });
+    updateCallout();
 
+    /* カメラフォーカスの補間 */
+    if (camAnim){
+      camAnim.t += dt / camAnim.dur;
+      var ck = Math.min(1, camAnim.t);
+      var ce = ck < 0.5 ? 2 * ck * ck : 1 - Math.pow(-2 * ck + 2, 2) / 2;
+      camera.position.lerpVectors(camAnim.fp, camAnim.tp, ce);
+      controls.target.lerpVectors(camAnim.ft, camAnim.tt, ce);
+      if (ck >= 1) camAnim = null;
+    }
+    controls.autoRotate = autoRotate && !camAnim;
     controls.update();
     renderer.render(scene, camera);
   }
