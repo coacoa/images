@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<!-- build: 2026-11-24 20:11:17 JST -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="data:," />
+<title>ことばのうつりかわり道場</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#f3ecd9; --bg2:#e9dfc4; --panel:#fffaf0; --panel2:#f7efdb;
+    --ink:#2b2418; --ink-soft:#5c5138; --line:#2b2418;
+    --accent:#b3392e; --accent2:#1f6f5c; --gold:#c9920e;
+    --btn:#fffaf0; --btn-ink:#2b2418; --good:#1f6f5c; --warn:#b3392e;
+    --shadow:#2b2418;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#14161f; --bg2:#0d0f16; --panel:#1e2230; --panel2:#262b3d;
+      --ink:#ece5cf; --ink-soft:#b9b096; --line:#ece5cf;
+      --accent:#e0685c; --accent2:#4fc2a5; --gold:#e5b83e;
+      --btn:#262b3d; --btn-ink:#ece5cf; --good:#4fc2a5; --warn:#e0685c;
+      --shadow:#000;
+    }
+  }
+  *{ box-sizing:border-box; }
+  html{ -webkit-text-size-adjust:100%; }
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"DotGothic16", "Hiragino Kaku Gothic ProN", sans-serif;
+    line-height:1.75; letter-spacing:.02em;
+  }
+  button{ font-family:inherit; }
+  .wrap{ max-width:860px; margin:0 auto; padding:14px 14px 48px; }
+
+  /* ===== top controls ===== */
+  .topbar{ display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; margin-bottom:10px; }
+  .ctl{
+    min-height:44px; padding:8px 14px; cursor:pointer;
+    background:var(--btn); color:var(--btn-ink);
+    border:3px solid var(--line); box-shadow:3px 3px 0 var(--shadow);
+    font-size:15px;
+  }
+  .ctl:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--shadow); }
+  .ctl[aria-pressed="true"]{ background:var(--gold); color:#2b2418; }
+
+  /* ===== title block ===== */
+  .titlebox{
+    border:4px solid var(--line); background:var(--panel);
+    box-shadow:6px 6px 0 var(--shadow); padding:18px 18px 14px; margin-bottom:14px;
+  }
+  .series{ font-size:13px; color:var(--accent); margin:0 0 4px; }
+  h1{ font-size:clamp(24px, 6vw, 38px); line-height:1.35; margin:0 0 6px; font-weight:400; }
+  .subtitle{ font-size:clamp(14px,3.6vw,18px); color:var(--ink-soft); margin:0 0 10px; }
+  .stance{
+    border:3px solid var(--accent2); background:var(--panel2);
+    padding:10px 12px; font-size:14.5px; margin:0;
+  }
+  .stance b{ color:var(--accent2); }
+
+  /* ===== progress ===== */
+  .progress-row{ display:flex; align-items:center; gap:10px; margin:14px 2px 8px; font-size:14px; }
+  .pbar{ flex:1; height:18px; border:3px solid var(--line); background:var(--panel); position:relative; }
+  .pfill{ position:absolute; inset:0; width:0%; background:repeating-linear-gradient(90deg, var(--accent2) 0 10px, var(--gold) 10px 20px); transition:width .4s; }
+
+  /* ===== lesson map ===== */
+  .map{ border:3px solid var(--line); background:var(--panel); box-shadow:4px 4px 0 var(--shadow); padding:12px; margin-bottom:14px; }
+  .map h2{ font-size:16px; margin:2px 0 8px; font-weight:400; }
+  .ch{ margin-bottom:10px; }
+  .ch-name{ font-size:14px; color:var(--accent); margin:0 0 6px; }
+  .lessons{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px; }
+  .lbtn{
+    min-height:48px; text-align:left; cursor:pointer; padding:8px 10px;
+    background:var(--btn); color:var(--btn-ink); border:3px solid var(--line);
+    font-size:13.5px; line-height:1.45;
+  }
+  .lbtn .no{ color:var(--accent2); }
+  .lbtn.done{ background:var(--panel2); }
+  .lbtn.done .no::after{ content:" ★"; color:var(--gold); }
+  .lbtn.now{ outline:3px solid var(--gold); outline-offset:1px; }
+
+  /* ===== main frame ===== */
+  .frame{
+    border:4px solid var(--line); background:var(--panel);
+    box-shadow:6px 6px 0 var(--shadow); padding:0; overflow:hidden;
+  }
+  .scene-head{
+    background:var(--panel2); border-bottom:3px solid var(--line);
+    padding:10px 14px; display:flex; flex-wrap:wrap; gap:6px 12px; align-items:baseline;
+  }
+  .scene-head .chlabel{ color:var(--accent); font-size:13px; }
+  .scene-head .ltitle{ font-size:19px; }
+  .stage{ padding:16px 16px 8px; min-height:300px; }
+  .who{ display:flex; gap:12px; align-items:flex-start; margin-bottom:12px; }
+  .face{
+    flex:0 0 auto; width:64px; height:64px; border:3px solid var(--line);
+    background:var(--bg2); display:grid; place-items:center; font-size:34px;
+  }
+  .sensei-name{ font-size:13px; color:var(--accent2); margin:0 0 2px; }
+  .stage p{ font-size:16.5px; margin:0 0 12px; }
+  .stage p.small{ font-size:14px; color:var(--ink-soft); }
+  .diagram{ margin:14px 0; border:3px solid var(--line); background:var(--bg); padding:10px; }
+  .diagram svg{ display:block; width:100%; height:auto; }
+  .diagram figcaption{ font-size:13px; color:var(--ink-soft); margin-top:6px; }
+  .quiz-q{ font-size:17px; border-left:6px solid var(--gold); padding-left:10px; }
+  .result{ border:3px solid var(--good); background:var(--panel2); padding:10px 12px; margin-bottom:12px; }
+  .result.bad{ border-color:var(--warn); }
+  .result b.good{ color:var(--good); } .result b.bad{ color:var(--warn); }
+
+  .actions{ display:flex; flex-wrap:wrap; gap:10px; padding:6px 16px 18px; }
+  .abtn{
+    min-height:48px; padding:10px 18px; cursor:pointer; font-size:16px;
+    background:var(--btn); color:var(--btn-ink); border:3px solid var(--line);
+    box-shadow:3px 3px 0 var(--shadow);
+  }
+  .abtn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--shadow); }
+  .abtn.primary{ background:var(--accent); color:#fff8ea; }
+  .abtn.sub{ font-size:14px; min-height:44px; }
+  .choices{ display:grid; gap:10px; padding:0 16px 18px; }
+  .cbtn{
+    min-height:52px; text-align:left; cursor:pointer; padding:10px 14px; font-size:15.5px;
+    background:var(--btn); color:var(--btn-ink); border:3px solid var(--line);
+    box-shadow:3px 3px 0 var(--shadow); line-height:1.55;
+  }
+  .cbtn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--shadow); }
+
+  /* ===== gallery / listen ===== */
+  .below{ margin-top:16px; display:flex; flex-wrap:wrap; gap:10px; }
+  .panel{
+    margin-top:12px; border:3px solid var(--line); background:var(--panel);
+    box-shadow:4px 4px 0 var(--shadow); padding:14px;
+  }
+  .panel h2{ font-size:17px; margin:0 0 10px; font-weight:400; }
+  .gal-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; }
+  .gal-item{ border:3px solid var(--line); background:var(--bg); padding:8px; }
+  .gal-item svg{ display:block; width:100%; height:auto; }
+  .gal-item .cap{ font-size:13px; margin-top:6px; }
+  .gal-item .cap b{ color:var(--accent2); font-weight:400; }
+  .listen-item{ border-bottom:2px dashed var(--ink-soft); padding:10px 0; }
+  .listen-item:last-child{ border-bottom:none; }
+  .listen-item h3{ font-size:15px; margin:0 0 4px; font-weight:400; color:var(--accent2); }
+  .listen-item p{ font-size:14.5px; margin:0 0 6px; }
+  [hidden]{ display:none !important; }
+  footer{ margin-top:22px; font-size:12.5px; color:var(--ink-soft); text-align:center; }
+  @media (prefers-reduced-motion: reduce){ .pfill{ transition:none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <button class="ctl" id="ttsBtn" aria-pressed="false">🗣 読上OFF</button>
+    <button class="ctl" id="listenBtn" aria-pressed="false">🎧 聞くモード</button>
+  </div>
+
+  <div class="titlebox">
+    <p class="series">◆ 新シリーズ 第1作 ◆</p>
+    <h1>ことばのうつりかわり道場</h1>
+    <p class="subtitle">― 世代・自称・顔出しを客観的に見る ―</p>
+    <p class="stance"><b>この道場の立場：</b>これは特定の世代を良い・悪いと断じる教材ではありません。言葉と文化の変化を、言語学と文化史の事実から客観的に観察するシリーズです。「今はこれが普通」と言われても戸惑うのは自然なこと。その戸惑いの正体を、観察でほどいていきます。</p>
+  </div>
+
+  <div class="progress-row">
+    <span id="progText">進捗 0 / 16</span>
+    <div class="pbar"><div class="pfill" id="pfill"></div></div>
+  </div>
+
+  <nav class="map" aria-label="レッスン一覧">
+    <h2>■ もくじ（好きな課から開けます）</h2>
+    <div id="mapBody"></div>
+  </nav>
+
+  <main class="frame" id="frame">
+    <div class="scene-head">
+      <span class="chlabel" id="chLabel"></span>
+      <span class="ltitle" id="lTitle"></span>
+    </div>
+    <div class="stage" id="stage"></div>
+    <div class="choices" id="choices" hidden></div>
+    <div class="actions" id="actions"></div>
+  </main>
+
+  <div class="below">
+    <button class="ctl" id="galBtn" aria-pressed="false">🖼 図解ギャラリー</button>
+  </div>
+
+  <section class="panel" id="galPanel" hidden>
+    <h2>🖼 図解ギャラリー（全16点）</h2>
+    <div class="gal-grid" id="galGrid"></div>
+  </section>
+
+  <section class="panel" id="listenPanel" hidden>
+    <h2>🎧 聞くモード ― 全レッスン本文</h2>
+    <div class="actions" style="padding:0 0 10px;">
+      <button class="abtn primary" id="playAllBtn">▶ ブラウザ音声で再生</button>
+      <button class="abtn sub" id="stopSpeakBtn">⏹ 停止</button>
+    </div>
+    <div id="listenBody"></div>
+  </section>
+
+  <footer>先生：コトバ仙人 ／ 非公式の学習用ADVチュートリアルです。進捗はこの端末のブラウザに保存されます。</footer>
+</div>
+
+<script>
+"use strict";
+/* ================= データ ================= */
+var CHAPTERS = [
+  "第1章 「今の若者は」はいつの時代もあった",
+  "第2章 自称の文化史 ― なぜ「○○先生」「○○くん」と名乗るのか",
+  "第3章 世代ラベルを疑う",
+  "第4章 現代をどう解釈するか"
+];
+
+/* diagram: boxes = 流れ図の箱（上から下／左から右）, note = 図の説明 */
+var LESSONS = [
+/* ---------- 第1章 ---------- */
+{ ch:0, title:"嘆きは古代からある",
+  teach:[
+   "やあ、よく来たね。わしはコトバ仙人。この道場では「今の若者の言葉はなっとらん」という嘆きを、まず歴史の物差しで測ってみる。",
+   "この嘆き、実はとても古い。鎌倉時代の末、『徒然草』を書いた兼好法師も、世の中や人のありようの変化をあれこれ嘆いておる。江戸時代の随筆にも「近頃の若い者は言葉が乱れて」という類の文句は繰り返し出てくる。",
+   "つまり「年長者が若者の言葉を嘆く」こと自体は、少なくとも数百年、記録に残る範囲ではずっと続いてきた営みなのじゃ。現代の戸惑いは、異常事態というより、この長い伝統の最新回と見るのが正確じゃろう。"
+  ],
+  more:"補足じゃ。有名な「今の若者は礼儀を知らない」という古代ギリシャ・ソクラテスの言葉とされる文句があるが、あれはソクラテスの著作に出典がなく、後世の創作とみる説が有力じゃ。嘆きがあまりに定型なので、偉人の名前を借りてまで語り継がれた、ということじゃな。",
+  quiz:{ q:"「年長者が若者の言葉を嘆く」という営みについて、史実に合うのはどれ？",
+    choices:["インターネット時代に初めて現れた現象である","鎌倉・江戸など古い時代の文献にも繰り返し見られる","昔の人は若者の言葉を一度も批判しなかった"],
+    ans:1, why:"正解は2。嘆き自体が数百年続く定型の営み。だから現代の嘆きも「言葉の崩壊の証拠」と即断はできないのじゃ。" },
+  diagram:{ boxes:["鎌倉『徒然草』の嘆き","江戸の随筆の嘆き","明治・戦後の嘆き","現代の嘆き"], note:"嘆きのバトンは時代を超えて渡されてきた" } },
+
+{ ch:0, title:"江戸・明治の若者言葉",
+  teach:[
+   "江戸時代にも「若者言葉」はあった。町人の若い衆の間で流行る言い回しは、その都度、年長者の眉をひそめさせた。",
+   "明治になると学生言葉が槍玉にあがる。女学生の「てよ・だわ」言葉は、当時の新聞や識者から「言葉の乱れ」とさんざん批判された。",
+   "ところがどうじゃ。その「だわ」は今や古風な女性語として辞書に載り、批判した側の言葉遣いの方が時代とともに消えていったものも多い。批判された言葉の全部ではなく、一部だけが残って次の時代の「普通」になる。これが変化の実像じゃ。"
+  ],
+  more:"ポイントは「全部は残らない」ことじゃ。流行語の大部分は数年で消える。だから新しい言葉を見ても、全部に適応する必要はない。残るのはごく一部だけ、と分かると少し気が楽になるじゃろう。",
+  quiz:{ q:"明治に批判された女学生の「てよ・だわ」言葉の、その後は？",
+    choices:["日本語を崩壊させ、誰も使えなくなった","一部は定着し、やがて「古風な言葉」として辞書に載る側になった","批判した識者の言葉遣いだけが今も完全に残った"],
+    ans:1, why:"正解は2。批判された形が定着し、時が経つと今度は「古い言葉」扱いになる。変化は一方向の劣化ではないのじゃ。" },
+  diagram:{ boxes:["若者言葉の流行","年長者の批判","大半は消える","一部が定着→次の「普通」"], note:"流行→批判→選別→定着、の繰り返し" } },
+
+{ ch:0, title:"戦後の新語ブームと嘆きの定型文",
+  teach:[
+   "戦後も同じ光景が繰り返された。アプレゲール、太陽族、みゆき族、新人類、バブル世代……時代ごとに若者へ新しい呼び名が貼られ、そのたびに「今の若者は」と嘆かれた。",
+   "面白いのは、嘆きの文句そのものがほぼ定型だということじゃ。「言葉が乱れている」「礼儀を知らない」「根性がない」「自分勝手だ」――対象の世代が入れ替わっても、文句の中身は驚くほど変わらない。",
+   "文句が定型だということは、それが特定の世代の実測データというより、「年長者が若者を見るときの定位置」から出てくる言葉だという可能性を示しておる。"
+  ],
+  more:"もうひとつ。嘆かれた側の若者は、やがて年長者になり、次の若者を嘆く側に回る。この「嘆きの入れ子構造」は次の課でじっくり見る。今の上の世代も、かつては嘆かれる側だったのじゃ。",
+  quiz:{ q:"各時代の「今の若者は」という嘆きに共通する特徴は？",
+    choices:["文句の中身が時代ごとに全く違い、比較できない","対象の世代が替わっても文句の中身はほぼ定型である","嘆きは必ずデータに基づいた実測報告である"],
+    ans:1, why:"正解は2。文句が定型である以上、それは世代の実態というより「嘆く側の定位置」を映している面が大きい。" },
+  diagram:{ boxes:["太陽族を嘆く","新人類を嘆く","ゆとりを嘆く","Z世代を嘆く"], note:"対象は替わるが、文句はほぼ同じ定型文" } },
+
+{ ch:0, title:"嘆きの入れ子構造 ― 上の世代も嘆かれていた",
+  teach:[
+   "ここがこの章の核心じゃ。今、若い世代に戸惑っている人の上の世代――たとえば団塊の世代――も、若い頃はその上の世代から嘆かれる側だった。学生運動の時代には「今の若者は過激で無軌道」と言われ、新人類と呼ばれた世代も同様じゃ。",
+   "そして、その上の世代を嘆いた人たち自身も、若い頃はさらに上の世代に嘆かれていた。嘆きは世代の階段を一段ずつ下りながら、同じ形で繰り返される入れ子構造をしておる。",
+   "大事なのはここからじゃ。嘆く側だった上の世代は、その戸惑いをどう乗り越えていったのか。観察すると典型的な道筋が見える。第一に、実生活で下の世代と接点を持つと、メディア経由の「若者像」と実物の差に気づき、印象が柔らぐことが多い。第二に、時間の解決――新しい言葉や作法の多くは結局消え、一部だけが残るので、全部に適応しなくても生活は回った。そして第三に、「全部は分からなくてよい」と線を引けた人ほど、戸惑いを引きずらなかった。",
+   "つまり乗り越え方は「若者を理解し尽くす」ことではなかったのじゃ。「分からない部分は分からないまま置く」――この距離の取り方が、時代を超えた共通の知恵と見える。"
+  ],
+  more:"裏を返すと、戸惑いの正体は言葉そのものより「自分の作法が通用しない場面が増えた」という体験であることが多い。作法が通じないのは不快じゃ。だがそれは相手の欠陥の証明ではなく、場のルールが世代ごとに少しずつ違うという、ただの事実なのじゃ。",
+  quiz:{ q:"上の世代が下の世代への戸惑いを乗り越えた典型的な道筋として、本文に合うのは？",
+    choices:["若者の言葉を完全にマスターして適応し尽くした","実物と接して印象が変わる／多くは消えるので全部に適応不要／「全部は分からなくてよい」と線を引けた","若者を一切見ないようにして解決した"],
+    ans:1, why:"正解は2。乗り越えの鍵は完全な理解ではなく、実物との接点・時間の選別・線引きという距離の取り方じゃ。" },
+  diagram:{ boxes:["嘆かれる（若者）","年を取り嘆く側へ","実物と接し印象が変化","「全部は分からなくてよい」と線引き"], note:"嘆きの入れ子と、乗り越えの道筋" } },
+
+/* ---------- 第2章 ---------- */
+{ ch:1, title:"「先生」の語源 ― 先に生まれた者",
+  teach:[
+   "第2章は自称の文化史じゃ。まず「先生」という語からいこう。これは中国語に由来する言葉で、文字通り「先に生まれた者」の意味だった。",
+   "日本では学問や芸事に先達である人への呼び名として定着し、やがて教師を指す語になった。明治以降、学校制度が整うと「先生＝教師」の結びつきが強くなる。",
+   "語源を知ると面白いのは、「先生」が本来は身分ではなく「先んじた者」への相対的な敬称だった点じゃ。誰でも何かの分野では先に生まれ、先に学んだ者になりうる。"
+  ],
+  more:"中国では古く、年長者や学識ある者への敬称として広く使われた。「先に生まれた」という原義は、日本語の「先輩」に近い感覚じゃな。肩書きというより関係を表す言葉だったのじゃ。",
+  quiz:{ q:"「先生」の語源として正しいのは？",
+    choices:["「教える専門職」を意味する日本固有の造語","中国語由来で「先に生まれた者」の意味","明治政府が作った教師専用の官名"],
+    ans:1, why:"正解は2。原義は「先に生まれた者」。先達への敬称が、のちに教師の代名詞へ狭まっていったのじゃ。" },
+  diagram:{ boxes:["中国語「先に生まれた者」","先達・学者への敬称","教師の代名詞へ"], note:"関係を表す語から、職業の代名詞へ" } },
+
+{ ch:1, title:"広がる「先生」 ― 医師・弁護士・議員・芸人",
+  teach:[
+   "「先生」の適用範囲は時代とともに広がってきた。医師、弁護士、政治家、作家、漫画家、落語家や芸人まで「先生」と呼ばれる。",
+   "これは日本語の敬称のクセを示しておる。「先生」は資格や職業そのものではなく、「その道の先達と目される人」へ付く。だから制度上の肩書きがない芸人にも付くし、逆に教師でも文脈で付かないことがある。",
+   "つまり「先生」は固定した身分称号というより、社会がその都度「先達」と認めた相手へ差し出す、流動的な敬称なのじゃ。この流動性が、後の章で見る動画文化の自称にもつながってくる。"
+  ],
+  more:"落語家が「師匠」と呼ばれ、漫才師が「先生」と呼ばれる場面を思い浮かべてみるとよい。敬称は制度ではなく、その場の人間関係と業界の慣習で決まる。言葉の作法は、思っているよりずっと「場」のものなのじゃ。",
+  quiz:{ q:"医師・弁護士・議員・芸人にまで「先生」が広がった理由として合うのは？",
+    choices:["法律で「先生」と呼ぶ職業が定められているから","「先生」が身分ではなく「その道の先達」への流動的な敬称だから","全員が学校の教師を兼業しているから"],
+    ans:1, why:"正解は2。「先生」は制度の称号ではなく、先達と認めた相手へ差し出す敬称。だから適用範囲が広がり続けたのじゃ。" },
+  diagram:{ boxes:["教師","医師・弁護士","議員・作家","芸人・漫画家"], note:"「先生」の適用範囲は広がり続けてきた" } },
+
+{ ch:1, title:"動画時代の「○○先生」は肩書きであり看板",
+  teach:[
+   "では現代の動画で、自分から「○○先生」と名乗る人はどう理解すればよいか。鍵は、メディアの形式じゃ。",
+   "動画のチャンネル名や名乗りは、テレビの番組名や店の看板と同じ「表示」の文化に属する。授業系・解説系の配信者が「○○先生」を名乗るのは、視聴者に「ここは教える場です」と役割を表示し、検索で見つけてもらうための肩書き＝ブランドとして機能しておる。",
+   "伝統的な作法では、敬称は他人が付けるもので自分で言うものではなかった。だが看板の文化では、店主が「○○堂」と自分で掲げるのと同じで、名乗りは敬称の自己使用というより「役割の表示」なのじゃ。非常識と切り捨てる前に、「これは会話の作法ではなく看板の作法だ」と見ると、現象の半分は説明がつく。"
+  ],
+  more:"もちろん、看板の作法が場違いな場面に持ち込まれれば違和感は生じる。問題は人ではなく「どの場の作法か」の取り違え、と捉える方が観察としては正確じゃ。作法は場ごとに違う――これも時代を超えた大原則じゃな。",
+  quiz:{ q:"動画で「○○先生」と自称する行為の解釈として、本文の立場は？",
+    choices:["敬称を自分に付ける明確な無礼であり、例外なく非常識","会話の作法ではなく、チャンネルの役割を表示する看板・ブランドとして機能している","法律上の資格を詐称している"],
+    ans:1, why:"正解は2。メディアの形式が変わると自称の作法も変わる。まず「看板の作法」として観察するのがこの道場の立場じゃ。" },
+  diagram:{ boxes:["会話の作法：敬称は他人が付ける","看板の作法：役割を自分で表示","動画の名乗りはこちら側"], note:"「○○先生」自称は看板の作法で読む" } },
+
+{ ch:1, title:"「○○くん」「○○ちゃん」という自称の流れ",
+  teach:[
+   "もうひとつ戸惑いの種、「○○くん」「○○ちゃん」と自分の名前に敬称を付けて名乗る自称じゃ。これにも流れがある。",
+   "出発点のひとつは幼児の一人称。子どもは周りの大人から「○○ちゃん、ごはんよ」と呼びかけられる形をそのまま覚え、自分の名前で自分を呼ぶ時期がある。日本語では珍しくない発達の姿じゃ。",
+   "この形は、アイドルやキャラクターの文化で「かわいい・親しみやすい persona の表示」として取り上げられ、配信文化では一人称そのものがブランディングの道具になった。配信者は「素の自分」ではなく「キャラとしての自分」を名乗る。だから名乗りは日常会話の自称というより、舞台上の役名に近い。",
+   "結論として、自称の作法はメディアの形式と一緒に変わる。対面の作法、放送の作法、配信の作法はそれぞれ別物で、今はその境界がスマホ一台で混ざり合っている。戸惑いの多くは、この「作法の混線」から生じておる。"
+  ],
+  more:"テレビ時代の芸能人も、役名や芸名という「キャラの名乗り」で活動していた。新しいのは、その作法がプロだけでなく一般の配信者にまで広がったことと、日常の画面の中に直接流れ込んでくることじゃ。",
+  quiz:{ q:"「○○くん／○○ちゃん」自称が広がった流れとして、本文に合うのは？",
+    choices:["幼児の一人称→アイドル・キャラ文化→配信者の一人称ブランディング","学校教育で正式に教えられたから","海外の敬称制度を輸入したから"],
+    ans:0, why:"正解は1。自分の名前で自分を呼ぶ幼児の一人称、キャラ文化、配信のブランディングがつながった流れじゃ。" },
+  diagram:{ boxes:["幼児の一人称（名前呼び）","アイドル・キャラ文化","配信者の一人称ブランド"], note:"自称の作法はメディアと一緒に変わる" } },
+
+/* ---------- 第3章 ---------- */
+{ ch:2, title:"世代ラベルは誰が作ったのか",
+  teach:[
+   "第3章では「氷河期世代」「ゆとり世代」「Z世代」といった括りそのものを点検する。まず出自じゃ。",
+   "これらの呼び名は、言語学や社会学が厳密な手続きで定義した分類ではない。「ゆとり」は教育制度への世間の呼び名から、「Z世代」はアメリカの世代マーケティングの用語（ジェネレーションZ）の輸入から広がった。主にマスコミ、マーケティング、就職産業が「語りやすく、売りやすい単位」として作り、広めた呼び名じゃ。",
+   "呼び名が広がると、あたかも実在の均質な集団があるかのように感じられる。だがそれは、地図の色分けが領土そのものではないのと同じで、便宜的な線引きにすぎない。"
+  ],
+  more:"「氷河期世代」も本来は、個人の性質ではなく「就職氷河期という環境に当たった」という状況の記述だった。ところがラベルは独り歩きし、いつしか個人の性格や能力を指す言葉にすり替わっていく。このすり替わりが危うさの本体じゃ。",
+  quiz:{ q:"「ゆとり世代」「Z世代」などの世代ラベルの出自として正しいのは？",
+    choices:["言語学・社会学が厳密に定義した学術分類","主にマスコミ・マーケティング・就職産業が作り広めた呼び名","国勢調査の公式区分"],
+    ans:1, why:"正解は2。ラベルは便宜的な線引きであり、均質な集団が実在する証拠ではないのじゃ。" },
+  diagram:{ boxes:["マスコミ・マーケティング","語りやすい呼び名を作る","広く流通","均質な集団のように見える"], note:"ラベルは「作られた単位」である" } },
+
+{ ch:2, title:"世代の中の差の方が大きい",
+  teach:[
+   "社会学や心理学のデータで繰り返し指摘されるのは、同じ世代の中のばらつき（地域、家庭環境、階層、個人差）の方が、世代と世代の平均の差より大きい場合が多い、ということじゃ。",
+   "たとえば「Z世代は○○だ」という言説の平均像に、目の前の若者が当てはまらないことは珍しくない。平均の差が小さく分布の重なりが大きいとき、ラベルで個人を予測する力はとても弱い。",
+   "言語でも同じじゃ。若者言葉を話すかどうかは、世代より「どのコミュニティに属しているか」で決まる部分が大きい。世代は粗い目安にはなっても、説明の主役にはなりにくいのじゃ。"
+  ],
+  more:"これは世代差がゼロという意味ではない。差はあるが小さいことが多く、ラベルの印象ほど大きくない、という話じゃ。「差がある」と「ラベルで個人が読める」は別の主張で、後者は成り立ちにくい。",
+  quiz:{ q:"世代間の差と世代内の差について、指摘されているのは？",
+    choices:["世代内のばらつきより世代間の差の方が常に圧倒的に大きい","世代内のばらつきの方が世代間の平均差より大きい場合が多い","世代内には個人差が存在しない"],
+    ans:1, why:"正解は2。だから世代ラベルで個人を予測する力は弱く、ラベル先行の判断は外れやすいのじゃ。" },
+  diagram:{ boxes:["世代Aの分布（幅が広い）","世代Bの分布（幅が広い）","平均の差は小さい","重なりが大きい"], note:"平均の差より、分布の重なりを見る" } },
+
+{ ch:2, title:"年齢効果と時代効果 ― 見かけ時間",
+  teach:[
+   "言語学には、世代の言葉を見分ける道具がある。「見かけ時間（apparent time）」という考え方じゃ。ある時点の各年齢層の言葉遣いを比べ、変化の方向を推定する方法じゃな。",
+   "ここで大事なのが二つの効果の区別じゃ。年齢効果――若い頃特有で、年を取るにつれて消えていく言葉遣い。たとえば若者言葉の多くは社会人になると自然に使わなくなる。もうひとつが時代効果――世代全体が持ち上がるように移っていく本当の言語変化で、これは年を取っても戻らない。",
+   "この区別をすると、「今の若者の言葉」への嘆きの多くは、実は年齢効果――つまりいつの時代の若者にもあった通過儀礼――を見ている可能性が高い、と冷静に切り分けられる。"
+  ],
+  more:"「ら抜き言葉」は時代効果の例とされることが多い。若い層だけでなく中年層でも使用が広がっており、世代ごとに入れ替わりながら全体が移っている。逆に流行語の大半は年齢効果で、持ち主と一緒に消えていく。",
+  quiz:{ q:"「年齢効果」の説明として正しいのは？",
+    choices:["年を取っても戻らない、時代全体の言語変化","若い頃特有で、年を取るにつれて消えていく言葉遣い","年齢を重ねるほど新しい言葉が増える現象"],
+    ans:1, why:"正解は2。年齢効果は通過儀礼的な言葉遣い。時代効果（全体の移行）と区別することが、言語学の見方じゃ。" },
+  diagram:{ boxes:["若者言葉を観察","年齢効果：年とともに消える","時代効果：全体が移っていく","混同しない"], note:"見かけ時間：2つの効果を切り分ける" } },
+
+{ ch:2, title:"ラベルが人を固定する危うさ",
+  teach:[
+   "ラベルのもうひとつの問題は、それが貼られた側の自己イメージを固定してしまうことじゃ。「どうせ氷河期だから」「ゆとりだから」と、本人が自分の可能性をラベルで説明し始めると、ラベルは予測ではなく拘束具になる。",
+   "逆に貼る側も、ラベルで「分かったつもり」になると、目の前の個人を見る手間を省いてしまう。どちらの側にとっても、ラベルは思考の近道であると同時に、思考の停止でもある。",
+   "だからこの道場の作法はこうじゃ。ラベルは「時代の環境を指す言葉」としては使ってよいが、「個人の性質を決める言葉」としては使わない。環境の記述と性格の決めつけを分けるだけで、世代談義の毒はだいぶ抜ける。"
+  ],
+  more:"もともと「就職氷河期」は環境の名前だった。それが世代の名前になり、やがて個人の形容詞になっていく。この三段のすり替わり（環境→世代→性格）に気づくことが、ラベルとの付き合い方じゃ。",
+  quiz:{ q:"世代ラベルの使い方として、この道場の作法に合うのは？",
+    choices:["個人の性格をラベルで決めてよい","ラベルは時代の環境を指す言葉として使い、個人の性質の決めつけには使わない","ラベルは一切口にしてはいけない"],
+    ans:1, why:"正解は2。環境の記述と性格の決めつけを分けること。それがラベルと付き合う実践的な作法じゃ。" },
+  diagram:{ boxes:["環境の名前（就職氷河期）","世代の名前にすり替わる","個人の性格の決めつけに","← ここで止める"], note:"すり替わりの三段目で止める" } },
+
+/* ---------- 第4章 ---------- */
+{ ch:3, title:"記述主義と規範主義",
+  teach:[
+   "最終章は、現代をどう解釈するか。言語学の基本姿勢を知っておくと楽になる。言語学は記述主義――言葉が実際にどう使われ、どう変わるかを記録し、仕組みを解く立場を本務とする。",
+   "対する規範主義は「正しい言葉遣い」を定め、守らせようとする立場じゃ。辞書や教育や公的な場面では規範も必要だが、規範主義の物差しだけで変化を見ると、変化はすべて「乱れ・劣化」に見えてしまう。",
+   "だが歴史が示すのは、変化＝劣化ではないということじゃ。「ら抜き」が広がっても日本語の文法が壊れたわけではなく、可能の形の体系が組み替わっている途上と記述できる。劣化と呼ぶか再編と呼ぶかは、物差しの選び方の問題なのじゃ。"
+  ],
+  more:"規範を持つこと自体は悪ではない。大事なのは、自分が今どちらの物差しで見ているかを自覚することじゃ。「これは乱れだ」と感じたとき、それは観測か、それとも規範の反応か――分けて考える癖が、戸惑いを観察に変える第一歩じゃ。",
+  quiz:{ q:"言語学の本務とされる立場は？",
+    choices:["正しい言葉遣いを定めて守らせる規範主義","実際の使われ方を記録し仕組みを解く記述主義","変化をすべて劣化と断定する立場"],
+    ans:1, why:"正解は2。記述主義の物差しでは、変化はまず「記録し、仕組みを解く」対象になるのじゃ。" },
+  diagram:{ boxes:["規範主義：正しさを守る","記述主義：変化を記録し解く","変化＝劣化とは限らない"], note:"どちらの物差しで見ているかを自覚する" } },
+
+{ ch:3, title:"匿名の時代から、顔出しの時代へ",
+  teach:[
+   "顔出し・実名・キャラで自分を売る文化は、どこから来たのか。流れをたどると、1990年代末から2000年代の匿名掲示板の時代がある。あの時代の作法は「名乗らない、顔を出さない」が基本だった。",
+   "その後、動画配信とSNSが主役になると、経済の仕組みが変わった。配信は「人」にファンが付き、広告や投げ銭が「人」に集まる構造――いわゆるアテンションエコノミーじゃ。この構造では、顔と名前とキャラは隠すものではなく、覚えてもらうための資産になる。",
+   "つまり顔出し文化は、若者の品位が下がった結果というより、メディアの経済構造が「匿名」から「個人の表示」へ移った帰結なのじゃ。作法は経済と技術の形に合わせて変わる。これはいつの時代も同じじゃ。"
+  ],
+  more:"匿名掲示板の作法も、当時の技術（回線、匿名の板文化）の中で合理的だった。作法に「絶対の品位」があるのではなく、環境に合った作法があるだけ、と見ると、現代の作法も相対化して見られるじゃろう。",
+  quiz:{ q:"顔出し・キャラで売る文化が広がった主な要因として、本文の説明は？",
+    choices:["若者の品位が急に下がったから","配信とアテンションエコノミーという経済構造が「個人の表示」を資産にしたから","法律で顔出しが義務化されたから"],
+    ans:1, why:"正解は2。作法は経済と技術の形に合わせて変わる。顔出しはその帰結として観察できるのじゃ。" },
+  diagram:{ boxes:["匿名掲示板の時代","動画配信・SNSの台頭","人にファンと収益が集まる構造","顔・名前・キャラが資産に"], note:"作法は経済構造の帰結として変わる" } },
+
+{ ch:3, title:"「非常識」という感覚を相対化する",
+  teach:[
+   "ここで一度、自分の側を観察してみよう。「非常識だ」と感じる感覚は、どこから来たのか。",
+   "その感覚は、自分が育った時代のメディア環境と作法の中で、長い時間をかけて形作られたものじゃ。対面と紙と放送の時代の作法が身についた人には、配信の作法は異物に見える。逆に配信の作法で育った人には、対面の作法の方が堅苦しく見えることもある。",
+   "これはどちらが正しいという話ではない。感覚自体が時代の産物だという相対化ができると、「相手が間違っている」という断定から、「作法の世代差がある」という観察へ、一歩引いて見られるようになる。第1章で見た上の世代の乗り越え方――実物と接する、時間に選別させる、線を引く――は、まさにこの一歩の引き方だったわけじゃ。"
+  ],
+  more:"相対化は「何でも許す」ことではない。自分の作法を守る場面は守ってよい。ただ、感覚の出所を知っていると、戸惑いが怒りに変わる前に「これは作法の差だな」と名前を付けられる。名前が付くと、感情はだいぶ扱いやすくなるのじゃ。",
+  quiz:{ q:"「非常識だ」という感覚について、本文の相対化の説明は？",
+    choices:["感覚は生まれつき不変のもので、時代に影響されない","感覚自体が、自分が育った時代のメディア環境と作法で形作られたものである","非常識と感じたら必ず相手が間違っている"],
+    ans:1, why:"正解は2。感覚も時代の産物。そう知ることで、断定ではなく観察として捉え直せるのじゃ。" },
+  diagram:{ boxes:["自分の作法が育った環境","相手の作法が育った環境","感覚の差＝作法の世代差","断定→観察へ"], note:"感覚の出所を知ると、名前が付けられる" } },
+
+{ ch:3, title:"締め ― 戸惑いが観察に変わるとき",
+  teach:[
+   "最後に、この道場の立場をまとめる。まず、見たくないものをフィルタで避けるのは個人の自由であり、正当なことじゃ。自分の画面と時間をどう使うかは自分の権利で、ここに遠慮はいらない。",
+   "その上で、「なぜ今そうなっているのか」を知っておくと、得が大きい。嘆きは古代から定型で繰り返されてきたこと。自称はメディアの形式と一緒に変わること。世代ラベルは作られた単位で、個人を決める力は弱いこと。そして上の世代も同じ戸惑いを抱え、実物との接点・時間の選別・「全部は分からなくてよい」という線引きで乗り越えてきたこと。",
+   "時代を超えた共通点を見つけ出すこと――それがこのシリーズの目的じゃ。共通点が見えると、今の戸惑いは「自分だけが取り残された異常な体験」ではなく、「いつの時代の誰もが通る、作法の世代差との出会い」だと分かる。戸惑いが観察に変わるとは、そういうことじゃ。",
+   "さあ、これで第1作は修了じゃ。分からないものは分からないまま置いてよい。その上で、見たいものを見て、自分の画面を自分の作法で整えていけばよい。それが、言葉のうつりかわりとの一番まっとうな付き合い方じゃと、わしは思うよ。"
+  ],
+  more:"補足として、今日の道具を3つだけ置いていく。(1)嘆きたくなったら「これは定型文か？」と問う。(2)自称に戸惑ったら「これは看板の作法か？」と問う。(3)ラベルを聞いたら「環境の話か、性格の決めつけか？」と問う。この3つの問いがあれば、次に戸惑う場面でも観察から入れるはずじゃ。",
+  quiz:{ q:"このシリーズの目的として、締めで述べられたのは？",
+    choices:["若者の言葉を完全にマスターさせること","時代を超えた共通点を見つけ出し、戸惑いを観察に変えること","世代ラベルで個人を正確に分類できるようにすること"],
+    ans:1, why:"正解は2。嘆きの定型・作法の変化・ラベルの正体・上の世代の乗り越え方――共通点の発見こそがこのシリーズの目的じゃ。" },
+  diagram:{ boxes:["フィルタで避ける自由（正当）","なぜ今そうなのかを知る","時代を超えた共通点の発見","戸惑い→観察へ"], note:"このシリーズの目的：共通点を見つけ、観察に変える" } }
+];
+
+/* ================= 図解SVG生成 ================= */
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function diagramSVG(d){
+  var boxes = d.boxes, n = boxes.length;
+  var w = 640, bh = 44, gap = 26, h = n*bh + (n-1)*gap + 16;
+  var s = '<svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="'+esc(d.note)+'">';
+  for(var i=0;i<n;i++){
+    var y = 8 + i*(bh+gap);
+    var fill = (i===n-1) ? 'var(--gold)' : 'var(--panel)';
+    s += '<rect x="70" y="'+y+'" width="500" height="'+bh+'" fill="'+fill+'" stroke="var(--line)" stroke-width="3"/>';
+    s += '<text x="320" y="'+(y+bh/2+6)+'" text-anchor="middle" font-size="16" fill="var(--ink)" font-family="DotGothic16,sans-serif">'+esc(boxes[i])+'</text>';
+    if(i<n-1){
+      var ay = y+bh;
+      s += '<path d="M320 '+ay+' L320 '+(ay+gap-6)+' M312 '+(ay+gap-14)+' L320 '+(ay+gap-4)+' L328 '+(ay+gap-14)+'" stroke="var(--accent)" stroke-width="3" fill="none"/>';
+    }
+  }
+  return s + '</svg>';
+}
+
+/* ================= 状態と保存 ================= */
+var SAVE_KEY = "kotobaUtsurikawariSaveV1";
+var TTS_KEY = "advTtsV1";
+var state = { cur:0, done:[], phase:"teach" };
+try{
+  var raw = localStorage.getItem(SAVE_KEY);
+  if(raw){ var p = JSON.parse(raw); if(p && p.done) state.done = p.done; if(typeof p.cur==="number") state.cur = p.cur; }
+}catch(e){}
+function save(){
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify({done:state.done, cur:state.cur})); }catch(e){}
+}
+function isDone(i){ return state.done.indexOf(i) >= 0; }
+
+/* ================= 読み上げ ================= */
+var ttsOn = false;
+try{ ttsOn = localStorage.getItem(TTS_KEY) === "on"; }catch(e){}
+var ttsBtn = document.getElementById("ttsBtn");
+function paintTts(){
+  ttsBtn.textContent = ttsOn ? "🗣 読上ON" : "🗣 読上OFF";
+  ttsBtn.setAttribute("aria-pressed", ttsOn ? "true" : "false");
+}
+function speak(text){
+  if(!ttsOn || !("speechSynthesis" in window)) return;
+  try{
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = "ja-JP"; u.rate = 1.0;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+function speakRaw(text){
+  if(!("speechSynthesis" in window)) return;
+  var u = new SpeechSynthesisUtterance(text);
+  u.lang = "ja-JP"; u.rate = 1.0;
+  speechSynthesis.speak(u);
+}
+ttsBtn.addEventListener("click", function(){
+  ttsOn = !ttsOn;
+  try{ localStorage.setItem(TTS_KEY, ttsOn ? "on" : "off"); }catch(e){}
+  paintTts();
+  if(!ttsOn && "speechSynthesis" in window) speechSynthesis.cancel();
+  if(ttsOn) render();
+});
+paintTts();
+
+/* ================= 描画 ================= */
+var stageEl = document.getElementById("stage");
+var choicesEl = document.getElementById("choices");
+var actionsEl = document.getElementById("actions");
+var chLabelEl = document.getElementById("chLabel");
+var lTitleEl = document.getElementById("lTitle");
+
+function lessonHead(i){
+  var L = LESSONS[i];
+  var numInCh = 0; for(var k=0;k<=i;k++) if(LESSONS[k].ch===L.ch) numInCh++;
+  return "第" + (i+1) + "課 ／ " + CHAPTERS[L.ch];
+}
+function bodyHTML(L, extra){
+  var h = '<div class="who"><div class="face" aria-hidden="true">🧙</div><div><p class="sensei-name">コトバ仙人</p></div></div>';
+  L.teach.forEach(function(p){ h += "<p>" + esc(p) + "</p>"; });
+  if(extra){ h += '<p><b>――もう少し詳しく。</b></p><p>' + esc(L.more) + "</p>"; }
+  h += '<figure class="diagram">' + diagramSVG(L.diagram) + "<figcaption>図：" + esc(L.diagram.note) + "</figcaption></figure>";
+  return h;
+}
+function plainText(L){
+  return L.teach.join("\n");
+}
+function setActions(list){
+  actionsEl.innerHTML = "";
+  list.forEach(function(a){
+    var b = document.createElement("button");
+    b.className = "abtn" + (a.primary ? " primary" : "") + (a.sub ? " sub" : "");
+    b.textContent = a.label;
+    b.addEventListener("click", a.fn);
+    actionsEl.appendChild(b);
+  });
+}
+function render(){
+  var i = state.cur, L = LESSONS[i];
+  chLabelEl.textContent = lessonHead(i);
+  lTitleEl.textContent = L.title;
+  choicesEl.hidden = true; choicesEl.innerHTML = "";
+  document.getElementById("progText").textContent = "進捗 " + state.done.length + " / " + LESSONS.length;
+  document.getElementById("pfill").style.width = (state.done.length / LESSONS.length * 100) + "%";
+  paintMap();
+
+  if(state.phase === "teach" || state.phase === "more"){
+    var extra = state.phase === "more";
+    stageEl.innerHTML = bodyHTML(L, extra);
+    var acts = [];
+    acts.push({ label:"✔ わかった（確認問題へ）", primary:true, fn:function(){ state.phase="quiz"; render(); } });
+    if(!extra){
+      acts.push({ label:"？ わからない（もう少し説明）", fn:function(){ state.phase="more"; render(); } });
+    } else {
+      acts.push({ label:"↩ はじめから読み直す", sub:true, fn:function(){ state.phase="teach"; render(); } });
+    }
+    acts.push({ label:"もくじで選ぶ", sub:true, fn:function(){ window.scrollTo({top:0, behavior:"smooth"}); } });
+    setActions(acts);
+    speak(plainText(L) + (extra ? "\n" + L.more : ""));
+  }
+  else if(state.phase === "quiz"){
+    stageEl.innerHTML = '<div class="who"><div class="face" aria-hidden="true">🧙</div><div><p class="sensei-name">コトバ仙人 ― 確認問題</p></div></div>'
+      + '<p class="quiz-q">' + esc(L.quiz.q) + '</p>'
+      + '<p class="small">間違えてもペナルティはない。解説を読んで、説明に戻ってよい。</p>';
+    choicesEl.hidden = false;
+    L.quiz.choices.forEach(function(c, ci){
+      var b = document.createElement("button");
+      b.className = "cbtn";
+      b.textContent = (ci+1) + ". " + c;
+      b.addEventListener("click", function(){ answer(ci); });
+      choicesEl.appendChild(b);
+    });
+    setActions([{ label:"↩ 説明に戻る", sub:true, fn:function(){ state.phase="teach"; render(); } }]);
+    speak(L.quiz.q);
+  }
+  else if(state.phase === "done"){
+    var last = (i === LESSONS.length - 1);
+    var allDone = state.done.length === LESSONS.length;
+    var msg = last
+      ? "全16課、これにて修了じゃ。嘆きの定型、自称の作法、ラベルの正体、そして時代を超えた共通点――戸惑いを観察に変える道具は揃えた。あとは自分の画面を、自分の作法で整えて暮らすだけじゃ。"
+      : "この課は修了じゃ。★が付いた。次の課へ進むか、もくじから気になる課を開いてよい。";
+    stageEl.innerHTML = '<div class="result"><b class="good">⭕ 正解 ― 課を修了しました</b><p style="margin:8px 0 0;">' + esc(L.quiz.why) + "</p></div>"
+      + '<div class="who"><div class="face" aria-hidden="true">🧙</div><div><p class="sensei-name">コトバ仙人</p></div></div><p>' + esc(msg) + "</p>"
+      + (allDone ? '<p><b>🏆 全課修了！ 「ことばのうつりかわり道場」第1作、卒業じゃ。</b></p>' : "");
+    var acts2 = [];
+    if(!last) acts2.push({ label:"▶ 次のレッスンへ", primary:true, fn:function(){ state.cur = i+1; state.phase="teach"; save(); render(); window.scrollTo({top:0, behavior:"smooth"}); } });
+    acts2.push({ label:"もくじで選ぶ", sub:true, fn:function(){ window.scrollTo({top:0, behavior:"smooth"}); } });
+    setActions(acts2);
+    speak(L.quiz.why + "\n" + msg);
+  }
+  save();
+}
+function answer(ci){
+  var L = LESSONS[state.cur];
+  if(ci === L.quiz.ans){
+    if(!isDone(state.cur)) state.done.push(state.cur);
+    state.phase = "done"; render();
+  } else {
+    stageEl.innerHTML = '<div class="result bad"><b class="bad">❌ 惜しい、違うようじゃ</b><p style="margin:8px 0 0;">' + esc(L.quiz.why) + '</p><p style="margin:8px 0 0;">ペナルティはない。説明に戻って読み直し、もう一度挑戦しよう。</p></div>';
+    choicesEl.hidden = true; choicesEl.innerHTML = "";
+    setActions([
+      { label:"↩ 説明に戻る", primary:true, fn:function(){ state.phase="teach"; render(); } },
+      { label:"もう一度問題を見る", fn:function(){ state.phase="quiz"; render(); } }
+    ]);
+    speak("惜しい、違うようじゃ。" + L.quiz.why);
+  }
+  save();
+}
+
+/* ================= もくじ ================= */
+var mapBody = document.getElementById("mapBody");
+function paintMap(){
+  mapBody.innerHTML = "";
+  CHAPTERS.forEach(function(chName, ci){
+    var div = document.createElement("div"); div.className = "ch";
+    var p = document.createElement("p"); p.className = "ch-name"; p.textContent = chName;
+    div.appendChild(p);
+    var grid = document.createElement("div"); grid.className = "lessons";
+    LESSONS.forEach(function(L, i){
+      if(L.ch !== ci) return;
+      var b = document.createElement("button");
+      b.className = "lbtn" + (isDone(i) ? " done" : "") + (state.cur === i ? " now" : "");
+      b.innerHTML = '<span class="no">第' + (i+1) + '課</span><br>' + esc(L.title);
+      b.addEventListener("click", function(){
+        state.cur = i; state.phase = "teach"; save(); render();
+        document.getElementById("frame").scrollIntoView({behavior:"smooth"});
+      });
+      grid.appendChild(b);
+    });
+    div.appendChild(grid);
+    mapBody.appendChild(div);
+  });
+}
+
+/* ================= 図解ギャラリー ================= */
+var galBtn = document.getElementById("galBtn");
+var galPanel = document.getElementById("galPanel");
+var galGrid = document.getElementById("galGrid");
+LESSONS.forEach(function(L, i){
+  var d = document.createElement("div"); d.className = "gal-item";
+  d.innerHTML = diagramSVG(L.diagram) + '<p class="cap"><b>第' + (i+1) + '課「' + esc(L.title) + '」</b><br>' + esc(L.diagram.note) + "</p>";
+  galGrid.appendChild(d);
+});
+galBtn.addEventListener("click", function(){
+  var open = galPanel.hidden;
+  galPanel.hidden = !open;
+  galBtn.setAttribute("aria-pressed", open ? "true" : "false");
+  galBtn.textContent = open ? "🖼 図解ギャラリー（開）" : "🖼 図解ギャラリー";
+});
+
+/* ================= 聞くモード ================= */
+var listenBtn = document.getElementById("listenBtn");
+var listenPanel = document.getElementById("listenPanel");
+var listenBody = document.getElementById("listenBody");
+LESSONS.forEach(function(L, i){
+  var d = document.createElement("div"); d.className = "listen-item";
+  var h = "<h3>第" + (i+1) + "課「" + esc(L.title) + "」</h3>";
+  L.teach.forEach(function(p){ h += "<p>" + esc(p) + "</p>"; });
+  h += "<p>" + esc(L.more) + "</p>";
+  d.innerHTML = h;
+  listenBody.appendChild(d);
+});
+listenBtn.addEventListener("click", function(){
+  var open = listenPanel.hidden;
+  listenPanel.hidden = !open;
+  listenBtn.setAttribute("aria-pressed", open ? "true" : "false");
+  if(open) listenPanel.scrollIntoView({behavior:"smooth"});
+});
+document.getElementById("playAllBtn").addEventListener("click", function(){
+  if(!("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  LESSONS.forEach(function(L, i){
+    speakRaw("第" + (i+1) + "課。" + L.title + "。");
+    L.teach.forEach(function(p){ speakRaw(p); });
+    speakRaw(L.more);
+  });
+});
+document.getElementById("stopSpeakBtn").addEventListener("click", function(){
+  if("speechSynthesis" in window) speechSynthesis.cancel();
+});
+
+render();
+</script>
+</body>
+</html>
