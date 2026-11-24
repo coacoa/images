@@ -258,6 +258,64 @@
     margin-top:14px;font-size:13.5px;color:var(--ink-2);
     background:var(--teal-soft);border-radius:10px;padding:10px 14px;
   }
+  /* ---------- fullscreen ---------- */
+  .viewer-card:fullscreen{
+    border-radius:0;border:none;display:flex;flex-direction:column;background:var(--panel);
+  }
+  .viewer-card:fullscreen #viewport{flex:1;aspect-ratio:auto;max-height:none;min-height:0}
+  .viewer-card:fullscreen .timeline{flex:none}
+  .viewer-card:-webkit-full-screen{
+    border-radius:0;border:none;display:flex;flex-direction:column;background:var(--panel);
+  }
+  .viewer-card:-webkit-full-screen #viewport{flex:1;aspect-ratio:auto;max-height:none;min-height:0}
+
+  /* ---------- listening mode ---------- */
+  .listen-btn{
+    width:calc(100% - 36px);margin:0 18px 16px;
+    border:1px solid var(--line);background:var(--panel-2);color:var(--ink);
+    border-radius:10px;padding:9px 12px;font-size:14px;font-weight:700;min-height:44px;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .listen-btn[aria-expanded="true"]{border-color:var(--teal);color:var(--teal)}
+  .listen-panel{
+    display:none;margin:0 18px 18px;border:1px solid var(--line);border-radius:10px;
+    background:var(--panel-2);padding:12px 14px;
+  }
+  .listen-panel.is-open{display:block}
+  .listen-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .listen-controls button{
+    border-radius:8px;padding:8px 14px;font-size:13.5px;font-weight:700;min-height:40px;
+    border:1px solid var(--line);background:var(--panel);color:var(--ink);
+  }
+  .listen-controls button.primary{background:var(--teal);border-color:var(--teal);color:#fff}
+  .listen-controls button:disabled{opacity:.38;cursor:default}
+  .listen-state{font-size:12.5px;color:var(--ink-3)}
+  .listen-list{margin:12px 0 0;padding:0;list-style:none;max-height:300px;overflow:auto}
+  .listen-list li{
+    padding:9px 10px;border-radius:8px;font-size:13.5px;color:var(--ink-2);line-height:1.65;
+  }
+  .listen-list li + li{margin-top:4px}
+  .listen-list li b{display:block;color:var(--ink);font-size:14px}
+  .listen-list li.is-reading{background:var(--teal-soft);box-shadow:inset 0 0 0 1px var(--teal)}
+
+  /* ---------- expansion ideas ---------- */
+  .ideas{margin-top:16px}
+  .ideas-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+  @media (max-width:860px){ .ideas-grid{grid-template-columns:1fr 1fr} }
+  @media (max-width:560px){ .ideas-grid{grid-template-columns:1fr} }
+  .idea{
+    border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--panel-2);
+  }
+  .idea h3{margin:0 0 6px;font-size:16px;font-weight:900;display:flex;align-items:center;gap:8px}
+  .idea h3 .tag{
+    font-size:11px;font-weight:700;letter-spacing:.05em;color:var(--teal);
+    background:var(--teal-soft);border-radius:6px;padding:2px 8px;white-space:nowrap;
+  }
+  .idea p{margin:0;font-size:13.5px;color:var(--ink-2)}
+  .idea ul{margin:8px 0 0;padding-left:1.2em;font-size:13.5px;color:var(--ink-2)}
+  .idea li{margin:3px 0}
+  .idea li b{color:var(--ink)}
+
   footer{margin-top:26px;color:var(--ink-3);font-size:12.5px;text-align:center}
 </style>
 </head>
@@ -269,12 +327,12 @@
     <h1>卓上扇風機の組み立てチュートリアル
       <span class="thin">Verge3D の e-learning デモと同じ操作感を、無料の Three.js でどこまで再現できるかの試作</span>
     </h1>
-    <p class="lead">モデルは Blender ではなく <strong>Three.js の図形（プリミティブ）の組み合わせ</strong>で作っていますが、ガードのワイヤーや羽根の形状、モーターの放熱スリットまで実物に寄せて作り直しました。見せ方もデモに近づけ、<strong>ステップごとにカメラが部品へ寄り、注釈コールアウトが部品を指します</strong>。本番ではここを <strong>Blender から書き出した glTF（.glb）</strong>に差し替えるだけで、ステップ解説・ハイライト・読み上げ・タイムラインはそのまま使えます。</p>
+    <p class="lead">モデルは Blender ではなく <strong>Three.js の図形（プリミティブ）の組み合わせ</strong>で作っていますが、ガードのワイヤーや羽根の形状、モーターの放熱スリットまで実物に寄せて作り直しました。見せ方もデモに近づけ、<strong>ステップごとにカメラが部品へ寄り、注釈コールアウトが部品を指します</strong>。本番ではここを <strong>Blender から書き出した glTF（.glb）</strong>に差し替えるだけで、ステップ解説・ハイライト・読み上げ・タイムラインはそのまま使えます。ビューアは<strong>フルスクリーン表示</strong>に対応し、解説パネルには全ステップを通して聞ける<strong>聞くモード（リスニング連続再生）</strong>も付けました。ページ下部には、この型を乗り物・交通ルール・PC組み立てなどへ展開するアイデアもまとめています。</p>
   </header>
 
   <div class="stage">
     <!-- 3D viewer -->
-    <section class="viewer-card" aria-label="3Dビューア">
+    <section class="viewer-card" id="viewerCard" aria-label="3Dビューア">
       <div class="viewer-head">
         <div class="vh-title"><span class="dot"></span>3Dビューア — ドラッグで回転 / ホイールで拡大</div>
         <div class="vh-tools">
@@ -282,6 +340,7 @@
           <button class="tool-btn" id="btnAuto" aria-pressed="true" type="button">自動回転</button>
           <button class="tool-btn" id="btnAnno" aria-pressed="true" type="button">注釈</button>
           <button class="tool-btn" id="btnReset" type="button">視点を戻す</button>
+          <button class="tool-btn" id="btnFull" aria-pressed="false" type="button">⛶ フルスクリーン</button>
         </div>
       </div>
       <div id="viewport">
@@ -330,6 +389,17 @@
         <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg>
         <span id="ttsLabel">読み上げ OFF（タップでON）</span>
       </button>
+      <button class="listen-btn" id="btnListen" type="button" aria-expanded="false" aria-controls="listenPanel">
+        🎧 聞くモード（全ステップを通して聞く）
+      </button>
+      <div class="listen-panel" id="listenPanel">
+        <div class="listen-controls">
+          <button class="primary" id="btnListenPlay" type="button">▶ ブラウザ音声で連続再生</button>
+          <button id="btnListenStop" type="button" disabled>■ 停止</button>
+          <span class="listen-state" id="listenState" role="status">全6ステップの解説を順番に読み上げます。スマホの読み上げ拡張（Read Aloud等）で聞く場合は、この一覧を上から読ませてください。</span>
+        </div>
+        <ol class="listen-list" id="listenList"></ol>
+      </div>
     </section>
   </div>
 
@@ -350,6 +420,8 @@
         <tr><th>組み立てアニメーション</th><td>部品ごとの「分解位置→組立位置」を補間。Blender で焼いた動きは <code>AnimationMixer</code></td></tr>
         <tr><th>タイムライン</th><td>スライダーの値で全工程の進み具合を直接スクラブ</td></tr>
         <tr><th>ステップ解説＋ボイスオーバー</th><td>HTML パネル ＋ speechSynthesis（道場シリーズと同じ仕組み）</td></tr>
+        <tr><th>聞くモード（連続再生）</th><td>全ステップの解説を順番に読み上げるリスニング再生＋一覧パネル（読み上げ拡張でもそのまま聞ける）</td></tr>
+        <tr><th>フルスクリーン表示</th><td>Fullscreen API でビューアを画面いっぱいに拡大。スマホ・タブレットでの実習向き</td></tr>
         <tr><th>学習管理（SCORM）連携</th><td>個人公開では不要。進捗はステップ表示で十分</td></tr>
       </table>
     </section>
@@ -367,6 +439,68 @@
       <p class="note">試作の割り切り：モデルはまだプリミティブの組み合わせで、実物の曲面の滑らかさには届きません。ただし質感は ACES トーンマッピングと金属／樹脂マテリアルで実物寄りに寄せ、教材としての骨格——手順・注釈・カメラワーク・ハイライト・読み上げ・タイムライン——はデモと揃えてあります。</p>
     </section>
   </div>
+
+  <section class="card ideas" aria-label="展開アイデア">
+    <h2>この「型」で展開できる題材</h2>
+    <p class="sub">この試作のエンジン——ステップ定義（タイトル・解説・対象部品・確認ポイント）＋部品ハイライト＋カメラワーク＋読み上げ＋聞くモード＋タイムライン——は、モデルとステップ定義を差し替えるだけで使い回せます。「部品があって、手順があって、間違えると困るもの」が好相性です。</p>
+    <div class="ideas-grid">
+      <div class="idea">
+        <h3>車のメンテナンス <span class="tag">乗り物</span></h3>
+        <p>エンジンルームは部品が密集していて、写真や文章では「どれのことか」が伝わりにくい題材。3Dで対象部品だけ光らせれば一発で分かります。</p>
+        <ul>
+          <li><b>タイヤ交換</b> — ジャッキのかけ位置、ホイールナットの対角締め順</li>
+          <li><b>バッテリー交換・ブースター接続</b> — プラス／マイナスの順序ミスが事故になる手順こそステップ化向き</li>
+          <li><b>エンジンオイル・冷却水の点検</b> — ゲージとリザーバータンクの場所探しが本体</li>
+        </ul>
+      </div>
+      <div class="idea">
+        <h3>バイクのメンテナンス <span class="tag">乗り物</span></h3>
+        <p>チェーンやブレーキなど「調整の加減」が肝の部品が多く、分解⇔組立タイムラインで動きを見せられます。</p>
+        <ul>
+          <li><b>チェーン清掃・注油・張り調整</b> — たるみ量の目安をモデル上で表示</li>
+          <li><b>ブレーキパッド交換</b> — キャリパーの外し方とピストン戻し</li>
+          <li><b>プラグ交換</b> — 締め付けトルクの感覚を手順で補う</li>
+        </ul>
+      </div>
+      <div class="idea">
+        <h3>自転車の修理・整備 <span class="tag">乗り物</span></h3>
+        <p>構造がシンプルでモデルの作りやすさも一番手頃。出先トラブル対応は「スマホで開いて、その場で見ながら直す」使われ方と相性がいい題材です。</p>
+        <ul>
+          <li><b>パンク修理（チューブ交換）</b> — タイヤレバーの使い方と噛み込み注意</li>
+          <li><b>ブレーキ・変速の調整</b> — ワイヤーの張りとリミットネジ</li>
+          <li><b>輪行の組み立て</b> — バラす逆順でそのまま教材になる</li>
+        </ul>
+      </div>
+      <div class="idea">
+        <h3>交通ルールの啓蒙 <span class="tag">啓蒙・教育</span></h3>
+        <p>組み立て型ではなく「場面再現型」への応用。視点を切り替えられるのが3Dの独壇場で、文章や標識クイズでは伝わらない「見え方そのもの」を体験させられます。</p>
+        <ul>
+          <li><b>死角体験</b> — トラックの運転席視点⇔自転車・歩行者視点を切り替え、内輪差と巻き込みを再現</li>
+          <li><b>交差点の優先関係</b> — 車・バイク・自転車・歩行者を置いて「誰が止まるべきか」を場面ごとに確認</li>
+          <li><b>自転車の通行ルール</b> — 車道左側通行、二段階右折、歩道通行の条件をコース上で再現</li>
+        </ul>
+      </div>
+      <div class="idea">
+        <h3>PCの組み立て <span class="tag">自作PC</span></h3>
+        <p>扇風機とまったく同じ「部品＋手順」の構造で、この型の本命候補。ケーブルの配線先は写真では必ず迷うので、行き先を光らせる価値が大きい題材です。</p>
+        <ul>
+          <li><b>CPU・クーラー取り付け</b> — 切り欠き合わせとグリスの塗り方</li>
+          <li><b>メモリ・M.2 SSD</b> — スロットの優先順位とラッチの感覚</li>
+          <li><b>フロントパネル配線</b> — 小さいピンの行き先を1本ずつハイライト</li>
+        </ul>
+      </div>
+      <div class="idea">
+        <h3>家電・日用品の手入れ <span class="tag">暮らし</span></h3>
+        <p>「年に数回しかやらないから毎回忘れる」作業は、手順教材の需要が安定しています。</p>
+        <ul>
+          <li><b>エアコンのフィルター掃除</b> — カバーの開け方と爪の位置</li>
+          <li><b>洗濯機の糸くずフィルター・排水口掃除</b></li>
+          <li><b>換気扇・レンジフードの分解清掃</b> — 外す順序がそのまま教材</li>
+        </ul>
+      </div>
+    </div>
+    <p class="note">作り方の優先順位のおすすめ：モデルが一番簡単なのは自転車とPC（直線・平面の部品が多い）。交通ルール啓蒙はモデルより「場面と視点切り替え」の設計が本体になります。どれも、このページのステップ定義の配列を書き換えるところから始められます。</p>
+  </section>
 
   <footer>Three.js 試作 / モデルはプリミティブ生成（Blender不使用）・解説は扇風機組み立ての一般的な手順をもとにしたサンプルです</footer>
 </div>
@@ -494,6 +628,57 @@
       if (fTts) fSpeak();
       else if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     });
+    /* 聞くモード（フォールバック側：全ステップ連続再生） */
+    var fBtnListen = document.getElementById("btnListen");
+    var fListenPanel = document.getElementById("listenPanel");
+    var fListenList = document.getElementById("listenList");
+    var fBtnPlay = document.getElementById("btnListenPlay");
+    var fBtnStop = document.getElementById("btnListenStop");
+    var fListenState = document.getElementById("listenState");
+    var fListenItems = [];
+    STEPS.forEach(function(s, i){
+      var li = document.createElement("li");
+      var b = document.createElement("b"); b.textContent = "STEP " + (i + 1) + "：" + s.title;
+      var tx = document.createElement("span"); tx.textContent = s.text;
+      li.appendChild(b); li.appendChild(tx);
+      fListenList.appendChild(li); fListenItems.push(li);
+    });
+    var fListening = false, fListenIdx = 0, fListenTimer = null;
+    function fListenStop(msg){
+      fListening = false;
+      if (fListenTimer){ clearTimeout(fListenTimer); fListenTimer = null; }
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+      fBtnPlay.disabled = false; fBtnStop.disabled = true;
+      fListenItems.forEach(function(li){ li.classList.remove("is-reading"); });
+      if (msg) fListenState.textContent = msg;
+    }
+    function fListenNext(){
+      if (!fListening) return;
+      if (fListenIdx >= STEPS.length){ fListenStop("全ステップの読み上げが終わりました。"); return; }
+      fListenItems.forEach(function(li, i){ li.classList.toggle("is-reading", i === fListenIdx); });
+      var s = STEPS[fListenIdx];
+      fListenState.textContent = "再生中：STEP " + (fListenIdx + 1) + " / " + STEPS.length + "「" + s.title + "」";
+      var u = new SpeechSynthesisUtterance("ステップ" + (fListenIdx + 1) + "。" + s.title + "。" + s.text);
+      u.lang = "ja-JP";
+      var adv = false;
+      function advance(){ if (adv || !fListening) return; adv = true; fListenIdx++; fListenTimer = setTimeout(fListenNext, 350); }
+      u.onend = advance; u.onerror = advance;
+      try { window.speechSynthesis.resume(); } catch(e) {}
+      window.speechSynthesis.speak(u);
+    }
+    fBtnListen.addEventListener("click", function(){
+      var open = fListenPanel.classList.toggle("is-open");
+      fBtnListen.setAttribute("aria-expanded", String(open));
+      if (!open) fListenStop();
+    });
+    fBtnPlay.addEventListener("click", function(){
+      if (!("speechSynthesis" in window)){ fListenState.textContent = "このブラウザは読み上げに対応していません。"; return; }
+      window.speechSynthesis.cancel();
+      fListening = true; fListenIdx = 0;
+      fBtnPlay.disabled = true; fBtnStop.disabled = false;
+      fListenNext();
+    });
+    fBtnStop.addEventListener("click", function(){ fListenStop("停止しました。"); });
     fRender();
     return;
   }
@@ -1004,6 +1189,90 @@
     window.speechSynthesis.onvoiceschanged = function(){};
   }
 
+  /* ============ 聞くモード（全ステップ連続再生） ============ */
+  var btnListen = document.getElementById("btnListen");
+  var listenPanel = document.getElementById("listenPanel");
+  var listenList = document.getElementById("listenList");
+  var btnListenPlay = document.getElementById("btnListenPlay");
+  var btnListenStop = document.getElementById("btnListenStop");
+  var listenState = document.getElementById("listenState");
+  var listenItems = [];
+  STEPS.forEach(function(s, i){
+    var li = document.createElement("li");
+    var b = document.createElement("b");
+    b.textContent = "STEP " + (i + 1) + "：" + s.title;
+    var tx = document.createElement("span");
+    tx.textContent = s.text;
+    li.appendChild(b); li.appendChild(tx);
+    listenList.appendChild(li);
+    listenItems.push(li);
+  });
+  var listening = false, listenIdx = 0, listenTimer = null;
+  function pickJaVoice(u){
+    if (!("speechSynthesis" in window)) return;
+    var voices = window.speechSynthesis.getVoices();
+    for (var i = 0; i < voices.length; i++){
+      if (voices[i].lang && voices[i].lang.indexOf("ja") === 0){ u.voice = voices[i]; break; }
+    }
+  }
+  function listenMark(){
+    listenItems.forEach(function(li, i){ li.classList.toggle("is-reading", listening && i === listenIdx); });
+    if (listening && listenItems[listenIdx]) listenItems[listenIdx].scrollIntoView({ block:"nearest", behavior:"smooth" });
+  }
+  function listenStop(msg){
+    listening = false;
+    if (listenTimer){ clearTimeout(listenTimer); listenTimer = null; }
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    btnListenPlay.disabled = false;
+    btnListenStop.disabled = true;
+    listenMark();
+    if (msg) listenState.textContent = msg;
+  }
+  function listenNext(){
+    if (!listening) return;
+    if (listenIdx >= STEPS.length){
+      listenStop("全ステップの読み上げが終わりました。");
+      return;
+    }
+    listenMark();
+    listenState.textContent = "再生中：STEP " + (listenIdx + 1) + " / " + STEPS.length + "「" + STEPS[listenIdx].title + "」";
+    var s = STEPS[listenIdx];
+    var u = new SpeechSynthesisUtterance("ステップ" + (listenIdx + 1) + "。" + s.title + "。" + s.text);
+    u.lang = "ja-JP"; u.rate = 1.0;
+    pickJaVoice(u);
+    var advanced = false;
+    function advance(){
+      if (advanced || !listening) return;
+      advanced = true;
+      listenIdx++;
+      listenTimer = setTimeout(listenNext, 350);
+    }
+    u.onend = advance;
+    u.onerror = advance;
+    try { window.speechSynthesis.resume(); } catch(e) {}
+    window.speechSynthesis.speak(u);
+    /* 音声が始まらない環境向けの保険：推定時間で次へ送る */
+    var estMs = Math.max(6000, (s.title.length + s.text.length) * 190);
+    listenTimer = setTimeout(function(){
+      if (listening && !window.speechSynthesis.speaking && !window.speechSynthesis.pending) advance();
+    }, estMs);
+  }
+  btnListen.addEventListener("click", function(){
+    var open = listenPanel.classList.toggle("is-open");
+    btnListen.setAttribute("aria-expanded", String(open));
+    if (!open) listenStop();
+  });
+  btnListenPlay.addEventListener("click", function(){
+    if (!("speechSynthesis" in window)){ listenState.textContent = "このブラウザは読み上げに対応していません。"; return; }
+    if (ttsOn){ ttsOn = false; btnTts.setAttribute("aria-pressed", "false"); ttsLabel.textContent = "読み上げ OFF（タップでON）"; }
+    window.speechSynthesis.cancel();
+    listening = true; listenIdx = 0;
+    btnListenPlay.disabled = true;
+    btnListenStop.disabled = false;
+    listenNext();
+  });
+  btnListenStop.addEventListener("click", function(){ listenStop("停止しました。"); });
+
   /* ============ リサイズ ============ */
   function resize(){
     var w = viewport.clientWidth, h = viewport.clientHeight;
@@ -1111,6 +1380,45 @@
   animate();
   /* 初期表示でもう一度サイズ確定（フォント読み込み後のズレ対策） */
   setTimeout(resize, 300);
+  /* フルスクリーン切替後にビューアのサイズを合わせ直す */
+  document.addEventListener("fullscreenchange", function(){ setTimeout(resize, 60); });
+  document.addEventListener("webkitfullscreenchange", function(){ setTimeout(resize, 60); });
+})();
+</script>
+<script>
+/* フルスクリーン切替（3Dの成否に関わらず単独で動く） */
+(function(){
+  "use strict";
+  var card = document.getElementById("viewerCard");
+  var btn = document.getElementById("btnFull");
+  if (!card || !btn) return;
+  function isFull(){
+    return document.fullscreenElement === card || document.webkitFullscreenElement === card;
+  }
+  function sync(){
+    var f = isFull();
+    btn.setAttribute("aria-pressed", String(f));
+    btn.textContent = f ? "⛶ フルスクリーンを終了" : "⛶ フルスクリーン";
+  }
+  btn.addEventListener("click", function(){
+    if (isFull()){
+      if (document.exitFullscreen) document.exitFullscreen();
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    } else {
+      var req = card.requestFullscreen || card.webkitRequestFullscreen;
+      if (req){
+        try {
+          var p = req.call(card);
+          if (p && p.catch) p.catch(function(){ btn.textContent = "⛶ この環境では使えません"; });
+        } catch(e) { btn.textContent = "⛶ この環境では使えません"; }
+      } else {
+        btn.textContent = "⛶ この環境では使えません";
+      }
+    }
+  });
+  document.addEventListener("fullscreenchange", sync);
+  document.addEventListener("webkitfullscreenchange", sync);
+  sync();
 })();
 </script>
 </body>
