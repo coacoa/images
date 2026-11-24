@@ -1,0 +1,952 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="data:," />
+<title>3Dチュートリアル試作 — 卓上扇風機の組み立て | Three.js</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Archivo:wght@600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#e9edf0;
+    --bg-2:#dde3e8;
+    --panel:#ffffff;
+    --panel-2:#f4f6f8;
+    --ink:#182028;
+    --ink-2:#4b5866;
+    --ink-3:#7c8a99;
+    --line:#cbd4dc;
+    --accent:#d94f26;
+    --accent-ink:#ffffff;
+    --teal:#0e7c7b;
+    --teal-soft:#e0f0ef;
+    --gold:#c9920e;
+    --viewport:#20262e;
+    --viewport-2:#171c22;
+    --marker:#ffffff;
+    --shadow:0 10px 30px rgba(24,32,40,.14);
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#11161c;
+      --bg-2:#0c1015;
+      --panel:#1b232e;
+      --panel-2:#232e3b;
+      --ink:#eef2f5;
+      --ink-2:#b6c2cf;
+      --ink-3:#8494a5;
+      --line:#33404f;
+      --accent:#f06435;
+      --teal:#2db3b1;
+      --teal-soft:#16393a;
+      --viewport:#0d1117;
+      --viewport-2:#090c10;
+      --shadow:0 10px 30px rgba(0,0,0,.45);
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Noto Sans JP", system-ui, -apple-system, "Hiragino Kaku Gothic ProN", sans-serif;
+    background:linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+    color:var(--ink);
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+  }
+  button, input[type="range"]{min-height:36px}
+  button{font-family:inherit;cursor:pointer}
+  a{color:var(--teal)}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:20px 16px 48px}
+
+  /* ---------- header ---------- */
+  header{padding:10px 2px 18px}
+  .kicker{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:"Archivo",sans-serif;font-size:12px;font-weight:800;letter-spacing:.14em;
+    color:var(--accent);text-transform:uppercase;
+  }
+  .kicker::before{content:"";width:26px;height:3px;background:var(--accent);display:inline-block}
+  h1{
+    margin:6px 0 6px;font-size:clamp(26px,4.6vw,40px);line-height:1.25;font-weight:900;letter-spacing:.01em;
+  }
+  h1 .thin{font-weight:500;color:var(--ink-2);font-size:.52em;display:block;margin-top:6px;letter-spacing:.02em}
+  .lead{margin:0;max-width:46em;color:var(--ink-2);font-size:15px}
+  .lead strong{color:var(--ink)}
+
+  /* ---------- layout ---------- */
+  .stage{
+    display:grid;grid-template-columns:minmax(0,1.65fr) minmax(300px,1fr);
+    gap:16px;align-items:start;margin-top:8px;
+  }
+  @media (max-width:860px){
+    .stage{grid-template-columns:1fr}
+  }
+
+  /* ---------- viewport ---------- */
+  .viewer-card{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden;
+  }
+  .viewer-head{
+    display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;
+    padding:10px 12px;border-bottom:1px solid var(--line);background:var(--panel-2);
+  }
+  .viewer-head .vh-title{font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--teal);flex:none}
+  .vh-tools{display:flex;flex-wrap:wrap;gap:6px}
+  .tool-btn{
+    border:1px solid var(--line);background:var(--panel);color:var(--ink);
+    border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700;line-height:1.2;
+    display:inline-flex;align-items:center;gap:6px;min-height:36px;
+  }
+  .tool-btn[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+  .tool-btn:focus-visible, .step-chip:focus-visible, .nav-btn:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+
+  #viewport{
+    position:relative;width:100%;aspect-ratio:4/3;max-height:560px;
+    background:radial-gradient(120% 90% at 50% 20%, var(--viewport) 0%, var(--viewport-2) 78%);
+    touch-action:none;overflow:hidden;
+  }
+  @media (max-width:560px){ #viewport{aspect-ratio:1/1.05} }
+  #viewport canvas{display:block;width:100%;height:100%}
+  #fallback{
+    position:absolute;inset:0;display:none;place-items:center;text-align:center;
+    color:#e8edf1;padding:24px;font-size:14px;
+  }
+  .part-label{
+    position:absolute;left:12px;top:12px;z-index:5;
+    background:rgba(10,14,18,.78);color:#fff;border-radius:10px;padding:8px 12px;
+    font-size:13px;line-height:1.5;max-width:75%;backdrop-filter:blur(4px);
+  }
+  .part-label b{display:block;font-size:15px}
+  .part-label span{opacity:.85;font-size:12px}
+  .hint{
+    position:absolute;right:12px;bottom:12px;z-index:5;
+    background:rgba(10,14,18,.62);color:#dfe7ee;border-radius:8px;padding:5px 10px;font-size:12px;
+  }
+  @media (max-width:560px){ .hint{display:none} }
+  .marker{
+    position:absolute;z-index:6;width:30px;height:30px;margin:-15px 0 0 -15px;
+    border-radius:50%;border:2px solid rgba(10,14,18,.25);
+    background:var(--marker);color:#182028;
+    font-family:"Archivo",sans-serif;font-weight:800;font-size:14px;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 3px 10px rgba(0,0,0,.35);padding:0;min-height:30px;
+    transition:transform .15s ease, background .15s ease, color .15s ease;
+  }
+  .marker:hover{transform:scale(1.15)}
+  .marker.is-done{background:var(--teal);color:#fff}
+  .marker.is-current{background:var(--accent);color:#fff;transform:scale(1.22)}
+  .marker.is-hidden{opacity:0;pointer-events:none}
+
+  /* timeline */
+  .timeline{padding:12px 14px 14px;border-top:1px solid var(--line);background:var(--panel)}
+  .tl-row{display:flex;align-items:center;gap:10px}
+  .play-btn{
+    flex:none;width:46px;height:46px;border-radius:50%;border:none;
+    background:var(--accent);color:var(--accent-ink);
+    display:flex;align-items:center;justify-content:center;min-height:46px;
+  }
+  .play-btn svg{width:20px;height:20px;fill:currentColor}
+  .tl-track{flex:1}
+  .tl-track input[type="range"]{width:100%;accent-color:var(--accent);height:36px}
+  .tl-labels{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-3);margin-top:-4px}
+  .tl-state{font-size:13px;font-weight:700;white-space:nowrap;min-width:6.5em;text-align:right;font-variant-numeric:tabular-nums}
+
+  /* ---------- lesson panel ---------- */
+  .lesson{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden;
+  }
+  .progress{height:6px;background:var(--panel-2);display:flex}
+  .progress i{display:block;height:100%;background:var(--accent);width:0%;transition:width .45s ease}
+  .lesson-body{padding:18px 18px 8px}
+  .step-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .step-no{
+    font-family:"Archivo",sans-serif;font-weight:800;font-size:13px;letter-spacing:.08em;
+    background:var(--teal-soft);color:var(--teal);border-radius:8px;padding:4px 10px;
+  }
+  .step-count{font-size:13px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+  .tts-state{font-size:12px;color:var(--ink-3)}
+  h2.step-title{margin:10px 0 6px;font-size:22px;line-height:1.4;font-weight:900}
+  .step-text{margin:0;color:var(--ink-2);font-size:15px}
+  .check{
+    margin:16px 0 4px;background:var(--panel-2);border-radius:10px;padding:12px 14px;
+  }
+  .check h3{margin:0 0 6px;font-size:13px;letter-spacing:.06em;color:var(--ink)}
+  .check ul{margin:0;padding:0;list-style:none}
+  .check li{
+    position:relative;padding:3px 0 3px 26px;font-size:14px;color:var(--ink-2);
+  }
+  .check li::before{
+    content:"";position:absolute;left:2px;top:11px;width:12px;height:7px;
+    border-left:3px solid var(--teal);border-bottom:3px solid var(--teal);transform:rotate(-45deg);
+  }
+  .lesson-nav{
+    display:flex;gap:8px;padding:14px 18px 18px;flex-wrap:wrap;
+  }
+  .nav-btn{
+    flex:1;min-width:110px;border-radius:10px;padding:10px 14px;font-size:15px;font-weight:700;
+    border:1px solid var(--line);background:var(--panel);color:var(--ink);min-height:48px;
+  }
+  .nav-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .nav-btn:disabled{opacity:.38;cursor:default}
+  .tts-btn{
+    width:100%;margin:0 18px 16px;width:calc(100% - 36px);
+    border:1px dashed var(--line);background:transparent;color:var(--ink-2);
+    border-radius:10px;padding:9px 12px;font-size:14px;font-weight:700;min-height:44px;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .tts-btn[aria-pressed="true"]{background:var(--teal-soft);color:var(--teal);border-style:solid;border-color:var(--teal)}
+  .tts-btn svg{width:18px;height:18px;fill:currentColor;flex:none}
+
+  /* step chips */
+  .chips{
+    display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:16px;
+  }
+  @media (max-width:560px){ .chips{grid-template-columns:repeat(3,1fr)} }
+  .step-chip{
+    border:1px solid var(--line);background:var(--panel);border-radius:10px;
+    padding:8px 6px;text-align:center;color:var(--ink);min-height:56px;
+  }
+  .step-chip b{display:block;font-family:"Archivo",sans-serif;font-size:15px;line-height:1.2}
+  .step-chip span{font-size:11.5px;color:var(--ink-2);display:block;line-height:1.35;margin-top:2px}
+  .step-chip.is-current{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+  .step-chip.is-current b{color:var(--accent)}
+  .step-chip.is-done b{color:var(--teal)}
+
+  /* ---------- lower sections ---------- */
+  .below{margin-top:28px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:860px){ .below{grid-template-columns:1fr} }
+  .card{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px;box-shadow:var(--shadow);
+  }
+  .card h2{margin:0 0 4px;font-size:19px;font-weight:900}
+  .card .sub{margin:0 0 12px;color:var(--ink-2);font-size:14px}
+  .map-table{width:100%;border-collapse:collapse;font-size:14px}
+  .map-table th,.map-table td{padding:9px 8px;text-align:left;vertical-align:top;border-top:1px solid var(--line)}
+  .map-table tr:first-child th{border-top:none}
+  .map-table th{width:42%;font-weight:700;color:var(--ink)}
+  .map-table td{color:var(--ink-2)}
+  .map-table code, .steps code{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em;
+    background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:1px 6px;white-space:nowrap;
+  }
+  ol.steps{margin:0;padding-left:1.4em;color:var(--ink-2);font-size:14.5px}
+  ol.steps li{margin:8px 0}
+  ol.steps b{color:var(--ink)}
+  .note{
+    margin-top:14px;font-size:13.5px;color:var(--ink-2);
+    background:var(--teal-soft);border-radius:10px;padding:10px 14px;
+  }
+  footer{margin-top:26px;color:var(--ink-3);font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="kicker">Three.js Prototype</span>
+    <h1>卓上扇風機の組み立てチュートリアル
+      <span class="thin">Verge3D の e-learning デモと同じ操作感を、無料の Three.js でどこまで再現できるかの試作</span>
+    </h1>
+    <p class="lead">モデルは Blender ではなく <strong>Three.js の図形（プリミティブ）の組み合わせ</strong>で作っています。本番ではここを <strong>Blender から書き出した glTF（.glb）</strong>に差し替えるだけで、ステップ解説・ハイライト・読み上げ・タイムラインはそのまま使えます。</p>
+  </header>
+
+  <div class="stage">
+    <!-- 3D viewer -->
+    <section class="viewer-card" aria-label="3Dビューア">
+      <div class="viewer-head">
+        <div class="vh-title"><span class="dot"></span>3Dビューア — ドラッグで回転 / ホイールで拡大</div>
+        <div class="vh-tools">
+          <button class="tool-btn" id="btnSpin" aria-pressed="false" type="button">羽根を回す</button>
+          <button class="tool-btn" id="btnAuto" aria-pressed="true" type="button">自動回転</button>
+          <button class="tool-btn" id="btnReset" type="button">視点を戻す</button>
+        </div>
+      </div>
+      <div id="viewport">
+        <div class="part-label" id="partLabel"><b>読み込み中…</b><span>Three.js を準備しています</span></div>
+        <div class="hint">部品や番号マーカーをクリックすると、そのステップへ移動します</div>
+        <div id="fallback"><p>3Dの読み込みに失敗しました。<br>ネットワーク接続を確認して、ページを再読み込みしてください。<br>（Three.js 本体は CDN から読み込んでいます）</p></div>
+        <!-- markers are injected here by JS -->
+      </div>
+      <div class="timeline">
+        <div class="tl-row">
+          <button class="play-btn" id="btnPlay" type="button" aria-label="組み立てアニメーションを再生">
+            <svg viewBox="0 0 24 24" id="playIcon"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+          <div class="tl-track">
+            <input type="range" id="tlRange" min="0" max="600" value="0" step="1" aria-label="組み立てタイムライン" />
+            <div class="tl-labels"><span>分解</span><span>ベース</span><span>モーター</span><span>後ろガード</span><span>羽根</span><span>キャップ</span><span>前ガード</span><span>完成</span></div>
+          </div>
+          <div class="tl-state" id="tlState">分解状態</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- lesson panel -->
+    <section class="lesson" aria-label="ステップ解説">
+      <div class="progress"><i id="progressBar"></i></div>
+      <div class="lesson-body">
+        <div class="step-meta">
+          <span class="step-no" id="stepNo">STEP 1 / 6</span>
+          <span class="step-count" id="stepCount"></span>
+          <span class="tts-state" id="ttsState" role="status"></span>
+        </div>
+        <h2 class="step-title" id="stepTitle"></h2>
+        <p class="step-text" id="stepText"></p>
+        <div class="check">
+          <h3>このステップの確認ポイント</h3>
+          <ul id="stepChecks"></ul>
+        </div>
+      </div>
+      <div class="lesson-nav">
+        <button class="nav-btn" id="btnPrev" type="button">← 前のステップ</button>
+        <button class="nav-btn primary" id="btnNext" type="button">次のステップ →</button>
+      </div>
+      <button class="tts-btn" id="btnTts" type="button" aria-pressed="false">
+        <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z"/></svg>
+        <span id="ttsLabel">読み上げ OFF（タップでON）</span>
+      </button>
+    </section>
+  </div>
+
+  <!-- step chips -->
+  <nav class="chips" id="chips" aria-label="ステップ一覧"></nav>
+
+  <div class="below">
+    <section class="card">
+      <h2>Verge3Dデモとの対応表</h2>
+      <p class="sub">有料ツールが売りにしている機能を、Three.js 側の何で肩代わりしているか。</p>
+      <table class="map-table">
+        <tr><th>モデル表示・回転・ズーム</th><td>Three.js ＋ OrbitControls（このページ）</td></tr>
+        <tr><th>Blender 連携</th><td>Blender 標準の glTF 書き出し → <code>GLTFLoader</code> で読込</td></tr>
+        <tr><th>部品クリック＆ハイライト</th><td>Raycaster で部品を拾い、発光（emissive）を脈打たせる</td></tr>
+        <tr><th>番号マーカー</th><td>3D座標を画面座標へ投影して HTML ボタンを重ねる</td></tr>
+        <tr><th>組み立てアニメーション</th><td>部品ごとの「分解位置→組立位置」を補間。Blender で焼いた動きは <code>AnimationMixer</code></td></tr>
+        <tr><th>タイムライン</th><td>スライダーの値で全工程の進み具合を直接スクラブ</td></tr>
+        <tr><th>ステップ解説＋ボイスオーバー</th><td>HTML パネル ＋ speechSynthesis（道場シリーズと同じ仕組み）</td></tr>
+        <tr><th>学習管理（SCORM）連携</th><td>個人公開では不要。進捗はステップ表示で十分</td></tr>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>GitHub Pages で本番化する手順</h2>
+      <p class="sub">この試作を「自分のモデルの教材」に育てる流れ。</p>
+      <ol class="steps">
+        <li><b>Blender でモデルを作る</b> — 部品ごとにオブジェクトを分け、名前を付ける（例：<code>base</code> / <code>blade</code>）。名前がそのままステップと対応づく。</li>
+        <li><b>glTF Binary（.glb）で書き出す</b> — Blender 標準機能。1ファイルにモデルと質感が全部入る。</li>
+        <li><b>このページのモデル生成部分を差し替える</b> — プリミティブ生成を消し、<code>GLTFLoader</code> で <code>model.glb</code> を読み込む。ステップ定義（タイトル・解説・対象部品名）の配列はそのまま使う。</li>
+        <li><b>フォルダごと GitHub Pages へ</b> — <code>index.html</code> と <code>model.glb</code> を同じフォルダに置いて push するだけ。Three.js 本体は CDN 参照のままでよい。</li>
+        <li><b>題材を差し替える</b> — 扇風機でなくても、PC自作・自転車の輪行・家具の組み立てなど、「部品＋手順」があるものなら同じ型で作れる。</li>
+      </ol>
+      <p class="note">試作の割り切り：質感（PBRマテリアル）や影の細かさは Verge3D のデモより簡素です。ただし教材としての骨格——手順・ハイライト・読み上げ・タイムライン——は全部そろっています。</p>
+    </section>
+  </div>
+
+  <footer>Three.js 試作 / モデルはプリミティブ生成（Blender不使用）・解説は扇風機組み立ての一般的な手順をもとにしたサンプルです</footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* ============ ステップ定義（シナリオとエンジンの分離） ============ */
+  var STEPS = [
+    {
+      part:"base", no:"STEP 1 / 6", title:"ベースを置く",
+      label:"① ベース（台座）", sub:"すべての土台。平らな場所に置く",
+      text:"まず台座を平らな場所に置きます。扇風機は羽根の振動で少しずつ動くことがあるので、傾いた場所や柔らかい布の上は避けます。電源コードは後ろ側に逃がしておくと、後の作業で踏んだり引っかけたりしません。",
+      checks:["台座がぐらつかない場所に置いた","電源コードを後ろに逃がした","スイッチが手前に向いている"]
+    },
+    {
+      part:"motor", no:"STEP 2 / 6", title:"支柱とモーター部を取り付ける",
+      label:"② 支柱・モーター部", sub:"羽根を回す心臓部",
+      text:"支柱を台座の穴に差し込み、裏側の固定ネジを締めます。モーター部は首振りの軸になる部分なので、差し込みが浅いままだと運転中に傾きます。奥まで入ったことを確認してから締めてください。",
+      checks:["支柱が奥まで差し込めている","固定ネジを締めた","モーター部を手で揺らしてぐらつきがない"]
+    },
+    {
+      part:"rear", no:"STEP 3 / 6", title:"後ろガードを固定する",
+      label:"③ 後ろガード", sub:"モーター軸に合わせてはめる",
+      text:"後ろガードをモーター部の突起に合わせ、固定ナットで締めます。ガードには上下の向きがあり、取っ手や引っかけ部分が上になるのが正解です。ナットは工具で強く締めすぎず、手でしっかり止まる程度で十分です。",
+      checks:["ガードの向き（上下）が合っている","固定ナットを締めた","ガードが軸と同心になっている"]
+    },
+    {
+      part:"blade", no:"STEP 4 / 6", title:"羽根を取り付ける",
+      label:"④ 羽根", sub:"軸の形に合わせて差し込む",
+      text:"羽根の中心穴をモーター軸に差し込みます。軸は半月形（Dカット）になっているので、穴の形と合う向きでしか入りません。無理に押し込まず、形が合う向きを探してまっすぐ差し込むのがコツです。",
+      checks:["軸と穴の形（Dカット）が合っている","羽根が奥まで入っている","手で回すとスムーズに回る"]
+    },
+    {
+      part:"cap", no:"STEP 5 / 6", title:"羽根キャップを締める",
+      label:"⑤ 羽根キャップ（スピンナー）", sub:"逆ネジに注意",
+      text:"羽根が外れないよう、キャップで固定します。ここは多くの扇風機で「逆ネジ」になっていて、普段と反対の左回しで締まります。これは羽根の回転で自然に締まる方向にするための工夫です。締めたら羽根を手で回し、ガードに当たらないか確認します。",
+      checks:["逆ネジ（左回し）で締めた","締めたあと羽根がスムーズに回る","ガードに羽根が当たっていない"]
+    },
+    {
+      part:"front", no:"STEP 6 / 6", title:"前ガードをはめて完成",
+      label:"⑥ 前ガード", sub:"リングとクリップで固定",
+      text:"前ガードを後ろガードに合わせ、外周のリング（または周囲のクリップ）で固定します。下側の引っかけを先に合わせてから上を閉じると、少ない力ではまります。全周が閉じていることを確認したら完成です。「羽根を回す」ボタンで試運転してみてください。",
+      checks:["下側の引っかけから合わせた","リング／クリップが全周閉じている","試運転で異音・ガタつきがない"]
+    }
+  ];
+  var PART_ORDER = ["base","motor","rear","blade","cap","front"];
+
+  /* ============ DOM ============ */
+  var viewport = document.getElementById("viewport");
+  var partLabel = document.getElementById("partLabel");
+  var tlRange = document.getElementById("tlRange");
+  var tlState = document.getElementById("tlState");
+  var btnPlay = document.getElementById("btnPlay");
+  var playIcon = document.getElementById("playIcon");
+  var btnPrev = document.getElementById("btnPrev");
+  var btnNext = document.getElementById("btnNext");
+  var btnSpin = document.getElementById("btnSpin");
+  var btnAuto = document.getElementById("btnAuto");
+  var btnReset = document.getElementById("btnReset");
+  var btnTts = document.getElementById("btnTts");
+  var ttsLabel = document.getElementById("ttsLabel");
+  var ttsState = document.getElementById("ttsState");
+  var progressBar = document.getElementById("progressBar");
+  var chipsWrap = document.getElementById("chips");
+
+  if (typeof THREE === "undefined") {
+    /* CDNに届かない環境でも、解説パネルとステップ移動だけは使えるようにする */
+    document.getElementById("fallback").style.display = "grid";
+    partLabel.style.display = "none";
+    var fCurrent = 0, fTts = false, fChips = [];
+    STEPS.forEach(function(s, i){
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "step-chip";
+      b.innerHTML = "<b>" + (i + 1) + "</b><span></span>";
+      b.querySelector("span").textContent = s.title.replace(/を.*$/, "").replace(/は.*$/, "");
+      b.addEventListener("click", function(){ fGo(i); });
+      chipsWrap.appendChild(b); fChips.push(b);
+    });
+    function fSpeak(){
+      if (!("speechSynthesis" in window)) return;
+      window.speechSynthesis.cancel();
+      var s = STEPS[fCurrent];
+      var u = new SpeechSynthesisUtterance(s.title + "。" + s.text);
+      u.lang = "ja-JP";
+      try { window.speechSynthesis.resume(); } catch(e) {}
+      window.speechSynthesis.speak(u);
+    }
+    function fRender(){
+      var s = STEPS[fCurrent];
+      document.getElementById("stepNo").textContent = s.no;
+      document.getElementById("stepCount").textContent = "部品：" + s.label;
+      document.getElementById("stepTitle").textContent = s.title;
+      document.getElementById("stepText").textContent = s.text;
+      var ul = document.getElementById("stepChecks"); ul.innerHTML = "";
+      s.checks.forEach(function(c){ var li = document.createElement("li"); li.textContent = c; ul.appendChild(li); });
+      progressBar.style.width = ((fCurrent + 1) / STEPS.length * 100) + "%";
+      btnPrev.disabled = fCurrent === 0;
+      btnNext.textContent = fCurrent === STEPS.length - 1 ? "最初から見直す ↺" : "次のステップ →";
+      fChips.forEach(function(chip, i){
+        chip.classList.toggle("is-current", i === fCurrent);
+        chip.classList.toggle("is-done", i < fCurrent);
+      });
+      tlState.textContent = "解説のみ表示中";
+    }
+    function fGo(i){
+      fCurrent = Math.max(0, Math.min(STEPS.length - 1, i));
+      fRender();
+      if (fTts) fSpeak();
+    }
+    btnPrev.addEventListener("click", function(){ fGo(fCurrent - 1); });
+    btnNext.addEventListener("click", function(){ fGo(fCurrent === STEPS.length - 1 ? 0 : fCurrent + 1); });
+    btnTts.addEventListener("click", function(){
+      fTts = !fTts;
+      btnTts.setAttribute("aria-pressed", String(fTts));
+      ttsLabel.textContent = fTts ? "読み上げ ON（ステップ移動で自動再生）" : "読み上げ OFF（タップでON）";
+      if (fTts) fSpeak();
+      else if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    });
+    fRender();
+    return;
+  }
+
+  /* ============ 状態 ============ */
+  var current = 0;              // 現在のステップ index
+  var progress = 0;             // 表示中の組み立て進捗 0..600
+  var progressTarget = 100;     // 目標進捗
+  var playing = false;
+  var spinning = false;
+  var autoRotate = true;
+  var ttsOn = false;
+
+  /* ============ シーン ============ */
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+  var CAM_HOME = new THREE.Vector3(4.6, 3.1, 6.4);
+  camera.position.copy(CAM_HOME);
+
+  var renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  viewport.insertBefore(renderer.domElement, viewport.firstChild);
+
+  var controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 3.2;
+  controls.maxDistance = 13;
+  controls.maxPolarAngle = Math.PI * 0.55;
+  controls.target.set(0, 1.55, 0);
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 0.9;
+
+  scene.add(new THREE.HemisphereLight(0xdfeaf2, 0x2a2f26, 0.85));
+  var key = new THREE.DirectionalLight(0xffffff, 0.95);
+  key.position.set(5, 8, 4);
+  key.castShadow = true;
+  key.shadow.mapSize.set(1024, 1024);
+  scene.add(key);
+  var rim = new THREE.DirectionalLight(0x9fd8d6, 0.35);
+  rim.position.set(-6, 3, -5);
+  scene.add(rim);
+
+  /* 床（作業台） */
+  var floor = new THREE.Mesh(
+    new THREE.CylinderGeometry(3.4, 3.55, 0.18, 56),
+    new THREE.MeshStandardMaterial({ color:0x39424e, roughness:0.9, metalness:0.05 })
+  );
+  floor.position.y = -0.09;
+  floor.receiveShadow = true;
+  scene.add(floor);
+  var grid = new THREE.PolarGridHelper(3.3, 12, 6, 56, 0x5a6875, 0x46525e);
+  grid.position.y = 0.005;
+  grid.material.transparent = true;
+  grid.material.opacity = 0.5;
+  scene.add(grid);
+
+  /* ============ マテリアル ============ */
+  var M = {
+    body:  new THREE.MeshStandardMaterial({ color:0xe8e4dc, roughness:0.45, metalness:0.08 }),
+    body2: new THREE.MeshStandardMaterial({ color:0xcfd6da, roughness:0.5,  metalness:0.15 }),
+    dark:  new THREE.MeshStandardMaterial({ color:0x2c333b, roughness:0.6,  metalness:0.3 }),
+    metal: new THREE.MeshStandardMaterial({ color:0x9aa7b1, roughness:0.3,  metalness:0.85 }),
+    accent:new THREE.MeshStandardMaterial({ color:0xd94f26, roughness:0.4,  metalness:0.1 }),
+    blade: new THREE.MeshStandardMaterial({ color:0x7fb5c9, roughness:0.25, metalness:0.05, transparent:true, opacity:0.82, side:THREE.DoubleSide }),
+    guard: new THREE.MeshStandardMaterial({ color:0xb9c4cc, roughness:0.35, metalness:0.8 })
+  };
+
+  function mesh(geo, mat, x, y, z){
+    var m = new THREE.Mesh(geo, mat);
+    if (x !== undefined) m.position.set(x, y, z);
+    m.castShadow = true;
+    return m;
+  }
+
+  /* ============ 部品の組み立て（プリミティブ） ============ */
+  var fan = new THREE.Group();
+  scene.add(fan);
+  var parts = {};   // id -> { group, exploded:Vector3, meshes:[], markerEl }
+
+  function registerPart(id, group, exploded){
+    group.userData.partId = id;
+    parts[id] = { group:group, exploded:exploded, meshes:[] };
+    group.traverse(function(o){ if (o.isMesh){ o.userData.partId = id; parts[id].meshes.push(o); } });
+    fan.add(group);
+  }
+
+  /* ① ベース */
+  (function(){
+    var g = new THREE.Group();
+    g.add(mesh(new THREE.CylinderGeometry(1.25, 1.38, 0.22, 40), M.body, 0, 0.11, 0));
+    g.add(mesh(new THREE.CylinderGeometry(0.95, 1.1, 0.1, 40), M.body2, 0, 0.26, 0));
+    var panel = mesh(new THREE.BoxGeometry(0.9, 0.07, 0.5), M.dark, 0, 0.3, 0.62);
+    panel.rotation.x = -0.18; g.add(panel);
+    g.add(mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.1, 24), M.accent, -0.22, 0.36, 0.62));
+    g.add(mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.08, 24), M.dark, 0.18, 0.35, 0.62));
+    g.add(mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.08, 24), M.dark, 0.42, 0.35, 0.6));
+    registerPart("base", g, new THREE.Vector3(0, -1.5, 0));
+  })();
+
+  /* ② 支柱・モーター */
+  (function(){
+    var g = new THREE.Group();
+    g.add(mesh(new THREE.CylinderGeometry(0.16, 0.2, 1.15, 24), M.body2, 0, 0.85, 0));
+    var housing = mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.95, 28), M.body, 0, 1.62, -0.1);
+    housing.rotation.x = Math.PI / 2; g.add(housing);
+    var back = mesh(new THREE.SphereGeometry(0.42, 28, 18), M.body, 0, 1.62, -0.58);
+    back.scale.z = 0.75; g.add(back);
+    g.add(mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.55, 16), M.metal, 0, 1.62, 0.55));
+    var knob = mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.16, 20), M.dark, 0, 2.12, -0.15);
+    g.add(knob);
+    registerPart("motor", g, new THREE.Vector3(-2.4, 0.7, -0.6));
+  })();
+
+  /* ガード共通（輪＋放射スポーク＋同心リング） */
+  function buildGuard(dome){
+    var g = new THREE.Group();
+    var R = 1.18;
+    g.add(mesh(new THREE.TorusGeometry(R, 0.045, 12, 56), M.guard, 0, 0, 0));
+    [0.85, 0.55, 0.28].forEach(function(r){
+      var ring = mesh(new THREE.TorusGeometry(r, 0.016, 8, 48), M.guard, 0, 0, dome * (1 - r / R) * 0.55);
+      g.add(ring);
+    });
+    for (var i = 0; i < 12; i++){
+      var a = (i / 12) * Math.PI * 2;
+      var spoke = mesh(new THREE.CylinderGeometry(0.014, 0.014, R, 6), M.guard,
+        Math.cos(a) * R / 2, Math.sin(a) * R / 2, dome * 0.16);
+      spoke.rotation.z = a + Math.PI / 2;
+      spoke.rotation.y = dome * 0.28;
+      g.add(spoke);
+    }
+    return g;
+  }
+
+  /* ③ 後ろガード */
+  (function(){
+    var g = buildGuard(-1);
+    g.position.set(0, 1.62, 0.28);
+    g.add(mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.14, 24), M.dark, 0, 0, -0.08));
+    var wrap = new THREE.Group(); wrap.add(g);
+    registerPart("rear", wrap, new THREE.Vector3(0, 0.9, 2.3));
+    parts.rear.inner = g;
+  })();
+
+  /* ④ 羽根 */
+  var bladeGroup;
+  (function(){
+    var g = new THREE.Group();
+    g.position.set(0, 1.62, 0.52);
+    var spin = new THREE.Group();
+    spin.add(mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.18, 24), M.body2, 0, 0, 0));
+    spin.children[0].rotation.x = Math.PI / 2;
+    for (var i = 0; i < 3; i++){
+      var holder = new THREE.Group();
+      var blade = mesh(new THREE.CircleGeometry(0.78, 26, 0.35, 1.9), M.blade, 0.62, 0.1, 0);
+      blade.scale.set(1, 0.82, 1);
+      blade.rotation.set(-0.5, 0.35, 0.2);
+      holder.add(blade);
+      holder.rotation.z = (i / 3) * Math.PI * 2;
+      spin.add(holder);
+    }
+    g.add(spin);
+    bladeGroup = spin;
+    var wrap = new THREE.Group(); wrap.add(g);
+    registerPart("blade", wrap, new THREE.Vector3(1.7, 1.1, 3.1));
+    parts.blade.inner = g;
+  })();
+
+  /* ⑤ キャップ */
+  (function(){
+    var g = new THREE.Group();
+    g.position.set(0, 1.62, 0.68);
+    var cap = mesh(new THREE.SphereGeometry(0.21, 26, 18), M.accent, 0, 0, 0);
+    cap.scale.z = 0.8; g.add(cap);
+    g.add(mesh(new THREE.CylinderGeometry(0.1, 0.13, 0.1, 20), M.dark, 0, 0, -0.08)).children;
+    g.children[g.children.length-1].rotation.x = Math.PI / 2;
+    var wrap = new THREE.Group(); wrap.add(g);
+    registerPart("cap", wrap, new THREE.Vector3(-1.6, 1.6, 3.6));
+    parts.cap.inner = g;
+  })();
+
+  /* ⑥ 前ガード */
+  (function(){
+    var g = buildGuard(1);
+    g.position.set(0, 1.62, 0.78);
+    var badge = mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.05, 28), M.accent, 0, 0, 0.34);
+    badge.rotation.x = Math.PI / 2; g.add(badge);
+    var ring = mesh(new THREE.TorusGeometry(1.21, 0.05, 12, 56), M.accent, 0, 0, 0.02);
+    g.add(ring);
+    var wrap = new THREE.Group(); wrap.add(g);
+    registerPart("front", wrap, new THREE.Vector3(0, 0.4, 4.6));
+    parts.front.inner = g;
+  })();
+
+  /* 部品の基準位置を記録（組立位置 = 現在位置） */
+  PART_ORDER.forEach(function(id){
+    var p = parts[id];
+    p.assembled = p.group.position.clone();
+    p.group.position.copy(p.assembled).add(p.exploded);
+  });
+
+  /* ============ マーカー（番号バッジ） ============ */
+  var markers = {};
+  PART_ORDER.forEach(function(id, i){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "marker";
+    b.textContent = String(i + 1);
+    b.setAttribute("aria-label", STEPS[i].label + " のステップへ");
+    b.addEventListener("click", function(){ goToStep(i, true); });
+    viewport.appendChild(b);
+    markers[id] = b;
+    parts[id].markerEl = b;
+  });
+  var markerAnchor = {
+    base:  new THREE.Vector3(1.15, 0.35, 0.3),
+    motor: new THREE.Vector3(-0.55, 2.0, -0.2),
+    rear:  new THREE.Vector3(0, 2.85, 0.3),
+    blade: new THREE.Vector3(0.95, 2.3, 0.55),
+    cap:   new THREE.Vector3(0, 1.62, 0.75),
+    front: new THREE.Vector3(-1.05, 2.3, 0.85)
+  };
+
+  /* ============ ハイライト ============ */
+  /* 共有マテリアルを汚さないよう、初回だけメッシュのマテリアルを複製して emissive を持たせる */
+  function ensureHlMaterial(m){
+    if (!m.material || !("emissive" in m.material)) return false;
+    if (!m.userData._hlReady){
+      m.material = m.material.clone();
+      m.material.emissive = new THREE.Color(0xe85a2a);
+      m.material.emissiveIntensity = 0;
+      m.userData._hlReady = true;
+    }
+    return true;
+  }
+  function applyHighlight(id, intensity){
+    PART_ORDER.forEach(function(pid){
+      var p = parts[pid]; if (!p) return;
+      var on = (pid === id);
+      p.meshes.forEach(function(m){
+        if (ensureHlMaterial(m)) m.material.emissiveIntensity = on ? intensity : 0;
+      });
+    });
+  }
+  function clearHighlights(){ applyHighlight(null, 0); }
+
+  /* ============ レイキャスト（部品クリック） ============ */
+  var raycaster = new THREE.Raycaster();
+  var pointer = new THREE.Vector2();
+  var downPos = null;
+  renderer.domElement.addEventListener("pointerdown", function(e){ downPos = [e.clientX, e.clientY]; });
+  renderer.domElement.addEventListener("pointerup", function(e){
+    if (!downPos) return;
+    var dx = e.clientX - downPos[0], dy = e.clientY - downPos[1];
+    downPos = null;
+    if (dx * dx + dy * dy > 36) return; // ドラッグはクリックとみなさない
+    var rect = renderer.domElement.getBoundingClientRect();
+    pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(pointer, camera);
+    var hits = raycaster.intersectObjects(fan.children, true);
+    for (var i = 0; i < hits.length; i++){
+      var pid = hits[i].object.userData.partId;
+      if (pid){
+        var idx = PART_ORDER.indexOf(pid);
+        if (idx >= 0) goToStep(idx, true);
+        break;
+      }
+    }
+  });
+
+  /* ============ ステップ遷移 ============ */
+  var chips = [];
+  STEPS.forEach(function(s, i){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "step-chip";
+    b.innerHTML = "<b>" + (i + 1) + "</b><span></span>";
+    b.querySelector("span").textContent = s.title.replace(/を.*$/, "").replace(/は.*$/, "");
+    b.addEventListener("click", function(){ goToStep(i, true); });
+    chipsWrap.appendChild(b);
+    chips.push(b);
+  });
+
+  function renderStep(){
+    var s = STEPS[current];
+    document.getElementById("stepNo").textContent = s.no;
+    document.getElementById("stepCount").textContent = "部品：" + s.label;
+    document.getElementById("stepTitle").textContent = s.title;
+    document.getElementById("stepText").textContent = s.text;
+    partLabel.innerHTML = "";
+    var b = document.createElement("b"); b.textContent = s.label;
+    var sp = document.createElement("span"); sp.textContent = s.sub;
+    partLabel.appendChild(b); partLabel.appendChild(sp);
+    var ul = document.getElementById("stepChecks");
+    ul.innerHTML = "";
+    s.checks.forEach(function(c){
+      var li = document.createElement("li"); li.textContent = c; ul.appendChild(li);
+    });
+    progressBar.style.width = ((current + 1) / STEPS.length * 100) + "%";
+    btnPrev.disabled = current === 0;
+    btnNext.textContent = current === STEPS.length - 1 ? "最初から見直す ↺" : "次のステップ →";
+    chips.forEach(function(chip, i){
+      chip.classList.toggle("is-current", i === current);
+      chip.classList.toggle("is-done", i < current);
+    });
+    PART_ORDER.forEach(function(id, i){
+      var el = markers[id];
+      el.classList.toggle("is-current", i === current);
+      el.classList.toggle("is-done", i < current);
+    });
+    clearHighlights();
+  }
+
+  function goToStep(i, animate){
+    current = Math.max(0, Math.min(STEPS.length - 1, i));
+    progressTarget = (current + 1) * 100;
+    if (!animate) progress = progressTarget;
+    playing = false;
+    updatePlayIcon();
+    renderStep();
+    if (ttsOn) speak();
+  }
+
+  btnPrev.addEventListener("click", function(){ goToStep(current - 1, true); });
+  btnNext.addEventListener("click", function(){
+    if (current === STEPS.length - 1) goToStep(0, true);
+    else goToStep(current + 1, true);
+  });
+
+  /* ============ タイムライン ============ */
+  function updatePlayIcon(){
+    playIcon.innerHTML = playing ? '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
+    btnPlay.setAttribute("aria-label", playing ? "一時停止" : "組み立てアニメーションを再生");
+  }
+  btnPlay.addEventListener("click", function(){
+    if (!playing && progressTarget >= 600){ progress = 0; progressTarget = 0; }
+    playing = !playing;
+    if (playing) progressTarget = 600;
+    updatePlayIcon();
+  });
+  tlRange.addEventListener("input", function(){
+    playing = false; updatePlayIcon();
+    progress = progressTarget = parseFloat(tlRange.value);
+    var idx = Math.min(STEPS.length - 1, Math.floor(progress / 100));
+    if (idx !== current){ current = idx; renderStep(); }
+  });
+
+  function applyProgress(){
+    PART_ORDER.forEach(function(id, i){
+      var p = parts[id];
+      var t = Math.max(0, Math.min(1, progress / 100 - i));
+      // easeInOut
+      var e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+      p.group.position.copy(p.assembled).addScaledVector(p.exploded, 1 - e);
+      var s = 0.92 + 0.08 * e;
+      p.group.scale.setScalar(s);
+    });
+    tlRange.value = String(Math.round(progress));
+    if (progress >= 600) tlState.textContent = "完成！";
+    else if (progress <= 0) tlState.textContent = "分解状態";
+    else tlState.textContent = "組み立て中 " + Math.round(progress / 6) + "%";
+  }
+
+  /* ============ ツールボタン ============ */
+  btnSpin.addEventListener("click", function(){
+    spinning = !spinning;
+    btnSpin.setAttribute("aria-pressed", String(spinning));
+  });
+  btnAuto.addEventListener("click", function(){
+    autoRotate = !autoRotate;
+    controls.autoRotate = autoRotate;
+    btnAuto.setAttribute("aria-pressed", String(autoRotate));
+  });
+  btnReset.addEventListener("click", function(){
+    camera.position.copy(CAM_HOME);
+    controls.target.set(0, 1.55, 0);
+  });
+  /* 操作を始めたら自動回転を止める（邪魔にならないように） */
+  renderer.domElement.addEventListener("pointerdown", function(){
+    if (autoRotate){ autoRotate = false; controls.autoRotate = false; btnAuto.setAttribute("aria-pressed", "false"); }
+  });
+
+  /* ============ 読み上げ ============ */
+  function speak(){
+    if (!("speechSynthesis" in window)){ ttsState.textContent = "このブラウザは読み上げ非対応です"; return; }
+    window.speechSynthesis.cancel();
+    var s = STEPS[current];
+    var u = new SpeechSynthesisUtterance(s.title + "。" + s.text);
+    u.lang = "ja-JP";
+    u.rate = 1.0;
+    var voices = window.speechSynthesis.getVoices();
+    for (var i = 0; i < voices.length; i++){
+      if (voices[i].lang && voices[i].lang.indexOf("ja") === 0){ u.voice = voices[i]; break; }
+    }
+    u.onstart = function(){ ttsState.textContent = "読み上げ中…"; };
+    u.onend = function(){ ttsState.textContent = ""; };
+    u.onerror = function(){ ttsState.textContent = ""; };
+    /* Chrome系は resume() を挟まないと始まらないことがある */
+    try { window.speechSynthesis.resume(); } catch(e) {}
+    window.speechSynthesis.speak(u);
+  }
+  btnTts.addEventListener("click", function(){
+    ttsOn = !ttsOn;
+    btnTts.setAttribute("aria-pressed", String(ttsOn));
+    ttsLabel.textContent = ttsOn ? "読み上げ ON（ステップ移動で自動再生）" : "読み上げ OFF（タップでON）";
+    if (ttsOn) speak();
+    else if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+  });
+  if ("speechSynthesis" in window && window.speechSynthesis.onvoiceschanged !== undefined){
+    window.speechSynthesis.onvoiceschanged = function(){};
+  }
+
+  /* ============ リサイズ ============ */
+  function resize(){
+    var w = viewport.clientWidth, h = viewport.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener("resize", resize);
+
+  /* ============ メインループ ============ */
+  var clock = new THREE.Clock();
+  var v3 = new THREE.Vector3();
+  function animate(){
+    requestAnimationFrame(animate);
+    var dt = Math.min(clock.getDelta(), 0.05);
+    var t = clock.elapsedTime;
+
+    /* 進捗を目標へ滑らかに */
+    var diff = progressTarget - progress;
+    if (Math.abs(diff) > 0.05){
+      var speed = playing ? 55 : 260;
+      var step = Math.sign(diff) * Math.min(Math.abs(diff), speed * dt);
+      progress += step;
+      if (playing && progress >= 600){ playing = false; updatePlayIcon(); }
+      var idx = Math.min(STEPS.length - 1, Math.max(0, Math.floor(progress / 100 - 0.001)));
+      if (playing && idx !== current){ current = idx; renderStep(); }
+    }
+    applyProgress();
+
+    /* 現在部品のハイライトを脈打たせる */
+    applyHighlight(STEPS[current].part, 0.32 + 0.22 * (0.5 + 0.5 * Math.sin(t * 3.2)));
+
+    /* 羽根の回転 */
+    if (spinning && progress >= 590) bladeGroup.rotation.z -= dt * 14;
+    else if (spinning) bladeGroup.rotation.z -= dt * 1.2;
+
+    /* マーカー投影 */
+    PART_ORDER.forEach(function(id, i){
+      var el = markers[id];
+      v3.copy(markerAnchor[id]);
+      /* 部品の現在のオフセットを加える */
+      v3.add(parts[id].group.position).sub(parts[id].assembled);
+      v3.project(camera);
+      if (v3.z > 1 || v3.z < -1){ el.classList.add("is-hidden"); return; }
+      el.classList.remove("is-hidden");
+      el.style.left = ((v3.x * 0.5 + 0.5) * viewport.clientWidth) + "px";
+      el.style.top = ((-v3.y * 0.5 + 0.5) * viewport.clientHeight) + "px";
+    });
+
+    controls.update();
+    renderer.render(scene, camera);
+  }
+
+  resize();
+  renderStep();
+  progress = 0; progressTarget = 100;
+  animate();
+  /* 初期表示でもう一度サイズ確定（フォント読み込み後のズレ対策） */
+  setTimeout(resize, 300);
+})();
+</script>
+</body>
+</html>
