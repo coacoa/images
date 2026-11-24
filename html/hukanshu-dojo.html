@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<!-- build: 2026-11-24 22:26:53 JST -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="data:," />
+<title>ふかん術道場</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#e7edef; --bg2:#d5e2e6; --panel:#fcfcfa; --panel2:#eef3f1;
+    --ink:#22303a; --ink-soft:#5a6b73; --line:#22303a;
+    --accent:#1d6f77; --accent2:#1f6f5c; --gold:#c9920e;
+    --btn:#fcfcfa; --btn-ink:#22303a; --good:#1f6f5c; --warn:#b3392e;
+    --shadow:#22303a;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#121a20; --bg2:#0b1116; --panel:#1c262e; --panel2:#25323b;
+      --ink:#e8ece7; --ink-soft:#aebcb2; --line:#e8ece7;
+      --accent:#5fc2cf; --accent2:#4fc2a5; --gold:#e5b83e;
+      --btn:#25323b; --btn-ink:#e8ece7; --good:#4fc2a5; --warn:#e0685c;
+      --shadow:#000;
+    }
+  }
+  *{ box-sizing:border-box; }
+  html{ -webkit-text-size-adjust:100%; }
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"DotGothic16", "Hiragino Kaku Gothic ProN", sans-serif;
+    line-height:1.75; letter-spacing:.02em;
+  }
+  button{ font-family:inherit; }
+  .wrap{ max-width:860px; margin:0 auto; padding:14px 14px 48px; }
+  .topbar{ display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; margin-bottom:10px; }
+  .ctl{
+    min-height:44px; padding:8px 14px; cursor:pointer;
+    background:var(--btn); color:var(--btn-ink);
+    border:3px solid var(--line); box-shadow:3px 3px 0 var(--shadow);
+    font-size:15px;
+  }
+  .ctl:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--shadow); }
+  .ctl[aria-pressed="true"]{ background:var(--gold); color:#22303a; }
+  .titlebox{
+    border:4px solid var(--line); background:var(--panel);
+    box-shadow:6px 6px 0 var(--shadow); padding:18px 18px 14px; margin-bottom:14px;
+  }
+  .series{ font-size:13px; color:var(--accent); margin:0 0 4px; }
+  h1{ font-size:clamp(24px, 6vw, 38px); line-height:1.35; margin:0 0 6px; font-weight:400; }
+  .subtitle{ font-size:clamp(14px,3.6vw,18px); color:var(--ink-soft); margin:0 0 10px; }
+  .stance{
+    border:3px solid var(--accent2); background:var(--panel2);
+    padding:10px 12px; font-size:14.5px; margin:0;
+  }
+  .stance b{ color:var(--accent2); }
+  .progress-row{ display:flex; align-items:center; gap:10px; margin:14px 2px 8px; font-size:14px; }
+  .pbar{ flex:1; height:18px; border:3px solid var(--line); background:var(--panel); position:relative; }
+  .pfill{ position:absolute; inset:0; width:0%; background:repeating-linear-gradient(90deg, var(--accent2) 0 10px, var(--gold) 10px 20px); transition:width .4s; }
+  .map{ border:3px solid var(--line); background:var(--panel); box-shadow:4px 4px 0 var(--shadow); padding:12px; margin-bottom:14px; }
+  .map h2{ font-size:16px; margin:2px 0 8px; font-weight:400; }
+  .ch{ margin-bottom:10px; }
+  .ch-name{ font-size:14px; color:var(--accent); margin:0 0 6px; }
+  .lessons{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:8px; }
+  .lbtn{
+    min-height:48px; text-align:left; cursor:pointer; padding:8px 10px;
+    background:var(--btn); color:var(--btn-ink); border:3px solid var(--line);
+    font-size:13.5px; line-height:1.45;
+  }
+  .lbtn .no{ color:var(--accent2); }
+  .lbtn.done{ background:var(--panel2); }
+  .lbtn.done .no::after{ content:" ★"; color:var(--gold); }
+  .lbtn.now{ outline:3px solid var(--gold); outline-offset:1px; }
+  .frame{
+    border:4px solid var(--line); background:var(--panel);
+    box-shadow:6px 6px 0 var(--shadow); padding:0; overflow:hidden;
+  }
+  .scene-head{
+    background:var(--panel2); border-bottom:3px solid var(--line);
+    padding:10px 14px; display:flex; flex-wrap:wrap; gap:6px 12px; align-items:baseline;
+  }
+  .scene-head .chlabel{ color:var(--accent); font-size:13px; }
+  .scene-head .ltitle{ font-size:19px; }
+  .stage{ padding:16px 16px 8px; min-height:300px; }
+  .who{ display:flex; gap:12px; align-items:flex-start; margin-bottom:12px; }
+  .face{
+    flex:0 0 auto; width:64px; height:64px; border:3px solid var(--line);
+    background:var(--bg2); display:grid; place-items:center; font-size:34px;
+  }
+  .sensei-name{ font-size:13px; color:var(--accent2); margin:0 0 2px; }
+  .stage p{ font-size:16.5px; margin:0 0 12px; }
+  .stage p.small{ font-size:14px; color:var(--ink-soft); }
+  .diagram{ margin:14px 0; border:3px solid var(--line); background:var(--bg); padding:10px; }
+  .diagram svg{ display:block; width:100%; height:auto; }
+  .diagram figcaption{ font-size:13px; color:var(--ink-soft); margin-top:6px; }
+  .quiz-q{ font-size:17px; border-left:6px solid var(--gold); padding-left:10px; }
+  .result{ border:3px solid var(--good); background:var(--panel2); padding:10px 12px; margin-bottom:12px; }
+  .result.bad{ border-color:var(--warn); }
+  .result b.good{ color:var(--good); } .result b.bad{ color:var(--warn); }
+  .actions{ display:flex; flex-wrap:wrap; gap:10px; padding:6px 16px 18px; }
+  .abtn{
+    min-height:48px; padding:10px 18px; cursor:pointer; font-size:16px;
+    background:var(--btn); color:var(--btn-ink); border:3px solid var(--line);
+    box-shadow:3px 3px 0 var(--shadow);
+  }
+  .abtn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--shadow); }
+  .abtn.primary{ background:var(--accent); color:#f4feff; }
+  .abtn.sub{ font-size:14px; min-height:44px; }
+  .choices{ display:grid; gap:10px; padding:0 16px 18px; }
+  .cbtn{
+    min-height:52px; text-align:left; cursor:pointer; padding:10px 14px; font-size:15.5px;
+    background:var(--btn); color:var(--btn-ink); border:3px solid var(--line);
+    box-shadow:3px 3px 0 var(--shadow); line-height:1.55;
+  }
+  .cbtn:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--shadow); }
+  .below{ margin-top:16px; display:flex; flex-wrap:wrap; gap:10px; }
+  .panel{
+    margin-top:12px; border:3px solid var(--line); background:var(--panel);
+    box-shadow:4px 4px 0 var(--shadow); padding:14px;
+  }
+  .panel h2{ font-size:17px; margin:0 0 10px; font-weight:400; }
+  .gal-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; }
+  .gal-item{ border:3px solid var(--line); background:var(--bg); padding:8px; }
+  .gal-item svg{ display:block; width:100%; height:auto; }
+  .gal-item .cap{ font-size:13px; margin-top:6px; }
+  .gal-item .cap b{ color:var(--accent2); font-weight:400; }
+  .listen-item{ border-bottom:2px dashed var(--ink-soft); padding:10px 0; }
+  .listen-item:last-child{ border-bottom:none; }
+  .listen-item h3{ font-size:15px; margin:0 0 4px; font-weight:400; color:var(--accent2); }
+  .listen-item p{ font-size:14.5px; margin:0 0 6px; }
+  [hidden]{ display:none !important; }
+  footer{ margin-top:22px; font-size:12.5px; color:var(--ink-soft); text-align:center; }
+  @media (prefers-reduced-motion: reduce){ .pfill{ transition:none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <button class="ctl" id="ttsBtn" aria-pressed="false">🗣 読上OFF</button>
+    <button class="ctl" id="listenBtn" aria-pressed="false">🎧 聞くモード</button>
+  </div>
+
+  <div class="titlebox">
+    <p class="series">◆ 「ことばのうつりかわり道場」から生まれた、作法の道場 ◆</p>
+    <h1>ふかん術道場</h1>
+    <p class="subtitle">― 不快を理解に変える作法 ―</p>
+    <p class="stance"><b>この道場の立場：</b>イライラしても、物事を少し引いて、抽象的に見渡す力があると、不快は「理解」に変わることがあります。これは医療や治療の話ではなく、一般的な考え方と習慣の情報です。説教はしません。具体的な手順と、小さな練習だけで組み立てます。ストレスで自滅しないための「引いて見る作法」を、一緒に身につけましょう。</p>
+  </div>
+
+  <div class="progress-row">
+    <span id="progText">進捗 0 / 16</span>
+    <div class="pbar"><div class="pfill" id="pfill"></div></div>
+  </div>
+
+  <nav class="map" aria-label="レッスン一覧">
+    <h2>■ もくじ（好きな課から開けます）</h2>
+    <div id="mapBody"></div>
+  </nav>
+
+  <main class="frame" id="frame">
+    <div class="scene-head">
+      <span class="chlabel" id="chLabel"></span>
+      <span class="ltitle" id="lTitle"></span>
+    </div>
+    <div class="stage" id="stage"></div>
+    <div class="choices" id="choices" hidden></div>
+    <div class="actions" id="actions"></div>
+  </main>
+
+  <div class="below">
+    <button class="ctl" id="galBtn" aria-pressed="false">🖼 図解ギャラリー</button>
+  </div>
+
+  <section class="panel" id="galPanel" hidden>
+    <h2>🖼 図解ギャラリー（全16点）</h2>
+    <div class="gal-grid" id="galGrid"></div>
+  </section>
+
+  <section class="panel" id="listenPanel" hidden>
+    <h2>🎧 聞くモード ― 全レッスン本文</h2>
+    <div class="actions" style="padding:0 0 10px;">
+      <button class="abtn primary" id="playAllBtn">▶ ブラウザ音声で再生</button>
+      <button class="abtn sub" id="pauseSpeakBtn">⏸ 一時停止</button>
+      <button class="abtn sub" id="stopSpeakBtn">⏹ 停止</button>
+    </div>
+    <p id="listenStatus" style="font-size:14px; margin:0 0 8px; color:var(--ink-soft);">未再生</p>
+    <div class="pbar" style="margin-bottom:10px;"><div class="pfill" id="listenFill" style="background:var(--accent2);"></div></div>
+    <div id="listenBody"></div>
+  </section>
+
+  <footer>先生：フカン仙人 ／ 一般的な考え方と習慣の情報を扱う学習用ADVチュートリアルです（医療・治療の助言ではありません）。進捗はこの端末のブラウザに保存されます。</footer>
+</div>
+
+<script>
+"use strict";
+/* ================= データ ================= */
+var CHAPTERS = [
+  "第1章 俯瞰とは何か",
+  "第2章 具体的な作法",
+  "第3章 応用編 ― 言葉の外へ",
+  "第4章 習慣化と落とし穴"
+];
+
+var LESSONS = [
+/* ---------- 第1章 ---------- */
+{ ch:0, title:"出来事と解釈は別物である",
+  teach:[
+   "やあ、よく来たね。わしはフカン仙人。高い所から世間を見渡すのが仕事じゃ。この道場では「引いて見る」作法――俯瞰（ふかん）を鍛える。",
+   "まず一番大事な土台からいこう。人はイライラするとき、出来事そのものに反応しているようでいて、実は「自分の解釈」に反応していることが多い。たとえば動画で若い配信者が「○○先生」と自称するのを見たとする。出来事は「人がそう名乗った」だけ。そこに「非常識だ」「生意気だ」という解釈が貼りついた瞬間、感情が動くのじゃ。",
+   "証拠に、同じ出来事でも人によって反応は違う。気にしない人もいれば、面白がる人もいる。出来事が同じで反応が違うなら、反応を決めているのは出来事ではなく、各自の解釈の方だということになる。",
+   "だから俯瞰の第一歩は、出来事と解釈を「別物」として切り離すことじゃ。解釈が悪いと言っているのではない。解釈は誰にでも自動で湧くもの。ただ、それを出来事そのものと混同しなくなると、感情に振り回されにくくなるのじゃ。"
+  ],
+  more:"練習の芽をひとつ。イラッとしたら、心の中で「今、出来事に怒っているのか、解釈に怒っているのか？」と一度だけ問うてみる。答えが出なくてもよい。問うこと自体が、出来事と解釈の間に細い隙間を作るのじゃ。",
+  quiz:{ q:"同じ出来事でも人によってイライラする人としない人がいる。この事実が示すのは？",
+    choices:["出来事そのものが反応を決めている","反応を決めているのは出来事ではなく、各自の解釈の方である","気にしない人は何も感じていない鈍感な人である"],
+    ans:1, why:"正解は2。出来事が同じで反応が違うなら、違いは解釈側にある。俯瞰はまず「出来事と解釈は別物」と切り離すところから始まるのじゃ。" },
+  diagram:{ boxes:["出来事が起きる","解釈が自動で貼りつく","感情が動く","← ここを切り離して見る"], note:"反応しているのは出来事か、解釈か" } },
+
+{ ch:0, title:"視点の高さ ― 5つの階",
+  teach:[
+   "俯瞰には「高さ」がある。低い所から順に、5つの階として整理してみよう。",
+   "第1階は「どっぷり一人称」。出来事の真っただ中で、自分の感情そのものになっている状態。「なんでこんなことを」という視点じゃ。第2階は「少し引いた三人称・カメラの視点」。自分と相手を、部屋の隅のカメラが撮っているように眺める。「ああ、今、自分は怒っているな」と見える階じゃ。",
+   "第3階は「パターン」の視点。「あ、これは前にもあった形だ。月曜の朝はいつもこうなる」といった繰り返しに気づく階。第4階は「構造」の視点。誰が悪いかではなく、どんな仕組み・立場・動機づけがそうさせているかを見る階。そして第5階は「歴史」の視点。今の出来事を、10年・100年の流れの中に置いて見る階じゃ。",
+   "どの階が正しいという話ではない。大事なのは「今の自分は何階にいるか」に気づき、必要なら一段だけ上がること。イライラの最中に5階まで一気に駆け上がる必要はない。一段上がるだけで、見えるものはだいぶ変わるのじゃ。"
+  ],
+  more:"ことばの道場で見た「嘆きは古代からある」は、まさに第5階・歴史の視点じゃった。あの見方ができたとき、戸惑いが少し理解に変わったはずじゃ。俯瞰とは、あの体験を言葉以外にも使えるようにしたものなのじゃ。",
+  quiz:{ q:"俯瞰の「視点の高さ」の使い方として、本文に合うのは？",
+    choices:["常に一番高い第5階にいなければならない","今の自分が何階にいるかに気づき、必要なら一段だけ上がる","一人称の視点は間違いなので捨てるべきである"],
+    ans:1, why:"正解は2。階は優劣ではなく距離の違い。一段上がるだけでも見えるものは変わるのじゃ。" },
+  diagram:{ boxes:["第1階 一人称（真っただ中）","第2階 カメラの視点","第3階 パターン","第4階 構造","第5階 歴史"], note:"視点の高さの5つの階。一段上がるだけでよい" } },
+
+{ ch:0, title:"抽象度を上げるとは ― 主語を大きく、時間を長く",
+  teach:[
+   "「抽象的に見る」と言われても、具体的に何をすればよいか分かりにくい。合言葉は2つじゃ。「主語を大きくする」と「時間を長くする」。",
+   "主語を大きくするとは、「あの人が」→「あの立場の人が」→「そういう場にいる人が」→「人は」と、考える単位を広げることじゃ。たとえば「あの店員は感じが悪い」で止まらず、「繁忙時の窓口では、誰でもそうなりやすい」と主語を広げると、個人への怒りが仕組みへの理解に少しずつ移っていく。",
+   "時間を長くするとは、「今この瞬間」→「今週」→「この1年」→「10年単位」で見ること。今朝の嫌な出来事も、10年の物差しで見れば、たいていは小さな波のひとつじゃ。逆に、小さなことが繰り返されるなら、それはパターンの問題だと見えてくる。",
+   "抽象度を上げるのは、物事をぼかすことではない。ピントを引いて、全体の形を見ることじゃ。細部は細部で大事だが、細部だけを見続けると全体の形は決して見えないのじゃ。"
+  ],
+  more:"注意をひとつ。主語を大きくしすぎると「人間なんてそんなもの」という冷笑に滑り落ちる。俯瞰は冷笑ではない。第3章で改めて扱うが、抽象化は「理解のため」に使うもので、「どうでもいい」の言い換えにしてはいけないのじゃ。",
+  quiz:{ q:"「抽象度を上げる」の具体的な方法として、本文が挙げたのは？",
+    choices:["細部をすべて無視すること","主語を大きくし、時間を長くして見ること","感情を一切持たないようにすること"],
+    ans:1, why:"正解は2。「あの人→あの立場の人→人」と主語を広げ、「今→1年→10年」と時間を伸ばす。それが抽象化の実作業じゃ。" },
+  diagram:{ boxes:["主語：あの人 → 立場 → 人","時間：今 → 1年 → 10年","個人への怒り","仕組みへの理解へ移る"], note:"抽象化＝主語を大きく、時間を長く" } },
+
+{ ch:0, title:"メタ認知 ― もう一人の自分が眺めている状態",
+  teach:[
+   "俯瞰の状態を指す言葉に「メタ認知」がある。難しそうに聞こえるが、中身は単純じゃ。「自分の考えを、もう一人の自分が見ている状態」のことじゃ。",
+   "たとえば怒っている最中に、頭の片隅で「お、自分、今かなり怒っているな。声も大きくなっている」と気づいている部分がある。あれがメタ認知の働きじゃ。怒りを消しているのではない。怒っている自分を、一段上から「観察」しているのじゃ。",
+   "メタ認知が働くと、感情と行動の間に小さな間（ま）ができる。その間があると、「思ったことをそのまま言う／書く／買う」前に、一呼吸置ける。この一呼吸こそが、ストレスで自滅しないための実用的な効き目じゃ。",
+   "鍛え方も大げさではない。「今、自分は○○と考えているな」と心の中で実況する癖をつけるだけじゃ。第2章では、この実況を助ける具体的な作法を並べていく。"
+  ],
+  more:"実況のコツは、評価を混ぜないことじゃ。「また怒ってしまった、情けない」ではなく「今、怒りが来ている。肩に力が入っている」という事実の実況にする。スポーツ中継のアナウンサーが選手を叱らないのと同じで、実況者はただ起きていることを述べるのじゃ。",
+  quiz:{ q:"メタ認知の説明として正しいのは？",
+    choices:["感情を完全に消し去る技術","自分の考えや感情を、もう一人の自分が眺めている状態","他人の考えを読み取る超能力"],
+    ans:1, why:"正解は2。メタ認知は感情を消すのではなく、感情と行動の間に「間」を作る。その一呼吸が俯瞰の効き目じゃ。" },
+  diagram:{ boxes:["感情が湧く","「今、怒っているな」と実況","感情と行動の間に間ができる","一呼吸置いて選べる"], note:"メタ認知＝自分を実況する、もう一人の自分" } },
+
+/* ---------- 第2章 ---------- */
+{ ch:1, title:"感情に名前をつける",
+  teach:[
+   "第2章は具体的な作法じゃ。第一の作法は「感情に名前をつける」こと。",
+   "イライラ、モヤモヤした状態は、名前がないと塊のまま大きく見える。ところが「これは怒りだ」「これは不安だ」「これは疲れからくる苛立ちだ」と名指しすると、不思議と少しだけ引いて見られるようになる。心理学の分野でも、感情を言葉で名指すことが感情の扱いを助ける、という知見が積み重なっている。",
+   "名前の付け方は粗くてよい。「イライラ」でも十分じゃ。もう少し細かく分けたいときは、3つの材料を点検すると名前が見つけやすい。疲れていないか（体の材料）、締め切りや予定に追われていないか（状況の材料）、相手への期待が外れていないか（解釈の材料）。",
+   "大事なのは、名指しは「抑える」ためではないことじゃ。「怒りだな」と名前が付いた怒りは、敵ではなく観察対象になる。名前は、俯瞰の取っ手なのじゃ。"
+  ],
+  more:"名前がどうしても見つからないときは「モヤモヤ」と呼んでよい。「名前の分からないモヤモヤがある」と言うこと自体が、もう名指しの第一歩じゃ。完璧な名前当てゲームにする必要はない。",
+  quiz:{ q:"感情に名前をつけることの効き目として、本文に合うのは？",
+    choices:["名前をつけると感情が消えてなくなる","名指すことで感情が観察対象になり、少し引いて見られる","名前をつけた感情は二度と湧かなくなる"],
+    ans:1, why:"正解は2。名指しは感情を消す技ではなく、俯瞰の取っ手。塊だったモヤモヤが「扱える対象」に変わるのじゃ。" },
+  diagram:{ boxes:["モヤモヤ（塊のまま）","名前をつける","観察対象になる","少し引いて見られる"], note:"名指しは俯瞰の取っ手" } },
+
+{ ch:1, title:"書き出して外に出す ― 外在化と2列メモ",
+  teach:[
+   "第二の作法は「書き出して外に出す」ことじゃ。頭の中で回っている考えは、頭の中にある限り自分と一体化して離れない。だが紙やメモアプリに書き出すと、考えは「外にある物」になる。外にある物は、眺めたり、並べ替えたり、後で見直したりできる。これを外在化と呼ぶ。",
+   "書き方のおすすめは「2列メモ」じゃ。紙やメモを左右に分け、左列に「起きた事実」、右列に「自分の解釈」を書く。たとえば左に「動画の出演者が『○○先生』と自称した」、右に「『非常識だ』『自分が軽く見られた気がする』と解釈した」と書く。",
+   "書いてみると、左列は意外に短く、右列の方がずっと長いことに気づくはずじゃ。感情を動かしていたのは、短い左列ではなく、長い右列の方だった――それが目で見える形になる。",
+   "書く道具は何でもよい。ノートでもスマホのメモでも、裏紙でもよい。残すことが目的ではなく、「外に出す」ことが目的なのじゃ。書いて捨てても構わない。"
+  ],
+  more:"2列に分けにくいときは、事実の側に「カメラで撮れることだけ」を書くとよい。映像に残るのは言葉や行動までで、「生意気だ」はカメラには映らない。映らないものは解釈の列、と仕分けるのがコツじゃ。",
+  quiz:{ q:"2列メモの分け方として正しいのは？",
+    choices:["左：相手の悪い点、右：自分の正しい点","左：起きた事実、右：自分の解釈","左：過去の失敗、右：将来の不安"],
+    ans:1, why:"正解は2。事実は短く、解釈は長い。書き出して外に出すことで、どちらが感情を動かしていたか目で見えるようになるのじゃ。" },
+  diagram:{ boxes:["頭の中で回る考え","紙に書き出す（外在化）","左：事実 ／ 右：解釈","感情の出所が見える"], note:"書き出すと、考えは眺められる物になる" } },
+
+{ ch:1, title:"視点移動の型 ― 3つの「だったら」",
+  teach:[
+   "第三の作法は「視点移動の型」じゃ。自分の席から離れて、別の席に座ってみる想像の手順で、使い回せる3つの型がある。",
+   "型その1「10年後の自分なら」。今イライラしている事を、10年後の自分が見たらどう思うか想像する。10年後の自分はたいてい、今日の細部を覚えていない。覚えていない程度のことなら、今の感情の大きさも見積もり直せる。",
+   "型その2「親しい他人だったら」。この出来事が、仲の良い友人に起きたことだったら、自分は友人に何と声をかけるか考える。他人への助言は、自分のことよりずっと冷静で優しいことが多い。その助言を、そのまま自分に返すのじゃ。型その3「初見の外国人だったら」。その文化を知らない人が見たら、この出来事をどう説明するか考える。説明には背景や仕組みが必要になるので、自然と構造の視点に近づく。",
+   "どの型も、結論を変えるためのものではない。席を替えることで「別の見え方もある」と知るためのものじゃ。見え方が2つあると分かれば、1つ目の見え方に縛られにくくなる。"
+  ],
+  more:"型は増やしてよい。「相手の席に座ったら」「100年後の歴史家なら」「宇宙人なら」でも同じ働きをする。大事なのは、自分の席が「唯一の席」ではなく「席のひとつ」だと体で分かることじゃ。",
+  quiz:{ q:"視点移動の型の目的として、本文に合うのは？",
+    choices:["正しい結論をひとつに決めること","席を替えて「別の見え方もある」と知り、最初の見え方に縛られにくくすること","自分の意見を捨てて他人の意見に従うこと"],
+    ans:1, why:"正解は2。10年後の自分／親しい他人／初見の外国人――型はどれも、見え方が複数あることを知るための道具じゃ。" },
+  diagram:{ boxes:["自分の席（今）","10年後の自分なら","親しい他人だったら","初見の外国人だったら"], note:"席を替えると、見え方が増える" } },
+
+{ ch:1, title:"ニュースとSNSとの距離の作法",
+  teach:[
+   "第四の作法は、情報との距離じゃ。現代のイライラの多くは、ニュースとSNSからやって来る。ここには特有の罠がある。",
+   "罠その1は「見出しだけで反応する」こと。見出しは、読ませるために感情を刺激するよう作られていることが多い。本文を読む前に反応すると、作り手の狙い通りに感情だけが動く。作法は単純で、「見出しでイラッとしたら、まず本文か、せめて時間を置く」じゃ。",
+   "罠その2は「速さ」じゃ。事件の直後は情報が錯綜し、断片だけで全体像は分からない。時間を置くと続報で事情が変わることも珍しくない。「今すぐ判断しない」のは逃げではなく、情報が揃うのを待つという立派な作法なのじゃ。",
+   "そして罠その3は「無限に流れてくる」こと。画面を開く回数と時間を、自分で区切る。たとえば「ニュースは朝と夕方だけ」「寝る前は見ない」といった小さな区切りで十分じゃ。距離は、意志の強さではなく仕組みで作るものなのじゃ。"
+  ],
+  more:"フィルタの話とつなげておこう。見たくないものを避ける仕組み（ホワイトリストやキーワードの隔離）は正当な道具じゃ。俯瞰は「全部見て受け止めよ」という教えではない。距離の作法とフィルタは、どちらも自分の画面と時間を守るための、同じ方向の工夫なのじゃ。",
+  quiz:{ q:"ニュースやSNSとの距離の作法として、本文に合うのは？",
+    choices:["見出しを見た瞬間に即座に反応し、拡散すること","見出しで反応せず本文や時間を置き、見る回数と時間を自分で区切ること","ニュースは一切見ず、社会から完全に離れること"],
+    ans:1, why:"正解は2。見出しは感情を刺激するよう作られがちで、速報直後は情報も不完全。時間を置き、区切りを作るのが距離の作法じゃ。" },
+  diagram:{ boxes:["見出しでイラッとする","本文を読む／時間を置く","続報で事情が変わることも","見る回数と時間を区切る"], note:"距離は意志ではなく仕組みで作る" } },
+
+/* ---------- 第3章 ---------- */
+{ ch:2, title:"「誰が悪いか」から「どんな仕組みか」へ",
+  teach:[
+   "第3章は応用編じゃ。まず、社会問題の見方から。ニュースで腹の立つ出来事を見たとき、頭は自動で「誰が悪いか」を探す。これは自然な反応だが、この問いのままでは理解は深まらない。犯人探しで終わると、残るのは怒りだけじゃ。",
+   "俯瞰の問いはこう替える。「どんな仕組みが、この出来事を生んだのか」。たとえば無謀な運転のニュースなら、「あの運転手が悪い」で止まらず、なぜそういう運転が繰り返されるのか――取り締まりの形、道路の設計、罰則と再発の関係、といった仕組み側に目を向ける。",
+   "仕組みで見ると、良いことが2つある。ひとつは、怒りの宛先が「得体の知れない個人」から「理解できる構造」に移り、感情が落ち着きやすくなること。もうひとつは、対策の議論ができるようになることじゃ。個人を叱っても構造は変わらないが、構造が見えれば「どこを変えれば減るか」が考えられる。",
+   "これは誰かを許す話ではない。責任と仕組みは別の列の話じゃ。2列メモで言えば、「誰に責任があるか」と「どんな仕組みか」は、どちらも書いてよい。ただ、仕組みの列を足すと、見え方が一段引いたものになるのじゃ。"
+  ],
+  more:"構造の視点は、ことばの問題でも同じじゃったな。「○○先生」の自称も、「あの人が非常識」で止まらず、配信という仕組み（人にファンが付き、名乗りが看板になる）で見ると理解に変わった。作法は対象を選ばないのじゃ。",
+  quiz:{ q:"社会問題を俯瞰で見るとき、問いの替え方として本文が勧めるのは？",
+    choices:["「誰が悪いか」だけを徹底的に追及する","「どんな仕組みがこの出来事を生んだのか」と問いを足す","問題はすべて無視して関心を持たない"],
+    ans:1, why:"正解は2。仕組みで見ると怒りの宛先が構造に移り、対策まで考えられる。責任の話を消すのではなく、仕組みの列を足すのじゃ。" },
+  diagram:{ boxes:["腹の立つ出来事","「誰が悪いか」で止まる","「どんな仕組みか」を足す","理解と対策が見える"], note:"犯人探しに、構造の列を足す" } },
+
+{ ch:2, title:"自分の年代の問題を分けて見る ― 氷河期の練習",
+  teach:[
+   "次は身近で、少し痛い応用じゃ。自分の年代の問題――たとえば就職氷河期に社会に出た世代の不遇――を、俯瞰で分けて見る練習をしよう。",
+   "分けるのは2つ。「個人の側」と「構造の側」じゃ。構造の側には、当時の雇用環境がある。バブル崩壊後の企業が新卒採用を大きく絞った時期に卒業が重なれば、本人の能力や努力とは無関係に、就職の入口そのものが狭かった。これは当時の経済状況と採用慣行という、個人では動かせない条件じゃ。",
+   "個人の側にも、もちろん色々あったはずじゃ。選んだ道、運、努力、失敗。それはそれで自分の歴史として認めてよい。ただし、全部を個人の側に寄せて「自分の努力不足だった」とだけ解釈すると、構造の分まで自分を責めることになる。逆に全部を構造のせいにすると、自分の手で変えられた部分まで見えなくなる。",
+   "俯瞰の分け方は、その中間じゃ。「あの時期の入口の狭さは構造」「その後の進み方は自分の歴史」と、列を分けて書く。分けて見えると、悔しさは残っても、自分を丸ごと否定する形にはなりにくい。年代の不遇は、個人の失敗証明書ではないのじゃ。"
+  ],
+  more:"この分け方は、他の年代の人を見る目も変える。若い世代の振る舞いが分からないときも、「あの世代が育った環境（構造）」と「その人個人」を分けて見ると、ラベルで一括りにせずに済む。第1章の主語の話と、ここでもつながっておるのじゃ。",
+  quiz:{ q:"氷河期世代の不遇を俯瞰で分けるとき、正しい分け方は？",
+    choices:["すべて本人の努力不足として解釈する","すべて時代のせいにして、自分の歴史は考えない","当時の雇用環境などの「構造」と、自分の歩みという「個人の歴史」に分けて見る"],
+    ans:2, why:"正解は3。構造の分まで自分を責めず、個人の分まで時代に預けない。分けて見ることで、悔しさが自己否定に化けにくくなるのじゃ。" },
+  diagram:{ boxes:["年代の不遇という実感","構造の列：当時の雇用環境・経済","個人の列：自分の歩みと選択","悔しさは残るが自己否定にならない"], note:"構造と個人を分けて書く" } },
+
+{ ch:2, title:"俯瞰は諦めではない ― 手の届く範囲に力を戻す",
+  teach:[
+   "ここで大事な誤解を解いておく。俯瞰は「どうせ何も変わらない」という諦めでも、「世の中そんなもの」という冷笑でもない。",
+   "俯瞰の仕上げは、むしろ逆じゃ。大きく見た上で、「自分の手の届く範囲はどこか」に力を戻すことなのじゃ。切り分けの物差しは2つ。「自分でコントロールできる事」と「できない事」じゃ。",
+   "できない事の例は、他人の考え方、過去の出来事、経済全体の動き、SNSで流れてくる他人の投稿そのもの。できる事の例は、自分の画面のフィルタ設定、見る時間の区切り、自分の言葉の選び方、今日の睡眠と運動、身近な人への接し方じゃ。",
+   "できない事に力を使い果たすと、人は疲れて自滅に近づく。逆に、できる事は小さいが確実に動く。俯瞰とは、大きな地図を広げた上で、「自分の手はここまで届く」と範囲を引き直す技術なのじゃ。諦めは地図を捨てること。俯瞰は地図を持ったまま、手の範囲で動くことじゃ。"
+  ],
+  more:"手の届く範囲は、時期によって変わる。疲れているときは範囲が狭くて当然じゃ。「今日は寝ることだけが手の届く範囲」という日があってもよい。範囲の大小ではなく、範囲の外に力を使い果たさないことが肝心なのじゃ。",
+  quiz:{ q:"俯瞰と諦めの違いとして、本文に合うのは？",
+    choices:["俯瞰も諦めも同じで、どちらも何もしないこと","俯瞰は大きく見た上で、手の届く範囲に力を戻すこと。諦めは地図そのものを捨てること","俯瞰はできない事にも全力で挑み続けること"],
+    ans:1, why:"正解は2。コントロールできる事とできない事を切り分け、できる範囲で確実に動く。それが俯瞰の仕上げじゃ。" },
+  diagram:{ boxes:["大きく見渡す（地図を広げる）","できる事／できない事を分ける","できない事から力を引く","手の届く範囲で確実に動く"], note:"俯瞰＝地図を持ち、手の範囲で動く" } },
+
+{ ch:2, title:"怒りを観察対象に変える ― 同じニュース、違う受け止め",
+  teach:[
+   "第3章の締めに、同じニュースへの受け止めがどう変わるか、例で通して見よう。題材は「若者の言葉遣いや振る舞いを嘆くニュース」じゃ。",
+   "一人称で受けるとこうなる。「またか。今の若者は本当に……」と怒りが湧き、その怒りは宛先がないまま一日残る。カメラの視点に一段上がると、「お、今の自分はニュースに怒っているな。肩に力が入っている」と実況が入る。パターンの視点では、「この手の記事は定期的に出るな。自分が反応するのも定期だな」と繰り返しが見える。",
+   "構造の視点では、「嘆きの記事は読まれやすい。メディアの仕組み上、世代対立は数字が取れる題材だ」と作り手側の事情が見える。歴史の視点では、「嘆き自体が数百年の定型だ」と、ことばの道場で見た景色が重なる。",
+   "注意してほしいのは、5階まで上がっても「怒るな」とは言っていないことじゃ。怒りは観察対象に変わり、「今日はこの記事は閉じて、自分の作業に戻ろう」という選択ができるようになる。ニュースは同じでも、受け止めと、その後の行動が変わる。それが俯瞰の実利なのじゃ。"
+  ],
+  more:"この例の順番を覚える必要はない。実戦では、どれか一段上がれたら十分じゃ。「実況が入った」「パターンが見えた」――どれかひとつ引っかかれば、その日の怒りはもう観察対象になっておる。",
+  quiz:{ q:"同じニュースでも俯瞰が働くと何が変わるか、本文に合うのは？",
+    choices:["ニュースの内容そのものが変わる","怒りが観察対象になり、その後の行動（閉じて作業に戻る等）を選べるようになる","怒りを感じることが完全になくなる"],
+    ans:1, why:"正解は2。俯瞰は怒りを消すのではなく、観察対象に変えて、行動を選べる状態を作る。それが実利じゃ。" },
+  diagram:{ boxes:["同じニュース","実況→パターン→構造→歴史","怒りが観察対象に","行動を選べる"], note:"変わるのはニュースではなく、受け止めと行動" } },
+
+/* ---------- 第4章 ---------- */
+{ ch:3, title:"1日1回の小さな練習 ― 摩擦を小さく、習慣にくっつける",
+  teach:[
+   "第4章は習慣化じゃ。作法は知っているだけでは身につかない。だが、大きな修行は続かない。設計は「1日1回、イラッとしたら書き出す」だけに絞る。",
+   "摩擦を小さくするのが第一原則じゃ。専用の立派なノートを用意すると、それを探す手間で続かなくなる。スマホのメモの先頭でも、机の裏紙でも、目につく場所に「書き出す場所」をひとつだけ決める。書く量は1行でよい。「15時、ニュース見出しにイラッ。解釈：また若者叩きかと思った」――これで1回分じゃ。",
+   "第二原則は、既存の習慣にくっつけること。「夕食の後にメモを見返す」「風呂上がりに1行書く」のように、毎日必ずやることの直後に置くと、新しい習慣は定着しやすい。意志で続けるのではなく、流れに乗せるのじゃ。",
+   "第三に、できなかった日を責めない。記録は断続的でよい。週に2回書けた週が続けば、視点の実況は少しずつ早くなる。俯瞰は筋力に似ていて、少しずつ、休み休みで育つのじゃ。"
+  ],
+  more:"書いたメモは財産になる。1か月分たまると「自分が何に反応しやすいか」のパターンが見えてくる。それは第1章で言う第3階（パターン）の視点を、自分のデータで手に入れるということじゃ。ゴミ箱のログから法則を見つけるフィルタの考え方と、まったく同じ発想なのじゃ。",
+  quiz:{ q:"俯瞰の練習を習慣にする設計として、本文に合うのは？",
+    choices:["毎日1時間の本格的な瞑想修行から始める","1日1回1行でよく、摩擦を小さくし、既存の習慣にくっつける","できなかった日は自分を厳しく責めて続ける"],
+    ans:1, why:"正解は2。小さく、摩擦なく、既存の流れに乗せる。責める設計は続かないし、俯瞰の練習自体がストレスになっては本末転倒じゃ。" },
+  diagram:{ boxes:["イラッとしたら1行書く","場所はひとつ・摩擦は小さく","既存の習慣の直後に置く","1か月で自分のパターンが見える"], note:"練習は小さく、流れに乗せる" } },
+
+{ ch:3, title:"落とし穴 ― 考えすぎと、感情の押し殺し",
+  teach:[
+   "習慣化の前に、落とし穴を2つ知っておこう。知っていれば落ちても自力で出られる。",
+   "穴その1は「考えすぎて動けなくなる」こと。俯瞰は考える技術だが、考えを深めるほど正解に近づくとは限らない。同じことを何周も考えている状態は、俯瞰ではなく反芻（はんすう）じゃ。見分け方は簡単で、「新しい情報や視点が増えているか」。増えていないのに頭だけ疲れているなら、それはもう観察ではなく堂々巡り。いったん書いて外に出し、体を動かして区切るのが出口じゃ。",
+   "穴その2は「感情を押し殺すことを俯瞰と勘違いする」こと。「怒ってはいけない」「イライラする自分は未熟だ」と感情に蓋をすると、感情は消えずに溜まる。俯瞰は消す技術ではなく眺める技術じゃ。「怒っているな」と眺めている限り、怒りがあってもよい。蓋と観察は正反対なのじゃ。",
+   "どちらの穴も、「うまく俯瞰できていない自分」を責める材料にしてはいけない。穴に気づいた時点で、もうメタ認知は働いておる。それ自体が練習の成果なのじゃ。"
+  ],
+  more:"もうひとつ小さい穴。「俯瞰できる自分」を他人への優位の道具にしないことじゃ。「自分は構造で見られるが、あの人は感情的だ」という見方は、俯瞰の顔をした一段上からの裁きで、作法の目的とは正反対じゃ。俯瞰は自分のための技術で、他人を測る物差しではない。",
+  quiz:{ q:"俯瞰の落とし穴として、本文が挙げた組み合わせは？",
+    choices:["考えすぎて動けなくなることと、感情を押し殺すこと","眠くなることと、お腹が空くこと","メモを取りすぎることと、人と話しすぎること"],
+    ans:0, why:"正解は1。新しい視点が増えない堂々巡りは反芻であり、感情への蓋は観察の正反対。どちらも「眺める」から外れた状態じゃ。" },
+  diagram:{ boxes:["穴1：堂々巡り（反芻）","穴2：感情に蓋をする","どちらも「眺める」から外れている","気づけた時点でメタ認知は働いている"], note:"消すのではなく、眺める。それが分かれ目" } },
+
+{ ch:3, title:"土台を整える ― 睡眠・運動・人と話すこと",
+  teach:[
+   "正直な話をしよう。俯瞰の作法は万能ではない。土台が崩れていると、どんな作法も効きにくい。土台とは、ごく基本的な生活の要素じゃ。",
+   "第一に睡眠。眠れていない日は、誰でも解釈が荒くなり、イライラの閾値が下がる。これは気合いの問題ではなく体の仕組みじゃ。そういう日は「今日は物差しが狂っている日だ」と割り切るだけでも違う。第二に体を動かすこと。散歩程度の運動でも、頭の中で回り続ける考えはほぐれやすい。考えは座っていると回り、歩くとほどける、と感じる人は多い。第三に人と話すこと。自分の解釈を声に出して人に聞いてもらうと、頭の中の塊が外に出る。書き出しの、声版じゃな。",
+   "そして大事な線引きをひとつ。作法や土台を試してもなお、日常に支障が出るほどしんどい状態が続くなら、それは作法の問題ではなく、専門家に相談する段階じゃ。医療機関や相談窓口に頼るのは、俯瞰の敗北ではない。手の届く範囲の正しい使い方のひとつなのじゃ。",
+   "この道場は一般的な情報の教材で、医療の助言はしない。だが「しんどい時は頼ってよい」という一般情報だけは、はっきり置いておく。"
+  ],
+  more:"土台の点検は、イライラしたときの2列メモにも使える。「事実：今日は4時間しか眠れていない」と左列に書ける日は、右列の解釈を割り引いて読める。体の状態は、解釈の物差しの狂いとして記録しておく価値があるのじゃ。",
+  quiz:{ q:"俯瞰の土台と線引きについて、本文に合うのは？",
+    choices:["作法さえ完璧なら睡眠や体調は関係ない","睡眠・運動・人と話すことが土台であり、それでも支障が続くほどしんどい時は専門家に相談する段階である","専門家に相談するのは俯瞰の敗北である"],
+    ans:1, why:"正解は2。土台が崩れれば解釈の物差しも狂う。そして相談は敗北ではなく、手の届く範囲の正しい使い方なのじゃ。" },
+  diagram:{ boxes:["土台：睡眠","土台：体を動かす","土台：人と話す","支障が続くなら専門家へ相談"], note:"作法の前に土台。頼ることも作法のうち" } },
+
+{ ch:3, title:"締め ― 冷たくなる技術ではなく、長く付き合う技術",
+  teach:[
+   "最後の課じゃ。この道場の締めくくりとして、俯瞰の正体をひと言で置いておく。俯瞰は、冷たくなる技術ではない。嫌なものとも、世の中とも、自分自身とも、長く付き合っていくための技術じゃ。",
+   "振り返ろう。出来事と解釈は別物だった。視点には高さがあり、一段上がるだけで見え方が変わった。抽象化は主語を大きく、時間を長くすることだった。具体的な作法として、名前をつけ、書き出して外に出し、席を替えて眺め、情報との距離を作った。応用では、仕組みで見て、構造と個人を分け、手の届く範囲に力を戻した。",
+   "それでも、嫌なものは嫌なまま残ることがある。俯瞰は嫌いを好きに変える魔法ではない。ただ、嫌なものの「大きさと正体」が分かると、それに振り回されて自滅する確率は下がる。フィルタで画面を整えるのと同じで、見たくないものは避けてよいし、分かった上で距離を取るのも立派な付き合い方じゃ。",
+   "イライラは、これからも来る。それでよい。来たときに「お、来たな」と一段上から迎えられるかどうか――その差を少しずつ広げていくのが、この術の修行の全部じゃ。高い所から見渡す景色は、案外、悪くないものだよ。"
+  ],
+  more:"卒業後の道具を3つ置いていく。(1)イラッとしたら「出来事か、解釈か」と問う。(2)書くときは左に事実、右に解釈。(3)力を使う前に「手の届く範囲か」と問う。この3つがあれば、道場を離れても作法は続くのじゃ。",
+  quiz:{ q:"この道場の締めとして述べられた、俯瞰の正体は？",
+    choices:["嫌なものをすべて好きになる技術","冷たくなって何も感じなくなる技術","嫌なものとも長く付き合っていくための技術"],
+    ans:2, why:"正解は3。俯瞰は嫌いを消す魔法でも冷笑でもない。正体と大きさが分かることで振り回されにくくなり、長く付き合えるようになる技術じゃ。" },
+  diagram:{ boxes:["出来事と解釈を分ける","作法：名指し・書き出し・席替え","応用：構造で見て、手の範囲へ","嫌なものとも長く付き合える"], note:"俯瞰は冷たさではなく、持続のための技術" } }
+];
+
+/* ================= 図解SVG生成 ================= */
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function diagramSVG(d){
+  var boxes = d.boxes, n = boxes.length;
+  var w = 640, bh = 44, gap = 26, h = n*bh + (n-1)*gap + 16;
+  var s = '<svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="'+esc(d.note)+'">';
+  for(var i=0;i<n;i++){
+    var y = 8 + i*(bh+gap);
+    var fill = (i===n-1) ? 'var(--gold)' : 'var(--panel)';
+    s += '<rect x="70" y="'+y+'" width="500" height="'+bh+'" fill="'+fill+'" stroke="var(--line)" stroke-width="3"/>';
+    s += '<text x="320" y="'+(y+bh/2+6)+'" text-anchor="middle" font-size="16" fill="var(--ink)" font-family="DotGothic16,sans-serif">'+esc(boxes[i])+'</text>';
+    if(i<n-1){
+      var ay = y+bh;
+      s += '<path d="M320 '+ay+' L320 '+(ay+gap-6)+' M312 '+(ay+gap-14)+' L320 '+(ay+gap-4)+' L328 '+(ay+gap-14)+'" stroke="var(--accent)" stroke-width="3" fill="none"/>';
+    }
+  }
+  return s + '</svg>';
+}
+
+/* ================= 状態と保存 ================= */
+var SAVE_KEY = "fukanJutsuSaveV1";
+var TTS_KEY = "advTtsV1";
+var state = { cur:0, done:[], phase:"teach" };
+try{
+  var raw = localStorage.getItem(SAVE_KEY);
+  if(raw){ var p = JSON.parse(raw); if(p && p.done) state.done = p.done; if(typeof p.cur==="number") state.cur = p.cur; }
+}catch(e){}
+function save(){
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify({done:state.done, cur:state.cur})); }catch(e){}
+}
+function isDone(i){ return state.done.indexOf(i) >= 0; }
+
+/* ================= 読み上げ ================= */
+var ttsOn = false;
+try{ ttsOn = localStorage.getItem(TTS_KEY) === "on"; }catch(e){}
+var ttsBtn = document.getElementById("ttsBtn");
+function paintTts(){
+  ttsBtn.textContent = ttsOn ? "🗣 読上ON" : "🗣 読上OFF";
+  ttsBtn.setAttribute("aria-pressed", ttsOn ? "true" : "false");
+}
+function speak(text){
+  if(!ttsOn || !("speechSynthesis" in window)) return;
+  try{
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = "ja-JP"; u.rate = 1.0;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+ttsBtn.addEventListener("click", function(){
+  ttsOn = !ttsOn;
+  try{ localStorage.setItem(TTS_KEY, ttsOn ? "on" : "off"); }catch(e){}
+  paintTts();
+  if(!ttsOn && "speechSynthesis" in window) speechSynthesis.cancel();
+  if(ttsOn) render();
+});
+paintTts();
+
+/* ================= 描画 ================= */
+var stageEl = document.getElementById("stage");
+var choicesEl = document.getElementById("choices");
+var actionsEl = document.getElementById("actions");
+var chLabelEl = document.getElementById("chLabel");
+var lTitleEl = document.getElementById("lTitle");
+
+function lessonHead(i){
+  var L = LESSONS[i];
+  return "第" + (i+1) + "課 ／ " + CHAPTERS[L.ch];
+}
+function bodyHTML(L, extra){
+  var h = '<div class="who"><div class="face" aria-hidden="true">🧙</div><div><p class="sensei-name">フカン仙人</p></div></div>';
+  L.teach.forEach(function(p){ h += "<p>" + esc(p) + "</p>"; });
+  if(extra){ h += '<p><b>――もう少し詳しく。</b></p><p>' + esc(L.more) + "</p>"; }
+  h += '<figure class="diagram">' + diagramSVG(L.diagram) + "<figcaption>図：" + esc(L.diagram.note) + "</figcaption></figure>";
+  return h;
+}
+function plainText(L){
+  return L.teach.join("\n");
+}
+function setActions(list){
+  actionsEl.innerHTML = "";
+  list.forEach(function(a){
+    var b = document.createElement("button");
+    b.className = "abtn" + (a.primary ? " primary" : "") + (a.sub ? " sub" : "");
+    b.textContent = a.label;
+    b.addEventListener("click", a.fn);
+    actionsEl.appendChild(b);
+  });
+}
+function render(){
+  var i = state.cur, L = LESSONS[i];
+  chLabelEl.textContent = lessonHead(i);
+  lTitleEl.textContent = L.title;
+  choicesEl.hidden = true; choicesEl.innerHTML = "";
+  document.getElementById("progText").textContent = "進捗 " + state.done.length + " / " + LESSONS.length;
+  document.getElementById("pfill").style.width = (state.done.length / LESSONS.length * 100) + "%";
+  paintMap();
+
+  if(state.phase === "teach" || state.phase === "more"){
+    var extra = state.phase === "more";
+    stageEl.innerHTML = bodyHTML(L, extra);
+    var acts = [];
+    acts.push({ label:"✔ わかった（確認問題へ）", primary:true, fn:function(){ state.phase="quiz"; render(); } });
+    if(!extra){
+      acts.push({ label:"？ わからない（もう少し説明）", fn:function(){ state.phase="more"; render(); } });
+    } else {
+      acts.push({ label:"↩ はじめから読み直す", sub:true, fn:function(){ state.phase="teach"; render(); } });
+    }
+    acts.push({ label:"もくじで選ぶ", sub:true, fn:function(){ window.scrollTo({top:0, behavior:"smooth"}); } });
+    setActions(acts);
+    speak(plainText(L) + (extra ? "\n" + L.more : ""));
+  }
+  else if(state.phase === "quiz"){
+    stageEl.innerHTML = '<div class="who"><div class="face" aria-hidden="true">🧙</div><div><p class="sensei-name">フカン仙人 ― 確認問題</p></div></div>'
+      + '<p class="quiz-q">' + esc(L.quiz.q) + '</p>'
+      + '<p class="small">間違えてもペナルティはない。解説を読んで、説明に戻ってよい。</p>';
+    choicesEl.hidden = false;
+    L.quiz.choices.forEach(function(c, ci){
+      var b = document.createElement("button");
+      b.className = "cbtn";
+      b.textContent = (ci+1) + ". " + c;
+      b.addEventListener("click", function(){ answer(ci); });
+      choicesEl.appendChild(b);
+    });
+    setActions([{ label:"↩ 説明に戻る", sub:true, fn:function(){ state.phase="teach"; render(); } }]);
+    speak(L.quiz.q);
+  }
+  else if(state.phase === "done"){
+    var last = (i === LESSONS.length - 1);
+    var allDone = state.done.length === LESSONS.length;
+    var msg = last
+      ? "全16課、これにて修了じゃ。俯瞰は冷たくなる技術ではない。嫌なものとも長く付き合うための技術じゃ。イライラはこれからも来るが、「お、来たな」と一段上から迎える練習は、今日から1日1行で続けられる。"
+      : "この課は修了じゃ。★が付いた。次の課へ進むか、もくじから気になる課を開いてよい。";
+    stageEl.innerHTML = '<div class="result"><b class="good">⭕ 正解 ― 課を修了しました</b><p style="margin:8px 0 0;">' + esc(L.quiz.why) + "</p></div>"
+      + '<div class="who"><div class="face" aria-hidden="true">🧙</div><div><p class="sensei-name">フカン仙人</p></div></div><p>' + esc(msg) + "</p>"
+      + (allDone ? '<p><b>🏆 全課修了！ 「ふかん術道場」卒業じゃ。高い所からの景色を、忘れずにな。</b></p>' : "");
+    var acts2 = [];
+    if(!last) acts2.push({ label:"▶ 次のレッスンへ", primary:true, fn:function(){ state.cur = i+1; state.phase="teach"; save(); render(); window.scrollTo({top:0, behavior:"smooth"}); } });
+    acts2.push({ label:"もくじで選ぶ", sub:true, fn:function(){ window.scrollTo({top:0, behavior:"smooth"}); } });
+    setActions(acts2);
+    speak(L.quiz.why + "\n" + msg);
+  }
+  save();
+}
+function answer(ci){
+  var L = LESSONS[state.cur];
+  if(ci === L.quiz.ans){
+    if(!isDone(state.cur)) state.done.push(state.cur);
+    state.phase = "done"; render();
+  } else {
+    stageEl.innerHTML = '<div class="result bad"><b class="bad">❌ 惜しい、違うようじゃ</b><p style="margin:8px 0 0;">' + esc(L.quiz.why) + '</p><p style="margin:8px 0 0;">ペナルティはない。説明に戻って読み直し、もう一度挑戦しよう。</p></div>';
+    choicesEl.hidden = true; choicesEl.innerHTML = "";
+    setActions([
+      { label:"↩ 説明に戻る", primary:true, fn:function(){ state.phase="teach"; render(); } },
+      { label:"もう一度問題を見る", fn:function(){ state.phase="quiz"; render(); } }
+    ]);
+    speak("惜しい、違うようじゃ。" + L.quiz.why);
+  }
+  save();
+}
+
+/* ================= もくじ ================= */
+var mapBody = document.getElementById("mapBody");
+function paintMap(){
+  mapBody.innerHTML = "";
+  CHAPTERS.forEach(function(chName, ci){
+    var div = document.createElement("div"); div.className = "ch";
+    var p = document.createElement("p"); p.className = "ch-name"; p.textContent = chName;
+    div.appendChild(p);
+    var grid = document.createElement("div"); grid.className = "lessons";
+    LESSONS.forEach(function(L, i){
+      if(L.ch !== ci) return;
+      var b = document.createElement("button");
+      b.className = "lbtn" + (isDone(i) ? " done" : "") + (state.cur === i ? " now" : "");
+      b.innerHTML = '<span class="no">第' + (i+1) + '課</span><br>' + esc(L.title);
+      b.addEventListener("click", function(){
+        state.cur = i; state.phase = "teach"; save(); render();
+        document.getElementById("frame").scrollIntoView({behavior:"smooth"});
+      });
+      grid.appendChild(b);
+    });
+    div.appendChild(grid);
+    mapBody.appendChild(div);
+  });
+}
+
+/* ================= 図解ギャラリー ================= */
+var galBtn = document.getElementById("galBtn");
+var galPanel = document.getElementById("galPanel");
+var galGrid = document.getElementById("galGrid");
+var galBuilt = false;
+galBtn.addEventListener("click", function(){
+  var open = galPanel.hidden;
+  if(open && !galBuilt){
+    galBuilt = true;
+    LESSONS.forEach(function(L, i){
+      var d = document.createElement("div"); d.className = "gal-item";
+      d.innerHTML = diagramSVG(L.diagram) + '<p class="cap"><b>第' + (i+1) + '課「' + esc(L.title) + '」</b><br>' + esc(L.diagram.note) + "</p>";
+      galGrid.appendChild(d);
+    });
+  }
+  galPanel.hidden = !open;
+  galBtn.setAttribute("aria-pressed", open ? "true" : "false");
+  galBtn.textContent = open ? "🖼 図解ギャラリー（開）" : "🖼 図解ギャラリー";
+});
+
+/* ================= 聞くモード ================= */
+var listenBtn = document.getElementById("listenBtn");
+var listenPanel = document.getElementById("listenPanel");
+var listenBody = document.getElementById("listenBody");
+var listenBuilt = false;
+function buildListen(){
+  if(listenBuilt) return; listenBuilt = true;
+  LESSONS.forEach(function(L, i){
+    var d = document.createElement("div"); d.className = "listen-item";
+    var h = "<h3>第" + (i+1) + "課「" + esc(L.title) + "」</h3>";
+    L.teach.forEach(function(p){ h += "<p>" + esc(p) + "</p>"; });
+    h += "<p>" + esc(L.more) + "</p>";
+    d.innerHTML = h;
+    listenBody.appendChild(d);
+  });
+}
+listenBtn.addEventListener("click", function(){
+  var open = listenPanel.hidden;
+  if(open) buildListen();
+  listenPanel.hidden = !open;
+  listenBtn.setAttribute("aria-pressed", open ? "true" : "false");
+  if(!open) stopListen();
+  if(open) listenPanel.scrollIntoView({behavior:"smooth"});
+});
+
+/* sequential player: play / pause(resume from item head) / stop */
+var listenItems = [];
+LESSONS.forEach(function(L, i){
+  listenItems.push("第" + (i+1) + "課。" + L.title + "。" + L.teach.join("") + L.more);
+});
+var lp = { idx:0, playing:false, paused:false, uid:0, timer:null, tick:null };
+var listenStatus = document.getElementById("listenStatus");
+var listenFill = document.getElementById("listenFill");
+var playAllBtn = document.getElementById("playAllBtn");
+function lpPaint(){
+  listenFill.style.width = (listenItems.length ? (lp.idx / listenItems.length * 100) : 0) + "%";
+  if(lp.playing){ listenStatus.textContent = "再生中 " + (lp.idx+1) + " / " + listenItems.length; playAllBtn.textContent = "⏸ 一時停止"; }
+  else if(lp.paused){ listenStatus.textContent = "一時停止中 " + (lp.idx+1) + " / " + listenItems.length + "（再開するとこの課の頭から読みます）"; playAllBtn.textContent = "▶ 再開"; }
+  else { listenStatus.textContent = lp.idx >= listenItems.length ? "再生終了" : "未再生"; playAllBtn.textContent = "▶ ブラウザ音声で再生"; }
+}
+function lpClearTimers(){ if(lp.timer){ clearTimeout(lp.timer); lp.timer = null; } if(lp.tick){ clearInterval(lp.tick); lp.tick = null; } }
+function lpSpeakCurrent(){
+  if(!("speechSynthesis" in window)){ lp.playing = false; lpPaint(); return; }
+  if(lp.idx >= listenItems.length){ lp.playing = false; lp.paused = false; lpPaint(); return; }
+  var myUid = ++lp.uid;
+  var u = new SpeechSynthesisUtterance(listenItems[lp.idx]);
+  u.lang = "ja-JP"; u.rate = 1.0;
+  u.onend = function(){ if(myUid !== lp.uid) return; lp.idx++; lpPaint(); lpSpeakCurrent(); };
+  u.onerror = function(){ if(myUid !== lp.uid) return; lp.idx++; lpSpeakCurrent(); };
+  speechSynthesis.speak(u);
+  /* watchdog: some browsers drop onend */
+  lpClearTimers();
+  var estMs = Math.max(8000, listenItems[lp.idx].length * 220);
+  lp.timer = setTimeout(function(){
+    if(myUid !== lp.uid || !lp.playing) return;
+    try{ speechSynthesis.cancel(); }catch(e){}
+    lp.idx++; lpPaint(); lpSpeakCurrent();
+  }, estMs);
+  lpPaint();
+}
+function startListen(){
+  if(!("speechSynthesis" in window)) return;
+  if(lp.paused){ lp.paused = false; lp.playing = true; lpSpeakCurrent(); return; }
+  try{ speechSynthesis.cancel(); }catch(e){}
+  lp.idx = 0; lp.playing = true; lp.paused = false;
+  lpSpeakCurrent();
+}
+function pauseListen(){
+  lp.uid++; lpClearTimers();
+  if("speechSynthesis" in window) try{ speechSynthesis.cancel(); }catch(e){}
+  lp.playing = false; lp.paused = true; lpPaint();
+}
+function stopListen(){
+  lp.uid++; lpClearTimers();
+  if("speechSynthesis" in window) try{ speechSynthesis.cancel(); }catch(e){}
+  lp.playing = false; lp.paused = false; lp.idx = 0; lpPaint();
+}
+playAllBtn.addEventListener("click", function(){
+  if(lp.playing) pauseListen(); else startListen();
+});
+document.getElementById("pauseSpeakBtn").addEventListener("click", function(){
+  if(lp.playing) pauseListen();
+});
+document.getElementById("stopSpeakBtn").addEventListener("click", stopListen);
+lpPaint();
+
+render();
+</script>
+</body>
+</html>
