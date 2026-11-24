@@ -53,11 +53,21 @@
   /* ---------- viewer ---------- */
   .stage{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;align-items:start}
   @media (max-width:900px){.stage{grid-template-columns:minmax(0,1fr)}}
-  .viewerbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+  .viewerbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;position:relative}
+  /* フルスクリーン時のみ、画面最下部に音声解説の字幕バーを出す */
+  #subtitle{display:none}
+  .viewerbox:fullscreen #subtitle{display:block;background:rgba(6,14,24,.93);color:#fff;
+    text-align:center;font-weight:700;font-size:clamp(1rem,2.4vw,1.3rem);line-height:1.65;
+    padding:12px 22px calc(12px + env(safe-area-inset-bottom));pointer-events:none}
   .viewerbox:fullscreen{border-radius:0;border:none;display:flex;flex-direction:column}
   .viewerbox:fullscreen .screen{flex:1;height:auto}
   .screen{position:relative;height:min(56vh,520px);min-height:320px;background:#87a8c8}
+  .screen.multi{height:min(76vh,700px)}
   .screen canvas{display:block;width:100%;height:100%}
+  .panetag{position:absolute;z-index:3;display:none;background:rgba(10,22,38,.82);color:#fff;
+    font-size:.75rem;font-weight:700;line-height:1.3;padding:5px 9px;border-radius:6px;
+    pointer-events:none;max-width:46%}
+  .screen.multi .panetag{display:block}
   .screen .fallback{position:absolute;inset:0;display:none;place-items:center;padding:20px;text-align:center;color:#fff;background:#5a7186;font-weight:700}
   .lbl{position:absolute;transform:translate(-50%,-100%);pointer-events:none;
     background:rgba(10,22,38,.82);color:#fff;font-size:.72rem;font-weight:700;line-height:1;
@@ -135,7 +145,7 @@
 
   <div class="lead">
     <h1>自転車の<span class="blue">青切符</span>、<br>事故は「お互いの思い込み」から起きる</h1>
-    <p>2026年4月1日から、自転車の交通違反にも交通反則通告制度（青切符）が導入されました。「知らなかった」では済まされない一方で、事故の多くはルールを知らないこと以前に、<strong>自転車・車・バイク・歩行者のあいだの「認識のズレ」</strong>から起きています。この教室では、事故寸前の場面を3Dで再現し、<strong>それぞれの視点に切り替えて</strong>何が見えていて何が見えていないかを確かめながら、ルールと反則金を学びます。何度でも巻き戻して見直せます。</p>
+    <p>2026年4月1日から、自転車の交通違反にも交通反則通告制度（青切符）が導入されました。「知らなかった」では済まされない一方で、事故の多くはルールを知らないこと以前に、<strong>自転車・車・バイク・歩行者のあいだの「認識のズレ」</strong>から起きています。この教室では、事故寸前の場面を3Dで再現し、<strong>それぞれの視点に切り替えて、または4つの視点を同時に並べて</strong>何が見えていて何が見えていないかを確かめながら、ルールと反則金を学びます。何度でも巻き戻して見直せます。シリーズ後半（場面7〜10）では、車の<strong>あおり運転</strong>や<strong>違法改造の爆音</strong>、バイクの爆音、ロードバイクの集団走行など、自転車以外の交通課題も同じ仕組みで扱います。</p>
     <div class="stats">
       <div class="stat"><b>2026年4月1日</b><span>自転車への青切符 施行日</span></div>
       <div class="stat"><b>16歳以上</b><span>対象（免許の有無は不問）</span></div>
@@ -152,6 +162,10 @@
         <div class="fallback" id="fallback">3Dを表示できませんでした。<br>下の解説テキストで同じ内容を学べます。</div>
         <div class="incident" id="incident"></div>
         <div class="viewtag" id="viewtag">視点：俯瞰</div>
+        <div class="panetag"></div>
+        <div class="panetag"></div>
+        <div class="panetag"></div>
+        <div class="panetag"></div>
       </div>
       <div class="transport">
         <button class="tbtn" id="btn-restart" type="button">⏮ 最初から</button>
@@ -162,8 +176,10 @@
         </div>
         <button class="tbtn" id="btn-tts" type="button" aria-pressed="false">🗣 読み上げ OFF</button>
         <button class="tbtn" id="btn-fs" type="button">⛶ フルスクリーン</button>
+        <button class="tbtn" id="btn-multi" type="button" aria-pressed="false">🖥 同時視点（マルチ）</button>
       </div>
       <div class="cams" id="cams"><span class="cap">視点を切り替える（同じ瞬間を、相手の目で見る）</span></div>
+      <div id="subtitle" aria-hidden="true"></div>
     </div>
 
     <aside class="info" id="info" aria-live="polite"></aside>
@@ -171,7 +187,7 @@
 
   <section class="block">
     <h2>🎧 聞くモード（全場面の解説を連続再生）</h2>
-    <p>画面を見られないときは、こちらで全6場面の解説を順番に聞けます。再生中の場面は3D側にも連動します。</p>
+    <p>画面を見られないときは、こちらで全10場面の解説を順番に聞けます。再生中の場面は3D側にも連動します。</p>
     <div class="listen">
       <button class="tbtn primary" id="btn-listen" type="button">▶ 全部を連続で聞く</button>
       <button class="tbtn" id="btn-listen-stop" type="button">⏹ 停止</button>
@@ -200,7 +216,7 @@
 
   <section class="block">
     <h2>主な違反と反則金</h2>
-    <p>日常で特に起きやすいものを抜粋しました（警察庁の自転車ルールブック等に基づく主な例）。この教室の6場面は、この表の違反をそのまま再現しています。</p>
+    <p>日常で特に起きやすいものを抜粋しました（警察庁の自転車ルールブック等に基づく主な例）。この教室の場面1〜6は、この表の違反をそのまま再現しています（場面7〜10は車・バイク側の交通課題で、罰則は各場面の解説に記載）。</p>
     <table class="fines">
       <thead><tr><th>違反行為</th><th>どんな行為か</th><th style="text-align:right">反則金</th></tr></thead>
       <tbody>
@@ -230,6 +246,8 @@
   <p class="srcs">出典：警察庁交通局「自転車ルールブック（自転車への交通反則通告制度の導入）」の内容に基づく解説として
     <a href="https://www.bk.mufg.jp/column/others/b0112.html" target="_blank" rel="noopener">三菱UFJ銀行コラム「自転車反則金（青切符）とは？」</a>、
     <a href="https://www.iza.ne.jp/article/20260327-DVDOL5M5SVDNPD5KL7O6QKLVTM/" target="_blank" rel="noopener">イザ！「自転車の青切符、違反行為と反則金一覧」</a>を参照しました。
+    場面7〜10の罰則・規制値は、<a href="https://www.gov-online.go.jp/article/202006/entry-10656.html" target="_blank" rel="noopener">政府広報オンライン「『あおり運転』は犯罪です！」</a>と
+    <a href="https://www.police.pref.osaka.lg.jp/kotsu/bosozoku/5089.html" target="_blank" rel="noopener">大阪府警察「厳しい罰則」（整備不良・消音器不備・騒音運転）</a>に基づきます。
     本ページは学習用の再現であり、実際の交通状況を保証するものではありません。金額は2026年4月施行時点の主な例です。</p>
 </div>
 
@@ -252,7 +270,9 @@ var actors=[];        /* {obj, keys, wheels[], bob, label, labelEl, headY} */
 var dynLights=[];     /* traffic lights to update: {mats, phase fn} */
 var conflict=null;    /* {pos:Vector3, ring} */
 var nightMode=false, bikeLampOn=false, extraState={};
+var fx={}; /* 場面ごとの演出ハンドル（パッシング点滅・空ぶかし振動など） */
 var camTargets={};    /* mode -> {getPos(), getLook()} */
+var multiMode=false, paneCams=[], panes=[];  /* multi-view: panes from scenario cams */
 
 function V3(x,y,z){return new THREE.Vector3(x,y,z);}
 function mat(color,rough,metal,extra){
@@ -275,11 +295,12 @@ function initGL(){
   renderer=new THREE.WebGLRenderer({antialias:true});
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
   renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFShadowMap;
+  renderer.shadowMap.autoUpdate=false; /* panes re-render the scene; update shadows once per frame */
   renderer.outputEncoding=THREE.sRGBEncoding;
   renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.05;
   screenEl.insertBefore(renderer.domElement, screenEl.firstChild);
   scene=new THREE.Scene();
-  camera=new THREE.PerspectiveCamera(50,1,0.1,400);
+  camera=new THREE.PerspectiveCamera(50,1,0.1,300); /* farを絞ると深度精度が上がり路面標示のチカチカも減る */
   camera.position.set(20,17,24);
   pmrem=new THREE.PMREMGenerator(renderer);
   scene.environment=pmrem.fromScene(new THREE.RoomEnvironment(),0.04).texture;
@@ -307,14 +328,22 @@ function groundPlane(size,color,y){
   var g=new THREE.Mesh(new THREE.PlaneGeometry(size,size),mat(color,0.95,0));
   g.rotation.x=-Math.PI/2; g.position.y=y||0; g.receiveShadow=true; scene.add(g); return g;
 }
-function roadSlab(w,d,x,z,color){
-  var m=box(w,0.06,d,mat(color||ASPH,0.92,0),x,0.03,z); m.castShadow=false; scene.add(m); return m;
+function roadSlab(w,d,x,z,color,lift){
+  /* 重なるスラブ同士は天面の高さをわずかにずらす。同高さだとZファイティングでチカチカする */
+  var m=box(w,0.06,d,mat(color||ASPH,0.92,0),x,0.03+(lift||0),z); m.castShadow=false; scene.add(m); return m;
+}
+function markMat(color){
+  /* 路面標示専用マテリアル：polygonOffsetでアスファルトの深度面から分離し、チカチカを防ぐ */
+  var m=mat(color||LINEW,0.85,0);
+  m.polygonOffset=true; m.polygonOffsetFactor=-2; m.polygonOffsetUnits=-2;
+  return m;
 }
 function dashLine(len,along,x,z,color,w){
   var g=new THREE.Group(); var n=Math.floor(len/3);
+  var y=0.09+(along==="z"?0.006:0); /* 縦横の中央線が交差点中心で交わるので高さをずらす */
   for(var i=0;i<n;i++){
-    var s=box(along==="x"?1.6:(w||0.16),0.02,along==="x"?(w||0.16):1.6,mat(color||LINEW,0.8,0),
-      along==="x"? x-len/2+1.5+i*3 : x, 0.075, along==="x"? z : z-len/2+1.5+i*3);
+    var s=box(along==="x"?1.6:(w||0.16),0.02,along==="x"?(w||0.16):1.6,markMat(color),
+      along==="x"? x-len/2+1.5+i*3 : x, y, along==="x"? z : z-len/2+1.5+i*3);
     s.castShadow=false; g.add(s);
   }
   scene.add(g); return g;
@@ -323,22 +352,22 @@ function crosswalk(cx,cz,traffic){
   /* stripes elongated along traffic direction, spread across the crossing path */
   var g=new THREE.Group();
   for(var i=-3;i<=3;i++){
-    var s=box(traffic==="x"?2.4:0.55,0.02,traffic==="x"?0.55:2.4,mat(LINEW,0.85,0),
-      traffic==="x"? cx : cx+i*1.3, 0.075, traffic==="x"? cz+i*1.3 : cz);
+    var s=box(traffic==="x"?2.4:0.55,0.02,traffic==="x"?0.55:2.4,markMat(LINEW),
+      traffic==="x"? cx : cx+i*1.3, 0.09, traffic==="x"? cz+i*1.3 : cz);
     s.castShadow=false; g.add(s);
   }
   scene.add(g); return g;
 }
 function stopLine(x,z,along){
-  var s=box(along==="x"?0.45:3.4,0.02,along==="x"?3.4:0.45,mat(LINEW,0.85,0),x,0.075,z);
+  var s=box(along==="x"?0.45:3.4,0.02,along==="x"?3.4:0.45,markMat(LINEW),x,0.09,z);
   s.castShadow=false; scene.add(s);
 }
 function arrowMark(x,z,ry){
   var g=new THREE.Group();
-  var shaft=box(0.35,0.02,2.4,mat(LINEW,0.85,0),0,0,-0.4); shaft.castShadow=false; g.add(shaft);
-  var head=new THREE.Mesh(new THREE.ConeGeometry(0.62,1.3,4),mat(LINEW,0.85,0));
+  var shaft=box(0.35,0.02,2.4,markMat(LINEW),0,0,-0.4); shaft.castShadow=false; g.add(shaft);
+  var head=new THREE.Mesh(new THREE.ConeGeometry(0.62,1.3,4),markMat(LINEW));
   head.rotation.x=-Math.PI/2; head.rotation.y=Math.PI/4; head.position.set(0,0.01,1.35); g.add(head);
-  g.position.set(x,0.075,z); g.rotation.y=ry||0; scene.add(g); return g;
+  g.position.set(x,0.09,z); g.rotation.y=ry||0; scene.add(g); return g;
 }
 function trafficLight(x,z,ry){
   var g=new THREE.Group();
@@ -394,9 +423,9 @@ function parkedCar(x,z,ry,color){
 /* Intersection: roads along X and Z, half-width 5 */
 function buildIntersection(){
   groundPlane(130,GRASS,-0.02);
-  roadSlab(110,10,0,0); roadSlab(10,110,0,0);
-  roadSlab(6,110,-8,0,SIDE); roadSlab(6,110,8,0,SIDE);
-  roadSlab(110,6,0,-8,SIDE); roadSlab(110,6,0,8,SIDE);
+  roadSlab(110,10,0,0,ASPH,0); roadSlab(10,110,0,0,ASPH,-0.004);
+  roadSlab(6,110,-8,0,SIDE,0.004); roadSlab(6,110,8,0,SIDE,0.004);
+  roadSlab(110,6,0,-8,SIDE,0.008); roadSlab(110,6,0,8,SIDE,0.008);
   dashLine(100,"x",0,-0.0,LINEY); dashLine(100,"z",0,0,LINEY);
   crosswalk(0,7.6,"z"); crosswalk(0,-7.6,"z"); crosswalk(7.6,0,"x"); crosswalk(-7.6,0,"x");
   building(-16,-16,11,17,11,0x9aa5ad); building(16,-17,12,22,12,0xb0a08e);
@@ -408,8 +437,8 @@ function buildIntersection(){
 function buildStraightRoad(opts){
   opts=opts||{};
   groundPlane(130,GRASS,-0.02);
-  roadSlab(120,9,0,0);
-  roadSlab(120,4.5,0,-6.8,SIDE); roadSlab(120,4.5,0,6.8,SIDE);
+  roadSlab(120,9,0,0,ASPH,0);
+  roadSlab(120,4.5,0,-6.8,SIDE,0.004); roadSlab(120,4.5,0,6.8,SIDE,0.004);
   dashLine(110,"x",0,0,LINEW);
   if(opts.crosswalkAt!=null) crosswalk(opts.crosswalkAt,0,"x");
   building(-20,-16,12,15,10,0x9aa5ad); building(14,-17,13,20,11,0xb0a08e);
@@ -496,7 +525,7 @@ function makeCar(color){
     var b=new THREE.SpotLight(0xffeec2,0,26,0.42,0.55,1);
     b.position.set(x,0.62,2.0); g.add(b); g.add(b.target); b.target.position.set(x*1.4,0,14); beams.push(b);
   });
-  g.userData={wheels:wheels,kind:"car",beams:beams};
+  g.userData={wheels:wheels,kind:"car",beams:beams,hlMat:hl};
   return g;
 }
 function makeMotorcycle(color){
@@ -541,7 +570,7 @@ function resetWorld(){
   scene.children.slice().forEach(function(ch){
     if(!(ch.userData&&ch.userData.keep)) scene.remove(ch);
   });
-  actors=[]; signals=[]; conflict=null;
+  actors=[]; signals=[]; conflict=null; fx={};
   var ls=document.querySelectorAll(".lbl"); for(var i=0;i<ls.length;i++) ls[i].remove();
   scene.background=new THREE.Color(0xa8c4e0);
   scene.fog=new THREE.Fog(0xa8c4e0,75,175);
@@ -574,7 +603,7 @@ function addActor(obj,keys,opts){
 function setConflict(x,z){
   var ring=new THREE.Mesh(new THREE.RingGeometry(0.75,1.05,36),
     new THREE.MeshBasicMaterial({color:0xe0342b,transparent:true,opacity:0.9,side:THREE.DoubleSide}));
-  ring.rotation.x=-Math.PI/2; ring.position.set(x,0.09,z); ring.visible=false;
+  ring.rotation.x=-Math.PI/2; ring.position.set(x,0.13,z); ring.visible=false;
   scene.add(ring); conflict={ring:ring};
 }
 function lerpAngle(a,b,t){
@@ -633,10 +662,33 @@ function updateSignals(tN,phase){
     }
   });
 }
+function placeCam(cam,mode,idx,tN){
+  if(mode==="pov"||mode==="chase"){
+    var a=actors[idx];
+    if(!a) return;
+    var p=a.obj.position, ry=a.obj.rotation.y;
+    var fx=Math.sin(ry), fz=Math.cos(ry), rx=-fz, rz=fx;
+    if(mode==="pov"){
+      var eyeH=a.headY, fOff=0.25, rOff=0;
+      if(a.kind==="car"){ eyeH=1.12; fOff=0.4; rOff=-0.38; }
+      var ex=p.x+fx*fOff+rx*rOff, ez=p.z+fz*fOff+rz*rOff;
+      cam.position.set(ex,eyeH,ez);
+      var pitch=(a.phone&&tN<0.6)?-1.5:-0.55;
+      cam.lookAt(ex+fx*10, eyeH+pitch, ez+fz*10);
+    }else{
+      cam.position.set(p.x-fx*6.5,3.1,p.z-fz*6.5);
+      cam.lookAt(p.x,1.0,p.z);
+    }
+  } else if(mode==="top"){
+    cam.position.set(0,58,0.01); cam.lookAt(0,0,0);
+  }
+  /* orbit: leave the camera where the user / home position put it */
+}
 function applyTime(){
   var sc=SCEN[curScenario], dur=sc.dur, tN=Math.min(1,timeS/dur);
   updateActors(tN);
   if(sc.phase) updateSignals(tN,sc.phase);
+  if(sc.tick) sc.tick(tN);
   var inc=sc.incident;
   var inWin=inc&&tN>=inc.t0&&tN<=inc.t1;
   var incEl=document.getElementById("incident");
@@ -646,36 +698,19 @@ function applyTime(){
     conflict.ring.visible=!!inWin;
     if(inWin){ var s=1+0.13*Math.sin(performance.now()*0.012); conflict.ring.scale.set(s,s,s); }
   }
-  /* camera */
+  /* camera (single view only; multi-view panes are placed in renderFrame) */
   if(!camera) return;
-  var mode=camMode;
-  if(mode==="pov"||mode==="chase"){
-    var a=actors[camActorIdx];
-    if(a){
-      var p=a.obj.position, ry=a.obj.rotation.y;
-      var fx=Math.sin(ry), fz=Math.cos(ry), rx=-fz, rz=fx;
-      if(mode==="pov"){
-        var eyeH=a.headY, fOff=0.25, rOff=0;
-        if(a.kind==="car"){ eyeH=1.12; fOff=0.4; rOff=-0.38; }
-        var ex=p.x+fx*fOff+rx*rOff, ez=p.z+fz*fOff+rz*rOff;
-        camera.position.set(ex,eyeH,ez);
-        var pitch=(a.phone&&tN<0.6)?-1.5:-0.55;
-        camera.lookAt(ex+fx*10, eyeH+pitch, ez+fz*10);
-      }else{
-        camera.position.set(p.x-fx*6.5,3.1,p.z-fz*6.5);
-        camera.lookAt(p.x,1.0,p.z);
-      }
-      controls.enabled=false;
-    }
-  } else if(mode==="top"){
-    camera.position.set(0,58,0.01); camera.lookAt(0,0,0); controls.enabled=false;
-  } else {
+  if(multiMode||camMode==="orbit"){
     controls.enabled=true;
+  } else {
+    placeCam(camera,camMode,camActorIdx,tN);
+    controls.enabled=false;
   }
   /* labels */
   var w=screenEl.clientWidth,h=screenEl.clientHeight;
   actors.forEach(function(a){
     if(!a.labelEl) return;
+    if(multiMode){ a.labelEl.style.display="none"; return; }
     var v=V3(a.obj.position.x,a.headY+0.45,a.obj.position.z).project(camera);
     if(v.z>1||v.z<-1){ a.labelEl.style.display="none"; return; }
     a.labelEl.style.display="block";
@@ -907,12 +942,173 @@ var SCEN=[
       {label:"車",labelWarn:"車（発見が遅れた！）",warnWin:bikeLampOn?null:[0.55,0.78],headY:1.3});
     if(!bikeLampOn) setConflict(8,-2.2);
   }
+},
+{
+  tab:"あおり運転", sub:"車が自転車を煽る", fine:"妨害運転罪", dur:12,
+  title:"⑦ あおり運転 ― 車間ゼロの恐怖は、立派な「犯罪」",
+  fineText:"妨害運転罪：3年以下の拘禁刑または50万円以下の罰金／25点で一発免許取消し",
+  story:"自転車の真後ろに車が異常接近し、パッシングを繰り返して威嚇します。恐怖で自転車がふらついたところへ、幅寄せ気味の乱暴な追い越し。煽られる側に落ち度はなくても、転倒すれば命に関わります。",
+  rule:"2020年6月30日施行の「妨害運転罪」。通行を妨害する目的での車間距離不保持・急接近・幅寄せ・執拗なパッシング・不要なクラクションなど10類型が対象で、3年以下の拘禁刑または50万円以下の罰金、違反点数25点で一発免許取消し（欠格期間2年）。高速道路で相手を停車させるなど著しい危険を生じさせれば5年以下・100万円以下・35点です。青切符（反則金）では済まない、刑事罰の世界です。",
+  gapBikeHead:"🚲 煽られる側（自転車）の受け止め",
+  gapBike:"「自分が遅いから仕方ない」と萎縮しがちですが、恐怖でハンドルが震え、そのふらつき自体が転倒・接触の引き金になります。煽られた側に責任はありません。",
+  gapOtherHead:"🚗 煽る側（車）の言い分と現実",
+  gapOther:"「急いでいるだけ」「すぐ抜けば終わり」のつもりでも、相手には「いつ轢かれるか分からない」数十秒です。今はドライブレコーダーと目撃証言で立件される時代で、一瞬のイライラが免許取消しと前科に直結します。",
+  tip:"煽られたら対抗せず、左に寄って止まり、やり過ごすのが正解。ナンバーと時刻を記録して110番通報を。煽る側は「抜きたい」気持ちを、まず車間距離に変えましょう。",
+  narration:"場面7、あおり運転です。車間距離を詰める、幅寄せ、執拗なパッシングは妨害運転罪。3年以下の拘禁刑または50万円以下の罰金で、違反点数25点、一発で免許取消しです。煽られたら争わず、止まってやり過ごし、記録して通報しましょう。",
+  incident:{t0:0.4,t1:0.66,text:"⚠ 車間ゼロ＋パッシング！ 自転車が恐怖でふらつく"},
+  home:{pos:[14,11,-19],tgt:[0,0.5,-2]},
+  cams:[["orbit","俯瞰（全体）"],["pov",0,"自転車の視点"],["pov",1,"車の視点"],["chase",0,"自転車を追う"]],
+  tick:function(tN){
+    if(fx.hl) fx.hl.emissiveIntensity=(tN>0.3&&tN<0.62)?(Math.sin(tN*170)>0?2.8:0.1):0.7;
+  },
+  setup:function(){
+    buildStraightRoad({});
+    var bike=makeBicycle(0x2e7d5b);
+    addActor(bike,[
+      {t:0,x:-20,z:-3.4,ry:EAST},{t:0.4,x:-0.8,z:-3.4,ry:EAST},
+      {t:0.5,x:4,z:-3.05,ry:EAST},{t:0.58,x:7.84,z:-3.65,ry:EAST},
+      {t:0.66,x:11.68,z:-3.3,ry:EAST},{t:1,x:28,z:-3.4,ry:EAST}],
+      {label:"自転車（煽られている）",labelWarn:"自転車（恐怖でふらつく！）",warnWin:[0.35,0.66],headY:1.75});
+    var car=makeCar(0x8c2f39);
+    addActor(car,[
+      {t:0,x:-38,z:-3.4,ry:EAST},{t:0.35,x:-6.2,z:-3.4,ry:EAST},
+      {t:0.62,x:6.8,z:-3.4,ry:EAST},{t:0.72,x:13.5,z:-2.2,ry:EAST},
+      {t:0.82,x:21,z:-1.6,ry:EAST},{t:1,x:40,z:-1.6,ry:EAST}],
+      {label:"車（異常接近）",labelWarn:"車（パッシング＋幅寄せ！）",warnWin:[0.3,0.8],headY:1.3});
+    fx.hl=car.userData.hlMat;
+    var ped=makePedestrian(0x5a7a9e);
+    addActor(ped,[{t:0,x:3,z:6.9,ry:WEST},{t:1,x:3,z:6.9,ry:WEST}],
+      {label:"歩行者（目撃している）",headY:1.45});
+    setConflict(4,-3.3);
+  }
+},
+{
+  tab:"車の違法改造・爆音", sub:"直管マフラーの代償", fine:"不正改造・整備不良", dur:12,
+  title:"⑧ 車の違法改造と爆音 ―「いい音」は誰かの安眠を壊す",
+  fineText:"不正改造：6か月以下の懲役または30万円以下の罰金／整備不良：3か月以下の拘禁刑または5万円以下の罰金・2点",
+  story:"深夜の住宅街。消音器を取り外した（直管）改造車が、爆音を響かせて加速していきます。歩行者は耳をふさぎ、沿道の家の明かりが次々と点きます。音の主は一瞬で通り過ぎますが、起こされた人たちの夜は戻りません。",
+  rule:"マフラーの切断・取り外しなど、保安基準に適合しない改造は道路運送車両法で禁止され、改造行為自体が「不正改造」として6か月以下の懲役または30万円以下の罰金。その状態で運転すれば整備不良（3か月以下の拘禁刑または5万円以下の罰金、違反点数2点）、消音器不備は5万円以下の罰金です。近接排気騒音の規制値は乗用車で96dB。運輸支局の整備命令に従わない場合は50万円以下の罰金や使用停止もあります。",
+  gapBikeHead:"🚗 改造車のドライバーの思い込み",
+  gapBike:"「音が大きい＝速い・カッコいい」は本人だけの感覚です。本人には音楽のように聞こえても、周囲にとっては騒音でしかなく、深夜の住宅街では何十軒もの睡眠を壊している自覚がありません。",
+  gapOtherHead:"🏠 沿道の住民・歩行者の受け止め",
+  gapOther:"爆音に多い低周波は窓を閉めても防げません。赤ちゃんや高齢者、夜勤明けの人の睡眠が断ち切られ、「また来た」という不安が積み重なります。加害者は通り過ぎて終わりでも、被害だけが毎晩残ります。",
+  tip:"マフラー交換自体が違法なのではなく、「性能等確認済み」の車検対応品なら合法です。直管・消音器なしは論外。音量はdB（デシベル）で測れる、客観的な迷惑だという意識を持ちましょう。",
+  narration:"場面8、車の違法改造と爆音です。消音器を外すなどの不正改造は、6か月以下の懲役または30万円以下の罰金。そのまま運転すれば整備不良にもなります。近接排気騒音の基準は乗用車で96デシベル。いい音のつもりでも、沿道の人には騒音です。",
+  incident:{t0:0.3,t1:0.62,text:"🔊 爆音で加速！ 沿道の家の明かりが次々と点く"},
+  home:{pos:[15,11,-19],tgt:[0,0.5,-1]},
+  cams:[["orbit","俯瞰（全体）"],["pov",0,"改造車の視点"],["pov",1,"歩行者の視点"],["chase",0,"車を追う"]],
+  setup:function(){
+    buildStraightRoad({});
+    setNight();
+    [-16,0,16].forEach(function(x){
+      var pole=cylBetween(V3(x,0,-6.2),V3(x,4.6,-6.2),0.07,mat(0x2c3138,0.5,0.7)); scene.add(pole);
+      var pl=new THREE.PointLight(0xffd9a0,0.85,17); pl.position.set(x,4.5,-6.0); scene.add(pl);
+      var bulb=new THREE.Mesh(new THREE.SphereGeometry(0.13,10,8),
+        new THREE.MeshStandardMaterial({color:0x554422,emissive:0xffd9a0,emissiveIntensity:2.2}));
+      bulb.position.set(x,4.55,-6.0); scene.add(bulb);
+    });
+    var car=makeCar(0x23262b);
+    car.add(cylBetween(V3(0.55,0.28,-1.6),V3(0.55,0.24,-2.62),0.11,mat(0xd7dde3,0.25,0.95))); /* 太い直管マフラー */
+    car.add(box(1.5,0.06,0.42,mat(0x11151a,0.4,0.6),0,1.06,-1.9)); /* リアスポイラー */
+    car.userData.beams.forEach(function(b){b.intensity=2.2;});
+    addActor(car,[
+      {t:0,x:-34,z:-2.2,ry:EAST},{t:0.3,x:-14,z:-2.2,ry:EAST},
+      {t:0.55,x:2,z:-2.2,ry:EAST},{t:1,x:36,z:-2.2,ry:EAST}],
+      {label:"改造車（直管マフラー）",labelWarn:"改造車（爆音で加速！）",warnWin:[0.28,0.62],headY:1.3});
+    var ped=makePedestrian(0x8a97a5);
+    addActor(ped,[
+      {t:0,x:-7,z:-6.8,ry:EAST},{t:1,x:7,z:-6.8,ry:EAST}],
+      {label:"歩行者（夜道）",labelWarn:"歩行者（耳をふさぐ！）",warnWin:[0.3,0.6],headY:1.45});
+    setConflict(0,-2.2);
+  }
+},
+{
+  tab:"バイクの爆音", sub:"空ぶかしと直管マフラー", fine:"騒音運転・消音器不備", dur:12,
+  title:"⑨ バイクの爆音 ― 空ぶかしの「ひと吹かし」が街の騒音に",
+  fineText:"騒音運転等：5万円以下の罰金／消音器不備：5万円以下の罰金・2点／不正改造は別途処罰",
+  story:"深夜の交差点。信号待ちのバイクが何度も空ぶかしを繰り返し、青信号で爆音とともに急発進します。ライダーには「いい音」でも、住宅街の夜に響く音は数百メートル先まで届きます。",
+  rule:"正当な理由なく空ぶかしや急加速で大きな騒音を出し、他人に著しく迷惑を及ぼすと「騒音運転等」で5万円以下の罰金。消音器の取り外し・切断は「消音器不備」で5万円以下の罰金・違反点数2点、改造行為自体は不正改造として6か月以下の懲役または30万円以下の罰金の対象です。近接排気騒音の規制値は二輪車94dB（原付は84〜90dB）で、これを超えるマフラーはそれ自体が保安基準不適合です。",
+  gapBikeHead:"🏍 ライダーの思い込み",
+  gapBike:"「自分だけが気持ちいい音」。本人にはヘルメットと風切り音で実際より小さく聞こえていて、街への響き方を想像できていません。「ひと吹かし」のつもりが、寝入りばなの何百人かを起こしています。",
+  gapOtherHead:"🏠 住民・歩行者の受け止め",
+  gapOther:"夜の住宅街では音が遠くまで届き、窓ガラスが震えるほどの音圧で眠っていた人が飛び起きます。「一瞬」でも毎晩繰り返されれば立派な生活妨害で、苦情と取締りの対象になります。",
+  tip:"純正や認証マフラーでも良い音は楽しめます。夜の住宅街では回転数を上げないのが最低限のマナー。空ぶかしには「騒音運転」という違反名がちゃんと付いている、と覚えておきましょう。",
+  narration:"場面9、バイクの爆音です。理由のない空ぶかしや急加速は騒音運転で、5万円以下の罰金。消音器を外せば消音器不備、改造そのものも処罰の対象です。二輪車の近接排気騒音の基準は94デシベル。夜の住宅街では特に控えましょう。",
+  incident:{t0:0.25,t1:0.6,text:"🔊 信号待ちで空ぶかし連発！ 近所迷惑"},
+  home:{pos:[16,13,20],tgt:[0,0.5,2]},
+  cams:[["orbit","俯瞰（全体）"],["pov",0,"バイクの視点"],["pov",1,"歩行者の視点"],["chase",0,"バイクを追う"]],
+  phase:function(tN){return tN<0.55?{NS:"red",EW:"green"}:{NS:"green",EW:"red"};},
+  tick:function(tN){
+    if(fx.moto&&tN>0.25&&tN<0.55) fx.moto.position.x=-2.5+Math.sin(performance.now()*0.11)*0.02;
+  },
+  setup:function(){
+    buildIntersection();
+    setNight();
+    signals.push({light:trafficLight(-6.4,-6.4,0),role:"NS"});
+    signals.push({light:trafficLight(6.4,-6.4,-Math.PI/2),role:"EW"});
+    var moto=makeMotorcycle(0x6e1423);
+    moto.add(cylBetween(V3(0.16,0.3,-0.5),V3(0.16,0.26,-1.15),0.07,mat(0xd7dde3,0.25,0.95))); /* 直管マフラー */
+    addActor(moto,[
+      {t:0,x:-2.5,z:26,ry:NORTH},{t:0.25,x:-2.5,z:7.4,ry:NORTH},
+      {t:0.55,x:-2.5,z:7.4,ry:NORTH},{t:0.75,x:-2.5,z:-8,ry:NORTH},
+      {t:1,x:-2.5,z:-30,ry:NORTH}],
+      {label:"バイク（信号待ち）",labelWarn:"バイク（空ぶかし！）",warnWin:[0.25,0.55],headY:1.7});
+    fx.moto=moto;
+    var ped=makePedestrian(0x7a6a8a);
+    addActor(ped,[{t:0,x:6.9,z:7.6,ry:WEST},{t:1,x:6.9,z:7.6,ry:WEST}],
+      {label:"歩行者（信号待ち）",labelWarn:"歩行者（耳をふさぐ！）",warnWin:[0.25,0.6],headY:1.45});
+    setConflict(-2.5,7.4);
+  }
+},
+{
+  tab:"集団走行（ロードバイク）", sub:"並進と隊列の信号", fine:"並進 3,000円", dur:12,
+  title:"⑩ ロードバイクの集団走行 ― 速い集団ほど「一列」と「信号」が命綱",
+  fineText:"反則金 3,000円（並進禁止違反）／信号無視は6,000円",
+  story:"5台のロードバイクが2列に広がって車道いっぱいに走行。後ろの車は追い越せず、しびれを切らして中央線をはみ出すと、対向バイクと正面衝突寸前に。集団走行そのものは合法ですが、並進は違反で、はみ出し追い越しは命取りです。",
+  rule:"自転車の並進は「並進可」の標識がある場所を除いて禁止で、並進禁止違反は反則金3,000円。集団走行は一列（シングルファイル）が原則です。また、先頭が青信号で渡っても、隊列の後方が赤信号で進入すれば信号無視（6,000円）。車の側も、追い越しは対向車線の安全が確認できる場所でだけ許されます。",
+  gapBikeHead:"🚴 集団側の思い込み",
+  gapBike:"「集団でいれば目立つから安全」「前の人が行ったから自分も行ける」と思いがち。でも集団は長く、車からは「一台の大きな塊」に見えます。塊が広がるほど、後続車の追い越し判断を誤らせます。",
+  gapOtherHead:"🚗 後続車・対向車の見え方",
+  gapOther:"ドライバーは集団全体を抜き切る距離と時間を見誤りがちです。対向車線にはみ出した瞬間、対向バイクとの相対速度は合計で100km/h級になり、どちらにも逃げ場がありません。",
+  tip:"集団走行は一列・一定の車間・信号では全員停止が基本。声かけで列を整えるのもマナーです。車側は「抜けるまで待つ」が正解で、数十秒を惜しんだはみ出しが正面衝突と紙一重です。",
+  narration:"場面10、ロードバイクの集団走行です。集団走行自体は合法ですが、横に並ぶ並進は反則金3千円の違反です。信号は隊列の最後尾まで守るのが原則。追い越す車も、対向車線の安全が確認できるまで待ちましょう。",
+  incident:{t0:0.48,t1:0.68,text:"⚠ はみ出し追い越し！ 対向バイクと正面衝突寸前"},
+  home:{pos:[15,13,-20],tgt:[0,0.5,0]},
+  cams:[["orbit","俯瞰（全体）"],["pov",0,"先頭バイクの視点"],["pov",5,"後続車の視点"],["pov",6,"対向バイクの視点"]],
+  setup:function(){
+    buildStraightRoad({});
+    function roadBike(color){
+      var b=makeBicycle(color);
+      b.children.slice().forEach(function(ch){ /* ロードバイクらしく前かごを外す */
+        if(ch.isMesh&&Math.abs(ch.position.z-0.78)<0.01&&Math.abs(ch.position.y-0.82)<0.01) b.remove(ch);
+      });
+      return b;
+    }
+    var spots=[[-26,-3.7],[-27.5,-1.9],[-29,-3.7],[-30.5,-1.9],[-32,-3.7]];
+    var cols=[0xc23b2e,0x2e6da4,0xd0811c,0x5b8c3e,0x7a4f9e];
+    spots.forEach(function(s,i){
+      addActor(roadBike(cols[i]),[
+        {t:0,x:s[0],z:s[1],ry:EAST},{t:1,x:s[0]+58,z:s[1],ry:EAST}],
+        i===0?{label:"集団（2列に広がっている）",labelWarn:"集団（並進は違反！）",warnWin:[0.1,0.6],headY:1.75}:{headY:1.75});
+    });
+    var car=makeCar(0x707880);
+    addActor(car,[
+      {t:0,x:-42,z:-2.6,ry:EAST},{t:0.4,x:-16,z:-2.6,ry:EAST},
+      {t:0.55,x:-4,z:0.2,ry:EAST},{t:0.68,x:4,z:0.8,ry:EAST},
+      {t:0.78,x:11,z:-0.8,ry:EAST},{t:1,x:26,z:-2.4,ry:EAST}],
+      {label:"車（追い越したい）",labelWarn:"車（はみ出し追い越し！）",warnWin:[0.45,0.72],headY:1.3});
+    var moto=makeMotorcycle(0x274b73);
+    addActor(moto,[
+      {t:0,x:30,z:2.2,ry:WEST},{t:1,x:-30,z:2.2,ry:WEST}],
+      {label:"対向バイク",labelWarn:"対向バイク（逃げ場なし！）",warnWin:[0.48,0.66],headY:1.7});
+    setConflict(-3,1.2);
+  }
 }
 ];
 </script>
 <script>
 /* ================= UI ================= */
-var ttsOn=false, listenSeq=-1;
+var ttsOn=false, listenSeq=-1, viewLabel="俯瞰（全体）";
 var playBtn=document.getElementById("btn-play");
 function setPlaying(p){
   playing=p;
@@ -958,8 +1154,8 @@ function renderInfo(){
     "<h3>何が起きるか</h3><p>"+((bikeLampOn&&sc.storyLit)?sc.storyLit:sc.story)+"</p>"+
     "<h3>ルールと反則金</h3><p>"+sc.rule+"</p>"+
     "<h3>認識のズレ ― なぜ起きるか</h3><div class='gap'>"+
-    "<div class='side bike'><b>🚲 自転車に乗る人の思い込み</b>"+sc.gapBike+"</div>"+
-    "<div class='side other'><b>🚗🚶 相手（車・バイク・歩行者）の見え方</b>"+sc.gapOther+"</div></div>"+
+    "<div class='side bike'><b>"+(sc.gapBikeHead||"🚲 自転車に乗る人の思い込み")+"</b>"+sc.gapBike+"</div>"+
+    "<div class='side other'><b>"+(sc.gapOtherHead||"🚗🚶 相手（車・バイク・歩行者）の見え方")+"</b>"+sc.gapOther+"</div></div>"+
     "<h3>防ぐコツ</h3><div class='tip'><b>✔ </b>"+sc.tip+"</div>";
   if(sc.extraBtn){
     html+="<button class='extrabtn' id='btn-light' type='button'>"+
@@ -983,11 +1179,65 @@ function renderCams(){
       camMode=mode; if(typeof idx==="number") camActorIdx=idx;
       if(mode==="orbit"){ camera.position.set(sc.home.pos[0],sc.home.pos[1],sc.home.pos[2]);
         controls.target.set(sc.home.tgt[0],sc.home.tgt[1],sc.home.tgt[2]); }
-      document.getElementById("viewtag").textContent="視点："+b.textContent;
+      viewLabel=b.textContent;
+      document.getElementById("viewtag").textContent="視点："+viewLabel;
       renderCams();
     });
     box.appendChild(b);
   });
+}
+function buildPanes(){
+  panes=[];
+  SCEN[curScenario].cams.slice(0,4).forEach(function(c){
+    panes.push({mode:c[0],idx:(typeof c[1]==="number")?c[1]:-1,label:(c[2]||c[1]||"")});
+  });
+  var tags=document.querySelectorAll(".panetag");
+  var rows=Math.max(1,Math.ceil(panes.length/2));
+  for(var i=0;i<tags.length;i++){
+    if(i<panes.length){
+      var col=i%2, row=Math.floor(i/2);
+      tags[i].textContent="📷 "+panes[i].label;
+      tags[i].style.display="";
+      tags[i].style.left="calc("+(col*50)+"% + 8px)";
+      tags[i].style.top="calc("+(row*100/rows)+"% + 8px)";
+    } else {
+      tags[i].style.display="none";
+    }
+  }
+}
+function getPaneCam(i){
+  if(!paneCams[i]) paneCams[i]=new THREE.PerspectiveCamera(50,1,0.1,300);
+  return paneCams[i];
+}
+function renderFrame(){
+  var W=screenEl.clientWidth||600, H=screenEl.clientHeight||360;
+  if(multiMode&&panes.length>1){
+    var cols=2, rows=Math.ceil(panes.length/cols);
+    var pw=W/cols, ph=H/rows, gap=2;
+    var tN=Math.min(1,timeS/SCEN[curScenario].dur);
+    renderer.shadowMap.needsUpdate=true;
+    renderer.setScissorTest(false);
+    renderer.setViewport(0,0,W,H);
+    renderer.setClearColor(0x141c26,1); /* ペイン間の2pxの継ぎ目色（昼・夜どちらでも浮かない暗色） */
+    renderer.clear();
+    renderer.setScissorTest(true);
+    for(var i=0;i<panes.length;i++){
+      var pn=panes[i], col=i%cols, row=Math.floor(i/cols);
+      var x=Math.round(col*pw+gap), wpx=Math.round(pw-gap*2);
+      var hpx=Math.round(ph-gap*2), y=Math.round(H-(row+1)*ph+gap);
+      var cam=(pn.mode==="orbit")?camera:getPaneCam(i);
+      if(pn.mode!=="orbit") placeCam(cam,pn.mode,pn.idx,tN);
+      cam.aspect=wpx/hpx; cam.updateProjectionMatrix();
+      renderer.setViewport(x,y,wpx,hpx);
+      renderer.setScissor(x,y,wpx,hpx);
+      renderer.render(scene,cam);
+    }
+    renderer.setScissorTest(false);
+  } else {
+    renderer.shadowMap.needsUpdate=true;
+    renderer.setViewport(0,0,W,H);
+    renderer.render(scene,camera);
+  }
 }
 function renderListenList(){
   var ol=document.getElementById("listen-list"); ol.innerHTML="";
@@ -1005,8 +1255,11 @@ function loadScenario(i,autoplay){
   SCEN[i].setup();
   camera.position.set(SCEN[i].home.pos[0],SCEN[i].home.pos[1],SCEN[i].home.pos[2]);
   controls.target.set(SCEN[i].home.tgt[0],SCEN[i].home.tgt[1],SCEN[i].home.tgt[2]);
-  document.getElementById("viewtag").textContent="視点：俯瞰（全体）";
-  renderTabs(); renderInfo(); renderCams();
+  viewLabel="俯瞰（全体）";
+  renderTabs(); renderInfo(); renderCams(); buildPanes();
+  document.getElementById("subtitle").textContent="🗣 "+SCEN[i].narration;
+  document.getElementById("viewtag").textContent=multiMode?
+    ("マルチ表示："+panes.length+"視点を同時表示"):"視点：俯瞰（全体）";
   setPlaying(!!autoplay);
   applyTime();
   if(autoplay&&ttsOn) speak(SCEN[i].narration);
@@ -1040,6 +1293,17 @@ document.getElementById("btn-fs").addEventListener("click",function(){
     else if(box.requestFullscreen) box.requestFullscreen();
   }catch(e){}
 });
+document.getElementById("btn-multi").addEventListener("click",function(){
+  multiMode=!multiMode;
+  this.textContent=multiMode?"🖥 同時視点 ON":"🖥 同時視点（マルチ）";
+  this.setAttribute("aria-pressed",multiMode?"true":"false");
+  screenEl.classList.toggle("multi",multiMode);
+  document.getElementById("cams").style.display=multiMode?"none":"";
+  document.getElementById("viewtag").textContent=multiMode?
+    ("マルチ表示："+panes.length+"視点を同時表示"):("視点："+viewLabel);
+  /* .screen の高さがクラスで変わるので、ON/OFF どちらでも描画バッファを合わせ直す */
+  requestAnimationFrame(function(){ resize(); });
+});
 document.getElementById("btn-listen").addEventListener("click",function(){
   stopSpeak();
   listenSeq=0;
@@ -1069,7 +1333,7 @@ function loop(ts){
     }
     applyTime();
     if(controls&&controls.enabled) controls.update();
-    if(renderer) renderer.render(scene,camera);
+    if(renderer) renderFrame();
   }catch(e){
     var el=document.getElementById("err");
     el.style.display="block"; el.textContent="描画エラー: "+e.message;
