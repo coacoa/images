@@ -45,12 +45,11 @@
   .tab small{display:block;font-weight:400;color:var(--ink2);font-size:.78rem}
   .tab[aria-pressed="true"]{border-color:var(--accent);background:var(--chip);box-shadow:inset 0 0 0 1px var(--accent)}
   .tab .fine{color:var(--danger);font-weight:700}
-  .stage{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;align-items:start}
-  @media (max-width:900px){.stage{grid-template-columns:minmax(0,1fr)}}
+  .stage{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:start}
   .viewerbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
   .viewerbox:fullscreen{border-radius:0;border:none;display:flex;flex-direction:column}
   .viewerbox:fullscreen .screen{flex:1;height:auto}
-  .screen{position:relative;height:min(56vh,520px);min-height:320px;background:#87a8c8}
+  .screen{position:relative;height:min(62vh,560px);min-height:320px;background:#87a8c8}
   .screen.multi{height:min(76vh,700px)}
   .screen canvas{display:block;width:100%;height:100%}
   .panetag{position:absolute;z-index:3;display:none;background:rgba(10,22,38,.82);color:#fff;
@@ -81,6 +80,8 @@
   .hudbar{height:7px;border-radius:4px;background:rgba(255,255,255,.22);margin-top:5px;overflow:hidden}
   .hudbar i{display:block;height:100%;background:#8fe6ae;border-radius:4px}
   .hud.over .hudbar i{background:#ff7a6b}
+  .hud.over{border:2px solid #ff1626;box-shadow:0 0 16px rgba(255,22,38,.6)}
+  .hud.over .big{color:#ff5b4d}
   .subtitle{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:5;width:min(94%,980px);
     display:none;background:rgba(8,16,28,.86);color:#fff;border-radius:10px;
     padding:10px 18px;font-size:clamp(.95rem,2.2vw,1.2rem);font-weight:700;line-height:1.6;text-align:center;
@@ -110,6 +111,7 @@
   .info h3:first-of-type{border-top:none;padding-top:0}
   .info p{margin:4px 0;font-size:.95rem}
   .gap{display:grid;gap:8px;margin-top:6px}
+  @media (min-width:760px){.gap{grid-template-columns:1fr 1fr}}
   .gap .side{border-radius:10px;padding:10px 12px;font-size:.92rem}
   .gap .side b{display:block;margin-bottom:2px}
   .gap .bike{background:var(--chip)}
@@ -125,6 +127,13 @@
   .card h3{margin:0 0 6px;font-size:1.02rem}
   .card p{margin:0;font-size:.93rem;color:var(--ink2)}
   .card.blue h3{color:var(--accent)} .card.red h3{color:var(--danger)}
+  .card ul{margin:6px 0 0;padding-left:1.25em;font-size:.93rem;color:var(--ink2)}
+  .card li{margin:4px 0}
+  .card li b{color:var(--ink)}
+  .prompts{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px;box-shadow:var(--shadow);margin-top:12px}
+  .prompts h3{margin:0 0 6px;font-size:1.02rem}
+  .prompts ul{margin:6px 0 0;padding-left:1.25em;font-size:.95rem}
+  .prompts li{margin:6px 0}
   table.fines{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
   table.fines th,table.fines td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line);font-size:.95rem}
   table.fines th{background:var(--panel2);font-size:.85rem;color:var(--ink2)}
@@ -147,7 +156,7 @@
 
   <div class="lead">
     <h1>交通課題 3D教室 <span class="blue">第2弾</span><br>爆音・あおり・集団走行 ―「自分だけ気持ちいい」の代償</h1>
-    <p>第1弾（自転車・青切符）に続くシリーズ第2弾です。今回は、車の違法改造と爆音マフラー、あおり運転、ロードバイクの集団走行、バイクの爆音という、街で実際に問題になっている4つの交通課題を取り上げます。どれも共通するのは、<strong>やっている本人には「大したこと」でも、周りには恐怖や迷惑として届いている</strong>という認識のズレです。3Dで場面を再現し、視点を切り替えて（または4視点同時に）確かめながら、ルールと罰則を学びます。爆音の場面では騒音の広がり方とdB（デシベル）の目安も表示します。</p>
+    <p>第1弾（自転車・青切符）に続くシリーズ第2弾です。今回は、車の違法改造と爆音マフラー、あおり運転、ロードバイクの集団走行、バイクの爆音という、街で実際に問題になっている4つの交通課題を取り上げます。どれも共通するのは、<strong>やっている本人には「大したこと」でも、周りには恐怖や迷惑として届いている</strong>という認識のズレです。3Dで場面を再現し、視点を切り替えて（または4視点同時に）確かめながら、ルールと罰則を学びます。爆音の場面では騒音の広がり方（赤い波紋）とdB（デシベル）の目安も表示します。各場面の解説は3Dビューの下に全幅で表示されるので、場面を見たあとにそのまま下へスクロールして読めます。過去に実際に起きた事例と、それを受けて生まれた制度も紹介し、ページの最後には、なぜ加害者と被害者が生まれるのか、そしてこうした事故・公害をどう減らすかの提案をまとめました。</p>
     <div class="stats">
       <div class="stat"><b>妨害運転罪</b><span>あおり運転は2020年創設・一発で免許取消</span></div>
       <div class="stat"><b>不正改造は犯罪</b><span>実施者は6か月以下の拘禁刑または30万円以下の罰金</span></div>
@@ -251,7 +260,104 @@
     </div>
   </section>
 
-  <p class="srcs">出典：政府広報オンライン<a href="https://www.gov-online.go.jp/article/202006/entry-10656.html" target="_blank" rel="noopener">「『あおり運転』は犯罪です！一発で免許取消し！」</a>、国土交通省 関東運輸局<a href="https://wwwtb.mlit.go.jp/kanto/content/000350982.pdf" target="_blank" rel="noopener">「6月は『不正改造車を排除する運動』の強化月間」</a>、国土交通省<a href="https://www.mlit.go.jp/report/press/content/001612126.pdf" target="_blank" rel="noopener">違法マフラーに関する資料</a>の内容に基づきます。dB表示は場面のイメージをつかむための目安で、実際の測定値ではありません。本ページは学習用の再現です。</p>
+  <section class="block">
+    <h2>過去の事例から考える ― 社会問題になった出来事と、その後の制度</h2>
+    <p>この教室の場面は、どれも実際に社会問題になった出来事の「型」を再現しています。ここでは、過去の実際の事例を、個人が特定されない形でたどります。何が起き、なぜ社会問題になり、どんな制度が生まれ、いまも同じ問題が続いているのかを見ると、場面の中の「認識のズレ」が決して他人事ではないことが分かります。</p>
+    <div class="cards">
+      <div class="card red">
+        <h3>事例1：高速道路で停車させられた一家（2017年・あおり運転）</h3>
+        <ul>
+          <li><b>何が起きたか：</b>2017年6月、神奈川県内の東名高速道路。パーキングエリアで駐車方法を注意されたことに腹を立てた男が、一家4人の乗る車を追い越し、約700メートルにわたって割り込みや急減速などの妨害を繰り返し、追い越し車線の上に相手の車を停車させた。男が降りて詰め寄っているところへ後続の大型トラックが追突し、夫婦が死亡、子ども2人がけがをした。</li>
+          <li><b>時代背景と社会問題化：</b>当時、あおり運転そのものを直接罰する法律はなく、安全運転義務違反や車間距離不保持、刑法の暴行罪などを組み合わせるしかなかった。「停車させた行為」と「死亡の結果」をどう結びつけて裁くかは裁判でも大きな争点になった。ドライブレコーダーの普及で被害の映像が広く報じられるようになり、2019年には常磐自動車道であおり運転の末に殴打する事件も発生。警察庁の調査では、運転者の約35%があおり運転の被害経験があると答えた。</li>
+          <li><b>生まれた制度：</b>2020年6月30日、改正道路交通法で「妨害運転罪」が創設された（場面②の内容）。あわせて自動車運転処罰法も改正され、妨害目的の運転で人を死傷させた場合に危険運転致死傷罪が適用されることも明確になった。</li>
+          <li><b>現在は：</b>厳罰化とドライブレコーダーの普及で「記録されれば一発で免許取消」という抑止の仕組みはできた。しかし、あおり運転の摘発や被害がなくなったわけではない。制度は「起きたら重く罰する」段階にあり、感情のまま車間を詰めてしまう運転そのものを減らすこと、そして場面⑤の対処法を広めることが、現在進行形の課題である。</li>
+        </ul>
+      </div>
+      <div class="card red">
+        <h3>事例2：暴走族の爆音と集団暴走（1970〜80年代→現在）</h3>
+        <ul>
+          <li><b>何が起きたか：</b>1970〜80年代、改造したバイクや車で数十台、ときに数百台の集団が、夜の幹線道路で爆音を響かせながら蛇行や信号無視を繰り返す光景が全国の都市で見られた。沿道住民の睡眠妨害、事故、集団同士の抗争まで含め、少年非行と騒音公害の代表として連日報道された。</li>
+          <li><b>時代背景：</b>バイクや車が若者の手に届くようになった時代で、少年非行全体のピーク期とも重なっていた。犯罪白書・警察庁の統計では、暴走族の構成員数は1982年に42,510人と過去最多を記録している。</li>
+          <li><b>生まれた制度：</b>「共同危険行為等の禁止」自体は1978年からあったが、2004年11月の道路交通法改正で、実際に危険や迷惑の結果が生じていなくても、集団での暴走行為そのものを処罰できるようになり、空ぶかしなどの騒音運転への罰則も設けられた。広島市の暴走族追放条例（2002年）のように、威圧的な集会そのものを規制する自治体条例も広がった。</li>
+          <li><b>現在は：</b>構成員数は2024年には約4,500人（共同危険型・警察白書）まで減り、ピーク時の約10分の1になった。法改正の効果に加え、若者の関心の変化も大きいとされる。ただし消えたわけではなく、かつての暴走族世代の大人たちが改造した旧型バイクで集まる「旧車會」の騒音や違法走行が、新しい形の問題として残っている。場面①④の爆音は、その現代版と言える。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>事例3：マフラー騒音に「数値と認証」で線を引くまで</h3>
+        <ul>
+          <li><b>何が起きたか：</b>社外マフラーへの交換が広がるなか、「車検のときだけ純正に戻す」「消音部品を外して走る」といった抜け道が横行した。音の大きさは感覚の言い合いになりやすく、現場の取り締まりも難しい状態が続いた。</li>
+          <li><b>生まれた制度：</b>2010年（平成22年）4月、マフラーの事前認証制度（現在の性能等確認制度）が始まり、新車だけでなく使用過程車にも「加速走行騒音を有効に防止する性能」が求められ、消音機構を容易に取り外せる構造も禁止された。2016年（平成28年）には国際基準（UN規則）が導入され、近接排気騒音は新車時の値をもとにする相対値規制（原則として+5dBまで）へ移行。認証表示の有無で適合を見分けられる仕組みが整った。</li>
+          <li><b>現在は：</b>制度の枠組みはできたが、未認証マフラーや基準外の改造はいまも流通し、毎年6月の「不正改造車を排除する運動」のような取り締まりが続いている。「好み」ではなく「数値と認証」で線を引くという考え方自体が、場面①④で伝えていることそのものである。</li>
+        </ul>
+      </div>
+      <div class="card blue">
+        <h3>事例4：サイクリストの聖地と、島の暮らし（しまなみ海道）</h3>
+        <ul>
+          <li><b>何が起きたか：</b>広島県尾道市と愛媛県今治市を結ぶ「しまなみ海道」は、島の人たちの生活を支えるために架けられた橋の道だが、自転車でも渡れることから「サイクリストの聖地」として世界的に知られるようになった。一方、島内の生活道路では並走や下り坂での速度超過が目立ち、住民から「ここはレース場ではない」という声や苦情が行政に寄せられるようになった。</li>
+          <li><b>時代背景：</b>観光振興と地域の暮らしが、同じ狭い道路の上で重なったことで生まれた摩擦である。「走る権利」と「静かに暮らす権利」の対立という、場面③の構図が地域全体の課題として現れた形と言える。</li>
+          <li><b>対策と現在：</b>自治体によるルール・マナーの周知やイベント運営の工夫、愛媛県の「自転車新文化」のように推進と啓発を両立させる取り組みが続いている。ただ、あおり運転のように一つの法律で線が引かれた問題と違い、決着はまだついていない。「人気の場所ほど、地元の暮らしとの約束事を先に決める」という、現在進行形の事例である。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>まとめ ― なぜ加害者と被害者が生まれるのか、どう減らすか</h2>
+    <p>5つの場面を通して見えてくる共通の仕組みは、<strong>「自分の感覚」と「相手への届き方」のズレ</strong>です。加害者になる人はたいてい悪人ではなく、自分の行為の大きさを小さく見積もっています。逆に被害者は、その行為を選ぶことも避けることもできず、一方的に受け取る側にいます。このズレは、感覚だけでは埋まりません。dBや車間距離のような<strong>数値で見る</strong>こと、相手の視点に立って<strong>想像する</strong>こと、そして「譲る」「認証品を選ぶ」といった<strong>具体的な行動の約束</strong>が、ズレを小さくします。場面ごとに整理しました。</p>
+    <div class="cards">
+      <div class="card red">
+        <h3>① 車の違法改造・爆音</h3>
+        <ul>
+          <li><b>加害者が生まれる理由：</b>車内では排気音が「いい音」に聞こえ、外への届き方を実感できない。基準が数値（dB）だと知らないまま、「みんな付けている」社外品を選んでしまう。</li>
+          <li><b>被害者が生まれる理由：</b>夜の住民は音を選べない。低音は壁や窓を貫き、眠りや夜勤明けの休息が一方的に奪われる。通り過ぎる側は一瞬でも、受ける側には毎晩のことになる。</li>
+          <li><b>減らす提案：</b>マフラーは「政府認証」「性能等確認」表示のある製品だけを選ぶ／点検・車検の機会に音量を測って自分の車の数値を知る／深夜・早朝の住宅街では発進を静かに、空ぶかしをしない。</li>
+        </ul>
+      </div>
+      <div class="card red">
+        <h3>② あおり運転</h3>
+        <ul>
+          <li><b>加害者が生まれる理由：</b>「前の車が遅い」「譲らないのが悪い」という正当化と、急ぎ・イライラの感情がそのままハンドルに直結する。車間を詰める行為の重さ（25点・一発取消）を、怒っている最中は思い出せない。</li>
+          <li><b>被害者が生まれる理由：</b>後ろに張り付かれた恐怖で萎縮し、視線をミラーに奪われて前方の注意が散る。焦って普段しない操作をすれば、二次事故の当事者にもなり得る。</li>
+          <li><b>減らす提案：</b>車間は「速度（km/h）の数字程度のメートル」を目安に数値で意識する／急ぐ日ほど出発を早める（唯一の合法的な時短）／ドライブレコーダーが普及した今は「常に見られている」前提で運転する。</li>
+        </ul>
+      </div>
+      <div class="card blue">
+        <h3>③ ロードバイクの集団走行</h3>
+        <ul>
+          <li><b>加害者が生まれる理由：</b>仲間と並ぶ一体感と、風よけ（ドラフティング）の効率の良さ。集団の中では一人ひとりの判断が薄れ、「車道を走る権利がある」という意識が「広がってよい」にすり替わりやすい。</li>
+          <li><b>被害者が生まれる理由：</b>後ろの車は、長さ10メートル超の集団を追い越すために長い対向車線走行を強いられる。焦りが無理な追い越しを生み、幅寄せ事故は集団側の命に関わる。対向車も行き場を失う。</li>
+          <li><b>減らす提案：</b>一列厳守を出発前の約束にする／3〜5台の小グループに分けて間隔をあける／信号で分かれたら無理に追わず、集合地点で合流するルールを決めておく。</li>
+        </ul>
+      </div>
+      <div class="card red">
+        <h3>④ バイクの爆音</h3>
+        <ul>
+          <li><b>加害者が生まれる理由：</b>ヘルメットの中では音がこもって小さく感じ、自分が思うより大きな音が出ていることに気づきにくい。空ぶかしは無意識の癖になっていることも多い。</li>
+          <li><b>被害者が生まれる理由：</b>バイクの高音は遠くまで届き、「いつ終わるか分からない繰り返し」は単発の通過音より強いストレスになる。夜は周囲が静かなぶん際立つ。</li>
+          <li><b>減らす提案：</b>政府認証／JMCA認証のマフラーを選び、刻印を確認できる状態に保つ／自分のバイクの音を一度、外から録音して聞いてみる／早朝・深夜の住宅街ではアイドリングと空ぶかしを控える。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>⑤ あおられたとき</h3>
+        <ul>
+          <li><b>被害者が加害者になる瞬間：</b>「なんで自分が譲らなければ」という悔しさから仕返しの急ブレーキを踏めば、その瞬間に自分が妨害運転の加害者になる。公道の意地の張り合いに勝者はいない。</li>
+          <li><b>減らす提案：</b>合言葉は「譲って、離れて、停まってから通報」。ドアはロックし車外に出ない／同乗者がいれば通報と撮影を任せる／ドライブレコーダーの映像はそのまま有力な証拠になるので、落ち着いた対処こそが後で自分を守る。</li>
+        </ul>
+      </div>
+    </div>
+    <div class="prompts">
+      <h3>それぞれの立場になって考えてみる</h3>
+      <ul>
+        <li><b>運転する立場で：</b>自分の車やバイクの音と車間は、外の人からどう感じられているか。数値（dB・メートル）で答えられますか？</li>
+        <li><b>住民・歩行者の立場で：</b>夜中に爆音で起こされたとき、その音を出した人に悪意はあったと思いますか。「悪意がない迷惑」に、自分はどう向き合いますか？</li>
+        <li><b>あおられる立場で：</b>後ろに張り付かれた瞬間、譲る判断ができますか。譲ることを「負け」と感じる気持ちと、どう折り合いを付けますか？</li>
+        <li><b>仲間と走る立場で：</b>集団の楽しさを保ちながら、後ろの車に「追い越しやすい集団だ」と思ってもらうには、何を約束にできますか？</li>
+        <li><b>見ている立場で：</b>こうした場面を目撃したとき、通報・記録・声かけのどれなら自分にできますか。傍観もまた、場面の一部です。</li>
+      </ul>
+    </div>
+  </section>
+
+  <p class="srcs">出典：政府広報オンライン<a href="https://www.gov-online.go.jp/article/202006/entry-10656.html" target="_blank" rel="noopener">「『あおり運転』は犯罪です！一発で免許取消し！」</a>、国土交通省 関東運輸局<a href="https://wwwtb.mlit.go.jp/kanto/content/000350982.pdf" target="_blank" rel="noopener">「6月は『不正改造車を排除する運動』の強化月間」</a>、国土交通省<a href="https://www.mlit.go.jp/report/press/content/001612126.pdf" target="_blank" rel="noopener">違法マフラーに関する資料</a>の内容に基づきます。事例パートは、岐阜県警察<a href="https://www.pref.gifu.lg.jp/uploaded/attachment/169294.pdf" target="_blank" rel="noopener">道路交通法改正資料（妨害運転の創設経緯と東名高速の事件概要）</a>、環境省<a href="https://www.env.go.jp/council/07air-noise/%E3%80%9021-4%E3%80%91.pdf" target="_blank" rel="noopener">マフラー性能等確認制度の資料</a>、および犯罪白書・警察白書に掲載された暴走族構成員数の統計も参照しています。事例は個人が特定されない形で再構成しています。dB表示は場面のイメージをつかむための目安で、実際の測定値ではありません。本ページは学習用の再現です。</p>
 </div>
 
 <div id="err" role="alert"></div>
@@ -710,8 +816,8 @@ function updateActors(tN){
   /* noise rings follow their source */
   noiseRings.forEach(function(nr){
     if(!nr.mesh){
-      nr.mesh=new THREE.Mesh(new THREE.RingGeometry(0.92,1.0,40),
-        new THREE.MeshBasicMaterial({color:0xffb340,transparent:true,opacity:0.4,side:THREE.DoubleSide,depthWrite:false}));
+      nr.mesh=new THREE.Mesh(new THREE.RingGeometry(0.84,1.0,40),
+        new THREE.MeshBasicMaterial({color:0xff1626,transparent:true,opacity:0.4,side:THREE.DoubleSide,depthWrite:false}));
       nr.mesh.rotation.x=-Math.PI/2; scene.add(nr.mesh);
     }
     var a=nr.actor, ex=a.obj.userData.exhaust||{x:0,y:0.4,z:-1};
@@ -725,7 +831,7 @@ function updateActors(tN){
       var s=0.6+ph*(variantOn?4:10);
       nr.mesh.scale.set(s,s,s);
       nr.mesh.position.set(wx,0.55,wz);
-      nr.mesh.material.opacity=(1-ph)*(variantOn?0.22:0.5);
+      nr.mesh.material.opacity=(1-ph)*(variantOn?0.3:0.85);
     }
   });
 }

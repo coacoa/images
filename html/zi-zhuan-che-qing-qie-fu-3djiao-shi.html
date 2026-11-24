@@ -51,8 +51,8 @@
   .tab .fine{color:var(--danger);font-weight:700}
 
   /* ---------- viewer ---------- */
-  .stage{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;align-items:start}
-  @media (max-width:900px){.stage{grid-template-columns:minmax(0,1fr)}}
+  /* 解説は3Dビューワーの下に全幅で置く（横に長く読めるレイアウト） */
+  .stage{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:start}
   .viewerbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;position:relative}
   /* フルスクリーン時のみ、画面最下部に音声解説の字幕バーを出す */
   #subtitle{display:none}
@@ -61,7 +61,7 @@
     padding:12px 22px calc(12px + env(safe-area-inset-bottom));pointer-events:none}
   .viewerbox:fullscreen{border-radius:0;border:none;display:flex;flex-direction:column}
   .viewerbox:fullscreen .screen{flex:1;height:auto}
-  .screen{position:relative;height:min(56vh,520px);min-height:320px;background:#87a8c8}
+  .screen{position:relative;height:min(62vh,560px);min-height:320px;background:#87a8c8}
   .screen.multi{height:min(76vh,700px)}
   .screen canvas{display:block;width:100%;height:100%}
   .panetag{position:absolute;z-index:3;display:none;background:rgba(10,22,38,.82);color:#fff;
@@ -80,6 +80,12 @@
     background:var(--danger);color:#fff;font-weight:800;padding:8px 18px;border-radius:10px;
     font-size:clamp(.95rem,3vw,1.15rem);box-shadow:0 4px 18px rgba(0,0,0,.35);pointer-events:none;text-align:center;max-width:92%}
   .incident.on{opacity:1;transform:translateX(-50%) scale(1)}
+  /* 爆音場面専用：ドギツイ赤＋黄色文字で脈打つ警告バナー */
+  .incident.loud{background:#ff1010;color:#fff200;border:3px solid #fff200;
+    box-shadow:0 0 26px rgba(255,16,16,.85),0 4px 18px rgba(0,0,0,.4);
+    animation:loudPulse .45s ease-in-out infinite alternate}
+  @keyframes loudPulse{from{transform:translateX(-50%) scale(1)}to{transform:translateX(-50%) scale(1.07)}}
+  @media (prefers-reduced-motion: reduce){.incident.loud{animation:none}}
   .viewtag{position:absolute;left:10px;bottom:10px;background:rgba(10,22,38,.78);color:#fff;
     font-size:.78rem;font-weight:700;padding:5px 10px;border-radius:6px;pointer-events:none}
   .transport{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;border-top:1px solid var(--line);background:var(--panel2)}
@@ -103,6 +109,17 @@
   .info h3:first-of-type{border-top:none;padding-top:0}
   .info p{margin:4px 0;font-size:.95rem}
   .gap{display:grid;gap:8px;margin-top:6px}
+  @media (min-width:760px){.gap{grid-template-columns:1fr 1fr}}
+  .card ul{margin:0;padding-left:1.25em}
+  .card li{font-size:.93rem;color:var(--ink2);margin:3px 0}
+  .card .q{display:block;margin-top:8px;font-weight:700;color:var(--ink);font-size:.93rem}
+  .closing{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:16px 18px;box-shadow:var(--shadow);margin-top:12px}
+  .closing p{margin:0;font-size:.98rem}
+  .subhead{font-size:1.08rem;margin:22px 0 8px;line-height:1.4}
+  .card.case p{margin:0 0 8px}
+  .card.case p:last-child{margin-bottom:0}
+  .card.case p b{color:var(--ink)}
   .gap .side{border-radius:10px;padding:10px 12px;font-size:.92rem}
   .gap .side b{display:block;margin-bottom:2px}
   .gap .bike{background:var(--chip)}
@@ -243,11 +260,131 @@
     </div>
   </section>
 
+  <section class="block">
+    <h2>最後に ― 加害者と被害者は、なぜ生まれるのか</h2>
+    <p>10の場面を通して見てきた事故や迷惑に、「生まれつきの悪人」はほとんど登場しません。登場するのは、急いでいる人、慣れた道を走る人、「自分は大丈夫」と思っている——昨日までの私たちと同じ普通の人です。加害者と被害者は別の種類の人間ではなく、<strong>その日の立場と、一瞬の判断が違っただけ</strong>で入れ替わります。まず、自分が普段いる立場を、相手の側から眺めてみてください。</p>
+
+    <h3 class="subhead">立場を入れ替えて考えてみる</h3>
+    <div class="cards">
+      <div class="card">
+        <h3>🚲 自転車に乗る人</h3>
+        <p>本音は「急いでいるだけ。車は止まってくれるはず」。でも相手からは、自転車は細くて速度が読みにくく、死角から突然現れる存在です。<span class="q">問い：自分が車を運転していたら、この動きは予測できますか？</span></p>
+      </div>
+      <div class="card">
+        <h3>🚗 車のドライバー</h3>
+        <p>本音は「青信号だから進んで当然」「少し詰めただけ」。でも相手にとって車は1トンを超える鉄の塊で、数秒の異常接近は「いつ轢かれるか分からない」恐怖です。<span class="q">問い：その数秒、本当に惜しむ価値がありますか？</span></p>
+      </div>
+      <div class="card">
+        <h3>🏍 バイクのライダー</h3>
+        <p>本音は「いい音。迷惑のつもりはない」。ヘルメットの中では実際より小さく聞こえています。でも沿道の人にとっては、夜の静けさを破って何百メートル先まで届く騒音です。<span class="q">問い：自分の家の前で、毎晩これを聞かされたらどう感じますか？</span></p>
+      </div>
+      <div class="card">
+        <h3>🚶 歩行者</h3>
+        <p>本音は「歩道は安全。相手が見てくれているはず」。でも駐車車両や建物の陰から出る歩行者は、運転する側からは突然現れる存在です。<span class="q">問い：横断する前に、相手と目が合いましたか？</span></p>
+      </div>
+      <div class="card">
+        <h3>🏠 沿道で暮らす人</h3>
+        <p>この立場は「被害だけが残る」側です。爆音の主は通り過ぎて終わりでも、起こされた赤ちゃんや夜勤明けの人の夜は戻りません。加害と被害の時間の長さが、まったく釣り合っていないのです。<span class="q">問い：自分の一瞬の快感と、誰かの毎晩の睡眠、どちらが重いですか？</span></p>
+      </div>
+      <div class="card">
+        <h3>👀 目撃者・周りの人</h3>
+        <p>あおり運転も暴走も、周りが見ているかどうかで続き方が変わります。ドライブレコーダーの記録、ナンバーのメモ、110番通報——「見ている人」の存在が、次の被害を止める力になります。<span class="q">問い：危ない場面を見たとき、自分にできる小さな一手は何ですか？</span></p>
+      </div>
+    </div>
+
+    <h3 class="subhead">では、なぜ「加害者」と「被害者」が生まれるのか</h3>
+    <div class="cards">
+      <div class="card"><h3>① 「見えているはず」の思い込み</h3><p>10場面すべてに共通する芯です。自分が見えていることと、相手に見えていることは別問題なのに、頭の中では混ざってしまう。この「認識のズレ」が重なった瞬間に、事故は起きます。</p></div>
+      <div class="card"><h3>② 慣れと「一瞬だけ」</h3><p>事故を起こすのは初心者とは限りません。「いつもの道だから」「スマホを一瞬見ただけ」「今日だけ急ぐ」——慣れが注意を省エネモードに切り替えたとき、人は加害者側に回ります。</p></div>
+      <div class="card"><h3>③ 自分の感覚がものさしになる</h3><p>自分のエンジン音は小さく感じ、自分の速度は遅く感じ、自分の車間は十分に感じる。他人の迷惑は、自分の感覚では測れません。だからこそ dB（デシベル）のような客観的なものさしや、相手の視点での確認が要ります。</p></div>
+      <div class="card"><h3>④ 環境が事故を誘う</h3><p>死角の多い交差点、暗い道、音が反響する住宅街。人の注意だけに頼る設計には限界があり、同じ場所で同じ事故が繰り返されます。ここは個人の努力ではなく、道路や制度の側で直せる部分です。</p></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>過去の事例 ― 社会問題になった出来事と、制度がどう変わったか</h2>
+    <p>ここまでの話は作り話ではありません。実際に起きた出来事の中から、個人が特定されない範囲で4件を再構成します。いずれも「一人の不注意」では終わらず社会問題になり、制度が動きました。そして、解決した問題と、いまも続いている問題があります。</p>
+    <div class="cards" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
+      <div class="card case">
+        <h3>事例1　あおり運転が一家を襲った事故（2017年・東名高速道路）→ 場面7</h3>
+        <p><b>時代背景：</b>当時、あおり運転そのものを直接罰する法律の規定はなく、安全運転義務違反や車間距離不保持、刑法の暴行罪などを組み合わせて取り締まるしかありませんでした。</p>
+        <p><b>何が起きたか：</b>2017年6月、パーキングエリアでのトラブルをきっかけに執拗なあおり運転を受けた一家の車が、追越車線に停車を余儀なくされ、後続の大型トラックに追突されました。夫婦が死亡し、子どもを含む4人が死傷。あおり運転を繰り返したドライバーは、危険運転致死傷罪で懲役18年の判決を受けました。</p>
+        <p><b>社会問題に：</b>「なぜあおり運転を直接罰せないのか」が大きく報じられ、国会でも議論になりました。</p>
+        <p><b>制度の変化：</b>2020年6月30日、改正道路交通法で「妨害運転罪」が新設されました（3年以下の拘禁刑または50万円以下の罰金、25点で一発免許取消し）。自動車運転死傷行為処罰法も改正され、走行中の車を停止させる行為が危険運転に追加されました。</p>
+        <p><b>いま：</b>「罰する仕組み」はできましたが、あおり運転の摘発や相談はその後も続いています。残されたのは、運転中に湧く怒りをどう扱うかという、一人ひとりの問題です。</p>
+      </div>
+      <div class="card case">
+        <h3>事例2　自転車の「ながらスマホ」死亡事故（2017年・川崎市）→ 場面3</h3>
+        <p><b>時代背景：</b>当時、自転車のながらスマホには法律の明確な罰則がなく、都道府県の規則による禁止（5万円以下の罰金）にとどまっていました。スマートフォンと電動アシスト自転車が急速に広がった時期です。</p>
+        <p><b>何が起きたか：</b>2017年12月、歩行者専用道路で、片手にスマートフォン、もう片手に飲み物を持ち、イヤホンをした状態の電動アシスト自転車が、歩行中の高齢女性に衝突。女性は死亡しました。運転していた学生は重過失致死罪で禁錮2年・執行猶予4年の有罪判決を受け、大学を退学したと報じられています。</p>
+        <p><b>社会問題に：</b>「自転車だから大丈夫」という意識の甘さと、罰則の弱さの両方が問題視されました。加害者側の人生も、被害者とその家族の人生も、取り返しのつかない形で変わりました。</p>
+        <p><b>制度の変化：</b>2024年11月、改正道路交通法で自転車のながらスマホが法律で禁止され、罰則が強化されました（6か月以下の懲役または10万円以下の罰金。危険を生じさせれば1年以下・30万円以下）。2026年4月からは青切符（反則金12,000円）の対象にもなっています。</p>
+        <p><b>いま：</b>罰則は重くなりましたが、スマホを見る習慣そのものは社会に深く根付いたままです。制度が追いついても、問題の根っこは「一瞬だけ」の油断にあります。</p>
+      </div>
+      <div class="card case">
+        <h3>事例3　自転車事故に約9,500万円の賠償判決（2013年・神戸地裁）→ 場面1〜6の前提</h3>
+        <p><b>時代背景：</b>自転車は「子どもの乗り物」という意識が強く、事故の賠償に備える保険は任意加入で、入っている人は少数でした。</p>
+        <p><b>何が起きたか：</b>2008年9月、神戸市で夜間、当時11歳の小学生が乗る自転車が歩行中の62歳の女性と正面衝突。女性は頭に重い傷害を負い、意識が戻らない状態になりました。2013年、神戸地方裁判所は親の監督責任として約9,521万円の支払いを命じ、支払う側は破産に至ったと報じられています。</p>
+        <p><b>社会問題に：</b>「自転車の事故でも、賠償で人生が壊れる」ことが広く知られるようになり、保険未加入のリスクが問題になりました。</p>
+        <p><b>制度の変化：</b>2015年、兵庫県が全国で初めて自転車保険への加入を義務づける条例を施行。その後、義務化は全国に広がり、2023年時点で32都府県に及んでいます（国土交通省調べ）。</p>
+        <p><b>いま：</b>仕組みは広がりましたが、罰則のない条例も多く、加入は最終的に一人ひとりの意識次第です。保険は事故を防ぎませんが、事故のあとに被害者を救済し、加害者側の家庭が壊れるのを防ぐ「最後の網」です。</p>
+      </div>
+      <div class="card case">
+        <h3>事例4　暴走族と爆音 ― 減らせた問題、形を変えて残る問題 → 場面8・9</h3>
+        <p><b>時代背景：</b>1960年代、消音材を抜いて爆音を出す改造の「カミナリ族」が現れ、1970〜80年代に暴走族が全国へ拡大しました。ピークの1982年には712グループ・約4万2,510人、年間4,000回以上の集団暴走行為が確認されています（警察統計）。若者の不満のはけ口とも言われた時代でした。</p>
+        <p><b>社会問題に：</b>爆音と集団暴走は沿道の生活を脅かし、死亡事故も相次ぎました。「若者の迷惑行為」では済まされない社会問題です。</p>
+        <p><b>制度の変化：</b>2004年11月の改正道路交通法で、共同危険行為は「実際に危険や迷惑が生じていなくても」処罰できるようになり、警察官が現場で確認すれば検挙できるようになりました。騒音運転への罰則も整えられ、広島市の暴走族追放条例（2002年）のような自治体の条例も後押ししました。</p>
+        <p><b>いま：</b>2024年の暴走族は116グループ・約4,483人と、最盛期の約1割まで減りました（警察白書）。集団暴走は「制度と取締りで大きく改善できた問題」の例です。ただし、中高年が中心の旧車會的な集まりや、一人で爆音改造を楽しむ行為は形を変えて残っています。問題は消えたのではなく、集団から個人へ移ったのです。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>事故と公害を減らすには ― 提案</h2>
+    <p>事例が教えてくれるのは、制度は「起きてから」動くということ、そして制度だけでは最後の一押しが効かないということです。減らすための手を、3つの層に分けて提案します。</p>
+    <div class="cards">
+      <div class="card">
+        <h3>自分でできること</h3>
+        <ul>
+          <li>止まる・点ける・車間をあける。この教室の10場面の基本動作を、まず自分の習慣にする</li>
+          <li>「相手からどう見えるか」を一度想像してから動く。目が合うまでは、見られていない前提で</li>
+          <li>夜の住宅街では回転数を上げない。マフラーは認証品（性能等確認済み）を選ぶ</li>
+          <li>煽られたら争わず、止まってやり過ごし、記録して通報する</li>
+          <li>自転車保険に入る。「起こさない」備えと「起こした後」の備えは別物</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>仕組みとまちでできること</h3>
+        <ul>
+          <li>自転車と車の通行空間を分ける（自転車レーン・分離）ことで、「交錯そのもの」を減らす</li>
+          <li>交差点の見通しの改善と街灯の増設。無灯火の自転車でも発見しやすい環境にする</li>
+          <li>ドライブレコーダーや記録の普及で、「見られている・残る」前提を作る</li>
+          <li>この教室のような視点切替の体験学習を、学校や地域の交通安全教育に取り入れる</li>
+          <li>騒音は dB で測れる客観的な迷惑として、規制と認証品の普及を続ける</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>制度に任せきりにしない</h3>
+        <ul>
+          <li>妨害運転罪も青切符も、誰かの犠牲のあとにできた制度。次の制度を待つ前に、自分が事例の側に回らない</li>
+          <li>罰則は「最低ライン」であって「ここまでなら大丈夫」の線ではない</li>
+          <li>家族や仲間同士で、危ない運転にはひと言声をかける。小さな指摘が、大きな事故の芽を摘む</li>
+        </ul>
+      </div>
+    </div>
+    <div class="closing">
+      <p>加害者と被害者は、紙一重です。違いを分けるのは人格ではなく、その日の立場と一瞬の判断でした。この教室の3D画面で相手の視点に立った経験を、実際の道路でも思い出してください。「相手にはどう見えているか」を一度想像すること——それが、加害者も被害者も生まないための、いちばん安くて、いちばん効く方法です。</p>
+    </div>
+  </section>
+
   <p class="srcs">出典：警察庁交通局「自転車ルールブック（自転車への交通反則通告制度の導入）」の内容に基づく解説として
     <a href="https://www.bk.mufg.jp/column/others/b0112.html" target="_blank" rel="noopener">三菱UFJ銀行コラム「自転車反則金（青切符）とは？」</a>、
     <a href="https://www.iza.ne.jp/article/20260327-DVDOL5M5SVDNPD5KL7O6QKLVTM/" target="_blank" rel="noopener">イザ！「自転車の青切符、違反行為と反則金一覧」</a>を参照しました。
     場面7〜10の罰則・規制値は、<a href="https://www.gov-online.go.jp/article/202006/entry-10656.html" target="_blank" rel="noopener">政府広報オンライン「『あおり運転』は犯罪です！」</a>と
     <a href="https://www.police.pref.osaka.lg.jp/kotsu/bosozoku/5089.html" target="_blank" rel="noopener">大阪府警察「厳しい罰則」（整備不良・消音器不備・騒音運転）</a>に基づきます。
+    過去の事例パートは、<a href="https://www.kokusen.go.jp/wko/pdf/wko-202305_02.pdf" target="_blank" rel="noopener">国民生活センター「国民生活」2023年5月号・特集「広がる自転車損害賠償責任保険の義務化」</a>（神戸地裁2013年判決・約9,521万円と兵庫県条例の経緯）、
+    <a href="https://vs-group.jp/lawyer/ko-tu-jiko/5228.html" target="_blank" rel="noopener">弁護士法人による、ながらスマホ事故の裁判例解説</a>（川崎市の事故に対する横浜地裁川崎支部2018年判決）、
+    <a href="https://born-in-japan.com/culture/yankee/" target="_blank" rel="noopener">犯罪白書・警察白書の数字に基づく暴走族の推移の解説</a>（1982年のピーク約4万2,510人、2024年約4,483人、2004年の法改正）に基づき、個人が特定されない範囲で再構成しました。
     本ページは学習用の再現であり、実際の交通状況を保証するものではありません。金額は2026年4月施行時点の主な例です。</p>
 </div>
 
@@ -606,6 +743,33 @@ function setConflict(x,z){
   ring.rotation.x=-Math.PI/2; ring.position.set(x,0.13,z); ring.visible=false;
   scene.add(ring); conflict={ring:ring};
 }
+/* 爆音の可視化：マフラーから広がるドギツイ赤の音波リング＋赤いフラッシュ光 */
+function makeNoise(){
+  var g=new THREE.Group();
+  var rings=[];
+  for(var i=0;i<4;i++){
+    var r=new THREE.Mesh(new THREE.RingGeometry(0.86,1.0,44),
+      new THREE.MeshBasicMaterial({color:0xff1414,transparent:true,opacity:0,
+        side:THREE.DoubleSide,depthWrite:false}));
+    r.rotation.x=-Math.PI/2; g.add(r); rings.push(r);
+  }
+  var glow=new THREE.PointLight(0xff2018,0,15,1.6);
+  glow.position.y=0.5; g.add(glow);
+  g.userData={rings:rings,glow:glow};
+  return g;
+}
+function updateNoise(g,active){
+  if(!g) return;
+  var now=performance.now()*0.0011;
+  g.userData.rings.forEach(function(r,i){
+    if(!active){ r.material.opacity=0; return; }
+    var ph=(now+i*0.25)%1;
+    var s=0.6+ph*7.5;
+    r.scale.set(s,s,s);
+    r.material.opacity=0.9*(1-ph);
+  });
+  g.userData.glow.intensity=active?(1.5+Math.sin(performance.now()*0.03)*1.1):0;
+}
 function lerpAngle(a,b,t){
   var d=(b-a)%(Math.PI*2);
   if(d>Math.PI)d-=Math.PI*2; if(d<-Math.PI)d+=Math.PI*2;
@@ -692,7 +856,7 @@ function applyTime(){
   var inc=sc.incident;
   var inWin=inc&&tN>=inc.t0&&tN<=inc.t1;
   var incEl=document.getElementById("incident");
-  if(inWin){ incEl.textContent=inc.text; incEl.className="incident on"; }
+  if(inWin){ incEl.textContent=inc.text; incEl.className="incident on"+(sc.loud?" loud":""); }
   else incEl.className="incident";
   if(conflict){
     conflict.ring.visible=!!inWin;
@@ -995,6 +1159,8 @@ var SCEN=[
   tip:"マフラー交換自体が違法なのではなく、「性能等確認済み」の車検対応品なら合法です。直管・消音器なしは論外。音量はdB（デシベル）で測れる、客観的な迷惑だという意識を持ちましょう。",
   narration:"場面8、車の違法改造と爆音です。消音器を外すなどの不正改造は、6か月以下の懲役または30万円以下の罰金。そのまま運転すれば整備不良にもなります。近接排気騒音の基準は乗用車で96デシベル。いい音のつもりでも、沿道の人には騒音です。",
   incident:{t0:0.3,t1:0.62,text:"🔊 爆音で加速！ 沿道の家の明かりが次々と点く"},
+  loud:true,
+  tick:function(tN){ updateNoise(fx.noise, tN>0.2&&tN<0.72); },
   home:{pos:[15,11,-19],tgt:[0,0.5,-1]},
   cams:[["orbit","俯瞰（全体）"],["pov",0,"改造車の視点"],["pov",1,"歩行者の視点"],["chase",0,"車を追う"]],
   setup:function(){
@@ -1011,6 +1177,7 @@ var SCEN=[
     car.add(cylBetween(V3(0.55,0.28,-1.6),V3(0.55,0.24,-2.62),0.11,mat(0xd7dde3,0.25,0.95))); /* 太い直管マフラー */
     car.add(box(1.5,0.06,0.42,mat(0x11151a,0.4,0.6),0,1.06,-1.9)); /* リアスポイラー */
     car.userData.beams.forEach(function(b){b.intensity=2.2;});
+    var noise8=makeNoise(); noise8.position.set(0.55,0.3,-2.6); car.add(noise8); fx.noise=noise8;
     addActor(car,[
       {t:0,x:-34,z:-2.2,ry:EAST},{t:0.3,x:-14,z:-2.2,ry:EAST},
       {t:0.55,x:2,z:-2.2,ry:EAST},{t:1,x:36,z:-2.2,ry:EAST}],
@@ -1035,11 +1202,13 @@ var SCEN=[
   tip:"純正や認証マフラーでも良い音は楽しめます。夜の住宅街では回転数を上げないのが最低限のマナー。空ぶかしには「騒音運転」という違反名がちゃんと付いている、と覚えておきましょう。",
   narration:"場面9、バイクの爆音です。理由のない空ぶかしや急加速は騒音運転で、5万円以下の罰金。消音器を外せば消音器不備、改造そのものも処罰の対象です。二輪車の近接排気騒音の基準は94デシベル。夜の住宅街では特に控えましょう。",
   incident:{t0:0.25,t1:0.6,text:"🔊 信号待ちで空ぶかし連発！ 近所迷惑"},
+  loud:true,
   home:{pos:[16,13,20],tgt:[0,0.5,2]},
   cams:[["orbit","俯瞰（全体）"],["pov",0,"バイクの視点"],["pov",1,"歩行者の視点"],["chase",0,"バイクを追う"]],
   phase:function(tN){return tN<0.55?{NS:"red",EW:"green"}:{NS:"green",EW:"red"};},
   tick:function(tN){
     if(fx.moto&&tN>0.25&&tN<0.55) fx.moto.position.x=-2.5+Math.sin(performance.now()*0.11)*0.02;
+    updateNoise(fx.noise, (tN>0.2&&tN<0.6)||(tN>=0.6&&tN<0.8));
   },
   setup:function(){
     buildIntersection();
@@ -1048,6 +1217,7 @@ var SCEN=[
     signals.push({light:trafficLight(6.4,-6.4,-Math.PI/2),role:"EW"});
     var moto=makeMotorcycle(0x6e1423);
     moto.add(cylBetween(V3(0.16,0.3,-0.5),V3(0.16,0.26,-1.15),0.07,mat(0xd7dde3,0.25,0.95))); /* 直管マフラー */
+    var noise9=makeNoise(); noise9.position.set(0.16,0.3,-1.2); moto.add(noise9); fx.noise=noise9;
     addActor(moto,[
       {t:0,x:-2.5,z:26,ry:NORTH},{t:0.25,x:-2.5,z:7.4,ry:NORTH},
       {t:0.55,x:-2.5,z:7.4,ry:NORTH},{t:0.75,x:-2.5,z:-8,ry:NORTH},
