@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<!-- build: 2026-11-25 13:44:01 JST -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<link rel="icon" href="data:," />
+<title>ほんとうのオーボス道場</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0e1a; --frame:#12172b; --panel:#0e1226; --ink:#ffffff; --dim:#aeb8d8;
+  --accent:#e8b33a; --accent2:#4fc3e8; --red:#e85454; --green:#58d68a;
+  --border:#3a4470; --btn:#1b2242; --btn-hi:#28335f;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"DotGothic16","Hiragino Kaku Gothic ProN",sans-serif;
+  display:flex; justify-content:center; padding:10px 8px 32px;
+  -webkit-text-size-adjust:100%;
+}
+button{font-family:inherit; min-height:44px; cursor:pointer}
+#frame{
+  width:100%; max-width:760px; background:var(--frame);
+  border:3px solid var(--border); border-radius:6px; padding:12px 12px 14px;
+  box-shadow:0 0 0 3px #05070f, 0 10px 30px rgba(0,0,0,.5);
+}
+header.top{display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between; margin-bottom:10px}
+h1{font-size:19px; margin:0; letter-spacing:.02em; line-height:1.35}
+h1 .sub{display:block; font-size:13px; color:var(--accent); margin-top:2px}
+.hbtns{display:flex; gap:6px; flex-wrap:wrap}
+.hbtn{
+  background:var(--btn); color:var(--ink); border:2px solid var(--border);
+  border-radius:4px; font-size:13px; padding:6px 10px;
+}
+.hbtn:active{background:var(--btn-hi)}
+#progress{font-size:13px; color:var(--dim); margin:0 0 8px}
+#progress .marks{color:var(--accent); letter-spacing:.15em}
+/* stage */
+#stage{
+  position:relative; border:3px solid var(--border); border-radius:4px;
+  background:linear-gradient(#131a38 0%, #131a38 62%, #0a0d1d 62%, #0a0d1d 100%);
+  min-height:300px; overflow:hidden;
+}
+#stage::after{ /* scanlines over scene only */
+  content:""; position:absolute; inset:0; pointer-events:none; z-index:3;
+  background:repeating-linear-gradient(0deg, rgba(0,0,0,.16) 0 1px, transparent 1px 3px);
+}
+#diagPanel{
+  position:relative; z-index:2; margin:10px auto 0; width:min(92%,520px);
+  background:#0a1410; border:3px solid #5a4632; border-radius:3px; padding:8px;
+  display:none;
+}
+#diagPanel.show{display:block}
+#diagPanel .dtitle{font-size:12px; color:#9fe8b0; text-align:center; margin-bottom:4px}
+#diagPanel svg{width:100%; height:auto; display:block}
+.chars{position:absolute; left:0; right:0; bottom:6px; z-index:2; display:flex; justify-content:space-between; padding:0 18px; pointer-events:none}
+.char{text-align:center}
+.char svg{display:block; margin:0 auto}
+.char .cname{font-size:12px; color:#fff; text-shadow:1px 1px 0 #000; margin-top:2px}
+.char.dim{opacity:.45}
+/* message box */
+#msgbox{
+  margin-top:10px; background:var(--panel); border:3px solid var(--border); border-radius:4px;
+  padding:12px 14px; min-height:132px; position:relative;
+}
+#speaker{font-size:13px; color:var(--accent); margin-bottom:6px}
+#msgtext{font-size:18px; line-height:1.65; white-space:pre-wrap; word-break:break-word; max-height:220px; overflow-y:auto}
+#msgtext .cursor{color:var(--accent)}
+#nextHint{position:absolute; right:10px; bottom:6px; font-size:12px; color:var(--dim); animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+/* choices */
+#choices{margin-top:10px; display:none; gap:8px; flex-wrap:wrap}
+#choices.show{display:flex}
+#choices.diagmenu{flex-direction:row}
+.choice{
+  flex:1 1 200px; background:var(--btn); color:#fff; font-weight:bold; font-size:16px;
+  border:2px solid var(--accent); border-radius:4px; padding:10px 12px; text-align:left; line-height:1.5;
+}
+.choice:active,.choice:hover{background:var(--btn-hi)}
+.choice.small{border-color:var(--border); font-weight:normal}
+/* footer + panels */
+footer.foot{margin-top:12px; font-size:12px; color:var(--dim); line-height:1.6}
+.panelbtn{
+  width:100%; margin-top:10px; background:var(--btn); color:var(--ink);
+  border:2px solid var(--border); border-radius:4px; font-size:14px; padding:8px;
+}
+#listenPanel,#gallery{display:none; margin-top:10px; border:2px solid var(--border); border-radius:4px; background:var(--panel); padding:12px}
+#listenPanel.show,#gallery.show{display:block}
+#listenPanel h2,#gallery h2{font-size:15px; margin:0 0 8px; color:var(--accent)}
+.listen-item{font-size:14px; line-height:1.7; margin-bottom:10px; white-space:pre-wrap}
+.listen-item b{color:var(--accent2)}
+.lbtns{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px}
+.lbtns button{background:var(--btn); color:#fff; border:2px solid var(--accent); border-radius:4px; padding:6px 14px; font-size:14px}
+#listenStatus{font-size:13px; color:var(--dim); margin-bottom:8px}
+#listenBarWrap{height:8px; background:#05070f; border:1px solid var(--border); border-radius:4px; overflow:hidden; margin-bottom:10px}
+#listenBar{height:100%; width:0%; background:var(--accent)}
+.gitem{border:2px solid var(--border); border-radius:4px; padding:10px; margin-bottom:10px; background:#0a0e20}
+.gitem .gt{font-size:13px; color:#9fe8b0; margin-bottom:6px}
+.gitem svg{width:100%; height:auto; display:block; background:#0a1410; border-radius:3px}
+@media (max-width:560px){
+  h1{font-size:16px}
+  #msgtext{font-size:18px; line-height:1.6}
+  #stage{min-height:270px}
+  .choice{flex:1 1 100%}
+  #choices.diagmenu .choice{flex:1 1 44%}
+}
+@media (prefers-reduced-motion: reduce){
+  #nextHint{animation:none}
+}
+</style>
+</head>
+<body>
+<div id="frame">
+  <header class="top">
+    <h1>ほんとうのオーボス道場<span class="sub">― 争いのエネルギーをどこへ向けるか ―</span></h1>
+    <div class="hbtns">
+      <button class="hbtn" id="ttsBtn" type="button">🗣 読上OFF</button>
+      <button class="hbtn" id="resetBtn" type="button">進捗リセット</button>
+    </div>
+  </header>
+
+  <p id="progress">進捗 <span class="marks" id="marks"></span> <span id="progText"></span></p>
+
+  <div id="stage">
+    <div id="diagPanel"><div class="dtitle" id="diagTitle"></div><div id="diagBody"></div></div>
+    <div class="chars">
+      <div class="char" id="charTeacher">
+        <svg width="72" height="92" viewBox="0 0 72 92" aria-hidden="true">
+          <rect x="26" y="4" width="20" height="8" fill="#8a93b8"/>
+          <rect x="20" y="12" width="32" height="22" fill="#d8c9a8"/>
+          <rect x="26" y="20" width="6" height="6" fill="#141824"/><rect x="40" y="20" width="6" height="6" fill="#141824"/>
+          <rect x="14" y="30" width="44" height="10" fill="#e8e2d2"/>
+          <rect x="16" y="40" width="40" height="34" fill="#3d5a80"/>
+          <rect x="30" y="74" width="12" height="14" fill="#2a3550"/>
+        </svg>
+        <div class="cname">ミナモト仙人</div>
+      </div>
+      <div class="char dim" id="charPlayer">
+        <svg width="72" height="92" viewBox="0 0 72 92" aria-hidden="true">
+          <rect x="22" y="10" width="28" height="24" fill="#e0b090"/>
+          <rect x="22" y="6" width="28" height="8" fill="#4a3220"/>
+          <rect x="27" y="19" width="5" height="5" fill="#141824"/><rect x="40" y="19" width="5" height="5" fill="#141824"/>
+          <rect x="18" y="38" width="36" height="32" fill="#7a4a3a"/>
+          <rect x="28" y="70" width="16" height="16" fill="#333d5e"/>
+        </svg>
+        <div class="cname">あなた</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="msgbox">
+    <div id="speaker">ミナモト仙人</div>
+    <div id="msgtext"></div>
+    <div id="nextHint" style="display:none">▼ タップで進む</div>
+  </div>
+
+  <div id="choices"></div>
+
+  <footer class="foot">
+    フィルタ研究・煽りパターン図鑑・税金のしくみ道場の議論の「根」を扱う、独立した短編道場です。特定の国家・思想への賛否ではなく、構造の分析として淡々と進みます。全2章・8レッスン。
+  </footer>
+
+  <button class="panelbtn" id="listenBtn" type="button">🎧 聞くモード（全レッスン文を並べる）</button>
+  <div id="listenPanel">
+    <h2>🎧 聞くモード</h2>
+    <div id="listenStatus">ブラウザ音声で順に再生できます。拡張機能の読み上げには、このパネルを開いたまま使ってください。</div>
+    <div id="listenBarWrap"><div id="listenBar"></div></div>
+    <div class="lbtns">
+      <button id="listenPlay" type="button">▶ ブラウザ音声で再生</button>
+      <button id="listenStop" type="button">■ 停止</button>
+    </div>
+    <div id="listenList"></div>
+  </div>
+
+  <button class="panelbtn" id="galleryBtn" type="button">🖼 図解ギャラリー（OFF）</button>
+  <div id="gallery"><h2>図解ギャラリー</h2><div id="galleryList"></div></div>
+</div>
+
+<script>
+"use strict";
+/* ============ 図解SVG ============ */
+function svgWrap(inner){return '<svg viewBox="0 0 320 130" xmlns="http://www.w3.org/2000/svg" role="img">'+inner+'</svg>';}
+var DIAGS = [
+ {t:"図1　枝葉の下にある根", svg: svgWrap(
+   '<rect x="20" y="14" width="62" height="22" fill="#28406e"/><text x="51" y="29" fill="#fff" font-size="10" text-anchor="middle">煽り動画</text>'+
+   '<rect x="94" y="14" width="62" height="22" fill="#28406e"/><text x="125" y="29" fill="#fff" font-size="10" text-anchor="middle">独占</text>'+
+   '<rect x="168" y="14" width="62" height="22" fill="#28406e"/><text x="199" y="29" fill="#fff" font-size="10" text-anchor="middle">税のモヤモヤ</text>'+
+   '<rect x="242" y="14" width="62" height="22" fill="#28406e"/><text x="273" y="29" fill="#fff" font-size="10" text-anchor="middle">詐欺</text>'+
+   '<path d="M51 36 L140 74 M125 36 L150 74 M199 36 L165 74 M273 36 L180 74" stroke="#e8b33a" stroke-width="2"/>'+
+   '<rect x="105" y="74" width="110" height="30" fill="#6e2828"/><text x="160" y="93" fill="#fff" font-size="11" text-anchor="middle">争いへのエネルギー</text>'+
+   '<text x="160" y="120" fill="#9fe8b0" font-size="10" text-anchor="middle">＝ ほんとうのオーボス</text>')},
+ {t:"図2　争いが止まらない3つの重なり", svg: svgWrap(
+   '<circle cx="125" cy="52" r="34" fill="#28406e" opacity=".85"/><circle cx="195" cy="52" r="34" fill="#6e5a28" opacity=".85"/><circle cx="160" cy="86" r="34" fill="#6e2828" opacity=".85"/>'+
+   '<text x="112" y="42" fill="#fff" font-size="10" text-anchor="middle">資源・地位</text><text x="112" y="55" fill="#fff" font-size="10" text-anchor="middle">の競争</text>'+
+   '<text x="208" y="42" fill="#fff" font-size="10" text-anchor="middle">敵でまとまる</text><text x="208" y="55" fill="#fff" font-size="10" text-anchor="middle">集団</text>'+
+   '<text x="160" y="102" fill="#fff" font-size="10" text-anchor="middle">争いの継続に</text><text x="160" y="115" fill="#fff" font-size="10" text-anchor="middle">利害を持つ側</text>')},
+ {t:"図3　顔のある敵 と 統計的な敵", svg: svgWrap(
+   '<rect x="24" y="18" width="120" height="66" fill="#6e2828"/><text x="84" y="44" fill="#fff" font-size="11" text-anchor="middle">顔のある敵</text><text x="84" y="62" fill="#ffd9d9" font-size="10" text-anchor="middle">脳が強く反応</text><text x="84" y="76" fill="#ffd9d9" font-size="10" text-anchor="middle">注目が集まる</text>'+
+   '<rect x="176" y="18" width="120" height="66" fill="#28406e"/><text x="236" y="44" fill="#fff" font-size="11" text-anchor="middle">統計的な敵</text><text x="236" y="62" fill="#cfdcff" font-size="10" text-anchor="middle">気候変動など</text><text x="236" y="76" fill="#cfdcff" font-size="10" text-anchor="middle">反応しにくい</text>'+
+   '<text x="160" y="106" fill="#9fe8b0" font-size="10" text-anchor="middle">戦争も対立煽りも、燃料は「敵への注目」</text>')},
+ {t:"図4　問題は量ではなく向き", svg: svgWrap(
+   '<rect x="16" y="48" width="90" height="30" fill="#6e2828"/><text x="61" y="67" fill="#fff" font-size="11" text-anchor="middle">争いの熱量</text>'+
+   '<path d="M106 63 L196 30" stroke="#e8b33a" stroke-width="3"/><path d="M106 63 L196 63" stroke="#888" stroke-width="2" stroke-dasharray="4 3"/><path d="M106 63 L196 96" stroke="#e85454" stroke-width="2"/>'+
+   '<text x="200" y="34" fill="#9fe8b0" font-size="11">課題へ向ける</text><text x="200" y="67" fill="#bbb" font-size="11">人へ向け続ける</text><text x="200" y="100" fill="#e8a0a0" font-size="11">奪い合いへ落ちる</text>'+
+   '<text x="160" y="122" fill="#9fe8b0" font-size="10" text-anchor="middle">消せない。問いは「どこへ向けるか」</text>')},
+ {t:"図5　転用の前例", svg: svgWrap(
+   '<rect x="18" y="20" width="110" height="26" fill="#6e2828"/><text x="73" y="37" fill="#fff" font-size="10" text-anchor="middle">ロケット兵器</text>'+
+   '<rect x="18" y="56" width="110" height="26" fill="#6e2828"/><text x="73" y="73" fill="#fff" font-size="10" text-anchor="middle">軍事研究</text>'+
+   '<path d="M128 33 L186 33 M128 69 L186 69" stroke="#e8b33a" stroke-width="3"/><path d="M186 33 l-8 -4 v8 z M186 69 l-8 -4 v8 z" fill="#e8b33a"/>'+
+   '<rect x="192" y="20" width="110" height="26" fill="#28406e"/><text x="247" y="37" fill="#fff" font-size="10" text-anchor="middle">宇宙開発</text>'+
+   '<rect x="192" y="56" width="110" height="26" fill="#28406e"/><text x="247" y="73" fill="#fff" font-size="10" text-anchor="middle">ネット / GPS</text>'+
+   '<text x="160" y="106" fill="#9fe8b0" font-size="10" text-anchor="middle">向きが変われば、同じ技術が別の実を結ぶ</text>')},
+ {t:"図6　競争の対象を変える", svg: svgWrap(
+   '<rect x="24" y="26" width="118" height="52" fill="#6e2828"/><text x="83" y="48" fill="#fff" font-size="11" text-anchor="middle">対象 ＝ 人間</text><text x="83" y="66" fill="#ffd9d9" font-size="10" text-anchor="middle">戦争・奪い合い</text>'+
+   '<path d="M142 52 L182 52" stroke="#e8b33a" stroke-width="3"/><path d="M182 52 l-8 -4 v8 z" fill="#e8b33a"/>'+
+   '<rect x="188" y="26" width="118" height="52" fill="#28502e"/><text x="247" y="48" fill="#fff" font-size="11" text-anchor="middle">対象 ＝ 課題</text><text x="247" y="66" fill="#d9ffd9" font-size="10" text-anchor="middle">スポーツ・挑戦</text>'+
+   '<text x="160" y="104" fill="#9fe8b0" font-size="10" text-anchor="middle">競争は残す。向ける先だけを変える</text>')},
+ {t:"図7　発想を滑らせる環境", svg: svgWrap(
+   '<rect x="14" y="16" width="92" height="24" fill="#28406e"/><text x="60" y="32" fill="#fff" font-size="10" text-anchor="middle">騙すほうが速い</text>'+
+   '<rect x="114" y="16" width="92" height="24" fill="#28406e"/><text x="160" y="32" fill="#fff" font-size="10" text-anchor="middle">被害が見えない</text>'+
+   '<rect x="214" y="16" width="92" height="24" fill="#28406e"/><text x="260" y="32" fill="#fff" font-size="10" text-anchor="middle">罰の確率が低い</text>'+
+   '<path d="M60 40 L140 66 M160 40 L160 66 M260 40 L180 66" stroke="#e8b33a" stroke-width="2"/>'+
+   '<rect x="100" y="66" width="120" height="26" fill="#6e2828"/><text x="160" y="83" fill="#fff" font-size="11" text-anchor="middle">発想がそちらへ滑る</text>'+
+   '<text x="160" y="112" fill="#9fe8b0" font-size="10" text-anchor="middle">確率を反転させれば、流れも反転する</text>')},
+ {t:"図8　コバエと排水口", svg: svgWrap(
+   '<circle cx="66" cy="36" r="4" fill="#bbb"/><circle cx="92" cy="26" r="4" fill="#bbb"/><circle cx="52" cy="56" r="4" fill="#bbb"/>'+
+   '<text x="72" y="84" fill="#e8a0a0" font-size="10" text-anchor="middle">1匹ずつ叩く</text><text x="72" y="97" fill="#e8a0a0" font-size="10" text-anchor="middle">＝ 対症療法</text>'+
+   '<path d="M120 60 L196 60" stroke="#e8b33a" stroke-width="3"/><path d="M196 60 l-8 -4 v8 z" fill="#e8b33a"/>'+
+   '<ellipse cx="256" cy="52" rx="40" ry="16" fill="#28406e"/><ellipse cx="256" cy="50" rx="26" ry="9" fill="#0a1410"/>'+
+   '<text x="256" y="84" fill="#9fe8b0" font-size="10" text-anchor="middle">排水口を掃除する</text><text x="256" y="97" fill="#9fe8b0" font-size="10" text-anchor="middle">＝ 発生源の除去</text>'+
+   '<text x="160" y="120" fill="#fff" font-size="10" text-anchor="middle">排水口は、一つずつしかない</text>')}
+];
+
+/* ============ レッスンデータ ============ */
+var CHAPTERS = ["第1章　なぜ争い続けるのか ― 本当のオーボス","第2章　向け先を変える ― 発生源と小さな掃除"];
+var LESSONS = [
+{ ch:0, title:"今日の話の根",
+  body:"ようこそ、ほんとうのオーボス道場へ。わしはミナモト仙人。この道場は短い。だが扱うのは、今日の議論すべての「根」じゃ。\n\nアルゴリズムの地獄、流通の独占、税金のモヤモヤ、情報商材や詐欺。枝葉は別々に見える。だが全部の下に、共通の構造が流れておる。\n\nそれは「人間同士の争いに、エネルギーが流れ続ける構造」じゃ。煽りが伸びるのも、囲い込みが儲かるのも、奪い合いが止まらないのも、この流れの上にある。\n\n枝葉を一枚ずつ叩いても、根が流れ続ける限り次が出る。だからこの見立てを置くのじゃ ―― これが「ほんとうのオーボス」かもしれん、とな。",
+  supp:"補足じゃ。オーボスとは「一番奥にいる元締め」のこと。個別の問題を解くのが無駄だと言いたいのではない。枝葉への対処と並行して、「その下で流れ続けているものは何か」を一度だけ見ておく。それがこの道場の役目じゃ。",
+  q:"この道場で「ほんとうのオーボス」と呼んでいるものはどれか。",
+  choices:["個別の悪人や、特定の企業そのもの","人間同士の争いにエネルギーが流れ続ける構造","アルゴリズムという技術そのもの"],
+  answer:1,
+  why:"違うぞ。悪人や企業は枝葉じゃ。この道場が見るのは、その下で流れ続ける「争いへエネルギーが向かう構造」のほうじゃ。もう一度読んでみよ。"},
+{ ch:0, title:"争いが止まらない理由の重なり",
+  body:"では、なぜ争いは止まらないのか。理由は一つではなく、重なっておる。\n\n第一に、資源と地位を巡る競争は、進化の仕様じゃ。人間だけの欠陥ではなく、生き物に組み込まれた初期設定に近い。\n\n第二に、「敵」がいると集団は一番安くまとまる。共通の敵を示すだけで結束が買える。だから指導者にとって、外敵は便利な統治の道具になる。争いが「使われる」理由じゃ。\n\n第三に、争いの継続そのものに利害を持つ既得権益がある。軍需のように、争いが続くことで成り立つ仕事や立場じゃ。止めたい理由より、続けたい理由を持つ側が組織化されていることも多い。\n\n仕様、道具、利害。この三つが重なると、誰か一人の悪意がなくても、争いは回り続ける。",
+  supp:"補足じゃ。三つの層を分けて覚えよ。①仕様＝競争は生き物の初期設定。②道具＝敵は集団をまとめる最安の方法。③利害＝争いの継続で成り立つ既得権益。どれか一つを直しても、残りが回し続ける。重なりを見るのが大事じゃ。",
+  q:"争いが止まらない理由として、このレッスンで挙げた重なりはどれか。",
+  choices:["人間の性格が昔より悪くなったこと","仕様（競争）・道具（敵で結束）・利害（継続の既得権益）の重なり","情報が足りないことだけ"],
+  answer:1,
+  why:"違うぞ。性格のせいにすると構造が見えなくなる。このレッスンの整理は「仕様・道具・利害」の三つの重なりじゃ。"},
+{ ch:0, title:"顔のある敵と、統計的な敵",
+  body:"次は、人間の注意の仕様じゃ。\n\n脳は「顔のある敵」には強く反応する。名前があり、姿があり、今まさに襲ってくる相手には、注意が即座に集まる。\n\n逆に「統計的な敵」には反応しにくい。気候変動がそうじゃ。敵に顔がなく、被害は遅れて来て、責任も利害も国ごとに違う。だから環境問題は、共通の敵になりにくい。\n\nここで今日の話とつながる。戦争も、クリックベイトの対立煽りも、燃やしている燃料は同じじゃ ―― 「敵への注目」である。対立の構図が一番伸びるのは、プラットフォームが偶然そうなったのではなく、人間のこの仕様を一番深いところで掴んでいるからじゃ。",
+  supp:"補足じゃ。ポイントは善悪ではなく「反応のしやすさ」の差じゃ。顔のある敵＝即座に反応。統計的な敵＝遅く、薄くしか反応できない。共通の敵にしたい対象ほど、後者の姿をしていることが多い。この非対称が、エネルギーの向きを歪める。",
+  q:"気候変動のような課題が「共通の敵」になりにくい主な理由はどれか。",
+  choices:["科学的に存在しないから","敵に顔がなく被害が遅れて来る「統計的な敵」で、脳が反応しにくいから","誰も関心を持っていないから"],
+  answer:1,
+  why:"違うぞ。関心の有無ではなく、注意の仕様の問題じゃ。顔がなく、遅れて来る敵には、脳は強く反応できない。そこが非対称の正体じゃ。"},
+{ ch:0, title:"エネルギーは消えない",
+  body:"第1章の締めじゃ。大事な前提を置く。\n\n争いのエネルギーは、消すことができない。競争心も、怒りも、目立ちたい気持ちも、人間の中から取り除くことはできん。「争いをなくそう」という呼びかけが届きにくいのは、相手が悪いのではなく、消えないものを消そうとしているからじゃ。\n\n問題は、量ではなく向きである。同じ熱量でも、人へ向ければ奪い合いになり、課題へ向ければ挑戦になる。\n\nだから問いは変わる。「どう止めるか」ではなく、「どこへ向けるか」。第2章は、この向きの変え方の話じゃ。",
+  supp:"補足じゃ。「消せない」前提に立つと、設計の話ができる。止める設計は破れやすいが、流路を変える設計は現実に作れる。水を止めるのではなく、水路を掘る。そういう発想で第2章へ進もう。",
+  q:"このレッスンの結論はどれか。",
+  choices:["争いのエネルギーは教育で消せる","エネルギーは消えない。問題は量ではなく向きで、問いは「どこへ向けるか」になる","エネルギーは増やすほどよい"],
+  answer:1,
+  why:"違うぞ。消す前提に立つと設計が破れる。エネルギーは残る。変えられるのは向きのほうじゃ。"},
+{ ch:1, title:"転用の前例",
+  body:"第2章じゃ。まず希望の材料から。エネルギーの転用には、歴史の前例がある。\n\n宇宙開発は、ロケット兵器の技術の転用じゃ。インターネットもGPSも、軍事研究から生まれた。戦争のために育った技術が、向きを変えて別の実を結んだ例じゃ。\n\nただし正直な留保もある。アポロ計画があれほど進んだのは、競争相手という「顔のある敵」がいたからじゃ。人類は敵なしでは大きく結集しにくい。その弱さの裏返しでもある。\n\nつまり課題はこうじゃ。敵の力を借りずに、あるいは敵を人にしないまま、どうやって大きなエネルギーを課題へ集めるか。前例は「転用は可能だ」と教えてくれる。同時に「結集の仕掛けが要る」とも。",
+  supp:"補足じゃ。前例の読み方は二つ。楽観の材料＝転用は歴史上、何度も起きた。注意の材料＝結集には「顔のある相手」が使われてきた。だからこそ、対象を人から課題へ移す仕掛けが要る、という第2章の主題につながる。",
+  q:"転用の前例が示すこととして、このレッスンの整理はどれか。",
+  choices:["軍事技術は平和利用できない","転用は可能だが、結集には仕掛けが要るという注意も残る","敵がいれば自動的に良い方向へ進む"],
+  answer:1,
+  why:"違うぞ。前例は「可能」の証明じゃが、同時に結集の難しさも示しておる。両方を読むのがこのレッスンじゃ。"},
+{ ch:1, title:"競争の対象を変える",
+  body:"転用の身近な原型は、スポーツじゃ。\n\nスポーツは、戦争の代替としてエネルギーを流す発明だったと言える。競争したい、勝ちたい、応援したいという熱は消さない。代わりに、相手を傷つける代わりにルールの中で競い、終われば握手する形に流路を変えた。\n\nここに仕組みの方向がある。競争自体は残す。変えるのは対象じゃ。「人間」から「課題」へ。記録へ、難問へ、昨日の自分へ。\n\nアルゴリズムの世界でも同じ発想ができる。対立への注目で競わせるのではなく、課題の解決や記録の更新に注目が集まる流路を作る。簡単ではないが、方向としては一本じゃ ―― 対象を、人から課題へ。",
+  supp:"補足じゃ。スポーツの賢さは「競争を禁止しなかった」ことじゃ。熱を残したまま、流路だけを変えた。仕組み作りで一番現実的なのは、この型じゃ。消すのではなく、流す先を設計する。",
+  q:"スポーツが示す仕組みの方向はどれか。",
+  choices:["競争そのものを禁止すること","競争は残し、対象を「人間」から「課題」へ変えること","勝敗をなくして全員同じにすること"],
+  answer:1,
+  why:"違うぞ。スポーツは競争も勝敗も残した。変えたのはエネルギーの流路と対象じゃ。そこが設計の型になる。"},
+{ ch:1, title:"騙しへの発想も、環境の出力",
+  body:"ここで線引きをはっきりさせる。お金を儲けたいという発想は、自由で健全なものじゃ。相手に喜ばれて対価を得る商売は、双方が得をする形じゃ。\n\n問題は、盗む・騙すへ滑ったときだけじゃ。ではなぜ発想はそちらへ滑るのか。理由は性質より環境にある。騙すほうが速い。被害が見えにくい。罰の確率が低い。そして正直な過程は地味で見えず、派手な成功だけが流通する。\n\nつまり発想は、環境の出力じゃ。「正直が損をして、騙しが得をする」環境では、流れはそちらへ向かう。逆に言えば、可視化し、記録を残し、捕まる確率を上げる ―― 確率を反転させる仕組みで、流れは変えられる。\n\n正直な留保を一つ。仕組みは確率を変えるが、ゼロにはしない。最後に「見られていなくてもやらない」という個人の層は残る。ただ、その層に頼る度合いを仕組みで下げていくことが、現実的な目標じゃ。",
+  supp:"補足じゃ。覚えるのは「発想＝環境の出力」という一文。速い・見えない・罰が低い・派手な成功だけ見える。この4条件がそろうと、誰の発想でも滑りやすくなる。条件を一つずつ潰すのが、可視化の仕事じゃ。",
+  q:"発想が「騙す」ほうへ滑る理由として、このレッスンの説明はどれか。",
+  choices:["生まれつき悪い人が増えたから","速い・見えにくい・罰の確率が低いなど、環境の条件がそろうから","お金を儲けたいと思うこと自体が悪いから"],
+  answer:1,
+  why:"違うぞ。儲けたい発想自体は健全じゃ。滑るのは環境の条件のせいで、条件は仕組みで変えられる。そこが要点じゃ。"},
+{ ch:1, title:"コバエと排水口 ― 締め",
+  body:"最後の課じゃ。身近な話で締めよう。\n\n夏のコバエを1匹ずつ叩くのは、対症療法じゃ。発生源がある限り、叩いても叩いても次が出る。煽り動画を1本ずつブロックするのと、同じ形をしておる。\n\nところが、排水口にハイターを流して掃除したら、コバエは驚くほど少なくなった。効いたのは駆除ではなく、発生源の除去じゃ。戦わずして減ったのじゃ。\n\n人間の根本も、同じかもしれん。壮大な人間改造の話ではなく、繁殖する条件を一つずつ潰す話。根は深く見えても、排水口は一つずつしかないのじゃ。\n\n―― 自分の手の届く発生源から、掃除する。それが、この道場の結論じゃ。卒業おめでとう。",
+  supp:"補足は要らんはずじゃが、一つだけ。排水口の教訓は「全部を直せ」という話ではない。「一つ潰すだけで、悩みが目に見えて減ることがある」という実感のほうじゃ。小さい発生源からでよい。それが現実の順番じゃ。",
+  q:"コバエの話が示す、最も効いた対処はどれか。",
+  choices:["1匹ずつ叩く回数を増やすこと","排水口という発生源を除去すること","コバエを無視して慣れること"],
+  answer:1,
+  why:"違うぞ。叩くのは対症療法じゃ。効いたのは発生源の除去。問題の形が変わらなければ、量を増やしても終わらない。"}
+];
+
+/* ============ 状態 ============ */
+var SAVE_KEY="oobosuSaveV1", TTS_KEY="advTtsV1";
+var save={done:[],cur:0};
+try{var s=JSON.parse(localStorage.getItem(SAVE_KEY)||"null"); if(s&&s.done) save=s;}catch(e){}
+while(save.done.length<LESSONS.length) save.done.push(false);
+var idx=Math.min(save.cur||0, LESSONS.length-1);
+var phase="explain"; // explain | check | quiz | done
+var typeTimer=null;
+
+function persist(){ try{localStorage.setItem(SAVE_KEY, JSON.stringify(save));}catch(e){} }
+function renderProgress(){
+  var m="",doneCount=0;
+  for(var i=0;i<LESSONS.length;i++){ m+= save.done[i]?"✓":"・"; if(save.done[i])doneCount++; }
+  document.getElementById("marks").textContent=m;
+  document.getElementById("progText").textContent=" "+doneCount+" / "+LESSONS.length+" 課 完了";
+}
+
+/* ============ TTS ============ */
+var ttsOn=false;
+try{ ttsOn = localStorage.getItem(TTS_KEY)==="1"; }catch(e){}
+var ttsBtn=document.getElementById("ttsBtn");
+function ttsLabel(){
+  var hasJa=false;
+  try{ var vs=speechSynthesis.getVoices(); for(var i=0;i<vs.length;i++){ if(vs[i].lang&&vs[i].lang.indexOf("ja")===0){hasJa=true;break;} } }catch(e){}
+  ttsBtn.textContent = ttsOn ? (hasJa?"🗣 読上ON":"🗣 読上ON（音声なし）") : "🗣 読上OFF";
+}
+function speak(text){
+  if(!ttsOn) return;
+  try{
+    speechSynthesis.cancel();
+    var u=new SpeechSynthesisUtterance(text.replace(/\n+/g,"。"));
+    u.lang="ja-JP"; u.rate=1.0;
+    var vs=speechSynthesis.getVoices();
+    for(var i=0;i<vs.length;i++){ if(vs[i].lang&&vs[i].lang.indexOf("ja")===0){u.voice=vs[i];break;} }
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+ttsBtn.addEventListener("click",function(){
+  ttsOn=!ttsOn;
+  try{localStorage.setItem(TTS_KEY, ttsOn?"1":"0");}catch(e){}
+  if(!ttsOn){ try{speechSynthesis.cancel();}catch(e){} }
+  ttsLabel();
+  if(ttsOn) speak(currentText);
+});
+if("speechSynthesis" in window){ speechSynthesis.onvoiceschanged=ttsLabel; }
+ttsLabel();
+
+/* ============ 表示 ============ */
+var msgEl=document.getElementById("msgtext"), hintEl=document.getElementById("nextHint"),
+    chEl=document.getElementById("choices"), diagPanel=document.getElementById("diagPanel"),
+    diagBody=document.getElementById("diagBody"), diagTitle=document.getElementById("diagTitle"),
+    spkEl=document.getElementById("speaker");
+var currentText="", fullText="", typePos=0, typing=false;
+
+function beep(freq,dur){
+  try{
+    var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+    if(!beep.ctx) beep.ctx=new AC();
+    var c=beep.ctx; if(c.state==="suspended") c.resume();
+    var o=c.createOscillator(), g=c.createGain();
+    o.type="square"; o.frequency.value=freq||660;
+    g.gain.setValueAtTime(0.04,c.currentTime); g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+(dur||0.07));
+    o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime+(dur||0.07));
+  }catch(e){}
+}
+function typewrite(text){
+  fullText=text; currentText=text; typePos=0; typing=true;
+  hintEl.style.display="none";
+  if(typeTimer) clearInterval(typeTimer);
+  typeTimer=setInterval(function(){
+    typePos+=2;
+    if(typePos>=fullText.length){ typePos=fullText.length; typing=false; clearInterval(typeTimer); onTyped(); }
+    msgEl.textContent=fullText.slice(0,typePos);
+    if(msgEl.scrollHeight>msgEl.clientHeight){
+      var nearBottom = (msgEl.scrollTop + msgEl.clientHeight) > (msgEl.scrollHeight-140);
+      if(nearBottom||typePos<60) msgEl.scrollTop=msgEl.scrollHeight;
+    }
+  },18);
+  speak(text);
+}
+msgEl.parentElement.addEventListener("click",function(){
+  if(typing){ if(typeTimer)clearInterval(typeTimer); typing=false; msgEl.textContent=fullText; onTyped(); }
+});
+function onTyped(){ if(phase==="explain"||phase==="supp"||phase==="why"){ showChoicesForPhase(); } else { hintEl.style.display="none"; } }
+
+function setChoices(list, diag){
+  chEl.innerHTML="";
+  list.forEach(function(c){
+    var b=document.createElement("button"); b.type="button"; b.className="choice"+(c.small?" small":"");
+    b.textContent=c.label; b.addEventListener("click",function(){beep(520,.06); c.fn();});
+    chEl.appendChild(b);
+  });
+  chEl.className="show"+(diag?" diagmenu":"");
+}
+function hideChoices(){ chEl.className=""; chEl.innerHTML=""; }
+
+function showDiag(i){
+  var d=DIAGS[i];
+  diagTitle.textContent=d.t; diagBody.innerHTML=d.svg; diagPanel.classList.add("show");
+}
+
+function startLesson(i){
+  idx=i; save.cur=i; persist(); renderProgress();
+  var L=LESSONS[i];
+  spkEl.textContent="ミナモト仙人 ― "+CHAPTERS[L.ch]+" ／ 第"+(i+1)+"課「"+L.title+"」"+(save.done[i]?" ✓":"");
+  showDiag(i); hideChoices(); phase="explain";
+  typewrite(L.body);
+}
+function showChoicesForPhase(){
+  var L=LESSONS[idx];
+  if(phase==="explain"){
+    setChoices([
+      {label:"✓ わかった", fn:goQuiz},
+      {label:"？ わからない（補足を聞く）", small:true, fn:function(){ phase="supp"; hideChoices(); typewrite(L.supp+"\n\n――では、確認問題に進もう。"); }}
+    ], true);
+  } else if(phase==="supp"){
+    setChoices([{label:"→ 確認問題へ", fn:goQuiz}], true);
+  } else if(phase==="why"){
+    setChoices([{label:"→ もう一度、確認問題", fn:goQuiz}], true);
+  }
+}
+function goQuiz(){
+  var L=LESSONS[idx]; phase="quiz"; hideChoices();
+  spkEl.textContent="確認問題 ― 第"+(idx+1)+"課「"+L.title+"」";
+  typewrite(L.q);
+  var list=L.choices.map(function(c,ci){
+    return {label:(ci+1)+". "+c, fn:function(){ answer(ci); }};
+  });
+  /* 問題文タイプ後に選択肢を出すため少し遅らせる */
+  var iv=setInterval(function(){ if(!typing){ clearInterval(iv); if(phase==="quiz") setChoices(list,false); } },120);
+}
+function answer(ci){
+  var L=LESSONS[idx];
+  if(ci===L.answer){
+    beep(880,.09); setTimeout(function(){beep(1320,.12);},110);
+    save.done[idx]=true; persist(); renderProgress();
+    phase="done"; hideChoices();
+    if(idx>=LESSONS.length-1){
+      spkEl.textContent="ミナモト仙人 ― 卒業";
+      typewrite("正解じゃ。これで全8課、修了じゃ。\n\n争いのエネルギーは消えない。だが向きは変えられる。発生源は一つずつしかない。自分の手の届くところから掃除する ―― それを忘れんでくれ。\n\n（最初から読み直すこともできます）");
+      setChoices([{label:"↺ 最初から読み直す", small:true, fn:function(){startLesson(0);}}],false);
+    } else {
+      spkEl.textContent="ミナモト仙人";
+      typewrite("正解じゃ。第"+(idx+1)+"課「"+L.title+"」修了 ✓\n\n次へ進もう。");
+      setChoices([{label:"→ 第"+(idx+2)+"課「"+LESSONS[idx+1].title+"」へ", fn:function(){startLesson(idx+1);}}],false);
+    }
+  } else {
+    beep(220,.12); phase="why"; hideChoices();
+    spkEl.textContent="ミナモト仙人";
+    typewrite(L.why);
+  }
+}
+document.getElementById("resetBtn").addEventListener("click",function(){
+  save={done:LESSONS.map(function(){return false;}),cur:0}; persist(); renderProgress(); startLesson(0);
+});
+
+/* ============ 聞くモード ============ */
+var listenPanel=document.getElementById("listenPanel"), listenList=document.getElementById("listenList");
+var listenBuilt=false;
+document.getElementById("listenBtn").addEventListener("click",function(){
+  var open=listenPanel.classList.toggle("show");
+  this.textContent= open?"🎧 聞くモード（閉じる）":"🎧 聞くモード（全レッスン文を並べる）";
+  if(open&&!listenBuilt){
+    listenBuilt=true;
+    LESSONS.forEach(function(L,i){
+      var d=document.createElement("div"); d.className="listen-item";
+      var b=document.createElement("b"); b.textContent="第"+(i+1)+"課「"+L.title+"」";
+      d.appendChild(b); d.appendChild(document.createTextNode("\n"+L.body+"\n（補足）"+L.supp));
+      listenList.appendChild(d);
+    });
+  }
+  if(!open) stopListen();
+});
+var listenState={playing:false, paused:false, i:0, uid:0};
+var playBtn=document.getElementById("listenPlay"), statusEl=document.getElementById("listenStatus"), barEl=document.getElementById("listenBar");
+var listenItems=[];
+LESSONS.forEach(function(L){ listenItems.push("第"+(i0(L))+"課 "+L.title+"。"+L.body); });
+function i0(L){ return LESSONS.indexOf(L)+1; }
+function listenSpeak(){
+  var st=listenState; if(st.i>=listenItems.length){ stopListen(); statusEl.textContent="再生が終わりました。"; return; }
+  var myUid=++st.uid;
+  statusEl.textContent="再生中 "+(st.i+1)+" / "+listenItems.length;
+  barEl.style.width=Math.round(st.i/listenItems.length*100)+"%";
+  try{
+    speechSynthesis.cancel();
+    var u=new SpeechSynthesisUtterance(listenItems[st.i].replace(/\n+/g,"。"));
+    u.lang="ja-JP"; u.rate=1.0;
+    var vs=speechSynthesis.getVoices();
+    for(var i=0;i<vs.length;i++){ if(vs[i].lang&&vs[i].lang.indexOf("ja")===0){u.voice=vs[i];break;} }
+    u.onend=function(){ if(listenState.uid!==myUid) return; listenState.i++; if(listenState.playing) listenSpeak(); };
+    speechSynthesis.speak(u);
+  }catch(e){ statusEl.textContent="このブラウザでは音声再生が使えませんでした。"; }
+}
+function stopListen(){
+  listenState.playing=false; listenState.paused=false; listenState.i=0; listenState.uid++;
+  try{speechSynthesis.cancel();}catch(e){}
+  playBtn.textContent="▶ ブラウザ音声で再生"; barEl.style.width="0%";
+}
+playBtn.addEventListener("click",function(){
+  var st=listenState;
+  if(st.playing){ /* pause: cancel current, resume replays item head */
+    st.playing=false; st.paused=true; st.uid++;
+    try{speechSynthesis.cancel();}catch(e){}
+    playBtn.textContent="▶ 再開（この課の頭から）";
+    statusEl.textContent="一時停止中 "+(st.i+1)+" / "+listenItems.length;
+  } else {
+    st.playing=true; st.paused=false; playBtn.textContent="⏸ 一時停止"; listenSpeak();
+  }
+});
+document.getElementById("listenStop").addEventListener("click",function(){ stopListen(); statusEl.textContent="停止しました。"; });
+
+/* ============ 図解ギャラリー ============ */
+var galBuilt=false;
+document.getElementById("galleryBtn").addEventListener("click",function(){
+  var g=document.getElementById("gallery");
+  var open=g.classList.toggle("show");
+  this.textContent= open?"🖼 図解ギャラリー（ON）":"🖼 図解ギャラリー（OFF）";
+  if(open&&!galBuilt){
+    galBuilt=true;
+    var list=document.getElementById("galleryList");
+    DIAGS.forEach(function(d,i){
+      var item=document.createElement("div"); item.className="gitem";
+      var t=document.createElement("div"); t.className="gt"; t.textContent="第"+(i+1)+"課 ― "+d.t;
+      item.appendChild(t);
+      var holder=document.createElement("div"); holder.innerHTML=d.svg; item.appendChild(holder);
+      list.appendChild(item);
+    });
+  }
+});
+
+/* ============ 開始 ============ */
+renderProgress();
+startLesson(idx);
+</script>
+</body>
+</html>
