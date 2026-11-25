@@ -1,0 +1,1267 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>YouTube煽りパターン図鑑 ― タイトルとサムネの型を可視化する</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+    <style>
+      button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]), textarea { min-height: 2.25rem; }
+      * { box-sizing: border-box; }
+      :root {
+        color-scheme: light dark;
+        --bg: #f4f4f2;
+        --surface: #ffffff;
+        --surface2: #ececea;
+        --ink: #1c1e22;
+        --ink2: #4a4e55;
+        --line: #d8d8d2;
+        --accent: #c8102e;
+        --code-bg: #171a1f;
+        --code-ink: #e8f0e4;
+        --p1: #12824a; --p2: #a86e00; --p3: #c22e2e; --p4: #1f5fa8;
+        --p5: #cf5a12; --p6: #bd2a6e; --p7: #0a7d74; --p8: #6d5138; --p9: #5b5ea6;
+        --p10: #7a4a12; --p11: #a8325f; --p12: #4e6b5e;
+        --neon: #e84393;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #141518;
+          --surface: #1e2024;
+          --surface2: #282a2f;
+          --ink: #eceef0;
+          --ink2: #b6bac0;
+          --line: #3a3d43;
+          --accent: #ff5b74;
+          --code-bg: #0c0e11;
+          --p1: #3ecf82; --p2: #e3aa2e; --p3: #ff7070; --p4: #6db1f2;
+          --p5: #ff9440; --p6: #f06ba8; --p7: #3ec9bc; --p8: #c9a37e; --p9: #a5a8e8;
+          --p10: #d99a4e; --p11: #f08bb4; --p12: #9dc4b2;
+          --neon: #ff6eb4;
+        }
+      }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif;
+        line-height: 1.75;
+        font-size: 16px;
+      }
+      .wrap { max-width: 880px; margin: 0 auto; padding: 0 18px 72px; }
+      h1 { font-size: clamp(26px, 6vw, 40px); font-weight: 900; line-height: 1.3; margin: 0 0 10px; letter-spacing: .01em; }
+      h2 { font-size: clamp(21px, 4.6vw, 28px); font-weight: 900; line-height: 1.4; margin: 56px 0 14px; padding-top: 8px; }
+      h3 { font-size: 17px; font-weight: 700; margin: 22px 0 8px; }
+      p { margin: 0 0 12px; }
+      .small { font-size: 13.5px; color: var(--ink2); }
+      a { color: var(--p4); }
+      code, .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: .88em; }
+
+      /* ---------- hero ---------- */
+      .hero { padding: 40px 0 6px; }
+      .hero .lede { font-size: 17px; color: var(--ink2); max-width: 42em; }
+      .note-box {
+        background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+        padding: 14px 18px; margin: 20px 0; font-size: 14.5px;
+      }
+      .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; margin: 18px 0 6px; }
+      .flow .step {
+        flex: 1 1 150px; background: var(--surface); border: 1px solid var(--line);
+        border-radius: 10px; padding: 12px 14px;
+      }
+      .flow .step b { display: block; font-size: 15px; margin-bottom: 2px; }
+      .flow .step span { font-size: 13px; color: var(--ink2); }
+      .flow .arrow { align-self: center; color: var(--ink2); font-weight: 900; }
+
+      /* ---------- tables ---------- */
+      .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+      table { border-collapse: collapse; width: 100%; font-size: 14px; }
+      th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+      tr:last-child td { border-bottom: none; }
+      th { background: var(--surface2); font-weight: 700; white-space: nowrap; }
+      td.num { white-space: nowrap; font-weight: 900; }
+      .tag {
+        display: inline-block; font-size: 12px; font-weight: 700; line-height: 1.5;
+        padding: 1px 8px; border-radius: 999px; color: #fff; white-space: nowrap;
+      }
+
+      /* ---------- nav chips ---------- */
+      .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 4px; }
+      .chips a {
+        display: inline-flex; align-items: center; min-height: 36px; padding: 4px 14px;
+        border: 1px solid var(--line); border-radius: 999px; background: var(--surface);
+        color: var(--ink); text-decoration: none; font-size: 13.5px; font-weight: 700;
+      }
+
+      /* ---------- pattern cards ---------- */
+      .card {
+        background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+        margin: 26px 0; overflow: hidden;
+      }
+      .card-head { padding: 18px 20px 4px; display: flex; gap: 14px; align-items: flex-start; }
+      .pnum {
+        flex: 0 0 auto; width: 52px; height: 52px; border-radius: 12px; color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 900; font-size: 19px; font-family: "JetBrains Mono", monospace;
+      }
+      .card-head h3 { margin: 2px 0 2px; font-size: 20px; font-weight: 900; line-height: 1.35; }
+      .card-head .sub { font-size: 13px; color: var(--ink2); }
+      .card-body { padding: 6px 20px 20px; }
+      .card-body h4 { font-size: 14px; font-weight: 900; margin: 18px 0 6px; letter-spacing: .04em; }
+      .card-body h4:first-child { margin-top: 8px; }
+      .card-body ul { margin: 0 0 6px; padding-left: 1.25em; }
+      .card-body li { margin-bottom: 4px; }
+      .examples { list-style: none; padding: 0 !important; margin: 0; }
+      .examples li {
+        background: var(--surface2); border-radius: 8px; padding: 9px 13px;
+        margin-bottom: 7px; font-weight: 500; font-size: 15px;
+      }
+      .signals { background: var(--code-bg); color: var(--code-ink); border-radius: 10px; padding: 14px 16px; font-size: 13.5px; }
+      .signals h5 { margin: 0 0 8px; font-size: 13px; letter-spacing: .06em; color: #9fd48a; font-family: "Noto Sans JP", sans-serif; }
+      .signals ul { margin: 0; padding-left: 1.2em; }
+      .signals li { margin-bottom: 5px; }
+      .signals code { color: #ffd479; word-break: break-all; }
+
+      /* thumbnail mock (模式図) */
+      .thumb {
+        position: relative; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden;
+        margin: 10px 0 4px; color: #fff; font-weight: 900; isolation: isolate;
+      }
+      .thumb .face {
+        position: absolute; border-radius: 50%;
+        background: radial-gradient(circle at 50% 38%, #ffd9b0 0 58%, #f2b57e 60% 100%);
+        box-shadow: 0 0 0 4px rgba(0,0,0,.25);
+      }
+      .thumb .face::before, .thumb .face::after {
+        content: ""; position: absolute; top: 34%; width: 11%; height: 15%;
+        background: #26221e; border-radius: 50%;
+      }
+      .thumb .face::before { left: 26%; } .thumb .face::after { right: 26%; }
+      .thumb .mouth {
+        position: absolute; left: 50%; top: 58%; transform: translateX(-50%);
+        width: 34%; height: 26%; background: #7a2d1d; border-radius: 0 0 999px 999px;
+      }
+      .thumb .big {
+        position: absolute; font-weight: 900; line-height: 1.15;
+        text-shadow: 2px 2px 0 #000, -2px 2px 0 #000, 2px -2px 0 #000, -2px -2px 0 #000, 0 3px 0 #000;
+      }
+      .thumb .badge {
+        position: absolute; font-size: clamp(11px, 2.6vw, 14px); font-weight: 900;
+        padding: 3px 10px; border-radius: 6px; line-height: 1.4;
+      }
+      .thumb-cap { font-size: 12.5px; color: var(--ink2); margin: 2px 0 0; }
+
+      .story-flow { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 8px 0; font-size: 13.5px; }
+      .story-flow .node { background: var(--surface2); border-radius: 8px; padding: 6px 11px; font-weight: 700; }
+      .story-flow .arr { color: var(--ink2); font-weight: 900; }
+      .story-flow .node.hot { background: #d92c2c; color: #fff; }
+
+      /* ---------- kabukicho ---------- */
+      .kabuki {
+        background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+        padding: 6px 22px 22px; margin-top: 8px;
+      }
+      .neon-strip {
+        display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 6px;
+      }
+      .neon-strip span {
+        font-weight: 900; font-size: 15px; padding: 8px 14px; border-radius: 8px; color: #fff;
+        text-shadow: 0 0 8px rgba(255,255,255,.55);
+      }
+      .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
+      .vs-grid .col { background: var(--surface2); border-radius: 10px; padding: 14px 16px; }
+      .vs-grid .col h4 { margin: 0 0 8px; font-size: 15px; }
+      .vs-grid ul { margin: 0; padding-left: 1.2em; font-size: 14.5px; }
+      @media (max-width: 620px) { .vs-grid { grid-template-columns: 1fr; } }
+
+      /* ---------- code / rules ---------- */
+      pre {
+        background: var(--code-bg); color: var(--code-ink); border-radius: 10px;
+        padding: 14px 16px; overflow-x: auto; font-size: 13.5px; line-height: 1.7; margin: 10px 0;
+      }
+      pre code { color: inherit; word-break: normal; }
+      .score-table td.pts { font-weight: 900; white-space: nowrap; text-align: right; }
+      .verdict { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+      .verdict div { flex: 1 1 170px; border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; background: var(--surface); font-size: 14px; }
+      .verdict b { display: block; font-size: 16px; }
+
+      /* ---------- tester ---------- */
+      .tester { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin: 18px 0; }
+      .tester label { display: block; font-weight: 700; font-size: 14px; margin: 12px 0 5px; }
+      .tester input[type="text"], .tester select {
+        width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px;
+        background: var(--bg); color: var(--ink); font-size: 16px; font-family: inherit;
+      }
+      .tester button {
+        margin-top: 16px; width: 100%; padding: 12px; border: none; border-radius: 10px;
+        background: var(--accent); color: #fff; font-size: 16px; font-weight: 900; cursor: pointer;
+      }
+      #testResult { margin-top: 16px; display: none; }
+      #testResult .score-big { font-size: 30px; font-weight: 900; }
+      #testResult ul { margin: 6px 0; padding-left: 1.25em; font-size: 14.5px; }
+
+      .loop-steps { counter-reset: lp; list-style: none; padding: 0; margin: 14px 0; }
+      .loop-steps li {
+        counter-increment: lp; background: var(--surface); border: 1px solid var(--line);
+        border-radius: 10px; padding: 12px 16px 12px 58px; margin-bottom: 9px; position: relative;
+      }
+      .loop-steps li::before {
+        content: counter(lp); position: absolute; left: 14px; top: 12px;
+        width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: #fff;
+        display: flex; align-items: center; justify-content: center; font-weight: 900;
+      }
+      .loop-steps b { display: block; }
+      .loop-steps span { font-size: 14px; color: var(--ink2); }
+
+      footer { margin-top: 60px; border-top: 1px solid var(--line); padding-top: 18px; font-size: 14px; color: var(--ink2); }
+      footer ul { padding-left: 1.2em; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+
+      <!-- ================= 冒頭 ================= -->
+      <header class="hero">
+        <h1>YouTube煽りパターン図鑑<br />― タイトルとサムネの型を可視化する</h1>
+        <p class="lede">YouTubeのおすすめ欄に並ぶタイトルとサムネイルには、驚くほど使い回される「型」がある。金額を誇示する型、LINEへ誘導する型、不安を煽る型、顔とデカ文字で押す型――。この図鑑はそれらを分類し、名前を付け、検出できる形に分解するための研究資料である。</p>
+        <div class="note-box">
+          <b>読み方の注記。</b>ここに挙げる例文は、実在の特定チャンネルを名指しするものではなく、よく見かける言い回しを再構成した「典型例」である。批判の対象は個人ではなく、繰り返し使われる<em>型（パターン）</em>そのもの。型として分析すれば、フィルタのルールに変換できる。
+        </div>
+        <h3>この図鑑の使い方</h3>
+        <div class="flow">
+          <div class="step"><b>1. 型を知る</b><span>パターンカードで「狙い」と見た目の特徴を掴む</span></div>
+          <div class="arrow">→</div>
+          <div class="step"><b>2. シグナルに変える</b><span>キーワード・正規表現・顔面積・OCRの語など、機械が拾える形にする</span></div>
+          <div class="arrow">→</div>
+          <div class="step"><b>3. スコアで判定する</b><span>シグナルの合計点で「通常／薄く／ゴミ箱」を分ける。消すのではなく隔離して見返せるようにする</span></div>
+        </div>
+        <p class="small">想定する判定パイプラインは、キーワード判定 → 顔面積の判定（BlazeFace）→ OCR（Tesseract.js）→ ローカルVLMによる意味判定、という段階式。速くて安い段で大半を処理し、グレーなものだけ重い段に回す。この図鑑の各カードは、その各段で何を見るかをそろえて書いてある。</p>
+      </header>
+
+      <h2>パターン全体地図</h2>
+      <p>まず全体を一覧する。横断パターンのP6は、他のすべての型に「被さる」見た目の型である。P8とP9は語彙の変化、P10は動画の形式、P11は呼び名の公共化、P12は言葉遣いと中身の落差を観察する型で、扱いが他と少し違う。</p>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>型</th><th>名前</th><th>突く心理</th><th>主な検出シグナル</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="num" style="color:var(--p1)">P1</td><td><b>情報商材・LINE誘導型</b></td><td>楽に稼ぎたい希望／無料なら損しない</td><td>LINE誘導の語、概要欄、無料・限定・特典</td></tr>
+            <tr><td class="num" style="color:var(--p2)">P2</td><td><b>金額誇大・マウント型</b></td><td>羨望と劣等感、実績への服従</td><td>金額＋期間の正規表現、札束・高級車の画像</td></tr>
+            <tr><td class="num" style="color:var(--p3)">P3</td><td><b>恐怖・不安煽り型</b></td><td>損失回避、乗り遅れ不安</td><td>ヤバい／危険／終了／暴露などの語</td></tr>
+            <tr><td class="num" style="color:var(--p4)">P4</td><td><b>権威・肩書き演出型</b></td><td>検証を飛ばす安心感</td><td>元○○／医師／社長／先生などの肩書き語</td></tr>
+            <tr><td class="num" style="color:var(--p5)">P5</td><td><b>切り抜き・対立煽り型</b></td><td>他人の揉め事への好奇心</td><td>放送事故／修羅場／論破、対向する2つの顔</td></tr>
+            <tr><td class="num" style="color:var(--p6)">P6</td><td><b>変顔・デカ文字の視覚型</b>（横断）</td><td>考える前の視覚の反射</td><td>顔面積3〜6割、極太文字、原色・高コントラスト</td></tr>
+            <tr><td class="num" style="color:var(--p7)">P7</td><td><b>バズ・若者文化型</b></td><td>流行への乗り遅れ不安、仲間内感</td><td>界隈／神回／しか勝たん等の流行語</td></tr>
+            <tr><td class="num" style="color:var(--p8)">P8</td><td><b>「クソ」接頭辞型</b></td><td>短く強い刺激への慣れ</td><td>「クソ＋形容詞」。単独では加点せず複合時のみ</td></tr>
+            <tr><td class="num" style="color:var(--p9)">P9</td><td><b>略しすぎ型（サ終族）</b></td><td>身内だけに伝わればよい閉じた効率</td><td>固定語では捕捉困難。情報密度の低さでVLM判定向き</td></tr>
+            <tr><td class="num" style="color:var(--p10)">P10</td><td><b>台本対話・生徒役型</b></td><td>聞き手の驚きによる社会的証明</td><td>タイトルでは判別困難。形式とP1とのセットで見る</td></tr>
+            <tr><td class="num" style="color:var(--p11)">P11</td><td><b>身内ノリ発信・厚顔無恥型</b></td><td>身内の距離感そのままの自己演出</td><td>チャンネル名末尾の「先生／くん／ちゃん」。単独では弱い</td></tr>
+            <tr><td class="num" style="color:var(--p12)">P12</td><td><b>丁寧なのにヤバいが滲む型</b></td><td>丁寧さによる警戒の解除</td><td>単語では検出不能。意味判定（LLM/VLM）専任の型</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav class="chips" aria-label="パターンへのジャンプ">
+        <a href="#p1">P1 情報商材</a><a href="#p2">P2 金額マウント</a><a href="#p3">P3 不安煽り</a><a href="#p4">P4 権威・肩書き</a>
+        <a href="#p5">P5 対立煽り</a><a href="#p6">P6 変顔・デカ文字</a><a href="#p7">P7 バズ・若者文化</a><a href="#p8">P8 クソ接頭辞</a><a href="#p9">P9 略しすぎ</a><a href="#p10">P10 台本対話</a><a href="#p11">P11 身内ノリ</a><a href="#p12">P12 丁寧なのにヤバい</a>
+        <a href="#kabukicho">歌舞伎町モデル</a><a href="#rules">検出ルール集</a><a href="#loop">研究の進め方</a><a href="#breach">お断りリストと突破ログ</a><a href="#exception">例外リスト</a><a href="#creator">結局、発信者で判断する</a><a href="#essence">なぜ直らないのか</a><a href="#monopoly">独占はどう終わるのか</a><a href="#majority">無名の多数のための仕組みづくり</a>
+      </nav>
+
+<!-- ================= パターンカード ================= -->
+<h2>パターンカード</h2>
+
+<article class="card" id="p1">
+<div class="card-head">
+<div class="pnum" style="background:var(--p1)">P1</div>
+<div>
+<h3>情報商材・LINE誘導型</h3>
+<div class="sub">動画は商品ではなく「入口」。本体は動画の外にある</div>
+</div>
+</div>
+<div class="card-body">
+<h4>狙い</h4>
+<p>「自分も楽に稼げるかもしれない」という希望と、「無料なら損はしない」という心理を突く。動画の再生そのものより、視聴者をプラットフォームの外（LINE）へ連れ出すことが目的になっている。</p>
+<h4>タイトルの特徴と典型例</h4>
+<p>「スマホ1つで」「誰でも」「完全在宅」「スキルなし」と参入障壁の低さを並べ、金額（P2）とセットで提示するのが定番。</p>
+<ul class="examples">
+<li>「スマホ1つで月30万円｜スキルなし・完全在宅で始める方法」</li>
+<li>「元手0円で稼ぐ仕組み、全部話します」</li>
+<li>「会社員が副業で月50万円を超えるまでの全手順」</li>
+</ul>
+<h4>動画の中身の構造（テンプレ）</h4>
+<div class="story-flow">
+<span class="node">どん底の過去</span><span class="arr">→</span>
+<span class="node">師匠・メンターとの出会い</span><span class="arr">→</span>
+<span class="node">成功</span><span class="arr">→</span>
+<span class="node">「あなたにも教えます」</span><span class="arr">→</span>
+<span class="node hot">LINE登録</span><span class="arr">→</span>
+<span class="node">無料特典</span><span class="arr">→</span>
+<span class="node hot">高額教材</span>
+</div>
+<p>結末はほぼ例外なく「詳しくは概要欄のLINEから」。無料・限定・特典・プレゼントは釣り餌の語彙で、入口は無料でも出口の価格は動画内では語られない。</p>
+<h4>サムネイルの特徴</h4>
+<div class="thumb" style="background:linear-gradient(120deg,#0d5c33,#12824a)">
+<span class="big" style="left:5%;top:10%;font-size:clamp(22px,5.4vw,38px);color:#ffe93d">月30万円</span>
+<span class="big" style="left:5%;bottom:12%;font-size:clamp(15px,3.6vw,24px)">スマホ1つで！</span>
+<span class="badge" style="right:4%;top:8%;background:#06c755">LINEで無料特典</span>
+<span class="badge" style="right:4%;bottom:10%;background:#d92c2c">限定公開</span>
+</div>
+<p class="thumb-cap">模式図：LINEを思わせる緑の帯、「無料」「限定」のバッジ、スマホと金額の組み合わせが典型。</p>
+<div class="signals">
+<h5>検出シグナル</h5>
+<ul>
+<li>キーワード：<code>無料</code> <code>限定</code> <code>特典</code> <code>プレゼント</code> <code>概要欄</code> <code>公式LINE</code></li>
+<li>正規表現：<code>/(LINE|ライン)(登録|限定|特典|で)/</code>、<code>/概要欄/</code> と金額表現の同時出現</li>
+<li>OCRで拾う語：サムネ内の「LINE登録」「無料特典」「今だけ」</li>
+<li>VLMに聞く観点：「外部サービスへの登録を促しているか」「無料を強調しているか」</li>
+</ul>
+</div>
+</div>
+</article>
+
+<article class="card" id="p2">
+<div class="card-head">
+<div class="pnum" style="background:var(--p2)">P2</div>
+<div>
+<h3>金額誇大・マウント型</h3>
+<div class="sub">数字と実績の物量で、検証する気を削ぐ</div>
+</div>
+</div>
+<div class="card-body">
+<h4>狙い</h4>
+<p>羨望と劣等感を同時に刺激する。「年収1億」を顔出しで掲げる人物に対して、視聴者は「すごい」か「自分もなりたい」で反応し、「その数字は本当か」という検証は後回しになる。実績の誇示そのものがコンテンツになっている点が特徴。</p>
+<h4>タイトルの特徴と典型例</h4>
+<p>具体的な数字＋短い期間の組み合わせが定番。「たった3ヶ月で」「1日で」と期間を短くするほど、再現できそうな錯覚が強まる。</p>
+<ul class="examples">
+<li>「年収1億の生活、全部見せます」</li>
+<li>「たった3ヶ月で月収100万円を達成した方法」</li>
+<li>「1日で300万円稼いだ日」</li>
+</ul>
+<h4>サムネイルの特徴</h4>
+<div class="thumb" style="background:linear-gradient(120deg,#3a2c05,#8a6508)">
+<div class="face" style="right:6%;top:12%;width:34%;aspect-ratio:1"><div class="mouth"></div></div>
+<span class="big" style="left:5%;top:12%;font-size:clamp(24px,6vw,42px);color:#ffe93d">年収1億</span>
+<span class="big" style="left:5%;bottom:14%;font-size:clamp(14px,3.4vw,22px)">札束ルームツアー</span>
+</div>
+<p class="thumb-cap">模式図：札束・高級車・タワマンの夜景を背景に、顔出しで金額を大きく掲げる。収益画面のスクリーンショット風サムネもこの型に含む。</p>
+<div class="signals">
+<h5>検出シグナル</h5>
+<ul>
+<li>正規表現：<code>/(月収|年収|年商)[0-9０-９]+(万|億)/</code>、<code>/[0-9０-９]+万円(稼|達成)/</code>、<code>/年収[0-9０-９]+億/</code></li>
+<li>期間の誇張：<code>/(たった|わずか)?[0-9０-９]+(ヶ月|か月|日)で/</code> と金額の同時出現</li>
+<li>画像指標：顔面積が中〜大、OCRで大きな金額数字が読める、札束・高級車らしい被写体</li>
+<li>VLMに聞く観点：「金額や資産を誇示する構図か」「収益画面風の画像か」</li>
+</ul>
+</div>
+</div>
+</article>
+
+<article class="card" id="p3">
+<div class="card-head">
+<div class="pnum" style="background:var(--p3)">P3</div>
+<div>
+<h3>恐怖・不安煽り型</h3>
+<div class="sub">「見ないと損する・終わる」で損失回避を突く</div>
+</div>
+</div>
+<div class="card-body">
+<h4>狙い</h4>
+<p>人は得をする話より、損をする話に強く反応する（損失回避）。「知らないと損」「やらないと終わる」は、その性質を直接押す言い回し。中身が注意喚起として正当な場合もあるため、語だけで即断せず複合で見る型でもある。</p>
+<h4>タイトルの特徴と典型例</h4>
+<ul class="examples">
+<li>「これを知らないと本当に損します」</li>
+<li>「○○はもうオワコンです」</li>
+<li>「やらないと終わる。今すぐ確認してください」</li>
+</ul>
+<h4>サムネイルの特徴</h4>
+<div class="thumb" style="background:linear-gradient(120deg,#5c0d0d,#a11616)">
+<div class="face" style="left:6%;top:14%;width:32%;aspect-ratio:1"><div class="mouth"></div></div>
+<span class="big" style="right:6%;top:16%;font-size:clamp(26px,6.4vw,46px);color:#ff3b30">ヤバい</span>
+<span class="big" style="right:6%;bottom:14%;font-size:clamp(16px,4vw,26px);color:#ffe93d">知らないと損</span>
+</div>
+<p class="thumb-cap">模式図：真っ赤な背景、深刻な表情、警告色と2〜4文字の断定語。</p>
+<div class="signals">
+<h5>検出シグナル</h5>
+<ul>
+<li>キーワード：<code>ヤバい</code> <code>危険</code> <code>終了</code> <code>オワコン</code> <code>暴露</code> <code>閲覧注意</code> <code>知らないと損</code> <code>やらないと終わる</code></li>
+<li>OCR：サムネ内の短い断定語（15文字以内）と赤系の面積比</li>
+<li>VLMに聞く観点：「不安や恐怖を煽る表現か」「具体的な根拠がタイトル内に示されているか」</li>
+</ul>
+</div>
+</div>
+</article>
+
+<article class="card" id="p4">
+<div class="card-head">
+<div class="pnum" style="background:var(--p4)">P4</div>
+<div>
+<h3>権威・肩書き演出型</h3>
+<div class="sub">肩書きで「中身の検証」を飛ばさせる</div>
+</div>
+</div>
+<div class="card-body">
+<h4>狙い</h4>
+<p>「元○○」「東大」「医師」「社長」という肩書きは、それだけで発言の信頼度を底上げする。本人の肩書きが本物かどうか、中身が肩書きに見合うかは、クリックした時点では分からない。自称の「○○先生」「○○さん（くん）」と呼び合う文化も含め、権威の演出が先に立つ型。</p>
+<h4>タイトルの特徴と典型例</h4>
+<ul class="examples">
+<li>「東大卒の医師が警告｜その習慣、今すぐやめてください」</li>
+<li>「元大手企業の社長が語る、表には出ない本当の話」</li>
+<li>「プロが教える、素人が絶対にやってはいけないこと」</li>
+</ul>
+<h4>サムネイルの特徴</h4>
+<p>白衣・スーツ姿、肩書きを帯状に表示するテロップ風レイアウト、「○○先生」の大きな自称文字。チャンネル名自体に肩書きが入っているケースも多い。</p>
+<div class="signals">
+<h5>検出シグナル</h5>
+<ul>
+<li>キーワード：<code>元○○</code> の形、<code>東大</code> <code>医師</code> <code>社長</code> <code>先生</code> <code>プロが</code> <code>専門家</code></li>
+<li>対象はタイトルだけでなくチャンネル名も（肩書き入りチャンネル名は常時シグナルになる）</li>
+<li>VLMに聞く観点：「肩書きの表示が内容より目立っているか」「警告・断定と肩書きが組み合わさっているか」</li>
+<li>注意：本物の専門家による正当な解説も同じ語を使う。P3（不安煽り）や金額表現と重なった場合に重く見る</li>
+</ul>
+</div>
+</div>
+</article>
+
+<article class="card" id="p5">
+<div class="card-head">
+<div class="pnum" style="background:var(--p5)">P5</div>
+<div>
+<h3>切り抜き・対立煽り型</h3>
+<div class="sub">他人の対立を切り取って、感情だけを先に配る</div>
+</div>
+</div>
+<div class="card-body">
+<h4>狙い</h4>
+<p>他人の揉め事は、自分が傷つかずに強い感情を味わえる。生配信やテレビ番組の「事故」「修羅場」の瞬間だけを切り取り、前後の文脈を捨てて感情の山場だけを商品にする型。切り抜き元の当事者が望んだ形とは限らない点も特徴。</p>
+<h4>タイトルの特徴と典型例</h4>
+<ul class="examples">
+<li>「生配信でガチ喧嘩になりました」</li>
+<li>「ブチギレの瞬間｜論破されて何も言えなくなった件」</li>
+<li>「修羅場まとめ」</li>
+</ul>
+<h4>サムネイルの特徴</h4>
+<div class="thumb" style="background:linear-gradient(90deg,#7a2d05 0 49%,#123a6e 51% 100%)">
+<div class="face" style="left:7%;top:16%;width:30%;aspect-ratio:1"><div class="mouth"></div></div>
+<div class="face" style="right:7%;top:16%;width:30%;aspect-ratio:1"><div class="mouth"></div></div>
+<span class="big" style="left:50%;top:38%;transform:translateX(-50%);font-size:clamp(22px,5.4vw,38px);color:#ff3b30">VS</span>
+<span class="badge" style="left:50%;bottom:9%;transform:translateX(-50%);background:#d92c2c">放送事故</span>
+</div>
+<p class="thumb-cap">模式図：2人の顔を左右に対置し、稲妻や亀裂のエフェクト、赤い「VS」で対立を演出する。</p>
+<div class="signals">
+<h5>検出シグナル</h5>
+<ul>
+<li>キーワード：<code>放送事故</code> <code>修羅場</code> <code>ブチギレ</code> <code>論破</code> <code>ガチ喧嘩</code> <code>炎上</code></li>
+<li>画像指標：検出される顔が2つ以上で、左右に対向する配置</li>
+<li>VLMに聞く観点：「対立・口論の場面を切り取ったものか」「当事者本人以外の第三者による切り抜きか」</li>
+</ul>
+</div>
+</div>
+</article>
+
+      <article class="card" id="p6">
+        <div class="card-head">
+          <div class="pnum" style="background:var(--p6)">P6</div>
+          <div>
+            <h3>変顔・デカ文字の視覚型（横断パターン）</h3>
+            <div class="sub">内容の型ではなく「見た目」の型。すべてのジャンルに被さる</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <h4>狙い</h4>
+          <p>おすすめ欄は一瞬の視線の奪い合いであり、考える前に指を止めさせることが目的。だからこの型は内容と無関係に、真面目なテーマの動画にすら被さってくる。サムネイル分析の記事でも、大きな顔・強い表情・短く太い文字はクリック率を上げる視覚的特徴として繰り返し指摘されている要素である。</p>
+          <h4>視覚的特徴</h4>
+          <ul>
+            <li><b>顔面積が異常に大きい</b>：目安として画面の3〜6割を顔が占める</li>
+            <li><b>誇張した表情</b>：驚き、口を大きく開ける、目を見開く</li>
+            <li><b>極太文字</b>：赤や黄の文字に白や黒の縁取り。サムネ内テキストは15文字以内の短い断定</li>
+            <li><b>矢印と丸囲み</b>：一点を指して「ここを見ろ」と視線を誘導する</li>
+            <li><b>高コントラストの原色</b>：隣の動画より目立つための軍拡競争の結果</li>
+          </ul>
+          <div class="thumb" style="background:linear-gradient(120deg,#8f1040,#bd2a6e)">
+            <div class="face" style="left:4%;top:6%;width:52%;aspect-ratio:1"><div class="mouth"></div></div>
+            <span class="big" style="right:4%;top:14%;font-size:clamp(24px,6vw,42px);color:#ffe93d">衝撃の<br />結末！</span>
+            <span class="badge" style="right:5%;bottom:10%;background:#fff;color:#c00">◯で囲まれた一点 →</span>
+          </div>
+          <p class="thumb-cap">模式図：画面の半分近い顔、縁取りされた極太文字、矢印と丸囲み。</p>
+          <div class="signals">
+            <h5>検出シグナル</h5>
+            <ul>
+              <li>顔面積比：BlazeFace等で検出した顔の面積 ÷ サムネ面積。<b>0.3以上で加点、0.5以上で強く加点</b>が目安</li>
+              <li>OCR：文字数が15文字以内かつ文字高が大きい／赤・黄の比率が高い</li>
+              <li>画像指標：彩度とコントラストの平均値が高い、原色の面積比</li>
+              <li>この型は単独でもシグナルになるが、P1〜P5の語彙シグナルと重なると確度が上がる</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article class="card" id="p7">
+        <div class="card-head">
+          <div class="pnum" style="background:var(--p7)">P7</div>
+          <div>
+            <h3>バズ・若者文化型</h3>
+            <div class="sub">流行の言い回し自体が釣り餌になる</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <h4>狙い</h4>
+          <p>「今これが来ている」という空気そのものでクリックさせる。流行語は「分かる人には分かる」身内の合図でもあり、乗り遅れ不安と所属感の両方を刺激する。言葉の寿命が短いため、型としては常に語彙リストの更新が要る。</p>
+          <h4>タイトルの特徴と典型例</h4>
+          <ul class="examples">
+            <li>「今、界隈でバズってるアレが神回すぎた」</li>
+            <li>「伝説の○○が帰ってきた｜○○しか勝たん」</li>
+            <li>「エモいと話題のあの動画、ついに公開」</li>
+          </ul>
+          <h4>サムネイルの特徴</h4>
+          <p>流行語そのものをデカ文字化する（P6と複合しやすい）。キラキラ・グラデーション文字、SNSの投稿画面風の枠など、「SNSで回ってきた感」の演出が添えられることが多い。</p>
+          <div class="signals">
+            <h5>検出シグナル</h5>
+            <ul>
+              <li>キーワード：<code>界隈</code> <code>エモい</code> <code>バズった</code> <code>神回</code> <code>伝説の</code> <code>しか勝たん</code></li>
+              <li>語彙の陳腐化が速いので、ゴミ箱ログの集計から新しい流行語を定期的に拾ってリストを更新する運用が前提</li>
+              <li>単独では弱いシグナル。若者文化そのものが悪いわけではないので、他の型との複合で見る</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article class="card" id="p8">
+        <div class="card-head">
+          <div class="pnum" style="background:var(--p8)">P8</div>
+          <div>
+            <h3>「クソ」接頭辞型 ― 良くも悪くも何にでもクソを付ける</h3>
+            <div class="sub">強調の接頭辞の席が、下品な方向に置き換わった</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <h4>観察</h4>
+          <p>今のタイトルやサムネでは、良いことにも悪いことにも何にでも「クソ」が付く。クソ面白い、クソ美味い、クソデカい、クソ強い／クソつまらない、クソゲー、クソ仕様。かつて強調の接頭辞だった「超」（超面白い、超美味い）の席を、「クソ」が奪ったのが現代の姿だ、というのがこの型の見立てである。強調の言葉が下品な方向へ置き換わった、語彙の変化として淡々と観察する。</p>
+          <h4>なぜ広がるか</h4>
+          <ul>
+            <li>短くて強い刺激になる。一語で温度を最大まで上げられる</li>
+            <li>感情の解像度を上げずに済む。「どれくらい面白いか」を言葉で区別しなくてよい</li>
+            <li>サムネの短い文字数にも収まる（P6の都合と相性がよい）</li>
+          </ul>
+          <p>結果としてタイトルの語彙は貧しくなり、全部が同じ温度に見える。本当は程度の違うはずの「面白い」が、すべて同じ強さで並ぶ。</p>
+          <h4>タイトルの特徴と典型例</h4>
+          <ul class="examples">
+            <li>「クソデカいハンバーガーを作ったらクソ美味かった」</li>
+            <li>「クソ強いボスにクソゲー仕様で挑む」</li>
+            <li>「クソ面白いのにクソつまらない理由」</li>
+          </ul>
+          <div class="signals">
+            <h5>検出シグナル</h5>
+            <ul>
+              <li>単純なシグナル：タイトル／OCR文字列に <code>クソ</code> を含むかどうか</li>
+              <li><b>注意点</b>：ゲーム文化の「クソゲー」は、愛着を込めた愛称として定着している用法もある。一律に悪い型と決めつけない</li>
+              <li>フィルタでは単独加点せず、<b>他の煽り要素と組み合わさったときだけ加点</b>するのが現実的</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article class="card" id="p9">
+        <div class="card-head">
+          <div class="pnum" style="background:var(--p9)">P9</div>
+          <div>
+            <h3>略しすぎ型（サ終族） ― 何でも略してタイパを稼いだつもりの人たち</h3>
+            <div class="sub">省いた手間の分だけ、読み手に解読の手間が移る</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <h4>観察</h4>
+          <p>「サポート終了」を「サ終」と言うように、何でも無意識に略してしまう型。タイトルや投稿でも、初見の人には解読が必要な略語が平然と使われる。本人はタイパ（タイムパフォーマンス）を稼いでいるつもりでも、実際は周りに嫌がられ、信頼性を失っていることに気づいていない。説明し直しや誤解による手戻りを数えると、むしろ一番効率が悪い――という逆説がこの型の軸である。</p>
+          <h4>なぜ広がるか</h4>
+          <ul>
+            <li>略語は「身内である」ことの合図になる。分かる人だけに伝わればよい、という閉じた効率の中では合理的に見える</li>
+            <li>短い文字数は、サムネやタイトルの都合（P6）にも合う</li>
+            <li>ただし「伝達の効率」と「身内の合図」は別物。外の人に届けた瞬間に効率は崩れ、解読コストは読み手側に転嫁される</li>
+          </ul>
+          <h4>タイトルの特徴と典型例</h4>
+          <ul class="examples">
+            <li>「サ終のお知らせとアプデ情報まとめ」</li>
+            <li>「コスパ最強のタイパ飯、ワンオペで回す」</li>
+            <li>「リスケ後のアポ、キャン待ちでリベンジ」</li>
+          </ul>
+          <p class="small">※ 業務略語そのものが悪いわけではない。問題は「初見の人に届ける場（タイトル）で、解読を前提にすること」の方にある。</p>
+          <h4>P8との共通点</h4>
+          <p>P8（クソ接頭辞型）とこの型は、根っこが同じである。どちらも「言葉の手間を省いた結果、表現の解像度と信頼が下がる」型だ。P8は強さで手間を省き、P9は短さで手間を省く。省いた手間は消えるのではなく、読み手の解読と不信に姿を変えて残る。</p>
+          <div class="signals">
+            <h5>検出シグナル</h5>
+            <ul>
+              <li>固定の単語リストでは捕まえにくい。略し方は無限に生まれるため、辞書の追いかけっこになる</li>
+              <li>観点は語そのものではなく、<b>タイトルの情報密度の低さ</b>と<b>初見で意味が取れない短縮語の比率</b></li>
+              <li>VLM／LLMに「このタイトルは初見の人に伝わるか」を聞く用途に向く型</li>
+              <li>フィルタとしては弱いシグナル。単独では加点せず、他の煽り要素との組み合わせで見る</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article class="card" id="p10">
+        <div class="card-head">
+          <div class="pnum" style="background:var(--p10)">P10</div>
+          <div>
+            <h3>台本対話・生徒役型 ― 無知なサポート役に語らせる自作自演の講座</h3>
+            <div class="sub">一人芝居を二人で演じると「自然な会話」に見える</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <h4>観察</h4>
+          <p>自分を撮影し、隣に「サポート役・聞き手役」を置いて語らせる形式の講座動画がある。サポート役は決まって無知な役回りで、「えっ、そうなんですか!?」「知らなかったです!」と驚き続け、語り手の自分は知識豊富な先生として際立つ。実質は台本のある一人芝居を二人で演じているだけで、とても胡散臭い――というのがこの型への観察である。</p>
+          <h4>型の名前について</h4>
+          <p>一般には「生徒役・聞き手役を置いた対話形式」と呼ばれる売り方で、聞き手は視聴者の代理として機能する。視聴者が言うはずの驚きや疑問を、聞き手が先に言ってくれる装置である。実態に即した呼び方としては「台本対話型」「やらせ対話型」が合う。</p>
+          <h4>なぜ効くのか（＝なぜ胡散臭さと表裏なのか）</h4>
+          <ul>
+            <li>独演だと押し付けがましい説明が、対話の形だと「自然な会話」に見える</li>
+            <li>聞き手の驚きが、「この話は驚く価値がある」という社会的証明の代わりになる</li>
+            <li>質問が仕込みなので、都合の悪い疑問は永遠に出てこない。反論や検証が構造的に存在しない</li>
+          </ul>
+          <p>裏を返せば、驚きが一定のリズムで機械的に挿入されること、疑問がすべて語り手の都合のよい方向にしか進まないことが、この型の見分け方でもある。</p>
+          <h4>サムネイル・形式の特徴</h4>
+          <p>語り手と聞き手の2ショットが基本形。聞き手は驚いた表情、語り手は指し棒やホワイトボードとともに収まることが多い。同じ聞き手がシリーズを通して毎回登場するのも特徴。</p>
+          <div class="signals">
+            <h5>検出シグナル</h5>
+            <ul>
+              <li>タイトル・チャンネル名だけでは判別しにくい型。<b>形式の特徴</b>で見る：同じ聞き手が毎回出る、2ショット講座の体裁</li>
+              <li>概要欄の講座案内・LINE誘導とセットになっていることが多く、<b>P1（情報商材・LINE誘導型）の演出部品</b>として使われることが多い</li>
+              <li>VLMに聞く観点：「講師と生徒役の2ショットか」「驚きの表情の聞き手が配置されているか」</li>
+              <li>対話形式そのものは正当な教育手法でもある。P1のシグナルと重なったときに、この型として数える</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article class="card" id="p11">
+        <div class="card-head">
+          <div class="pnum" style="background:var(--p11)">P11</div>
+          <div>
+            <h3>身内ノリ発信・厚顔無恥型 ― ○○先生・○○くん・○○ちゃん</h3>
+            <div class="sub">身内の呼び名が、公共の場では「看板」に変わる</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <h4>観察</h4>
+          <p>○○先生、○○くん、○○ちゃんといった、身内の間での呼び名やノリを、そのまま全世界に向けて発信してしまう型。本人たちは身内の距離感のつもりでも、外から見ると場違いで厚顔無恥に見える――というのがこの型への観察である。</p>
+          <h4>分析の軸</h4>
+          <ul>
+            <li>身内の呼び名は本来「関係性の合図」。内輪では親しさの表現でも、公共の場では自己演出として働く。先生＝権威の看板（P4と接続する）、くん／ちゃん＝キャラクターの看板である</li>
+            <li>匿名掲示板の時代、「中の人のノリ」は内側に閉じていた。それが顔出し・キャラ経済の時代には、看板として表に出てきた。呼び名の公共化は、その時代の変化として読める</li>
+            <li>発信者側に悪意はなく、距離感の切り替えスイッチがないだけ、というケースも多い。型として観察する対象は「ノリ」そのものより「内と外の境界のなさ」の方である</li>
+          </ul>
+          <h4>タイトル・チャンネル名の特徴と典型例</h4>
+          <ul class="examples">
+            <li>チャンネル名：「○○先生のゆるっと講座」「○○くんのゲーム部屋」「○○ちゃんねる」</li>
+            <li>タイトル内で自分や仲間を「○○先生」「○○くん」と三人称的に呼び続ける</li>
+            <li>内輪のあだ名・内輪ネタが、説明なしにタイトルの前提になっている</li>
+          </ul>
+          <div class="signals">
+            <h5>検出シグナル</h5>
+            <ul>
+              <li>チャンネル名・タイトルに含まれる自称パターン。正規表現では <code>/(先生|くん|ちゃん)$/</code> のようなチャンネル名の末尾や、タイトル内の自称を拾う</li>
+              <li><b>注意点</b>：教育・子ども向けなど、正当な用法も非常に多い。単独では弱いシグナルとして扱い、他の型（P1・P4など）との組み合わせで見る</li>
+              <li>P4（権威・肩書き演出型）のうち「先生」の自称は、この型と重なる領域にある</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article class="card" id="p12">
+        <div class="card-head">
+          <div class="pnum" style="background:var(--p12)">P12</div>
+          <div>
+            <h3>丁寧なのにヤバいが滲む型 ― 言葉遣いの丁寧さと中身の極端さの落差</h3>
+            <div class="sub">汚い言葉を一切使わないのに、端々から湧き出てくるもの</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <h4>観察</h4>
+          <p>話し方は丁寧で穏やかなのに、話の中身や価値観の「ヤバさ」が端々から湧き出てきてしまう型。表面の言葉遣いはきれいなので一見まともに見えるが、よく聞くと、確信の強さ、極端な主張、他者への攻撃性や支配的な優しさなどが滲み出ている。</p>
+          <h4>なぜ厄介か</h4>
+          <ul>
+            <li><b>キーワードフィルタがまったく効かない。</b>汚い言葉も煽り単語も使わないので、表面的な判定（P3やP8の単語マッチ）では素通りする</li>
+            <li>丁寧さが免罪符のように働く。「こんなに丁寧に話す人の言うことなら」と警戒が下がる分、むしろ素朴な煽りより入り込みやすい</li>
+            <li>タイトルやサムネも地味なことが多く、P6の視覚シグナルでも拾えない</li>
+          </ul>
+          <h4>滲み出るサインの例</h4>
+          <ul>
+            <li>穏やかな口調のまま断言する、極端な予言・警告</li>
+            <li>丁寧語でのマウントや見下し（敬語の形をした序列の確認）</li>
+            <li>優しい言葉で相手の行動を縛る言い回し（心配の形をした支配）</li>
+            <li>謝罪や謙遜の形を取りながら、一切譲らない主張</li>
+          </ul>
+          <p class="small">※ いずれも言い回しの型の例示であり、特定の個人や団体を指すものではない。</p>
+          <div class="signals">
+            <h5>検出シグナル</h5>
+            <ul>
+              <li>この型は<b>意味でしか判定できない</b>。検出はLLM／VLM担当とはっきり位置づける</li>
+              <li>判定の観点は落差そのもの：「言葉遣いの丁寧さ」と「主張の極端さ・確信度」の差が大きいほど、この型の疑いが強い</li>
+              <li>段階判定パイプライン（キーワード → 顔面積 → OCR → 意味判定）の中で、<b>最後の意味判定が存在する理由を一番よく示す型</b>である。速い段をすべて素通りするものが、最後の段の担当になる</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <!-- ================= 歌舞伎町モデル ================= -->
+      <h2 id="kabukicho">歌舞伎町モデル ― おすすめ欄は夜の繁華街である</h2>
+      <div class="kabuki">
+        <p>YouTubeのおすすめ欄を眺める感覚は、夜の歌舞伎町を歩く感覚に似ている。派手で下品な看板、客引きの甘い言葉、安さで釣って高く取る手口――その全部が、サムネとタイトルの世界にそのまま存在する。これは比喩であると同時に、構造の対応表としてかなり正確に機能する。</p>
+        <div class="neon-strip" aria-hidden="true">
+          <span style="background:#c2185b">年収1億</span>
+          <span style="background:#7b1fa2">無料で教えます</span>
+          <span style="background:#1565c0">月30万円ポッキリ</span>
+          <span style="background:#c62828">知らないと損</span>
+          <span style="background:#2e7d32">LINE限定特典</span>
+        </div>
+        <p class="small">おすすめ欄の「看板」。隣より目立たなければ埋もれる、という条件は街もネットも同じ。</p>
+
+        <h3>対応表：現実の街 ⇔ ネット</h3>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>現実の街（歌舞伎町）</th><th>ネット（YouTube）</th><th>構造</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>ネオンと派手な看板の競い合い</td>
+                <td>サムネのデカ文字・原色・顔の大きさのエスカレーション（P6）</td>
+                <td>隣より目立たないと埋もれるので、どちらも年々派手になる</td>
+              </tr>
+              <tr>
+                <td>客引きの「2時間飲み放題3,000円ポッキリ」</td>
+                <td>タイトルの「月30万円稼げる」「無料で教えます」（P1・P2）</td>
+                <td>入口の値段・条件は釣りであり、本当の値段は中に入るまで分からない</td>
+              </tr>
+              <tr>
+                <td>入店後の席料・チャージ・勝手な注文の上乗せで、1時間が5万円になるぼったくり</td>
+                <td>LINE登録後の、無料特典 → 限定動画 → 高額教材という段階的な釣り上げ（P1）</td>
+                <td>入口は安く／無料に、出口で高く取る構造が同じ</td>
+              </tr>
+              <tr>
+                <td>客引きと店が紹介料で結ばれている</td>
+                <td>投稿者と販売者（案件・教材側）の収益構造</td>
+                <td>案内する側は、あなたが払う金額から取り分を得る</td>
+              </tr>
+              <tr>
+                <td>「看板やメニューの隅の小さい文字に書いてある」という言い訳</td>
+                <td>概要欄の隅や、限定条件の小さな注記</td>
+                <td>不利な条件ほど、小さく、遠くに書かれる</td>
+              </tr>
+              <tr>
+                <td>ポストに「チラシ・広告お断り」と書いてあるのに、無理やり広告の紙を入れてくる業者</td>
+                <td>「興味なし」を押しても、似たものが何度も戻ってくるおすすめ欄の強制表示</td>
+                <td>意思表示は存在するのに、破る側にコストがなく、手間は全部受け手の負担になる</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>「お断り」が効かない構造 ― 意思表示の非対称</h3>
+        <p>対応表の最後の行は、他と少し性格が違う。看板や客引きは「攻めてくる側」の手口だったが、これは<b>受け手が意思表示をしているのに、それが尊重されない</b>という話である。</p>
+        <p>玄関のポストに「チラシ・広告お断り」と貼ってある家は少なくない。それでも広告の紙は入ってくる。なぜか。業者にとって、ポストに1枚入れるコストはほぼゼロで、お断りを破っても罰も損失もない。一方、受け手の側にはコストが積み上がる。毎日ポストを確認し、要らない紙をより分け、捨てる手間。「お断り」の意思表示をした側が、むしろ表示した後もずっと手間を払い続ける構造になっている。</p>
+        <p>おすすめ欄の「興味なし」ボタンは、まさにこれと同じである。意思表示の仕組みは用意されている。しかし押しても似たものは戻ってくるし、チャンネル単位で止める手続きは分かりにくい場所にあり、設定の手間は全部こちら持ちだ。そして表示する側には、お断りを無視するコストが一切ない。むしろ表示回数が増えるほど得をする。<b>意思表示は存在する。ただし破る側にコストがなく、守らせる手間と捨てる手間は全部、受け手の負担になる</b>――この非対称こそが、街のポストとおすすめ欄に共通する構造である。</p>
+        <p>だから防御の発想も同じになる。お断りの意思表示が効くのを待つのではなく、自分の側に仕分けの仕組み（ポストなら分別、ネットならフィルタ）を持つしかない。この研究では今後も、<b>ネットの現象には常に現実世界の対応物を重ねて考える</b>方針を取る。対応物が見つかる現象は、構造が理解できた現象だからである。</p>
+
+        <h3>制度の差：街には条例がある、ネットには自衛しかない</h3>
+        <p>現実の歌舞伎町には、客引きを禁じる東京都の迷惑防止条例や、料金の不当な表示・取り立てを規制するぼったくり防止条例（指定区域が対象）がある。弁護士ドットコムの解説では、「1時間3,000円で飲み放題、追加料金なし」と言われて5万円を請求されるケースが例示されている。それでも検挙は年10数件程度にとどまり、手口は巧妙化しているという。</p>
+        <p>一方ネット側は、プラットフォームのガイドライン頼みで、個別の「釣り」への実効的な取り締まりはほぼ期待できない。実質的には自衛が中心になる。だからこそ、パターンを知り、自前のフィルタを持つことが要る――というのがこの図鑑の結論である。</p>
+        <p class="small">出典：<a href="https://www.bengo4.com/c_8/n_2314/" target="_blank" rel="noopener">弁護士ドットコム「ぼったくり防止条例」解説</a></p>
+
+        <h3>現実のフィルタリングにも使える</h3>
+        <p>面白いことに、街での防御とネットでの防御は同じ型をしている。「パターンを見抜く目」は、街でもネットでも同じ一つの技能である。</p>
+        <div class="vs-grid">
+          <div class="col">
+            <h4>街での防御</h4>
+            <ul>
+              <li>客引きと目を合わせない・反応しない・立ち止まらない（反応が「見込み客」の合図になる）</li>
+              <li>看板の金額を信じず、相場を先に知っておく</li>
+              <li>入る前に料金表示を確認する</li>
+              <li>連れて行かれる店ではなく、自分で選んだ店に入る</li>
+            </ul>
+          </div>
+          <div class="col">
+            <h4>ネットでの防御</h4>
+            <ul>
+              <li>サムネに反応しない（クリックが「見込み」の合図になり、似たものが増えて戻ってくる）</li>
+              <li>タイトルの数字を相場感で疑う</li>
+              <li>概要欄の誘導に乗らず、自分で検索して選ぶ</li>
+              <li>おすすめ欄に連れて行かれるのではなく、自分で選んだチャンネルを見る</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= 検出ルール集 ================= -->
+      <h2 id="rules">検出ルール集 ― フィルタにそのまま使える形</h2>
+      <p>図鑑の各カードで挙げたシグナルを、実装に落とせる形にまとめる。考え方は「1つの強い証拠で即断しない」。弱いシグナルを積み上げ、合計点で段階を分ける。</p>
+
+      <h3>(a) 金額系の正規表現</h3>
+      <pre><code>/(月収|年収|年商)[0-9０-９]+(万|億)/     … 「月収100万」「年収1億」
+/[0-9０-９]+万円(稼|達成)/              … 「300万円稼いだ」
+/年収[0-9０-９]+億/                      … 「年収3億」
+/(たった|わずか)?[0-9０-９]+(ヶ月|か月|日)で/  … 期間の短さ（金額と複合で使用）</code></pre>
+      <p class="small">全角数字（０-９）を含めるのが日本語タイトルでは重要。半角だけだと大半を取りこぼす。</p>
+
+      <h3>(b) LINE誘導系</h3>
+      <pre><code>/(LINE|ライン)(登録|限定|特典|で)/      … 誘導の核
+/概要欄/                                … 単独では弱い。上の表現や金額と組み合わせる
+/(無料|限定|特典|プレゼント)/            … 釣り餌の語彙</code></pre>
+
+      <h3>(c) スコア配点の考え方</h3>
+      <p>シグナルごとに重みを変え、合計で「薄く表示」と「ゴミ箱（隔離リスト）」を分ける。重みは「そのシグナル単独でどれだけ型が確定するか」で決める。</p>
+      <div class="table-scroll">
+        <table class="score-table">
+          <thead><tr><th>シグナル</th><th>根拠</th><th style="text-align:right">点数</th></tr></thead>
+          <tbody>
+            <tr><td>煽り単語 1語（ヤバい、暴露、神回など）</td><td>正当な文脈でも使うため弱い</td><td class="pts">+1</td></tr>
+            <tr><td>「クソ」接頭辞（P8）／略語過多（P9）</td><td>愛称・業界用法があるため単独では加点しない</td><td class="pts">+0（複合時 +1）</td></tr>
+            <tr><td>肩書き語（P4）</td><td>本物の専門家も使うため中程度</td><td class="pts">+2</td></tr>
+            <tr><td>金額の数字表現（P2）</td><td>型の確定度が高い</td><td class="pts">+3</td></tr>
+            <tr><td>顔面積 大（画面の3割以上、P6）</td><td>視覚型の核シグナル</td><td class="pts">+3</td></tr>
+            <tr><td>LINE誘導（P1）</td><td>外へ連れ出す意図が明確で最も重い</td><td class="pts">+4</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="verdict">
+        <div><b>0点：通常表示</b>シグナルなし。そのまま表示する。</div>
+        <div><b>1〜3点：薄く表示</b>怪しいが確定しない。薄く＋クリックブロックで様子見。</div>
+        <div><b>4点以上：ゴミ箱へ</b>通常のフィードから外し、隔離リストで理由つきで見返せるようにする。</div>
+      </div>
+      <div class="note-box">
+        <b>BlockTubeで使う場合。</b>BlockTubeのキーワード欄では、日本語のキーワードを <code>/キーワード/</code> のようにスラッシュで囲むと正規表現として扱われ、日本語が正しくマッチする（囲まないと日本語キーワードが黙って効かないことがある）。上の正規表現もこの形式で流用できる。
+      </div>
+
+      <h3>試し判定 ― タイトルを入れてスコアを見る</h3>
+      <p>このページ内のルールだけで判定する小さな道具。タイトル（と、あればサムネの文字）と顔面積の目安を入れると、上の配点でスコアと内訳を表示する。</p>
+      <div class="tester">
+        <label for="tTitle">タイトル</label>
+        <input type="text" id="tTitle" placeholder="例：スマホ1つで月30万円！詳しくは概要欄のLINEで" />
+        <label for="tThumb">サムネイル内の文字（OCRで読める想定の語）</label>
+        <input type="text" id="tThumb" placeholder="例：無料特典 年収1億" />
+        <label for="tFace">顔面積の目安</label>
+        <select id="tFace">
+          <option value="0">顔なし／小さい（画面の3割未満）</option>
+          <option value="3">大きい（画面の3割以上）+3</option>
+        </select>
+        <button type="button" id="tBtn">判定する</button>
+        <div id="testResult" aria-live="polite"></div>
+      </div>
+
+      <!-- ================= 研究の進め方 ================= -->
+      <h2 id="loop">研究の進め方 ― ゴミ箱ログから法則を学ぶ</h2>
+      <p>この図鑑は完成品ではなく、育てる前提の資料である。フィルタが隔離したもの（ゴミ箱ログ）を定期的に見返すことで、新しい型が見つかり、ルールが増え、誤判定が減る。そのループが研究の本体になる。</p>
+      <ol class="loop-steps">
+        <li><b>隔離して、消さない</b><span>フィルタしたものはタイトル・チャンネル・サムネURL・顔面積・OCR結果・マッチしたキーワードをJSONで記録し、理由つきで見返せる状態に残す。完全に消すと、検証も学習もできなくなる。</span></li>
+        <li><b>集計して偏りを見る</b><span>ログを集計すると、どの単語・どの金額表現・どの構図が繰り返し現れるかが見える。プラットフォームが「感情を揺らす型」として配っているものの偏りが、ゴミ側に濃縮されて現れる。</span></li>
+        <li><b>新しい型を図鑑に足す</b><span>既存のP1〜P12に当てはまらない繰り返しを見つけたら、新しいパターンとして名前を付け、検出シグナルと一緒にこの図鑑とルール集へ追加する。</span></li>
+        <li><b>誤判定を拾って例外を育てる</b><span>真面目な経済ニュースの金額表記、愛称としての「クソゲー」、本物の専門家の肩書きなど、正当なものまで巻き込んでいたら、それはルールの側の問題。例外リストと配点の調整で、フィルタの精度そのものを育てる。</span></li>
+      </ol>
+      <h3>ゴミ箱ログ（JSON）の記録例</h3>
+      <pre><code>{
+  "title": "スマホ1つで月30万円｜詳しくは概要欄のLINEで",
+  "channel": "（チャンネル名）",
+  "thumbnail": "（サムネイルURL）",
+  "faceRatio": 0.42,
+  "ocr": ["月30万円", "無料特典"],
+  "matched": ["金額:月30万円", "LINE誘導", "顔面積大"],
+  "score": 10,
+  "verdict": "ゴミ箱"
+}</code></pre>
+      <p>この形式で残しておけば、あとから「どのシグナルが一番効いているか」「どの型が増えているか」を機械的に数え直せる。感想ではなく集計でフィルタを育てるための設計である。</p>
+
+      <!-- ================= お断りリストと突破ログ ================= -->
+      <h2 id="breach">お断りリストと突破ログ ― 強制力を測る</h2>
+      <p>フィルタ研究の土台には、もう一つ前提がある。<b>「お断りリスト」――見たくないものを明示したリストを、このツールではいつでも簡単に可視化できる仕組みにする</b>ということだ。お断りは気分や好みの揺れではなく、明示的な意思表示である。だから「なんとなく見たくない」のではなく、<b>何を断ったかが一覧として見えること自体が前提</b>になる。リストが見えなければ、後で検証もできなければ、突破されたことにすら気づけない。</p>
+      <h3>突破は、それだけで悪質とみなす</h3>
+      <p>お断りリストに一致するのに表示されてきた情報は、内容の良し悪しを問わず、<b>それだけで悪質とみなす</b>。言い換えると「突破事例」として記録する。理由は単純で、お断りは既に表明済みの意思だからだ。通常のコンテンツなら「合わなかった」で済むが、お断りを踏み越えてきたものは、受け手の意思を無視して届けられたという点で性質が違う。ゴミ箱ログとは別に、突破ログとして残す価値がある。</p>
+      <h3>突破の数と割合が、強制力の指標になる</h3>
+      <p>突破の回数や割合は、そのプラットフォームのアルゴリズムの<b>強制力の強さを測る指標</b>になる。現実の対応物で言えば、「広告お断り」と貼ったポストに何枚チラシが入っていたかを数えるのと同じである。1枚なら偶然やミスかもしれないが、数えて割合が見えてくれば、それは業者の悪質さそのものが数字になったものだ。感覚で「しつこい」と感じるのではなく、<b>数えることで強制の強さが測定可能になる</b>。</p>
+      <div class="note-box">
+        <p style="margin:0 0 8px"><b>pull型とpush型では、突破の起き方が違う。</b></p>
+        <p style="margin:0 0 8px">自分で選んだ情報源だけを集める<b>pull型のミニインターネット</b>では、突破は情報源側の都合で起きる。購読した先が方針を変えた、別のものを混ぜてきた、という形で、送り手はあくまで情報源である。</p>
+        <p style="margin:0">一方、<b>push型のおすすめ</b>では、プラットフォーム自体が「興味なし」などの設定を乗り越えてくる。情報源ではなく、配達の仕組みそのものがお断りを無効化する。だからpush型の突破は、単なるマッチングの失敗ではなく、<b>設定より配信を優先する設計の表れ</b>として数える意味が大きい。</p>
+      </div>
+      <p>お断りリストを可視化し、突破を数える。この二つが揃って初めて、「強制されている」という感覚は、検証できる研究対象になる。</p>
+
+      <!-- ================= 例外リスト ================= -->
+      <h2 id="exception">例外リスト ― 「この人だけは見る」の設計</h2>
+      <p>フィルタがどれだけうまく効くようになっても、必ず出てくるのが<b>個人的な例外</b>である。「ほとんどの煽り動画は要らない。でも、この人だけは見たい」――この気持ちは、フィルタの失敗でも矛盾でもない。むしろ例外をどう扱うかまで設計して初めて、フィルタは自分の道具になる。お断りリストと対になる仕組みとして、ここに<b>例外リスト</b>の設計を置く。</p>
+
+      <h3>1. パターンは「型」への判定、例外は「人」への信頼</h3>
+      <p>例外が矛盾に見えない理由は、判定の対象が違うからだ。この図鑑のパターン判定が裁いているのは<b>「型」</b>である。金額の見せ方、誘導の構造、サムネの作り――繰り返し現れる手口そのものを相手にしている。一方、例外の根拠は<b>「人」への信頼</b>である。「この人の動画は、多少型に触れていても中身で判断したい」という、特定の相手に対する評価だ。型への判定と人への信頼は別の層にあるので、両立しても何もおかしくない。</p>
+      <p>現実の対応物で言えば、繁華街の看板の話と同じである。通りの派手な看板は全部信用しなくても、<b>顔なじみの店には入る</b>。あれは看板の派手さを許したのではなく、店主という人を選んでいる。ネットでも同じで、例外は「この手口は良い」と言っているのではなく、「この人は見る」と言っているにすぎない。</p>
+
+      <h3>2. 優先順位は「具体的な意思表示ほど強い」</h3>
+      <p>判定がぶつかったときの優先順位は、意思表示の具体さで決める。<b>具体的なものほど強い</b>、が原則である。</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>順位</th><th>意思表示</th><th>内容</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1（最強）</td><td><b>例外</b> ― この人を見る</td><td>特定の人（チャンネル）への、名前を挙げた意思表示</td></tr>
+            <tr><td class="num">2</td><td><b>お断り</b> ― この話題は見ない</td><td>話題・単語への意思表示。例外より対象が広い分、一つ下に置く</td></tr>
+            <tr><td class="num">3</td><td><b>パターンのスコア</b></td><td>型の集計による機械的な判定。意思表示ではなく推定なので最下位</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>したがって、例外リストに入れた人の動画がお断り単語に触れても、<b>表示する</b>。人への意思表示が、話題への意思表示に勝つからだ。ただし、ここで黙って通してはいけない。通過した事実は<b>「例外で通過」としてログに記録する</b>。例外はフィルタの穴ではなく、記録された上での通過でなければならない。記録がなければ、例外がどれだけ働いているのか、後から検証できなくなる。</p>
+
+      <h3>3. 例外中であることは、常に見えるようにする</h3>
+      <p>例外で表示されている動画には、カードに<b>「例外中」の印</b>を付ける。今見ているのはフィルタが良しとしたからではなく、自分の例外指定で見ているのだと、常に分かる状態にする。印がなければ、「なぜこれは表示されているのか」が分からなくなり、フィルタ全体への信頼が崩れる。</p>
+      <p>そして例外リスト自体も、お断りリストとまったく同じ扱いにする。<b>いつでも一覧で可視化できることが前提</b>である。誰を例外にしているかが見えなければ、例外は「なんとなく通っているもの」に化けてしまう。可視化されて初めて、例外は意思表示として成立する。</p>
+
+      <h3>4. 例外は取り消し前提で、見返しの対象にする</h3>
+      <p>例外は一度入れたら終わりの勲章ではない。<b>取り消し前提</b>で運用する。ゴミ箱の見返しのときには、隔離されたものだけでなく、<b>例外で通過したものも一緒に並べて点検する</b>。「最近この人の動画、結局つまらなくなっていないか」「例外のままにしておく理由はまだあるか」を、通過ログを見ながら判断する。信頼が更新されるものなら、例外も更新されて当然である。</p>
+      <div class="note-box">
+        <p style="margin:0">例外はルールを破ることではない。<b>ルールの上に、自分の判断の席を確保する設計</b>である。フィルタの最上位にいるのはスコアでもお断りでもなく、最後は自分の判断だ――例外リストは、その判断を明示的な形にしたものにほかならない。</p>
+      </div>
+
+      <!-- ================= 結局、発信者で判断する ================= -->
+      <h2 id="creator">結局、発信者で判断する ― メディア共通の問題と、公共の電波の立て直し</h2>
+      <p>例外リストの話を一歩先へ進めると、結論は意外と昔からある読み方に戻ってくる。<b>最終的に、判断の単位は発信者になる</b>ということだ。媒体の看板ではなく、この記者、この番組の作り手、この発信者――人で選ぶ。その感覚はYouTube時代に突然生まれたものではない。</p>
+
+      <h3>1. 信頼の単位は、看板から人へ下りてきた</h3>
+      <p>マスメディアの時代、信頼の単位は基本的に<b>媒体の看板</b>だった。「あの新聞社だから」「あの放送局のニュースだから」という形で、組織の名前が中身の保証の代わりをしていた。もちろん、その時代にも例外はあった。「新聞社は信用しないが、この記者の記事なら読む」「局はともかく、この人の番組なら見る」という読み方は、昔から普通に存在した。看板の中でも、結局は書き手や作り手で選んでいたのである。</p>
+      <p>変わったのは、その例外の方が主役になったことだ。看板への信頼が崩れるにつれて、<b>判断の単位は組織から個人へ下りてきた</b>。今はチャンネル名やアカウント名ではなく、「この人が言っているかどうか」で読むかどうかを決める場面の方が多い。YouTubeでもニュースでも、起きているのは看板の解体と、個人単位への分解である。</p>
+      <p>この図鑑の言葉で言い直せば、<b>例外リストとは、その個人単位の信頼を仕組みにしたもの</b>だ。「この人だけは見る」は場当たり的な好みではなく、看板が機能しなくなった時代に、読む側が自分で作り直した信頼の単位である。お断りリストが「何を断るか」の明示だとすれば、例外リストは「誰を信じるか」の明示であり、両方そろって初めて、判断の単位が自分の側に戻ってくる。</p>
+
+      <h3>2. 媒体が変わっても、歪む元は共通している</h3>
+      <p>ここで一度、YouTubeだけの問題として見るのをやめてみる。テレビとネット動画は別のものに見えるが、構造を並べると、判断が歪む元は驚くほど共通している。</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>共通の構造</th><th>テレビ</th><th>YouTube</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><b>注意を広告主に売る収益構造</b></td>
+              <td>視聴率を測り、スポンサーに枠を売る</td>
+              <td>クリック率と滞在時間を測り、広告主に表示を売る</td>
+            </tr>
+            <tr>
+              <td><b>測れる数字への最適化</b></td>
+              <td>分単位の視聴率に合わせて編集や編成が寄る</td>
+              <td>滞在時間に合わせてタイトルとサムネが寄る（P6）</td>
+            </tr>
+            <tr>
+              <td><b>速報競争による検証の軽視</b></td>
+              <td>速さを競うあまり、確認前の情報が流れる</td>
+              <td>速さと初動の伸びを競い、検証は後回しになる</td>
+            </tr>
+            <tr>
+              <td><b>受け手に選択肢がなく「割り当てられる」</b></td>
+              <td>編成表は局が決め、視聴者はその中からしか選べない</td>
+              <td>おすすめ欄はアルゴリズムが決め、視聴者は並べられたものからしか選べない</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>ポイントは、<b>「視聴者の注意を広告主に売る」という収益構造そのものは、媒体が変わっても同じ</b>だという点である。テレビではスポンサーと視聴率、YouTubeでは広告と滞在時間が、その役割を担っている。数字の名前は違っても、注意を集めるほど儲かる構造が同じなら、煽りや誇張への圧力も同じ方向に働く。この図鑑で扱ってきた型は、YouTube固有の病気というより、注意を売るメディア全般に共通する圧力が、サムネとタイトルの形で表に出たものだと言える。</p>
+      <p>もう一つ共通するのが、<b>速報競争による検証の軽視</b>である。速いことが評価される仕組みでは、確かめる時間はコストになる。誤りが後から静かに直されても、最初に広がった印象は残る。そして受け手の側には、そもそも選択肢が用意されていない。編成もおすすめも、こちらが頼んだものではなく<b>割り当てられたもの</b>の中から選ばされている。その「割り当て」の感覚こそが、媒体をまたいで共通する窮屈さの正体である。</p>
+
+      <h3>3. 公共の電波は、役割を果たしているか</h3>
+      <p>テレビの側には、ネットにはないはずの前提があった。<b>電波は本来、公共のもの</b>だという前提である。使える周波数には限りがあるため、国が免許で利用を割り当てる。その代わり、電波を使う事業には公共的な役割が期待されてきたはずだった。</p>
+      <p>ところが現実には、免許制であるがゆえに<b>新規参入はほぼ閉ざされ、既存の事業者が長くその座に居続ける構造</b>になっている。公共の資源が、結果として既得権益の側に固定される。競争による入れ替えが起きにくければ、看板への信頼が下がっても、編成や姿勢が大きく変わる圧力も働きにくい。公共の電波が本来の役割を果たしていない、という不満の根はここにある。特定の局や個人の問題としてではなく、<b>入れ替えの起きない免許の構造</b>として見るべき話である。</p>
+      <p>ここから出てくる見立ては率直だ。<b>本来、テレビメディアがもっとまともなら、ここまでYouTube依存にはならなかったはずだ</b>、というものである。人々がネット動画へ流れたのは、ネットが全面的に優れていたからだけではない。公共の電波の側が、検証の丁寧さでも、受け手への尊重でも、期待に応え続けてこなかった結果、見る場所が移ったという面が大きい。移った先のYouTubeでも同じ収益構造が待っていた、というのが皮肉な二重構造である。逃げ場を変えても、注意を売る仕組みからは逃げられていなかった。</p>
+
+      <h3>4. 立て直しの方向 ― 民主化が止まった場所を取り戻す</h3>
+      <p>では、どこから立て直すのか。手がかりは、ネットが既に達成したことと、達成できなかったことを分けて考えることにある。</p>
+      <p><b>発信の民主化自体は、ネットが達成した。</b>今は誰でも記事を書き、動画を出し、配信できる。かつて免許と設備がなければ届かなかった「出す側」に、普通の人が立てるようになった。これは本物の変化である。問題はその先にある。<b>流通（おすすめ）の層が、再び一社のアルゴリズムに握られた</b>ことだ。誰でも発信はできる。しかし何が誰に届くかは、一つのおすすめの仕組みがほぼ決めている。民主化は発信側で進んだのに、流通側で逆戻りした――この非対称が、今の状態を一番よく説明する。</p>
+      <div class="note-box">
+        <p style="margin:0 0 8px"><b>発信は開かれた。流通は閉じた。</b></p>
+        <p style="margin:0">出す自由は広がったのに、届くかどうかは一社の並べ方次第。この図鑑の型が栄える土壌は、発信側の自由ではなく、流通側の集中の方にある。</p>
+      </div>
+      <p>立て直しの方向は、その逆である。<b>流通の層に、受け手の選択肢を取り戻す</b>こと。具体的には、おすすめのアルゴリズムを一つに固定せず選べること、自分のフィルタを自分の側に持てることである。この図鑑と、お断りリスト・例外リスト・ゴミ箱ログを育てるフィルタ研究そのものが、その最小単位の実践にあたる。他人の並べ方を待つのではなく、自分の並べ方を持つという点で、例外リスト（誰を信じるか）とフィルタ（何をどう並べるか）は同じ方向を向いている。</p>
+      <p>もう一つの展望として、<b>公共的な流通の担い手</b>の可能性も残しておきたい。電波の時代に公共性が期待されたのは、発信の層だった。これからは、流通の層――何をどう届けるか――にこそ、広告の圧力から距離を置いた担い手が要るのかもしれない。それが既存の公共放送の刷新なのか、新しい形の仕組みなのかは、まだ答えがない。ただ、少なくとも個人の側では、答えを待たずに始められることがある。発信者で判断し、自分のフィルタで並べ替えることだ。看板が崩れ、流通が一社に握られた時代に、判断の単位を自分の手に戻す――例外リストから始まった話は、結局そこに行き着く。</p>
+
+      <h3>5. 競争が働いていない ― 動画はYouTube一択の現実</h3>
+      <p>ここで素朴な疑問が残る。「気に入らなければ、他のサービスに移ればいいのではないか」という疑問である。市場が正常なら、質の悪いサービスは利用者に見限られ、競争が自浄作用を働かせるはずだ。ところがネット動画については、この前提自体が成り立っていない。<b>移る先が、実質的に存在しない</b>のである。</p>
+      <p>代替とされるものを見ていくと、受け手の逃げ場になっていないことが分かる。短尺の縦動画が中心のサービスは、形式も楽しみ方も別物で、長尺の解説や記録を探す層にとっては置き換えにならない。かつて存在感のあった国内の動画サービスは勢いを失い、投稿も視聴も細った。結果として、ネット動画は実質YouTube一択であり、<b>「一択であること」自体が問題</b>なのだ。特定のサービスを名指しで非難する話ではない。選択肢が形だけ残って実質がないとき、競争原理は名前だけのものになる。</p>
+      <p>なぜ競争が働かないのか。理由はいくつか重なっている。</p>
+      <ul>
+        <li><b>無料なので、価格競争にならない。</b>利用者は対価を払っていないため、「高い・安い」で比べる土俵が存在しない。競争の土俵は価格ではなく、動画カタログの量と、おすすめ（アルゴリズム）の精度になる。</li>
+        <li><b>ネットワーク効果が複利で効く。</b>見る人が多いところに作る人が集まり、作る人が多いところに見る人が集まる。その循環の中で、視聴履歴や推薦データの蓄積の差も積み上がっていく。データが多ければおすすめは賢くなり、おすすめが賢ければ人は離れない。先行者の優位は努力ではなく構造として自動的に強くなり、後発は同じ土俵に上がる前に差が開き続ける。</li>
+        <li><b>インフラのコストが参入の壁になる。</b>動画は文字や画像と違い、帯域と保存容量の費用が桁違いに大きい。無料で世界中に配信し続ける体力自体が、事実上の免許のように新規参入を絞っている。</li>
+      </ul>
+      <p>現実の対応物を並べると、この構造は珍しくない。町に一つしかないショッピングモールは、店子の評判が悪くても客が来るしかない。免許で守られた放送の寡占も同型で、前節で見た<b>公共の電波の固定化とまったく同じ問題</b>である。流通が寡占のとき、競争による自浄作用は起きない。利用者の不満は「移る」という形で届かないため、提供側に直す理由も生まれない。おすすめの質が長年改善しないのは、怠慢というより、この構造の当然の帰結として読める。</p>
+      <p>だとすれば、結論ははっきりしている。<b>競争に期待できない以上、対抗手段は受け手の側に作るしかない。</b>第一に、この図鑑の主題である<b>窓（フィルタ）を自分で持つこと</b>。流通を握る側の並べ方をそのまま受け取るのではなく、自分の側で並べ直す。第二に、<b>RSSのような開かれた規格で購読し、プラットフォームを移れる状態を保つこと</b>である。購読の関係が特定サービスの内側に閉じていれば、移る自由は言葉の上だけのものになる。開かれた規格でつながっていれば、受け手の側の関係は持ち運べる。窓を自分で持つことと、移れる状態を保つこと――この二つは、ロックインを弱めるための、個人にできる現実的な対抗手段である。</p>
+
+      <h3>6. OSの独占との共通点 ― Windows/OfficeとYouTube</h3>
+      <p>この「競争が働いていない」構造は、動画に限った話ではない。長く事実上の標準であり続けたOSとオフィスソフトの世界にも、同じ形が先に現れている。特定の企業を名指しで責める話ではなく、<b>独占が固定化したときに何が起きるか</b>という構造の分析として並べてみる。</p>
+      <p><b>独占が固定化すると、製品は利用者のためではなく、売る側の都合で変わるようになる。</b>OSの側では、広告の表示、利用データの収集、強制的な更新、アカウント作成の強制、使わない新機能の押し込みが、その例として挙げられる。YouTubeの側では、「興味なし」を押しても形を変えて戻ってくるおすすめが対応する。どちらも本質は同じで、<b>「お断りが効かない」構造</b>である。逃げ場がないと分かっているからこそ、断られても押し続ける所作が成り立つ。お断りリストの節で見た非対称は、ここでもそのまま当てはまる。</p>
+      <p>離れにくさの作り方――ロックイン――も対応している。</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th></th><th>人質になるもの</th><th>離れにくさの正体</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><b>Office</b></td>
+              <td>ファイル形式（docx／xlsx）が事実上の標準であること</td>
+              <td>他人とファイルをやり取りする以上、互換性が人質になる。自分だけ別の形式に移っても、受け渡しで困る</td>
+            </tr>
+            <tr>
+              <td><b>YouTube</b></td>
+              <td>登録チャンネル・再生履歴・おすすめの蓄積</td>
+              <td>長年かけて育った購読と履歴が人質になる。移る先では、蓄積がゼロからになる</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p><b>競争が止まると、競う物差し自体が変わる</b>点も共通している。OSは本来、軽さや安定さで競うべきところを、新機能をどれだけ押し込めるかで競うようになった。今のOSが「酷い」と言われる理由の一端はここにある。動画も同じで、面白さや確かさではなく、滞在時間で競っている。物差しがずれれば、製品の変わり方もずれるのは当然の帰結である。</p>
+      <p>そして根底にある共通点は、<b>利用者が顧客である前に「囲い込みの対象」として扱われる</b>ことだ。長く囲いの中に留めることが目的になれば、使い心地やお断りの尊重は、優先順位として後ろに下がる。問題は個々の機能の良し悪しではなく、その順位付けの方にある。</p>
+      <div class="note-box">
+        <p style="margin:0 0 8px"><b>OSでは、答えは既に出ている。</b></p>
+        <p style="margin:0">この図鑑の読み手自身は、OSについては既に一つの答えを実践している。Linux／NixOSへ移り、自分の環境を自分で宣言して持つことで、「割り当てられた環境」から抜けたのである。<b>ミニインターネットは、その情報摂取版にあたる。</b>夜間に集め、深さを自分で決め、お断りと例外を自分のリストで持つ――OSでやったことを情報でもやる。それが、この研究全体の位置づけである。</p>
+      </div>
+
+      <h3>7. 独占と囲い込みの歴史 ― 一番損をするのはエンドユーザー</h3>
+      <p>前節で見た構造は、OSに限った話ではない。独占ができると囲い込みが進み、最後に一番損をするのはエンドユーザーになる――この分配は、歴史上ほぼ毎回同じ形で繰り返されてきた。</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>独占の形</th><th>握られたもの</th><th>人質になったもの</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><b>鉄道の独占</b></td>
+              <td>運賃と沿線の商い</td>
+              <td>移動そのものと、沿線で暮らし商うこと</td>
+            </tr>
+            <tr>
+              <td><b>電話の独占</b></td>
+              <td>回線と接続の条件</td>
+              <td>「つながること」自体</td>
+            </tr>
+            <tr>
+              <td><b>OSの独占</b></td>
+              <td>ファイル形式と操作の慣れ</td>
+              <td>蓄積したファイルと、身についた慣れ</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>形は違っても、<b>損をする順番は同じ</b>である。囲い込みの利益は囲う側に残り、コストは末端へ寄っていく。</p>
+      <p>なぜ末端が一番損をするのか。作る側には、まだ退路がある。別の媒体で出す、別の仕事に移る、という選択肢が残っている。広告主にも、別の出稿先がある。ところが受け手は違う。移ろうとすれば、履歴・ファイル・つながりといった<b>蓄積を全部置いて出る</b>しかない。逃げ場が一番狭く、声を上げる手段も一番弱い位置にいるからこそ、コストの行き先になりやすい。</p>
+      <p>囲い込みの入り口も、歴史を通して共通している。最初から不便で強引なものは、人は寄ってこない。囲い込みは、<b>最初は便利さの顔をして入ってくる</b>。</p>
+      <div class="story-flow">
+        <span class="node">便利だから集まる</span><span class="arr">→</span>
+        <span class="node">集まったから人質になる</span><span class="arr">→</span>
+        <span class="node hot">人質になったから酷いことができる</span>
+      </div>
+      <p>便利さ自体が悪いわけではない。問題は、集まった後の蓄積が持ち出せなくなることの方にある。蓄積が人質になった時点で、条件を悪くされても離れられない、という関係が完成する。</p>
+      <p>だから対抗手段は、囲い込みの強さを競うことではなく、<b>「人質を作らない」形に寄せること</b>になる。RSSのような開かれた規格で購読する、標準的なファイル形式で持ち運べる状態を保つ、環境を自分で宣言して再現できるようにしておく。どれも地味だが、蓄積を自分の側に残すための実務である。この点で、開かれた規格を保つことは、ミニインターネットの実践や、Linux／NixOSで環境を自分で持つ実践と地続きである。独占そのものを名指しで断罪する話ではなく、どの時代でも末端に寄ってきたコストを、自分の側では受け取らないための形の話として読んでほしい。</p>
+
+      <!-- ================= 締め：なぜアルゴリズムは直らないのか ================= -->
+      <h2 id="essence">なぜアルゴリズムは直らないのか ― 地獄の本質</h2>
+      <p>ここまで12の型を並べてきたが、最後に一番大きな話をしておく。この図鑑が扱ってきた煽りの最大の原因は、投稿者一人ひとりのモラルではない。<b>おすすめアルゴリズムの設計そのもの</b>である。ここがちゃんと機能していれば、利用者はこんなに苦労せずに済むはずだった。にもかかわらず、なぜGoogleはこの状態を放置し続けるのか。その答えが、今のネットの地獄の本質だと言ってよい。</p>
+
+      <h3>1. 最適化されているのは「満足」ではなく「滞在時間」</h3>
+      <p>YouTubeのおすすめが最大化しようとしているのは、視聴者の満足や動画の質ではない。<b>クリック率と視聴時間、つまりプラットフォームへの滞在時間</b>である。そして滞在時間は、そのまま広告の表示回数＝広告収入に直結する。</p>
+      <p>この指標のもとでは、煽りは「モラルの低下」ではなく<b>指標への合理的な適応</b>である。クリックされるタイトル、最後まで見させる構成、次も押させるサムネ――それらが数字を伸ばす以上、投稿者がそちらへ寄っていくのは当然の帰結だ。歌舞伎町の看板が隣より派手になっていくのとまったく同じ構造で、看板を地味にした店から先に埋もれていく。悪いのは個々の看板ではなく、「派手な看板ほど得をする」と決めている通りの設計の方である。</p>
+
+      <h3>2. ポリシーは「煽りそのもの」を禁じていない</h3>
+      <p>プラットフォームのポリシーが禁じているのは、原則として<b>「動画に含まれていないものを、あると思わせる」悪質なクリックベイト</b>――つまり約束した中身が存在しない詐欺的な釣りだけである。</p>
+      <p>裏を返せば、<b>誇張した表現、変顔、デカ文字、赤丸や矢印そのものは違反ではない</b>。中身が約束に一応応えていれば、どれだけ下品に煽っても規約の内側に収まる。取り締まりとされるものも、削除やアカウント停止のような強い措置ではなく、サムネイルの差し替え、広告制限、おすすめでの露出低下といった<b>「静かな減速」</b>が中心だ。煽りは「バレなければセーフ」なのではなく、<b>約束さえ守れば今も合法な設計</b>として残り続けている。</p>
+
+      <h3>3. 直せば直すほど、プラットフォームは損をする</h3>
+      <p>ではなぜ直さないのか。理由は単純で、<b>直すと滞在時間が減り、広告収入が減るから</b>である。煽りを本気で排除すれば、クリックも再生時間も目減りする。それは利用者にとっての改善であると同時に、経営にとっては売上の減少である。</p>
+      <p>もう一つ、測定の問題がある。<b>満足度は測りにくく、クリックと時間は測りやすい。</b>組織の中で繰り返し起きるのは、測れるものが目的そのものにすり替わる現象だ。「良いおすすめを作る」という曖昧な目標は、やがて「クリック率と視聴時間を上げる」という測れる目標に置き換わり、その目標に最適化された結果が今のおすすめ欄である。</p>
+      <p>そして広告モデルの根本として、<b>顧客は広告主であり、商品は利用者の注意（アテンション）</b>である。利用者は客ではなく、在庫として数えられる側にいる。在庫の居心地を良くすることより、在庫を長く棚に留めておくことの方が、設計の優先順位として上になる。地獄が直らないのは、誰かが怠けているからではなく、<b>直す動機が構造の中に存在しない</b>からである。</p>
+
+      <h3>4. 締め ― 地獄はバグではなく仕様である</h3>
+      <div class="note-box">
+        <p style="margin:0 0 10px"><b>地獄はバグではなく仕様である。</b>設計通りに動いた結果がこの状態なら、プラットフォームの改善を待つのは筋が悪い。待っている間も、こちらの注意は商品として数えられ続ける。</p>
+        <p style="margin:0">だから答えは、自分の側にフィルタ――見るための「窓」――を持つことになる。この図鑑と、ゴミ箱ログを育てるフィルタ研究が存在する理由はそこにある。プラットフォームは変えられなくても、自分の窓は変えられる。ディストピアモード道場の締めの言葉を借りれば――<b>「世界がどう見えるかは、どの窓から見るかで決まる」</b>。おすすめ欄という他人の窓から世界を眺めるのをやめ、自分の窓を持つ。それが、この地獄に対する現実的な回答である。</p>
+      </div>
+
+      <!-- ================= 最終章：独占はどう終わるのか ================= -->
+      <h2 id="monopoly">独占はどう終わるのか ― 歴史と、AI時代の機会</h2>
+      <p>前の章で見た通り、おすすめの地獄は「直す動機が構造の中に存在しない」ために直らない。では、そもそも独占というものは歴史の中でどう終わってきたのか。良い手段はあるのか、それとも時間をかけるしかないのか。過去の独占の終わり方を並べると、だいたい4つの類型に分けられる。ここでも特定の誰かを名指しで断罪するのではなく、構造と歴史の分析として淡々と並べる。</p>
+
+      <h3>1. 独占の終わり方の4類型</h3>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>類型</th><th>歴史の例</th><th>効き方と限界</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><b>国家による解体</b></td>
+              <td>スタンダード・オイル（1911年、反トラスト法で分割）、AT&amp;T（1984年、分割）</td>
+              <td>効くことは効く。ただし<b>条件が同じなら再統合する</b>。AT&amp;Tの分割で生まれた子会社たちは、規制と市場の条件が変わる中で結局また合体し、今の姿に戻っていった。解体は「形」を変えても、「独占が得をする条件」までは変えない</td>
+            </tr>
+            <tr>
+              <td><b>土俵ごとの交代</b></td>
+              <td>IBMの大型コンピュータの独占はPCに、MicrosoftのOS独占は独禁法訴訟ではなくスマホに侵食された</td>
+              <td>正面から倒れる独占は意外と少なく、多くは<b>土俵が変わって終わる</b>。ただし交代の勝者が、そのまま次の独占者になる。終わるのは「その独占」であって、独占そのものではない</td>
+            </tr>
+            <tr>
+              <td><b>相互接続と標準化の義務付け</b></td>
+              <td>電話番号ポータビリティ、通信事業者間の相互接続義務、EUのゲートキーパー規制</td>
+              <td>地味だが、<b>人質を解放する方向の道具</b>である。番号を持ち運べれば電話会社を替えるコストが下がり、相互接続が義務なら「つながること」自体を囲えなくなる。効果は限定的でも、現実に使える手として残っている</td>
+            </tr>
+            <tr>
+              <td><b>コモンズの成長</b></td>
+              <td>Linuxがサーバ市場を取り、Wikipediaが百科事典の独占を終わらせた</td>
+              <td><b>市場でも国家でもない第三の道</b>。誰のものでもない共有地が育つことで、独占されていた領域そのものが商品でなくなる。買収も禁止もできない形で対抗軸が育つ終わり方である</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>4つを並べて分かるのは、どの類型も「独占者を倒す」話ではなく、<b>独占が成り立つ条件を崩す</b>話だということである。解体は組織を割り、交代は土俵を替え、相互接続は人質を解き、コモンズは対抗軸を育てる。逆に言えば、条件がそのままなら、倒しても姿を変えて戻ってくる。</p>
+
+      <h3>2. 時間は効くが、受け身の解決である</h3>
+      <p>「放っておけば、そのうち終わるのではないか」。歴史的には、時間は確かに効く。世代が替われば習慣が替わり、習慣が替われば独占の土台も痩せていく。かつて絶対に見えた媒体や道具が、若い世代にとっては「そもそも使わないもの」になっている例はいくらでもある。</p>
+      <p>ただし、それは<b>受け身の解決</b>である。待っている間の数十年、囲い込みのコストは末端が払い続ける。前の節で見た通り、損をする順番はいつも同じで、一番逃げ場のない受け手が一番長く損をする。歴史の教訓を一文にすれば、<b>「待てば終わるが、待つ間の分配は最悪」</b>ということになる。時間に任せることは、解決ではあっても、公平な解決ではない。</p>
+
+      <h3>3. AI時代の機会 ― 編集権の個人化</h3>
+      <p>では、ネットとAIの時代だからこそ作れる仕組みはあるのか。ここで注目したいのが、<b>編集権</b>の置き場所の変化である。編集権とは、何を見出しにし、何を捨てるかを決める権限のことだ。</p>
+      <div class="story-flow">
+        <span class="node">新聞の時代：編集部</span><span class="arr">→</span>
+        <span class="node">アルゴリズムの時代：一社の最適化</span><span class="arr">→</span>
+        <span class="node hot">ローカルAIの時代：一人ひとりの編集者</span>
+      </div>
+      <p>新聞の時代、編集は新聞社の編集部にあった。アルゴリズムの時代、編集は一社の最適化の内側に移った。媒体が変わっても、<b>編集権はずっと中央にあった</b>。受け手は、中央が選んだものの中から選ぶことしかできなかった。</p>
+      <p>ところが、ローカルAIによる意味判定が実用的になった今、初めて<b>一人ひとりが自分の編集者を持つ</b>ことが技術的に可能になった。夜間バッチで集めた全件に意味判定をかける――少し前なら大企業の設備でしかできなかった処理が、家庭のLANの中の一台で回せる。この図鑑の後ろで構想してきたミニインターネットは、その最初の形である。独占の終わり方の類型で言えば、これはコモンズの成長に近い。ただし育てるのは共有地そのものではなく、<b>各人の側にある窓</b>の方である。中央の編集権を取り返すのではなく、編集権を分散させてしまう終わり方、と言える。</p>
+
+      <h3>4. 注意点 ― AI自体が次の独占の種でもある</h3>
+      <p>最後に、正直な注意点を置いておく。AI自体が、次の独占の種でもある。大きな計算資源と大量のデータを握れる側が強くなる構造は、プラットフォームの独占と同型に進みうる。土俵ごとの交代の歴史が示す通り、交代の勝者は次の独占者になりやすい。</p>
+      <p>だから、編集権の個人化という機会が現実になるかどうかは、<b>オープンなモデルとローカル実行が生き残るか</b>にかかっている。モデルが開かれ、手元の機械で動く限り、編集者は各人の側に置ける。逆に、意味判定がクラウドの向こう側にしか存在しない世界では、編集権はまた中央に戻る。</p>
+      <div class="note-box">
+        <p style="margin:0">「ローカルで動くこと」にこだわる設計には、趣味以上の意味がある。それは、編集権を自分の側に置き続けるための条件そのものだからである。独占は待てば終わる。だが待つ間の分配は最悪で、交代の勝者は次の独占者になる。ならば、終わりを待つのではなく、窓を自分の側に持つ。その実践の積み重ねが、この図鑑の結論である。</p>
+      </div>
+
+      <!-- ================= 真の最終章：無名の多数のための仕組みづくり ================= -->
+      <h2 id="majority">無名の多数のための仕組みづくり ― この図鑑の結論</h2>
+      <p>型の分類、検出ルール、独占の分析と、ここまで問題と仕組みを追ってくると、最後に見えてくる大きなものは2つに絞られる。どちらも技術の話ではなく、この研究が何のためにあるのか、という目的の話である。</p>
+
+      <h3>1. 平穏が先、社会はその外側</h3>
+      <p>第一は、<b>自分自身の心の平穏</b>である。これが最重要であり、この図鑑のすべての実践――フィルタを持つこと、お断りを数えること、窓を自分の側に置くこと――は、まずここに帰着する。不快なものに無理やり付き合わされず、モヤモヤを抱えたまま一日を過ごさずに済むこと。それ自体が目的であって、何かの手段ではない。</p>
+      <p>第二は、<b>社会がまともになること</b>である。これは平穏と密接に関連している。煽りや囲い込みが構造として残り続ける社会では、個人の側でどれだけ窓を工夫しても、平穏は常に防御し続けなければならないものになる。仕組みが少しでもまともになれば、その防御の手間自体が減る。だから第二は、第一の外側の条件として位置づけられる。</p>
+      <p>順番が大事である。<b>平穏が先、社会はその外側</b>に置く。逆にすると――社会を変えるために自分の平穏を燃料にする形になると――人は燃え尽きるし、負の感情を特定の人へ向け続けることにもなりやすい。世界の規模で考えれば対象は大きすぎるように見える。ただ、ネットとAIの問題は最初から国境を越えており、目的関数の歪みも独占も編集権の集中も、どの社会でも同じ構造で起きている。だから世界の視点も、誇張ではなく、この問題の本来の大きさとして取り入れておく必要がある。スケールは違っても、扱っている構造は同じである。</p>
+
+      <h3>2. 声の大きさの非対称 ― 物語は誰のものか</h3>
+      <p>平穏が損なわれる場面には、長く続いてきた一つの非対称がある。<b>声の大きい側の物語だけが繰り返し流れる</b>、という非対称である。</p>
+      <p>典型は、昔いじめっ子だった人物が更生し、今は子だくさんで頑張っている、というドキュメンタリーの型である。加害から更生へ、という起承転結は感動の型に収まりやすく、媒体の目的関数（感動と視聴率）で選別すれば、繰り返し採用される。一方、当時黙って耐えた側の経験には起承転結がない。耐えていた時間は地味で、映像になる場面がなく、終わりの合図もない。結果として、耐えた側の物語は流れず、記録の上では「いなかったこと」になる。</p>
+      <p>ここで問題にすべきは、更生そのものではない。更生は良いことである。問題は<b>物語の配分が、声の大きい側に偏っている</b>ことの方にある。加害者は語ることで称賛まで得るのに、被害者は謝罪を受ける場面すらなく、感動話の背景にもなれない。黙っていたことは、傷がなかったことではないのに、配分の仕組みの中ではそう扱われてしまう。</p>
+      <p>今のネットでも、同じ構図はそのまま残っている。迷惑行為や炎上の当事者による反省・復帰の動画は一つの型として成立し、再生される。対して、その行為で不快な思いをした側、黙って離れた側の経験は、動画にも記事にもなりにくい。声量がそのまま存在の大きさになり、黙っている側は統計にも残らない。これは声の大きさによる、一種の独占として読むことができる。</p>
+
+      <h3>3. 個人叩きのループ ― 向け先を人から仕組みへ</h3>
+      <p>この非対称への不満や怒りが、特定の個人に向けられ続ける限り、ループは終わらない。相手が一人消えても、次の相手が現れて同じことが繰り返される。炎上の形で見れば、昭和の時代から既に同じ繰り返しがあり、媒体が新聞・テレビからSNSへ移っても構図は変わっていない。怒りが「処理した気分」を与えるため、袋叩きが終わると一件落着の感覚になり、仕組みへの問い自体が消えてしまう。祭りは、解決の代用品として機能しているのである。</p>
+      <p>出口は、向け先を変えることにある。<b>人ではなく、仕組みの方を見る。</b>誰の物語が流れるかを決めている配分の仕組み、煽りが得をする目的関数、お断りが効かない非対称――対象を構造に置けば、相手が入れ替わっても問いは残り、改善の余地も残る。逆に、対象が個人である限り、問いはその人の退場と一緒に終わり、構造は手つかずで残る。コバエを1匹ずつ叩いても発生源が残れば終わらないのと、構造は同じである。</p>
+
+      <h3>4. 設計原則 ― 黙っている側を、どう数えるか</h3>
+      <p>では、無名の多数のための仕組みは、どのような原則で設計すべきか。この図鑑の議論から、原則は3つに整理できる。</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>原則</th><th>内容</th><th>この図鑑での対応物</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><b>1. 不快を「声」ではなく実測で数える</b></td>
+              <td>黙っている側は声を上げないため、声の量で測る仕組みでは最初から数に入らない。不快や負担は、表明された苦情ではなく、起きた事実として数える必要がある</td>
+              <td>お断り突破ログ。お断りしたのに届いた回数を数えることは、黙った人の負担を初めて数字にする行為である</td>
+            </tr>
+            <tr>
+              <td><b>2. 拒否の手間を受け手に負わせず、デフォルトで守る</b></td>
+              <td>「嫌なら設定で止められる」は、止める手間を受け手に転嫁した形にすぎない。守られることが初期状態であり、例外的に緩める場合だけ手間がかかる、という向きが本来の設計である</td>
+              <td>歌舞伎町モデルの章で見た意思表示の非対称の裏返し。破る側にコストがなく、守らせる手間が受け手持ちである構造を、設計の側で逆転させる</td>
+            </tr>
+            <tr>
+              <td><b>3. 深さと選択権を本人に返す</b></td>
+              <td>何を、どれだけ深く見るかは、本人が決める。見出しだけ知れば十分なものと、深く追いたいものを分ける権利は、配信側の最適化ではなく受け手の側にある</td>
+              <td>ミニインターネットの深さの設計（深く見る／見出しだけ／ゴミ箱）と、例外リストによる「誰を見るか」の明示</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>3つに共通するのは、基準を「声の大きい人」から「黙っている多数」へ移すことである。いまの仕組みの多くは、発信する人、数字を動かす人、苦情を言う人を基準に設計されており、黙っていることは「問題なし」と解釈される。原則を逆に置くことは、その解釈をやめることから始まる。</p>
+
+      <h3>5. 留保 ― 不快をゼロにすることではない</h3>
+      <p>ここで一つ、留保を置いておく。この章で言う「不快やモヤモヤを与えられない仕組み」は、<b>不快・苛立ち・モヤモヤをゼロにすることではない</b>。それらは本来の感情の一部であり、消えてよいものではない。むしろ、モヤモヤは<b>不正を知らせるセンサー</b>として働くことがある。おかしい、と感じる感覚がなければ、配分の偏りにも、お断りの突破にも、誰も気づかない。センサーをゼロにしてしまえば、不正に気づけない社会になる。</p>
+      <p>問題は感情の存在そのものではなく、次の3点にある。</p>
+      <ul>
+        <li><b>アルゴリズムに人工的に増幅されること。</b>自然に生じた不快が、滞在時間のために何倍にも膨らまされ、繰り返し配達される</li>
+        <li><b>向け先が「人」に固定されること。</b>センサーが指しているのは本来、仕組みの歪みであるはずなのに、感情の出口が特定の個人への怒りに固定されてしまう</li>
+        <li><b>解消の手段が袋叩きしか用意されていないこと。</b>感じた不快を処理する正規の経路――記録する、数える、仕組みを直す――がなく、祭りに参加する形でしか発散できない</li>
+      </ul>
+      <p>したがって問いは「どう消すか」ではなく、<b>「どうバランスを取るか」</b>である。センサーは残し、増幅を止め、向け先を人から仕組みへ移し、解消の経路を袋叩き以外にも用意する。平穏とは感情のない状態ではなく、感情に振り回されずに済む配分が取れている状態のことだ、と定義し直した方が正確である。</p>
+      <p>もう一つ、そのバランス取りを個人の努力だけに任せてはいけない。<b>バランスを自分で取れない人のために、仕組みの側が調整を肩代わりする設計</b>が要る。具体的には、調整しなくてもデフォルトで守られること、投稿や拡散の前に冷却の遅延が入ること、いつでも退出できること、である。フィルタを組める人、設定を追える人だけが快適でいられる設計では、結局「できる人だけが守られる」ことになる。</p>
+      <p>これは、バリアフリーや福祉と同じ発想である。段差を上れる人だけが通れる建物が不完全なのと同じで、自己調整できる人だけが平穏でいられる情報環境も、設計として未完成である。調整の肩代わりは、特別な配慮ではなく、無名の多数を基準に置くなら当然の前提になる。</p>
+
+      <h3>6. 締め ― 感動話にならない人生を、そのまま肯定できる仕組み</h3>
+      <div class="note-box">
+        <p style="margin:0 0 10px">この図鑑が最後に目指すのは、目立つ一部のための仕組みではない。<b>無名の多数が、不快やモヤモヤを与えられずに、それぞれの幸福を追求できる仕組み</b>である。</p>
+        <p style="margin:0">その多数の人生は、たいてい感動話にはならない。更生の物語も、成功の物語もなく、ただ静かに続いていく。<b>感動話にならない人生を、そのまま肯定できる仕組み</b>――物語になることを幸福の条件にしない設計こそが、この研究の目標である。</p>
+      </div>
+
+      <footer>
+        <h3 style="margin-top:0">参考にした考え方</h3>
+        <ul>
+          <li><a href="https://note.com/ai_labo/n/n8c35f9ed12b1" target="_blank" rel="noopener">note：AIによるサムネイル・タイトル分析</a>（P6の視覚的特徴などの考え方）</li>
+          <li><a href="https://note.com/jitan_shikou/n/na0c2dc34af7e" target="_blank" rel="noopener">note：YouTubeからLINEへ誘導する典型パターンの解説</a>（P1の構造）</li>
+          <li><a href="https://www.bengo4.com/c_8/n_2314/" target="_blank" rel="noopener">弁護士ドットコム：ぼったくり防止条例の解説</a>（歌舞伎町モデルの章）</li>
+        </ul>
+        <p>この図鑑は、実在の特定チャンネルを名指しで非難するものではなく、繰り返し現れる「型」を分析し、自分のフィルタ研究に使うための資料である。例文はすべて典型例として再構成したもの。</p>
+      </footer>
+
+    </div>
+
+    <script>
+      (function () {
+        var btn = document.getElementById('tBtn');
+        var result = document.getElementById('testResult');
+        btn.addEventListener('click', function () {
+          var title = document.getElementById('tTitle').value || '';
+          var thumb = document.getElementById('tThumb').value || '';
+          var face = parseInt(document.getElementById('tFace').value, 10) || 0;
+          var text = title + ' ' + thumb;
+          var hits = [];
+          var score = 0;
+          function add(label, pts) { hits.push(label + '（+' + pts + '）'); score += pts; }
+
+          // LINE誘導 +4
+          if (/(LINE|ライン)(登録|限定|特典|で)/.test(text)) add('P1 LINE誘導', 4);
+          else if (/概要欄/.test(text)) add('概要欄への誘導', 2);
+          if (/(無料|特典|プレゼント)/.test(text) && /(LINE|ライン|概要欄)/.test(text)) add('P1 無料・特典の釣り餌（誘導と複合）', 1);
+
+          // 金額 +3
+          if (/(月収|年収|年商)[0-9０-９]+(万|億)/.test(text) || /[0-9０-９]+万円(稼|達成)/.test(text) || /年収[0-9０-９]+億/.test(text)) {
+            add('P2 金額の数字表現', 3);
+          }
+          if (/(たった|わずか)?[0-9０-９]+(ヶ月|か月|日)で/.test(text) && score > 0) add('P2 期間の短さ（金額と複合）', 1);
+
+          // 肩書き +2
+          if (/(東大|医師|社長|専門家|プロが|元[^\s]{1,8}(社長|役員|勤務))/.test(text)) add('P4 肩書き語', 2);
+          else if (/先生/.test(text)) add('P4/P11 「先生」の自称', 1);
+
+          // 煽り単語 +1 each (max 3)
+          var words = ['ヤバい','危険','終了','オワコン','暴露','閲覧注意','知らないと損','放送事故','修羅場','ブチギレ','論破','ガチ喧嘩','炎上','界隈','エモい','バズ','神回','伝説の','しか勝たん','誰でも','完全在宅','スキルなし'];
+          var wcount = 0;
+          for (var i = 0; i < words.length; i++) {
+            if (text.indexOf(words[i]) !== -1 && wcount < 3) { add('煽り・流行の単語「' + words[i] + '」', 1); wcount++; }
+          }
+
+          // クソ: 単独0点、複合時+1
+          var hasKuso = text.indexOf('クソ') !== -1;
+          if (hasKuso && score > 0) add('P8 「クソ」接頭辞（他のシグナルと複合）', 1);
+          if (hasKuso && score === 0) hits.push('P8 「クソ」接頭辞のみ ― 単独では加点しない（+0）');
+
+          // 顔面積
+          if (face > 0) add('P6 顔面積 大', face);
+
+          var verdict, color;
+          if (score >= 4) { verdict = 'ゴミ箱行き候補'; color = '#c22e2e'; }
+          else if (score >= 1) { verdict = '薄く表示'; color = '#a86e00'; }
+          else { verdict = '通常表示'; color = '#12824a'; }
+
+          var html = '<div class="score-big" style="color:' + color + '">' + score + '点 ― ' + verdict + '</div>';
+          if (hits.length) {
+            html += '<ul>' + hits.map(function (h) { return '<li>' + h + '</li>'; }).join('') + '</ul>';
+          } else {
+            html += '<p class="small">マッチしたシグナルはありませんでした。P9（略しすぎ）・P10（台本対話）・P12（丁寧なのにヤバい）は単語では判定できず、意味判定の担当です。</p>';
+          }
+          if (!title && !thumb) html += '<p class="small">※ タイトルが空です。例文を入れると内訳が見られます。</p>';
+          result.innerHTML = html;
+          result.style.display = 'block';
+        });
+      })();
+    </script>
+  </body>
+</html>
