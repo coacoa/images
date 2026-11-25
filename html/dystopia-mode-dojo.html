@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<!-- build: 2026-11-25 12:31:08 JST -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ディストピアモード道場 ― フィルタの裏側を覗く</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{
+--tb:29%;
+--ink:#ffe9e4; --dim:#c98a80; --blue:#ff3b30; --panel:#1c0a10;
+--win:#2a0e14; --accent:#ffd94a; --good:#7ee787; --bad:#ff7b72;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+body{margin:0;background:#0d0508;color:var(--ink);
+font-family:"DotGothic16","Hiragino Kaku Gothic ProN","Noto Sans JP",monospace,sans-serif;
+-webkit-font-smoothing:none;font-smooth:never;
+display:flex;justify-content:center;padding:14px 10px 40px}
+.cab{width:100%;max-width:760px}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{font-weight:900;letter-spacing:2px;font-size:18px;color:#fff;
+text-shadow:2px 2px 0 var(--blue), 4px 4px 0 #2a0e14}
+.logo small{display:block;font-size:11px;color:var(--dim);letter-spacing:1px;text-shadow:none}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer}
+.sbtn{background:var(--win);color:var(--ink);border:2px solid var(--dim);
+padding:4px 10px;font-size:12px;border-radius:4px;min-height:36px}
+.sbtn:hover{border-color:#fff;color:#fff}
+.params{display:flex;gap:14px;background:var(--panel);border:2px solid var(--dim);
+padding:6px 12px;font-size:12px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.params b{color:var(--accent)}
+.bar{display:inline-block;width:120px;height:10px;background:#3a1420;vertical-align:middle;margin-left:4px;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--good);display:block}
+.screen{position:relative;border:6px solid var(--dim);border-radius:6px;overflow:hidden;
+aspect-ratio:16/10;background:#000;image-rendering:pixelated}
+.screen::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+background:repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 3px, transparent 3px 6px)}
+.bg{position:absolute;inset:0;transition:opacity.4s}
+.bg-room{background:linear-gradient(#2a0a12 0 55%, #3d1420 55% 100%)}
+.bg-room::before{content:"";position:absolute;right:8%;top:8%;width:110px;height:130px;
+background:linear-gradient(#4a1622,#2a0a12);border:6px solid #12040a;
+box-shadow:0 0 0 4px #6e2436, inset 0 0 0 3px #6e2436}
+.bg-term{background:radial-gradient(ellipse at 50% 40%, #33100e 0%, #170507 70%)}
+.bg-term::before{content:"DYSTOPIA ❚ 判定ログ ❚ JSON ❚ ゴミ箱リスト ❚ 顔面積比 ❚ OCRヒット ❚ キーワード ❚ 隔離 ❚";
+position:absolute;inset:6%;color:#c0392b;font-size:13px;line-height:2.1;opacity:.55;
+font-family:ui-monospace,Menlo,monospace;word-break:break-all}
+.bg-way{background:linear-gradient(#1b1040 0%, #5a2438 55%, #b3543f 82%, #ffb36b 100%)}
+.bg-city{background:linear-gradient(#12060c 0%, #2e0d18 60%, #571f2a 100%)}
+.bg-city::before{content:"";position:absolute;left:0;right:0;bottom:29%;height:46%;
+background:
+linear-gradient(#0000 78%, #0a0306 78%) ,
+repeating-linear-gradient(90deg, #0a0306 0 34px, #0000 34px 46px, #160710 46px 78px, #0000 78px 92px);
+box-shadow:inset 0 0 60px rgba(255,60,40,.25)}
+.stars{position:absolute;inset:0;z-index:1;
+background-image:radial-gradient(2px 2px at 12% 18%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 32% 8%, #ffd8d0 50%, transparent 51%),
+radial-gradient(2px 2px at 55% 22%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 74% 10%, #ffd8d0 50%, transparent 51%),
+radial-gradient(2px 2px at 88% 26%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 44% 30%, #ffb0a0 50%, transparent 51%)}
+.char{position:absolute;bottom:var(--tb);left:50%;transform:translateX(-50%);z-index:2;
+filter:drop-shadow(0 0 10px rgba(255,70,50,.75))}
+.char svg{display:block}
+.ground{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:1;
+background:linear-gradient(transparent, rgba(16,3,6,.92) 30%)}
+.namebox{position:absolute;left:14px;bottom:calc(var(--tb) + 8px);z-index:8;color:#ffffff;
+background:var(--win);border:3px solid var(--dim);padding:2px 14px;font-weight:700;font-size:16px;
+letter-spacing:.06em;text-shadow:2px 2px 0 #000}
+.textbox{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:7;color:#ffffff;
+background:rgba(20,4,8,.97);border-top:4px solid var(--dim);
+padding:12px 16px;font-size:18px;line-height:1.8;letter-spacing:.06em;
+text-shadow:2px 2px 0 #000;
+cursor:pointer;white-space:pre-wrap;overflow-y:auto;overflow-x:hidden;
+scrollbar-width:thin;scrollbar-color:#ff3b30 #1c0a10}
+.textbox::-webkit-scrollbar{width:10px}
+.textbox::-webkit-scrollbar-track{background:#1c0a10}
+.textbox::-webkit-scrollbar-thumb{background:#ff3b30;border:2px solid #140408}
+.textbox.next{position:absolute;right:12px;bottom:6px;color:var(--accent);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.choices{position:absolute;top:0;left:0;right:0;bottom:calc(var(--tb) + 46px);z-index:9;display:none;flex-direction:column;
+align-items:center;justify-content:center;gap:12px;background:rgba(16,3,6,.80);padding:16px;overflow-y:auto}
+.choices.show{display:flex}
+.choice{width:min(92%,520px);background:#1a050a;color:#ffffff;font-weight:700;
+border:3px solid #ffd9d2;padding:12px 16px;font-size:18px;letter-spacing:.08em;
+text-shadow:2px 2px 0 #000;text-align:left;border-radius:4px;min-height:44px}
+.choice:hover{border-color:var(--accent);color:#fff;background:#571f2a}
+.choice::before{content:"▶ ";color:var(--accent)}
+.choice.done{border-color:var(--good)}
+.choice.done::before{content:"✔ ";color:var(--good)}
+.title{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
+justify-content:center;gap:14px;background:radial-gradient(ellipse at 50% 35%, #571f2a 0%, #0d0508 75%);text-align:center;padding:16px}
+.title h1{margin:0;font-size:clamp(24px,6vw,42px);letter-spacing:3px;color:#fff;
+text-shadow:3px 3px 0 var(--blue), 6px 6px 0 #2a0e14}
+.title p{color:#ffd9d2;font-size:14px;margin:0;line-height:1.9}
+.tbtn{background:#1a050a;color:#fff;font-weight:700;border:3px solid #ffd9d2;padding:10px 26px;font-size:17px;letter-spacing:.08em;border-radius:4px;min-height:44px}
+.tbtn:hover{border-color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
+border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;opacity:0;transition:opacity.3s;z-index:50;pointer-events:none}
+.toast.show{opacity:1}
+#diagram{transition:width .25s}
+.screen.diagmenu #diagram{width:min(430px,74%)}
+.screen.diagmenu .choices{bottom:calc(var(--tb) + 8px);flex-direction:row;flex-wrap:wrap;align-content:flex-start;justify-content:center;gap:8px}
+.screen.diagmenu .choice{flex:1 1 28%;width:auto;margin:0;text-align:center;font-size:14px;padding:10px 8px;line-height:1.5}
+#diagram{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:min(560px,94%);z-index:5;background:rgba(16,3,6,.88);border:2px solid var(--dim);padding:6px;display:none}
+#diagram svg{width:100%;height:auto;display:block}
+footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
+kbd{display:inline-block;background:#2a0e14;border:1px solid var(--dim);border-bottom-width:2px;
+border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+@media (max-width:560px){.textbox{font-size:15px}.char{bottom:var(--tb)}}
+@media (orientation:portrait) and (max-width:760px){
+:root{--tb:46%}
+.screen{aspect-ratio:auto;height:80vh;height:80dvh}
+.textbox{font-size:16px;line-height:1.75}
+.char svg{width:100px;height:127px}
+.choice{font-size:16px;padding:10px 14px}
+.choices{overflow-y:auto}
+.title h1{font-size:24px}
+.title p{font-size:13px}
+.params{gap:8px;font-size:11px}
+.bar{width:80px}
+}
+.choices{justify-content:flex-start;overflow-y:auto}
+.choice:first-child{margin-top:auto}
+.choice:last-child{margin-bottom:auto}
+</style>
+</head>
+<body>
+<div class="cab">
+<header>
+<div class="logo">ディストピアモード道場<small>― フィルタの裏側を覗く 全16課 ―</small></div>
+<div class="btns">
+<button class="sbtn" id="btnSound">🔊 音ON</button><button class="sbtn" id="btnTts">🗣 読上OFF</button>
+<button class="sbtn" id="btnLevels">🏠 レベル選択</button>
+<button class="sbtn" id="btnReset">🗑 進捗リセット</button>
+</div>
+</header>
+
+<div class="params">
+<span>理解済み <b id="pDone">0</b> / 16 課<span class="bar"><i id="bDone" style="width:0%"></i></span></span>
+<span style="color:var(--dim)">現在：<span id="pNow">タイトル</span></span>
+<span style="margin-left:auto;color:var(--dim)">💾 進捗は自動保存（localStorage）</span>
+</div>
+
+<div class="screen" id="screen">
+<div class="bg bg-city" id="bg"></div>
+<div class="stars"></div>
+<div class="ground"></div>
+<div class="char" id="char"></div>
+<div id="diagram"></div>
+<div class="namebox" id="namebox" style="display:none"></div>
+<div class="textbox" id="textbox"><span id="text"></span><span class="next" id="nextmark" style="display:none">▼</span></div>
+<div class="choices" id="choices"></div>
+<div class="title" id="title">
+<h1>ディストピアモード道場</h1>
+<p>フィルタが「捨てたもの」だけを並べて見る、逆転のモード。<br>
+ゴミ箱リストは、プラットフォームが本当は見せたかったものの標本箱。<br>
+実装の設計から、法則の読み方、浸かりすぎない心構えまで。全16課。<br>
+「分かった！」で次へ、「分からない」で何度でもやり直し。</p>
+<button class="tbtn" id="btnEnter">▶ 裏側の扉を開く</button>
+<p>進捗（理解済み ✔）はブラウザに自動保存されます</p>
+</div>
+</div>
+
+<footer>
+遊び方：説明を読んだら「これは分かった！」か「分からない」を選ぶだけ。分かったら確認問題が1問出て、正解でその課は理解済み ✔。
+間違えてもペナルティなし、補足説明を読んで何度でも挑めます。本文クリックで文字送り、長い文は自動スクロール＋手動スクロール可。
+この道場は、君のフィルタ計画（キーワード→顔面積→OCR→ローカルVLMの段階判定、消さずに「通常／薄く／ゴミ箱リスト」へ隔離し、判定ログをJSONで残す設計）の発展編です。サムネ判定道場とその補講で学んだ「ゴミ箱リスト」を、今度は「だけ」眺めるモードとして実装する発想を教材化しました。第4章では、ゴミだけを見ることの認知への影響と、研究モードとしての作法も真面目に扱います。
+</footer>
+<style>
+#galleryWrap{margin:16px 0 4px;text-align:center}
+#gallery{display:none;text-align:left;margin-top:12px}
+.gal-item{background:#16060c;border:2px solid #6e2436;padding:10px 12px;margin:0 0 12px}
+.gal-cap{color:#ffd94a;font-size:14px;margin-bottom:8px}
+.gal-diag svg{width:100%;height:auto;display:block}
+</style>
+<div id="galleryWrap">
+<div style="margin-bottom:10px"><button class="sbtn" id="btnListen">🎧 リスニング（全レッスン読み上げ）</button>
+<div id="listenPanel" style="display:none;text-align:left;margin-top:10px;background:#16060c;border:2px solid #6e2436;padding:10px 12px">
+<div style="margin-bottom:8px"><button class="sbtn" id="btnPlay">▶ ブラウザ音声で再生</button> <button class="sbtn" id="btnStop">⏹ 停止</button> <span id="listenStatus" style="font-size:12px;color:#ffb0a0"></span></div>
+<div style="height:8px;background:#3a1420;border:1px solid #6e2436;margin-bottom:8px"><div id="listenFill" style="height:100%;width:0%;background:#ffd94a"></div></div>
+<div style="font-size:12px;color:#ffb0a0;margin-bottom:8px">PCでは Read Aloud 拡張機能で、この下のテキストをそのまま読み上げられます。</div>
+<div id="listenText" style="color:#fff;font-size:15px;line-height:1.7"></div>
+</div></div>
+<button class="sbtn" id="btnGallery">🖼 図解一覧（復習用）を表示</button>
+<div id="gallery"></div>
+</div>
+<script>
+(function(){
+var btnMain = document.getElementById('btnListen');
+var panel = document.getElementById('listenPanel');
+var btn = document.getElementById('btnPlay');
+var btnStop = document.getElementById('btnStop');
+var st = document.getElementById('listenStatus');
+var fill = document.getElementById('listenFill');
+var lt = document.getElementById('listenText');
+if(!btnMain || !panel || !btn) return;
+var playing = false, items = [], idx = 0, curId = 0, watchdog = null, tickTimer = null, itemStart = 0, started = false, attempts = 0, built = false, paused = false;
+function buildItems(){
+  var arr = [];
+  LEVELS.forEach(function(ch, ci){
+    arr.push('第' + (ci + 1) + '章。' + ch.name);
+    ch.lessons.forEach(function(ls){
+      arr.push(ls.title);
+      (ls.teach || []).forEach(function(t){ arr.push(t); });
+    });
+  });
+  return arr;
+}
+function buildText(){
+  lt.innerHTML = '';
+  LEVELS.forEach(function(ch, ci){
+    var h = document.createElement('div');
+    h.style.cssText = 'color:#ffd94a;font-weight:bold;margin:14px 0 6px';
+    h.textContent = '第' + (ci + 1) + '章 ' + ch.name;
+    lt.appendChild(h);
+    ch.lessons.forEach(function(ls){
+      var t = document.createElement('div');
+      t.style.cssText = 'font-weight:bold;margin:10px 0 4px';
+      t.textContent = ls.title;
+      lt.appendChild(t);
+      (ls.teach || []).forEach(function(tx){
+        var p = document.createElement('div');
+        p.style.cssText = 'margin:0 0 8px;white-space:pre-wrap';
+        p.textContent = tx;
+        lt.appendChild(p);
+      });
+    });
+  });
+}
+function pickVoice(){
+  var vs = speechSynthesis.getVoices();
+  for(var i = 0; i < vs.length; i++){ if(vs[i].lang && vs[i].lang.toLowerCase().indexOf('ja') === 0) return vs[i]; }
+  return vs[0] || null;
+}
+function fmt(sec){ var m = Math.floor(sec / 60), s = sec % 60; return m + ':' + (s < 10 ? '0' : '') + s; }
+function setBar(){ if(fill && items.length) fill.style.width = Math.round(idx / items.length * 100) + '%'; }
+function status(){
+  if(!st || !playing) return;
+  var el = Math.floor((Date.now() - itemStart) / 1000);
+  st.textContent = (started ? '再生中 ' : '準備中… ') + (idx + 1) + '/' + items.length + '（' + fmt(el) + '）' + (items[idx] || '').slice(0, 18);
+}
+function clearTimers(){
+  if(watchdog){ clearTimeout(watchdog); watchdog = null; }
+  if(tickTimer){ clearInterval(tickTimer); tickTimer = null; }
+}
+function stop(msg){
+  playing = false; paused = false; curId++; clearTimers();
+  try{ speechSynthesis.cancel(); }catch(e){}
+  btn.textContent = '▶ ブラウザ音声で再生';
+  if(st) st.textContent = msg || '';
+  if(fill) fill.style.width = '0%';
+}
+function armWatchdog(text){
+  if(watchdog) clearTimeout(watchdog);
+  var est = Math.min(45000, Math.max(7000, text.length * 260 + 4000));
+  watchdog = setTimeout(function(){
+    if(!playing) return;
+    curId++;
+    try{ speechSynthesis.cancel(); }catch(e){}
+    idx++; next();
+  }, est);
+}
+function trySpeak(text, useVoice){
+  var my = ++curId;
+  started = false; itemStart = Date.now(); setBar(); status();
+  try{ speechSynthesis.resume(); }catch(e){}
+  var u = new SpeechSynthesisUtterance(String(text).replace(/\n+/g, ' '));
+  u.lang = 'ja-JP'; u.rate = 1.0;
+  var v = useVoice ? pickVoice() : null;
+  if(v) u.voice = v;
+  u.onstart = function(){ if(my === curId){ started = true; status(); } };
+  u.onend = function(){ if(my === curId && playing){ idx++; next(); } };
+  u.onerror = function(){
+    if(my !== curId || !playing) return;
+    if(speechSynthesis.getVoices().length === 0){ stop('音声が見つかりません（この端末では読み上げできません）'); return; }
+    if(useVoice && attempts === 0){ attempts++; trySpeak(text, false); return; }
+    idx++; next();
+  };
+  armWatchdog(text);
+  try{ speechSynthesis.speak(u); }catch(e){ setTimeout(function(){ if(my === curId && playing){ idx++; next(); } }, 300); }
+}
+function next(){
+  if(!playing || paused) return;
+  if(idx >= items.length){ stop('読み上げ終了（全' + items.length + '項目）'); if(fill) fill.style.width = '100%'; return; }
+  attempts = 0;
+  trySpeak(items[idx], true);
+}
+if(btnStop) btnStop.onclick = function(){ if(playing) stop('停止しました'); };
+btnMain.onclick = function(){
+  if(panel.style.display !== 'none'){
+    panel.style.display = 'none';
+    btnMain.textContent = '🎧 リスニング（全レッスン読み上げ）';
+    if(playing) stop('停止しました');
+    return;
+  }
+  if((typeof LEVELS === 'undefined' && typeof NODES === 'undefined')){ return; }
+  if(!built){ buildText(); built = true; }
+  panel.style.display = 'block';
+  btnMain.textContent = '🎧 リスニングを閉じる';
+};
+btn.onclick = function(){
+  if(!('speechSynthesis' in window)){ if(st) st.textContent = 'このブラウザは読み上げに未対応です'; return; }
+  if(playing && !paused){
+    paused = true; curId++; clearTimers();
+    try{ speechSynthesis.cancel(); }catch(e){}
+    btn.textContent = '▶ 再開';
+    if(st) st.textContent = '一時停止中 ' + (idx + 1) + '/' + items.length + '（再開はこの項目の頭から）';
+    return;
+  }
+  if(playing && paused){
+    paused = false;
+    btn.textContent = '⏸ 一時停止';
+    if(st) st.textContent = '再開します';
+    attempts = 0;
+    clearTimers();
+    tickTimer = setInterval(status, 500);
+    trySpeak(items[idx], true);
+    return;
+  }
+  if((typeof LEVELS === 'undefined' && typeof NODES === 'undefined')){ if(st) st.textContent = 'データ読み込みに失敗しました'; return; }
+  items = buildItems(); idx = 0; playing = true; itemStart = Date.now();
+  btn.textContent = '⏸ 一時停止';
+  if(st) st.textContent = '準備中…';
+  if(fill) fill.style.width = '0%';
+  try{ speechSynthesis.cancel(); }catch(e){}
+  clearTimers();
+  tickTimer = setInterval(status, 500);
+  setTimeout(next, 200);
+};
+})();
+</script>
+<script>
+(function(){
+var btn = document.getElementById('btnGallery');
+var gal = document.getElementById('gallery');
+var built = false;
+function build(){
+var html = '';
+if (typeof LEVELS !== 'undefined' && typeof DIAG !== 'undefined') {
+LEVELS.forEach(function(lv, li){
+lv.lessons.forEach(function(ls, i){
+if (DIAG[ls.id]) { html += '<div class="gal-item"><div class="gal-cap">第' + (li+1) + '章 第' + (i+1) + '課：' + ls.title + '</div><div class="gal-diag">' + DIAG[ls.id] + '</div></div>'; }
+});
+});
+} else if (typeof DIAG !== 'undefined') {
+Object.keys(DIAG).forEach(function(k){
+var cap = k;
+if (typeof NODES !== 'undefined' && NODES[k] && NODES[k].title) cap = NODES[k].title;
+html += '<div class="gal-item"><div class="gal-cap">' + cap + '</div><div class="gal-diag">' + DIAG[k] + '</div></div>';
+});
+}
+gal.innerHTML = html || '<div class="gal-cap">図解はありません</div>';
+}
+btn.onclick = function(){
+var show = gal.style.display !== 'block';
+if (show && !built) { build(); built = true; }
+gal.style.display = show ? 'block' : 'none';
+btn.textContent = show ? '🖼 図解一覧（復習用）を隠す' : '🖼 図解一覧（復習用）を表示';
+};
+})();
+</script>
+</div>
+
+<div class="toast" id="toast">💾 保存しました</div>
+
+<script>
+"use strict";
+/* ============ シルエット ============ */
+function sil(extra){
+return '<svg width="150" height="190" viewBox="0 0 120 150">'
++ '<circle cx="60" cy="34" r="17" fill="#2a0e14"/>'
++ '<path d="M22 150 C22 96 40 66 60 66 C80 66 98 96 98 150 Z" fill="#2a0e14"/>'
++ (extra || '') + '</svg>';
+}
+const CHARS = {
+bannin: sil('<rect x="34" y="14" width="52" height="8" fill="#ff3b30"/>'
++ '<rect x="44" y="29" width="32" height="9" fill="#2a0e14" stroke="#c98a80" stroke-width="2"/>'
++ '<circle cx="53" cy="33" r="3" fill="#ff3b30"/><circle cx="67" cy="33" r="3" fill="#ff3b30"/>'
++ '<path d="M46 118 L74 118 L68 132 L52 132 Z" fill="#ffd94a"/>'),
+ore: sil(''),
+none: ''
+};
+
+/* ============ カリキュラム ============ */
+const LEVELS = [
+{ name:'第1章 発想編 ― 逆転の面白さ', desc:'普通のフィルタは「見たいものだけ残す」。ディストピアモードは、その裏側だけを覗く発想じゃ。', lessons:[
+{ id:'a1', title:'普通のフィルタと、裏返しのモード', teach:[
+'ようこそ裏側へ。わしはウラガワ番人、フィルタが捨てたものの番をしておる。まず普通のフィルタの仕事を確認しよう。君のホワイトリスト型フィルタは、全カードを薄くして、許可したものだけを見せる。「見たいものだけを残す」道具じゃな。',
+'ディストピアモードは、その真逆じゃ。残したものではなく、捨てたもの——ゴミ箱リスト行きになったカードだけを集めて、フィードとして並べて眺める。同じフィルタ、同じデータ。ただ「どちらの窓から見るか」を反転させただけ。それだけで、まったく別の景色が現れるのじゃ。'],
+retry:'普通＝見たいものだけ残す。ディストピアモード＝捨てたものだけ並べて見る、窓の反転。',
+quiz:{ q:'ディストピアモードが並べて見せるのは何か？', choices:[
+{ t:'フィルタが捨てた（ゴミ箱行きの）ものだけ', ok:true }, { t:'許可されたおすすめだけ', ok:false }, { t:'人気ランキング上位だけ', ok:false } ] } },
+{ id:'a2', title:'ゴミ箱は「標本箱」である', teach:[
+'ゴミ箱リストを、ただの失敗作の山と思ってはいかん。あれは標本箱じゃ。何の標本かというと——プラットフォームが「本当は君に見せたかったもの」の標本じゃ。',
+'おすすめ欄に並ぶものは、中立に選ばれているわけではない。長く滞在させ、次も開かせるために選ばれている。その中でも特に強い餌——怒らせる、不安にさせる、羨ましがらせる内容——が、君のフィルタに引っかかってゴミ箱に集まる。つまりゴミ箱には、プラットフォームの「本音」が濃縮されておるのじゃ。'],
+retry:'ゴミ箱は、プラットフォームが本当は見せたかった「強い餌」の標本箱。',
+quiz:{ q:'ゴミ箱リストが「標本箱」と呼ばれる理由は？', choices:[
+{ t:'プラットフォームが見せたかった強い餌が濃縮されるから', ok:true }, { t:'削除した証拠を保管するため', ok:false }, { t:'動画ファイルを保存しているから', ok:false } ] } },
+{ id:'a3', title:'捨てたものだけ見ると、世界が歪んで見える', teach:[
+'ここが面白さの核じゃ。ゴミ箱だけを眺めていると、世界は実に暗く見える。煽り、怒り、不安、下品な釣り——そういうものばかりが並ぶのだから当然じゃ。「世の中は最悪だ」という気分が、じわりと湧いてくる。',
+'だが注意せよ。その「最悪の世界」は現実そのものではない。フィルタが「これは餌だ」と判定して寄せ集めた、偏った標本だけを見ている結果じゃ。捨てたものだけを集めれば、どんな世界でもディストピアに仕上がる。この「仕掛けが見える」こと自体が、このモードの面白さなのじゃ。'],
+retry:'ゴミだけ見れば世界は最悪に見える。だがそれは偏った標本の効果で、現実そのものではない。',
+quiz:{ q:'ゴミ箱だけ見て「世の中は最悪だ」と感じるのはなぜか？', choices:[
+{ t:'本当に世の中が最悪だから', ok:false }, { t:'強い餌だけが寄せ集められた偏った標本を見ているから', ok:true }, { t:'画面が暗い配色だから', ok:false } ] } },
+{ id:'a4', title:'なぜ面白いのか ― 窓を変える実験', teach:[
+'まとめよう。ディストピアモードの面白さは3つある。①反転の快感——普段は見えない裏側を覗く背徳感。②標本の面白さ——「ああ、今日もこんな餌が投げられていたのか」と観察できること。③自分のフィルタの働きが目に見えること——守られている実感が、ゴミの量と質で分かる。',
+'そして根底にあるのは、「世界がどう見えるかは、どの窓から見るかで決まる」という実験じゃ。同じ一日、同じプラットフォームでも、通常の窓と裏側の窓では別世界になる。この体感こそが、後の章で学ぶ観察と心構えの土台になるのじゃ。'],
+retry:'面白さは反転の快感・標本の観察・フィルタの可視化。根底は「窓を変えると世界が変わる」実験。',
+quiz:{ q:'ディストピアモードの根底にある実験とは？', choices:[
+{ t:'フィルタの判定精度を競う実験', ok:false }, { t:'世界がどう見えるかは、どの窓から見るかで決まる、という体感', ok:true }, { t:'ゴミ箱を早く空にする実験', ok:false } ] } },
+]},
+{ name:'第2章 実装編 ― ゴミ箱をフィードにする', desc:'判定ログ（JSON）をカードのフィードに変える設計。土台はViolentmonkey、処理も保存も全部ローカルじゃ。', lessons:[
+{ id:'b1', title:'材料は判定ログ（JSON）', teach:[
+'実装の材料は、サムネ判定道場の補講で学んだ判定ログじゃ。判定のたびに残すJSON——タイトル、チャンネル名、サムネURL、顔面積比、OCRで当たった単語、マッチしたキーワード、時刻。この1件1件が、ディストピアモードの「投稿」になる。',
+'大事なのは、判定した瞬間にログへ必要な項目を全部残しておくことじゃ。特にサムネURLと判定理由（顔面積比・OCRヒット・キーワード）は必須。後から元ページを掘り返すのは大変だが、ログに残っていれば、ゴミ箱はそのままフィードの材料になる。設計は「判定と記録をセットにする」ことから始まるのじゃ。'],
+retry:'材料は判定ログJSON：タイトル・チャンネル名・サムネURL・顔面積比・OCRヒット単語・マッチキーワード・時刻。',
+quiz:{ q:'ディストピアモードのフィードの材料は？', choices:[
+{ t:'判定のたびに残したJSONログ', ok:true }, { t:'YouTubeのおすすめAPI', ok:false }, { t:'ブラウザの閲覧履歴', ok:false } ] } },
+{ id:'b2', title:'カード形式フィードの設計', teach:[
+'表示はカード形式じゃ。1件のログを1枚のカードにして、サムネ画像、タイトル、チャンネル名を、普段のおすすめ欄そっくりに並べる。わざと「いつもの画面」に似せるのが肝じゃ。見慣れた並びで中身だけが餌ばかり——その落差が、標本としての面白さを生む。',
+'並び順は時刻の新しい順が基本。そこへ絞り込みを足す：キーワード別、チャンネル別、顔面積比の大きい順、などじゃ。ゴミ箱リストの見返し画面（サムネつき一覧）を作ってあれば、その一覧表示をそのままフィード表示に転用できる。新しい画面をゼロから作る必要はないのじゃ。'],
+retry:'ログ1件＝カード1枚。おすすめ欄そっくりに並べ、時刻順＋絞り込み。見返し画面の転用でよい。',
+quiz:{ q:'カードの見た目を「いつものおすすめ欄」に似せる理由は？', choices:[
+{ t:'開発が楽だから', ok:false }, { t:'見慣れた並びで中身だけ餌、という落差が標本の面白さを生むから', ok:true }, { t:'YouTubeの規約で決まっているから', ok:false } ] } },
+{ id:'b3', title:'Violentmonkeyでのモード切替', teach:[
+'実装の土台は、君のホワイトリスト型フィルタと同じViolentmonkeyのユーザースクリプトじゃ。左上のパネルにモード切替ボタンを1つ足す。「通常モード」では許可されたカードだけが見える通常ビュー、「ディストピアモード」では判定済みのゴミ側カードだけを集めて並べる反転ビュー。',
+'反転ビューの中身は、ページ上のカードをその場で出す方法と、保存済みログから組み立てる方法の2通りがある。ページ内にある分はその場で集めればよく、過去分まで眺めたいならログから組み立てる。まずはページ内の反転表示から作るのが、道場のいつもの段階作法じゃ。'],
+retry:'パネルにモード切替ボタン。反転ビューはまずページ内の判定済みカードを集めるところから。',
+quiz:{ q:'モード切替の置き場所として自然なのは？', choices:[
+{ t:'既存フィルタのパネルに切替ボタンを足す', ok:true }, { t:'別のブラウザを立ち上げる', ok:false }, { t:'OSの設定画面', ok:false } ] } },
+{ id:'b4', title:'判定理由の併記と、全部ローカルという原則', teach:[
+'カードには必ず判定理由を併記するのじゃ。「顔面積比 38%」「OCR：衝撃・ヤバい」「キーワード：社長」を小さく添える。なぜ捨てられたかが見えることが、通常のゴミ箱と標本箱の決定的な違いじゃ。理由が見えれば、眺める行為が観察に変わる。',
+'そして原則：判定も、ログも、フィードの組み立ても、全部ローカル処理・ローカル保存じゃ。何を捨てたかという記録は、君の閲覧の癖そのもの。外のサーバーに送る理由はどこにもない。GMストレージにログを貯め、ブラウザの中でだけ並べる。自前で完結するからこそ、遠慮なく裏側を覗けるのじゃ。'],
+retry:'カードには判定理由を必ず併記。処理も保存も全部ローカル——捨てたものの記録は外に出さない。',
+quiz:{ q:'カードに判定理由を併記する意味は？', choices:[
+{ t:'カードを賑やかに見せるため', ok:false }, { t:'なぜ捨てられたかが見え、眺める行為が観察に変わるから', ok:true }, { t:'JSONの仕様で必須だから', ok:false } ] } },
+]},
+{ name:'第3章 観察編 ― ゴミの山から法則を読む', desc:'ゴミの山は眺めるだけでは終わらない。集計して偏りを読めば、フィルタを育てる研究材料になるのじゃ。', lessons:[
+{ id:'c1', title:'集計する ― 単語・顔・構図の偏り', teach:[
+'観察の第一歩は集計じゃ。ログはJSON、つまりテキストのデータだから数えられる。よく当たるキーワードは何か。顔面積比の分布はどこに山があるか。OCRで拾える単語の顔ぶれはどうか。数を出すと、「なんとなく多い」が「全体の何割」という言葉に変わる。',
+'構図の偏りも見えてくる。顔は右か左か、文字は上か下か、色は赤と黄ばかりか。餌の作り手たちはクリック率で最適化されているから、勝ちパターンに寄っていく。その寄り具合——偏りそのものが、彼らの設計図の写し絵なのじゃ。'],
+retry:'JSONログを集計し、キーワード・顔面積比・OCR単語・構図の偏りを数で読む。',
+quiz:{ q:'集計で一番大事な変化は？', choices:[
+{ t:'「なんとなく多い」が「全体の何割」と言えるようになる', ok:true }, { t:'ゴミ箱が自動で空になる', ok:false }, { t:'サムネが高画質になる', ok:false } ] } },
+{ id:'c2', title:'時間帯とチャンネルの偏り', teach:[
+'次は切り口を変える。時刻の項目があるのだから、時間帯で分けてみるのじゃ。朝のフィードと深夜のフィードでは、投げてくる餌の種類が違うことがある。不安を煽るものは夜に効き、怒らせるものはニュースの直後に増える——そういう波が見えてくる。',
+'チャンネル別の偏りも重要じゃ。ゴミの半分が少数のチャンネルから来ているなら、そのチャンネルは「餌の専門店」ということになる。逆に、普段は真面目なのに時々だけ強い餌を混ぜるチャンネルもある。偏りの読み分けが、許可リストの見直し材料になるのじゃ。'],
+retry:'時刻で割ると餌の波が見える。チャンネルで割ると「餌の専門店」と「時々混ぜる所」が分かれる。',
+quiz:{ q:'チャンネル別の集計で分かることは？', choices:[
+{ t:'チャンネルの登録者数の推移', ok:false }, { t:'ゴミの大半を出す「餌の専門店」の存在', ok:true }, { t:'動画の再生時間の合計', ok:false } ] } },
+{ id:'c3', title:'誤判定を見つけて「戻す」 ― フィルタが育つ', teach:[
+'標本を眺めていると、必ず「これは捨てるほどではなかった」という誤判定に気づく。顔は大きいが真面目な解説、強い単語が入っているが中身は冷静な検証——そういう1枚を見つけたら、「戻す」操作で通常表示へ復帰させるのじゃ。',
+'この「戻す」が、ただの後始末でないところが肝心じゃ。誤判定のパターンは、そのまま判定ルールの欠陥の記録になる。「この単語は文脈で意味が変わる」「顔面積比の線はここだと誤爆する」——戻すたびに法則が1つ言語化され、閾値とキーワードが直せる。ディストピアモードは、フィルタを育てるための観察窓でもあるのじゃ。'],
+retry:'誤判定を見つけたら「戻す」。そのパターンがルールの欠陥の記録になり、調整の材料になる。',
+quiz:{ q:'誤判定を「戻す」作業の本当の価値は？', choices:[
+{ t:'ゴミ箱の件数を減らせること', ok:false }, { t:'誤判定のパターンから判定ルールの直し方が分かること', ok:true }, { t:'チャンネルに抗議できること', ok:false } ] } },
+{ id:'c4', title:'プラットフォームの「癖」が濃縮されて見える', teach:[
+'観察編の締めじゃ。ゴミ側に集まるのは、感情を揺らす型ばかりじゃ。怒らせる見出し、不安にさせる予告、羨ましがらせる成功談、焦らせる限定感。これは偶然ではない。滞在時間を稼ぐ仕組みが、そういう型を選び、増やし、君の画面まで届けているからじゃ。',
+'通常モードでは、この癖は薄まって見えない。許可された穏やかな面しか見ないからじゃ。ところがゴミ側では癖だけが濃縮されて並ぶ。つまりディストピアモードは遊びであると同時に、プラットフォームの誘導の癖を観察し、自分のフィルタを改善するための研究モードなのじゃ。——ただし、研究には作法が要る。それが次の最終章じゃ。'],
+retry:'ゴミ側には「感情を揺らす型」が濃縮される。ディストピアモードは遊びであり、研究モードでもある。',
+quiz:{ q:'ゴミ側で濃縮されて見えるものは？', choices:[
+{ t:'プラットフォームが滞在時間を稼ぐために選ぶ、感情を揺らす型', ok:true }, { t:'動画の画質の癖', ok:false }, { t:'自分の検索履歴の癖だけ', ok:false } ] } },
+]},
+{ name:'第4章 心構え編 ― ディストピアに浸からない', desc:'最終章は真面目な話じゃ。ゴミだけを見る窓には、認知を引っ張る力がある。その扱い方を学ぶ。', lessons:[
+{ id:'d1', title:'観察と没入は違う', teach:[
+'まず線を引くのじゃ。標本を眺めて法則を読むのが「観察」。気づけば30分、餌の見出しに心を掴まれ、怒ったり不安になったりしながらスクロールし続けているのが「没入」じゃ。同じ画面を見ていても、中身は正反対なのじゃ。',
+'見分け方は簡単じゃ。観察している間、頭の中には問いがある——「この型は今日何件目か」「誤判定はないか」。没入すると問いが消え、感情だけが残る。問いが消えたと気づいたら、それが退出の合図じゃ。番人からの第一の作法として覚えておくのじゃ。'],
+retry:'観察＝問いを持って見る。没入＝問いが消えて感情だけ残る。問いが消えたら退出の合図。',
+quiz:{ q:'「没入」に入ったサインは？', choices:[
+{ t:'集計メモを書き始めた', ok:false }, { t:'頭の中の問いが消え、感情だけが残っている', ok:true }, { t:'判定理由を読み始めた', ok:false } ] } },
+{ id:'d2', title:'裏返しのバイアス ― 平均的な現実は通常側にある', teach:[
+'第1章で学んだ通り、ゴミだけを見れば世界は最悪に見える。これは認知の罠じゃ。フィルタの通常モードにも偏りはある——穏やかなものだけ見れば、世界は平和に見えすぎる。その裏返しとして、ディストピアモードは「世界は最悪だ」という方向へ、同じだけ強く引っ張る。',
+'平均的な現実は、どちらの窓の景色でもない。ゴミ箱は「投げられた餌」の標本であって、「世の中全体」の標本ではないのじゃ。餌の量が多いことと、世の中が悪いことは、別の話じゃ。この切り分けを忘れた時、ディストピアモードは道具から毒に変わる。'],
+retry:'ゴミだけの景色は通常モードの裏返しのバイアス。平均的な現実はどちらの窓にもそのまま映らない。',
+quiz:{ q:'ゴミ箱の景色について正しい理解は？', choices:[
+{ t:'ゴミ箱は世の中全体の縮図である', ok:false }, { t:'ゴミ箱は「投げられた餌」の標本で、世の中全体の標本ではない', ok:true }, { t:'ゴミが多い日は世の中が悪くなっている', ok:false } ] } },
+{ id:'d3', title:'研究モードの作法 ― 目的と時間制限', teach:[
+'では実践の作法じゃ。ディストピアモードに入る時は、研究者として入る。①入る前に目的を1つ決める——「今日の誤判定探し」「今週のキーワード集計」など。②時間制限を先に置く——法則探しなら15分、それで十分データは取れる。③出る時は通常モードに戻し、ゴミ側の景色を「標本だった」と頭の中で言い直してから閉じる。',
+'タイマーは遠慮なく使ってよい。15分で切り上げるのは、根性が弱いのではなく設計じゃ。長く浸かるほど観察の質は下がり、感情の残り香だけが増える。短く、目的を持って、定期的に——それが研究モードの型なのじゃ。'],
+retry:'作法は3つ：目的を1つ決める／時間を先に制限する（例15分）／閉じる時に「標本だった」と言い直す。',
+quiz:{ q:'研究モードの作法として正しいのは？', choices:[
+{ t:'気の済むまで眺めてから考える', ok:false }, { t:'目的と時間制限を先に決めてから入る', ok:true }, { t:'感情が動いたら記録せず閉じる', ok:false } ] } },
+{ id:'d4', title:'笑う距離と俯瞰 ― 卒業の課', teach:[
+'最後の課じゃ。ゴミの山への一番よい態度は、笑って眺める距離感じゃ。「今日も元気に餌が投げられているな」と、作り手の必死さごと面白がる。その距離が取れている間は、餌は君に届いていない。餌は、引っかかった者の中でだけ効くのじゃ。',
+'これは、ふかん術道場で学んだ俯瞰そのものじゃな。視点を一段上げて、出来事ではなく仕組みを見る。——卒業にあたり、番人からの一文を置く。「世界がどう見えるかは、どの窓から見るかで決まる」。通常の窓と裏側の窓、両方を持ち、どちらか一方を現実と勘違いしないこと。それがこの道場の修了証じゃ。'],
+retry:'笑って眺める距離＝俯瞰。締めの一文：「世界がどう見えるかは、どの窓から見るかで決まる」。',
+quiz:{ q:'この道場の締めの一文は？', choices:[
+{ t:'ゴミ箱は毎日空にすべし', ok:false }, { t:'フィルタは強ければ強いほどよい', ok:false }, { t:'世界がどう見えるかは、どの窓から見るかで決まる', ok:true } ] } },
+]},
+];
+
+/* ============ エンジン ============ */
+const SAVE_KEY = 'dystopiaModeSaveV1';
+const TOTAL = LEVELS.reduce((a,l)=>a+l.lessons.length,0);
+let done = {};
+try{ const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); if(s && s.done) done = s.done;}catch(e){}
+let soundOn = true, typing = null, advanceFn = null;
+let cur = { level:0, lesson:0, pages:[], page:0};
+
+const $ = id => document.getElementById(id);
+const bgEl=$('bg'), charEl=$('char'), nameEl=$('namebox'), textEl=$('text'),
+boxEl=$('textbox'), chEl=$('choices'), nextEl=$('nextmark');
+
+function beep(freq, dur, delay, vol){
+if(!soundOn) return;
+try{
+const ctx = beep.ctx || (beep.ctx = new (window.AudioContext||window.webkitAudioContext)());
+if(ctx.state === 'suspended') ctx.resume();
+const o = ctx.createOscillator(), g = ctx.createGain();
+o.type='square'; o.frequency.value = freq || 660;
+g.gain.value = vol || 0.03;
+o.connect(g); g.connect(ctx.destination);
+const t = ctx.currentTime + (delay||0);
+o.start(t); o.stop(t + (dur||0.06));
+}catch(e){}
+}
+function save(){
+try{ localStorage.setItem(SAVE_KEY, JSON.stringify({done})); toast();}catch(e){}
+}
+function toast(){
+const t=$('toast'); t.classList.add('show');
+clearTimeout(toast.tm); toast.tm=setTimeout(()=>t.classList.remove('show'), 900);
+}
+function doneCount(){ return Object.keys(done).filter(k=>done[k]).length;}
+function renderProgress(now){
+$('pDone').textContent = doneCount();
+$('bDone').style.width = (doneCount()/TOTAL*100) + '%';
+if(now) $('pNow').textContent = now;
+}
+function setScene(bg, char, name){
+bgEl.className = 'bg ' + bg;
+charEl.innerHTML = CHARS[char] || '';
+charEl.style.display = char && char!== 'none'? '': 'none';
+if(name){ nameEl.textContent = name; nameEl.style.display='';} else nameEl.style.display='none';
+}
+function typeText(txt, onDoneTyping){ speak(txt);
+clearInterval(typing);
+textEl.textContent=''; nextEl.style.display='none';
+boxEl.scrollTop = 0;
+advanceFn = null;
+let i=0;
+typing = setInterval(()=>{
+i++;
+textEl.textContent = txt.slice(0, i);
+boxEl.scrollTop = boxEl.scrollHeight;
+const ch = txt.charAt(i-1);
+if(ch && ch!== ' ' && ch!== '\n' && i % 2 === 1){
+beep(880 + Math.random()*420, 0.018, 0, 0.012);
+}
+if(i >= txt.length){
+clearInterval(typing); typing=null;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+}
+}, 26);
+boxEl.onclick = ()=>{
+if(typing){
+clearInterval(typing); typing=null;
+textEl.textContent = txt; boxEl.scrollTop = boxEl.scrollHeight;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+} else if(advanceFn){
+const f = advanceFn; advanceFn = null; f();
+}
+};
+}
+document.addEventListener('keydown', e=>{
+if(!typing && advanceFn && (e.key === ' ' || e.key === 'Enter')){
+e.preventDefault();
+const f = advanceFn; advanceFn = null; f();
+}
+});
+function showChoices(items){
+chEl.innerHTML='';
+items.forEach(it=>{
+const b=document.createElement('button');
+b.className='choice' + (it.done? ' done': '');
+b.textContent=it.t;
+b.onclick=()=>{ beep(520,.06); setTimeout(()=>beep(780,.07),70); chEl.classList.remove('show'); it.fn();};
+chEl.appendChild(b);
+});
+chEl.classList.add('show');
+const dg = $('diagram');
+if(dg && dg.style.display === 'block'){
+$('screen').classList.add('diagmenu');
+requestAnimationFrame(()=>{
+const sr = $('screen').getBoundingClientRect();
+const dr = dg.getBoundingClientRect();
+chEl.style.top = Math.max(0, Math.round(dr.bottom - sr.top + 8)) + 'px';
+});
+} else { $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+}
+function hideChoices(){ chEl.classList.remove('show'); chEl.innerHTML=''; chEl.style.top=''; $('screen').classList.remove('diagmenu'); }
+
+/* ============ 図解（8bit風SVG・黒板） ============ */
+function _ar(x1,y1,x2,y2,col){ col=col||'#c98a80'; var pts; if(Math.abs(x2-x1)>=Math.abs(y2-y1)){ pts = x2>x1 ? [[x2,y2],[x2-10,y2-6],[x2-10,y2+6]] : [[x2,y2],[x2+10,y2-6],[x2+10,y2+6]]; } else { pts = y2>y1 ? [[x2,y2],[x2-6,y2-10],[x2+6,y2-10]] : [[x2,y2],[x2-6,y2+10],[x2+6,y2+10]]; } return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+col+'" stroke-width="4"/><polygon points="'+pts.map(function(p){return p.join(',');}).join(' ')+'" fill="'+col+'"/>'; }
+function _tx(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#ffe9e4')+'" text-anchor="middle">'+str+'</text>'; }
+function _bx(x,y,w,h,label,fill){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'" stroke="#c98a80" stroke-width="2"/><text x="'+(x+w/2)+'" y="'+(y+h/2+5)+'" font-size="12" fill="#fff" text-anchor="middle">'+label+'</text>'; }
+function _tag(x,y,str,col){ var w=str.length*12+12; return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="20" fill="'+col+'"/><text x="'+(x+w/2)+'" y="'+(y+14)+'" font-size="11" fill="#16060c" text-anchor="middle" font-weight="bold">'+str+'</text>'; }
+function _svg(inner){ return '<svg viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'+inner+'</svg>'; }
+var YL='#ffd94a', GN='#7ee787', RD='#ff7b72', DM='#c98a80';
+const DIAG = {
+a1: _svg(_tx(180,16,'窓の反転',DM,12)
+ + _bx(8,44,104,38,'通常：残す側','#14532d') + _ar(112,63,128,63)
+ + _bx(128,44,104,38,'フィルタ','#571f2a') + _ar(232,63,248,63)
+ + _bx(248,44,104,38,'裏側：捨てる側','#4a1420')
+ + _tx(180,112,'同じデータ、見る窓を反転させるだけ',YL,12)),
+a2: _svg(_tx(180,16,'ゴミ箱＝標本箱',DM,12)
+ + _tag(16,26,'怒らせる餌',RD) + _tag(116,26,'不安にさせる餌',RD) + _tag(232,26,'羨ましがらせる餌',RD)
+ + _tag(50,62,'プラットフォームの「本音」が濃縮',YL)),
+a3: _svg(_tx(180,16,'偏った標本の効果',DM,12)
+ + _bx(8,44,150,38,'ゴミだけ集める','#4a1420') + _ar(158,63,174,63)
+ + _bx(174,44,178,38,'世界が最悪に見える','#571f2a')
+ + _tx(180,112,'現実ではなく、標本の偏りの効果',YL,12)),
+a4: _svg(_tx(180,16,'面白さの3点と根底の実験',DM,12)
+ + _tag(16,26,'反転の快感',YL) + _tag(116,26,'標本の観察',YL) + _tag(216,26,'守られてる実感',YL)
+ + _tag(40,62,'根底：窓を変えると世界が変わる',GN)),
+b1: _svg(_tx(180,16,'判定ログ（JSON）の項目',DM,12)
+ + _tag(8,26,'タイトル',GN) + _tag(92,26,'チャンネル名',GN) + _tag(196,26,'サムネURL',GN)
+ + _tag(8,58,'顔面積比',GN) + _tag(92,58,'OCRヒット単語',GN) + _tag(208,58,'キーワード',GN)
+ + _tag(150,90,'時刻',GN)),
+b2: _svg(_tx(180,16,'カード形式フィード',DM,12)
+ + _bx(8,36,104,52,'カード：サムネ','#571f2a')
+ + _bx(128,36,104,52,'カード：理由付き','#571f2a')
+ + _bx(248,36,104,52,'カード：理由付き','#571f2a')
+ + _tx(180,112,'おすすめ欄そっくりに並べるのが肝',YL,12)),
+b3: _svg(_tx(180,16,'パネルのモード切替',DM,12)
+ + _bx(30,26,300,34,'［通常モード］⇔［ディストピアモード］','#571f2a')
+ + _tx(180,84,'通常ビュー：許可カードだけ',GN,12)
+ + _tx(180,108,'反転ビュー：ゴミ側カードだけ',RD,12)),
+b4: _svg(_tx(180,16,'理由の併記とローカル原則',DM,12)
+ + _tag(16,26,'顔面積比 38%',YL) + _tag(130,26,'OCR：衝撃',YL) + _tag(222,26,'KW：社長',YL)
+ + _tag(40,62,'判定も保存も全部ローカル（外に出さない）',GN)),
+c1: _svg(_tx(180,16,'集計で読む偏り',DM,12)
+ + _tag(16,26,'キーワード頻度',GN) + _tag(140,26,'顔面積比の分布',GN)
+ + _tag(16,58,'OCR単語の顔ぶれ',GN) + _tag(160,58,'構図：顔の位置・色',GN)),
+c2: _svg(_tx(180,16,'切り口を変える',DM,12)
+ + _bx(8,44,160,38,'時間帯で割る','#571f2a') + _ar(168,63,184,63)
+ + _bx(184,44,168,38,'餌の波が見える','#4a1420')
+ + _tx(180,108,'チャンネルで割ると「餌の専門店」が見える',YL,11)),
+c3: _svg(_tx(180,16,'戻す → 法則 → 調整',DM,12)
+ + _bx(2,44,112,38,'誤判定を戻す','#571f2a') + _ar(114,63,126,63)
+ + _bx(126,44,112,38,'欠陥を言語化','#571f2a') + _ar(238,63,250,63)
+ + _bx(250,44,108,38,'閾値を調整','#14532d')),
+c4: _svg(_tx(180,16,'濃縮される「感情を揺らす型」',DM,12)
+ + _tag(16,26,'怒らせる',RD) + _tag(96,26,'不安にさせる',RD) + _tag(196,26,'羨ましがらせる',RD) + _tag(286,26,'焦らせる',RD)
+ + _tag(50,62,'遊びであり、研究モードでもある',YL)),
+d1: _svg(_tx(180,16,'観察と没入の違い',DM,12)
+ + _bx(8,40,160,40,'観察：問いがある','#14532d')
+ + _bx(192,40,160,40,'没入：感情だけ残る','#4a1420')
+ + _tx(180,108,'問いが消えたら退出の合図',YL,12)),
+d2: _svg(_tx(180,16,'裏返しのバイアス',DM,12)
+ + _bx(8,40,104,38,'通常側：平和','#14532d')
+ + _bx(128,40,104,38,'平均的な現実','#571f2a')
+ + _bx(248,40,104,38,'ゴミ側：最悪','#4a1420')
+ + _tx(180,104,'どちらの窓も、そのまま現実ではない',YL,11)),
+d3: _svg(_tx(180,16,'研究モードの作法',DM,12)
+ + _tag(16,26,'①目的を1つ決める',GN) + _tag(160,26,'②時間制限（例15分）',GN)
+ + _tag(50,60,'③閉じる時に「標本だった」と言い直す',YL)),
+d4: _svg(_tx(180,16,'卒業の一文',DM,12)
+ + _tx(180,52,'世界がどう見えるかは',YL,15)
+ + _tx(180,78,'どの窓から見るかで決まる',YL,15)
+ + _tx(180,108,'笑う距離＝俯瞰。両方の窓を持つ',GN,12)),
+};
+function showDiagFor(id){
+const d = $('diagram');
+if(DIAG[id]){ d.innerHTML = DIAG[id]; d.style.display = 'block'; }
+else d.style.display = 'none';
+}
+function hideDiag(){ $('diagram').style.display = 'none'; $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+
+/* ============ 画面遷移 ============ */
+function goLevels(){
+hideChoices();
+hideDiag();
+setScene('bg-city','none','');
+renderProgress('レベル選択');
+const dc = doneCount();
+const intro = dc === 0
+? '「よく来た。わしがウラガワ番人じゃ」\nテーマは「ディストピアモード」——フィルタが捨てたものだけを並べて見る、逆転の発想じゃ。全' + TOTAL + '課。\n好きな章からでよい。分かるまで、何度でも付き合うぞ。'
+: '「戻ったか。現在の理解済みは ' + dc + ' / ' + TOTAL + ' 課じゃ」\n続きをやるもよし、済んだ課を復習するもよし。';
+typeText(intro, ()=>{
+showChoices(LEVELS.map((lv, i)=>{
+const c = lv.lessons.filter(l=>done[l.id]).length;
+return { t: lv.name + '（' + c + '/' + lv.lessons.length + ' 済）', done: c === lv.lessons.length,
+fn: ()=>goLessons(i)};
+}));
+});
+}
+function goLessons(li){
+hideChoices();
+hideDiag();
+const lv = LEVELS[li];
+cur.level = li;
+setScene('bg-city','bannin','ウラガワ番人');
+renderProgress(lv.name);
+typeText('\n' + lv.desc + '\n課を選ぶのじゃ。✔ は理解済み。復習は何度でもできるぞ。', ()=>{
+showChoices(
+lv.lessons.map((ls, i)=>({ t: ls.title, done:!!done[ls.id], fn: ()=>startLesson(li, i, false)}))
+.concat([{ t:'レベル選択に戻る', fn: goLevels}])
+);
+});
+}
+function startLesson(li, idx, withRetry){
+hideChoices();
+const ls = LEVELS[li].lessons[idx];
+cur.level = li; cur.lesson = idx;
+cur.pages = ls.teach.slice();
+if(withRetry) cur.pages.push('\n' + ls.retry);
+cur.page = 0;
+setScene('bg-term','bannin','ウラガワ番人');
+renderProgress(LEVELS[li].name + '：' + ls.title);
+showDiagFor(ls.id);
+teachPage();
+}
+function teachPage(){
+const isLast = cur.page >= cur.pages.length - 1;
+typeText('\n' + cur.pages[cur.page], ()=>{
+if(isLast){ showCheck();}
+else { advanceFn = ()=>{ cur.page++; teachPage();};}
+});
+}
+function showCheck(){
+showChoices([
+{ t:'これは分かった！（確認問題へ）', fn: showQuiz},
+{ t:'分からない（もう一度聞く）', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'レッスン一覧に戻る', fn: ()=>goLessons(cur.level)}
+]);
+}
+function showQuiz(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+setScene('bg-term','bannin','ウラガワ番人');
+typeText('\n' + ls.quiz.q, ()=>{
+showChoices(ls.quiz.choices.map(c=>({
+t: c.t,
+fn: ()=>{ if(c.ok) completeLesson(); else wrongAnswer();}
+})));
+});
+}
+function wrongAnswer(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+beep(220,.12); setTimeout(()=>beep(180,.14),120);
+typeText('「むむ、違うぞ。焦らなくてよい」\n' + ls.retry, ()=>{
+showChoices([
+{ t:'もう一度説明を聞く', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'もう一度問題に挑む', fn: showQuiz}
+]);
+});
+}
+function completeLesson(){
+hideDiag();
+const li = cur.level, idx = cur.lesson;
+const ls = LEVELS[li].lessons[idx];
+done[ls.id] = true; save();
+[392,523,659,784].forEach((f,i)=>beep(f,.1,i*0.11));
+renderProgress(LEVELS[li].name + '：' + ls.title + ' ✔');
+const dc = doneCount();
+const levelDone = LEVELS[li].lessons.every(l=>done[l.id]);
+let msg = '「うむ、分かったようじゃな」\n理解済み ✔（合計 ' + dc + ' / ' + TOTAL + ' 課）';
+if(dc >= TOTAL){
+setScene('bg-way','bannin','ウラガワ番人');
+msg += '\n\n――全課、修了じゃ！\n通常の窓と裏側の窓、両方を持った者だけが見える景色がある。ディストピアモードを作る時は、遊びとして楽しく、入る時は研究者として短く。そして覚えておれ——「世界がどう見えるかは、どの窓から見るかで決まる」。卒業おめでとう！';
+} else if(levelDone){
+msg += '\nこの章は全課修了じゃ。よくやった。';
+}
+typeText(msg, ()=>{
+const items = [];
+if(dc < TOTAL){
+if(idx + 1 < LEVELS[li].lessons.length){
+items.push({ t:'次の課へ（' + LEVELS[li].lessons[idx+1].title + '）', fn: ()=>startLesson(li, idx+1, false)});
+} else if(li + 1 < LEVELS.length){
+items.push({ t:'次の章へ（' + LEVELS[li+1].name + '）', fn: ()=>goLessons(li+1)});
+}
+}
+items.push({ t:'レッスン一覧に戻る', fn: ()=>goLessons(li)});
+items.push({ t:'レベル選択に戻る', fn: goLevels});
+showChoices(items);
+});
+}
+
+/* ============ ボタン類 ============ */
+$('btnEnter').onclick = ()=>{ beep(660,.06); $('title').style.display='none'; goLevels();};
+$('btnLevels').onclick = ()=>{ $('title').style.display='none'; goLevels();};
+$('btnReset').onclick = ()=>{
+done = {}; save(); renderProgress('タイトル');
+$('title').style.display='flex';
+};
+$('btnSound').onclick = (e)=>{
+soundOn =!soundOn;
+e.target.textContent = soundOn? '🔊 音ON': '🔇 音OFF';
+if(soundOn) beep(700,.06);
+};
+renderProgress('タイトル');
+
+let ttsOn = false;
+try{ ttsOn = localStorage.getItem('advTtsV1') === '1'; }catch(e){}
+const btnTts = document.getElementById('btnTts');
+function updTtsBtn(){ if(btnTts) btnTts.textContent = ttsOn ? '🗣 読上ON' : '🗣 読上OFF'; }
+function speak(txt){
+  if(!ttsOn || !('speechSynthesis' in window)) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(String(txt).replace(/\n+/g, ' '));
+    u.lang = 'ja-JP'; u.rate = 1.0;
+    const vs = speechSynthesis.getVoices();
+    const jv = vs.find(v => v.lang && v.lang.toLowerCase().indexOf('ja') === 0) || vs[0];
+    if(jv) u.voice = jv;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+if(btnTts) btnTts.onclick = () => {
+  ttsOn = !ttsOn;
+  try{ localStorage.setItem('advTtsV1', ttsOn ? '1' : '0'); }catch(e){}
+  updTtsBtn();
+  if(ttsOn){ speak(textEl.textContent); setTimeout(checkVoices, 800); }
+  else if('speechSynthesis' in window) speechSynthesis.cancel();
+};
+function checkVoices(){
+  if(!ttsOn || !btnTts || !('speechSynthesis' in window)) return;
+  if(speechSynthesis.getVoices().length === 0) btnTts.textContent = '🗣 音声なし';
+  else updTtsBtn();
+}
+if('speechSynthesis' in window) speechSynthesis.onvoiceschanged = checkVoices;
+updTtsBtn();
+setTimeout(checkVoices, 800);
+</script>
+</body>
+</html>
