@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<!-- build: 2026-11-25 13:37:01 JST -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="data:,">
+<title>税金のしくみ道場 ― 嫌悪感を、仕組みの理解に変える</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{
+--tb:29%;
+--ink:#f2ead8; --dim:#8fa6bd; --blue:#5bc0de; --panel:#101c2b;
+--win:#1d3049; --accent:#e8b84a; --good:#7ee787; --bad:#ff7b72;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+body{margin:0;background:#08111c;color:var(--ink);
+font-family:"DotGothic16","Hiragino Kaku Gothic ProN","Noto Sans JP",monospace,sans-serif;
+-webkit-font-smoothing:none;font-smooth:never;
+display:flex;justify-content:center;padding:14px 10px 40px}
+.cab{width:100%;max-width:760px}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{font-weight:900;letter-spacing:2px;font-size:18px;color:#fff;
+text-shadow:2px 2px 0 #8a6a1a, 4px 4px 0 #1d3049}
+.logo small{display:block;font-size:11px;color:var(--dim);letter-spacing:1px;text-shadow:none}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer}
+.sbtn{background:var(--win);color:var(--ink);border:2px solid var(--dim);
+padding:4px 10px;font-size:12px;border-radius:4px;min-height:36px}
+.sbtn:hover{border-color:#fff;color:#fff}
+.params{display:flex;gap:14px;background:var(--panel);border:2px solid var(--dim);
+padding:6px 12px;font-size:12px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.params b{color:var(--accent)}
+.bar{display:inline-block;width:120px;height:10px;background:#243a52;vertical-align:middle;margin-left:4px;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--good);display:block}
+.screen{position:relative;border:6px solid var(--dim);border-radius:6px;overflow:hidden;
+aspect-ratio:16/10;background:#000;image-rendering:pixelated}
+.screen::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+background:repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 3px, transparent 3px 6px)}
+.bg{position:absolute;inset:0;transition:opacity.4s}
+.bg-room{background:linear-gradient(#13273e 0 55%, #1d3049 55% 100%)}
+.bg-room::before{content:"";position:absolute;right:8%;top:8%;width:110px;height:130px;
+background:linear-gradient(#243a52,#13273e);border:6px solid #050b13;
+box-shadow:0 0 0 4px #3d5a78, inset 0 0 0 3px #3d5a78}
+.bg-term{background:radial-gradient(ellipse at 50% 40%, #16283e 0%, #08111c 70%)}
+.bg-term::before{content:"税金 ❚ 会費 ❚ 一般会計 ❚ 社会保障 ❚ 国債費 ❚ 特別会計 ❚ 基金 ❚ 決算 ❚ 予算 ❚ 単年度主義 ❚ サンセット ❚ 住民監査請求 ❚ 明細 ❚";
+position:absolute;inset:6%;color:#5bc0de;font-size:13px;line-height:2.1;opacity:.45;
+font-family:ui-monospace,Menlo,monospace;word-break:break-all}
+.bg-way{background:linear-gradient(#0b2540 0%, #1d3049 55%, #8a6a1a 82%, #e8b84a 100%)}
+.bg-city{background:linear-gradient(#08111c 0%, #13273e 60%, #1d3049 100%)}
+.bg-city::before{content:"";position:absolute;left:0;right:0;bottom:29%;height:46%;
+background:
+linear-gradient(#0000 78%, #04090f 78%) ,
+repeating-linear-gradient(90deg, #04090f 0 34px, #0000 34px 46px, #0d1a29 46px 78px, #0000 78px 92px);
+box-shadow:inset 0 0 60px rgba(232,184,74,.18)}
+.stars{position:absolute;inset:0;z-index:1;
+background-image:radial-gradient(2px 2px at 12% 18%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 32% 8%, #ffe9a8 50%, transparent 51%),
+radial-gradient(2px 2px at 55% 22%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 74% 10%, #ffe9a8 50%, transparent 51%),
+radial-gradient(2px 2px at 88% 26%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 44% 30%, #a8d8f0 50%, transparent 51%)}
+.char{position:absolute;bottom:var(--tb);left:50%;transform:translateX(-50%);z-index:2;
+filter:drop-shadow(0 0 10px rgba(232,184,74,.6))}
+.char svg{display:block}
+.ground{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:1;
+background:linear-gradient(transparent, rgba(4,9,15,.92) 30%)}
+.namebox{position:absolute;left:14px;bottom:calc(var(--tb) + 8px);z-index:8;color:#ffffff;
+background:var(--win);border:3px solid var(--dim);padding:2px 14px;font-weight:700;font-size:16px;
+letter-spacing:.06em;text-shadow:2px 2px 0 #000}
+.textbox{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:7;color:#ffffff;
+background:rgba(6,13,22,.97);border-top:4px solid var(--dim);
+padding:12px 16px;font-size:18px;line-height:1.8;letter-spacing:.06em;
+text-shadow:2px 2px 0 #000;
+cursor:pointer;white-space:pre-wrap;overflow-y:auto;overflow-x:hidden;
+scrollbar-width:thin;scrollbar-color:#e8b84a #101c2b}
+.textbox::-webkit-scrollbar{width:10px}
+.textbox::-webkit-scrollbar-track{background:#101c2b}
+.textbox::-webkit-scrollbar-thumb{background:#e8b84a;border:2px solid #060d16}
+.textbox.next{position:absolute;right:12px;bottom:6px;color:var(--accent);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.choices{position:absolute;top:0;left:0;right:0;bottom:calc(var(--tb) + 46px);z-index:9;display:none;flex-direction:column;
+align-items:center;justify-content:center;gap:12px;background:rgba(4,9,15,.80);padding:16px;overflow-y:auto}
+.choices.show{display:flex}
+.choice{width:min(92%,520px);background:#0d1a29;color:#ffffff;font-weight:700;
+border:3px solid #d8e6f2;padding:12px 16px;font-size:18px;letter-spacing:.08em;
+text-shadow:2px 2px 0 #000;text-align:left;border-radius:4px;min-height:44px}
+.choice:hover{border-color:var(--accent);color:#fff;background:#1d3049}
+.choice::before{content:"▶ ";color:var(--accent)}
+.choice.done{border-color:var(--good)}
+.choice.done::before{content:"✔ ";color:var(--good)}
+.title{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
+justify-content:center;gap:14px;background:radial-gradient(ellipse at 50% 35%, #1d3049 0%, #08111c 75%);text-align:center;padding:16px}
+.title h1{margin:0;font-size:clamp(24px,6vw,42px);letter-spacing:3px;color:#fff;
+text-shadow:3px 3px 0 #8a6a1a, 6px 6px 0 #1d3049}
+.title p{color:#d8e6f2;font-size:14px;margin:0;line-height:1.9}
+.tbtn{background:#0d1a29;color:#fff;font-weight:700;border:3px solid #d8e6f2;padding:10px 26px;font-size:17px;letter-spacing:.08em;border-radius:4px;min-height:44px}
+.tbtn:hover{border-color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
+border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;opacity:0;transition:opacity.3s;z-index:50;pointer-events:none}
+.toast.show{opacity:1}
+#diagram{transition:width .25s}
+.screen.diagmenu #diagram{width:min(430px,74%)}
+.screen.diagmenu .choices{bottom:calc(var(--tb) + 8px);flex-direction:row;flex-wrap:wrap;align-content:flex-start;justify-content:center;gap:8px}
+.screen.diagmenu .choice{flex:1 1 28%;width:auto;margin:0;text-align:center;font-size:14px;padding:10px 8px;line-height:1.5}
+#diagram{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:min(560px,94%);z-index:5;background:rgba(4,9,15,.88);border:2px solid var(--dim);padding:6px;display:none}
+#diagram svg{width:100%;height:auto;display:block}
+footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
+kbd{display:inline-block;background:#1d3049;border:1px solid var(--dim);border-bottom-width:2px;
+border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+@media (max-width:560px){.textbox{font-size:15px}.char{bottom:var(--tb)}}
+@media (orientation:portrait) and (max-width:760px){
+:root{--tb:46%}
+.screen{aspect-ratio:auto;height:80vh;height:80dvh}
+.textbox{font-size:16px;line-height:1.75}
+.char svg{width:100px;height:127px}
+.choice{font-size:16px;padding:10px 14px}
+.choices{overflow-y:auto}
+.title h1{font-size:24px}
+.title p{font-size:13px}
+.params{gap:8px;font-size:11px}
+.bar{width:80px}
+}
+.choices{justify-content:flex-start;overflow-y:auto}
+.choice:first-child{margin-top:auto}
+.choice:last-child{margin-bottom:auto}
+</style>
+</head>
+<body>
+<div class="cab">
+<header>
+<div class="logo">税金のしくみ道場<small>― 嫌悪感を、仕組みの理解に変える 全18課（本編16課＋補講2課）―</small></div>
+<div class="btns">
+<button class="sbtn" id="btnSound">🔊 音ON</button><button class="sbtn" id="btnTts">🗣 読上OFF</button>
+<button class="sbtn" id="btnLevels">🏠 レベル選択</button>
+<button class="sbtn" id="btnReset">🗑 進捗リセット</button>
+</div>
+</header>
+
+<div class="params">
+<span>理解済み <b id="pDone">0</b> / 18 課<span class="bar"><i id="bDone" style="width:0%"></i></span></span>
+<span style="color:var(--dim)">現在：<span id="pNow">タイトル</span></span>
+<span style="margin-left:auto;color:var(--dim)">💾 進捗は自動保存（localStorage）</span>
+</div>
+
+<div class="screen" id="screen">
+<div class="bg bg-city" id="bg"></div>
+<div class="stars"></div>
+<div class="ground"></div>
+<div class="char" id="char"></div>
+<div id="diagram"></div>
+<div class="namebox" id="namebox" style="display:none"></div>
+<div class="textbox" id="textbox"><span id="text"></span><span class="next" id="nextmark" style="display:none">▼</span></div>
+<div class="choices" id="choices"></div>
+<div class="title" id="title">
+<h1>税金のしくみ道場</h1>
+<p>税金へのモヤモヤは、昔から消えない。だが責める相手を「人」から「仕組み」に変えると、景色が変わる。<br>
+会費という見方、使い道の実像、無駄が生まれる構造、そして改善の道具まで。全18課（本編16課＋補講「正直な出発点」2課）。<br>
+数字はすべて「約」「目安」の概数。特定の誰かを責める話ではなく、構造の話をする。<br>
+「分かった！」で次へ、「分からない」で何度でもやり直し。</p>
+<button class="tbtn" id="btnEnter">▶ 帳簿を開きにいく</button>
+<p>進捗（理解済み ✔）はブラウザに自動保存されます</p>
+</div>
+</div>
+
+<footer>
+遊び方：説明を読んだら「これは分かった！」か「分からない」を選ぶだけ。分かったら確認問題が1問出て、正解でその課は理解済み ✔。
+間違えてもペナルティなし、補足説明を読んで何度でも挑めます。本文クリックで文字送り、長い文は自動スクロール＋手動スクロール可。
+この道場は、ふかん術道場（不快を俯瞰で理解に変える）の実践編です。税金・公務員・役人への悪いイメージとモヤモヤを否定せず、その出どころを「選べなさ」の構造で分解し、使い道の実像と無駄の発生機構を押さえた上で、「人ではなく仕組みを改善するには」という視点に着地します。数字は公表資料に基づく概数で、年度によって変動します。特定の政党・政治家・個人への賛否や非難は扱いません。
+</footer>
+<style>
+#galleryWrap{margin:16px 0 4px;text-align:center}
+#gallery{display:none;text-align:left;margin-top:12px}
+.gal-item{background:#0d1a29;border:2px solid #3d5a78;padding:10px 12px;margin:0 0 12px}
+.gal-cap{color:#e8b84a;font-size:14px;margin-bottom:8px}
+.gal-diag svg{width:100%;height:auto;display:block}
+</style>
+<div id="galleryWrap">
+<div style="margin-bottom:10px"><button class="sbtn" id="btnListen">🎧 リスニング（全レッスン読み上げ）</button>
+<div id="listenPanel" style="display:none;text-align:left;margin-top:10px;background:#0d1a29;border:2px solid #3d5a78;padding:10px 12px">
+<div style="margin-bottom:8px"><button class="sbtn" id="btnPlay">▶ ブラウザ音声で再生</button> <button class="sbtn" id="btnStop">⏹ 停止</button> <span id="listenStatus" style="font-size:12px;color:#a8d8f0"></span></div>
+<div style="height:8px;background:#243a52;border:1px solid #3d5a78;margin-bottom:8px"><div id="listenFill" style="height:100%;width:0%;background:#e8b84a"></div></div>
+<div style="font-size:12px;color:#a8d8f0;margin-bottom:8px">PCでは Read Aloud 拡張機能で、この下のテキストをそのまま読み上げられます。</div>
+<div id="listenText" style="color:#fff;font-size:15px;line-height:1.7"></div>
+</div></div>
+<button class="sbtn" id="btnGallery">🖼 図解一覧（復習用）を表示</button>
+<div id="gallery"></div>
+</div>
+<script>
+(function(){
+var btnMain = document.getElementById('btnListen');
+var panel = document.getElementById('listenPanel');
+var btn = document.getElementById('btnPlay');
+var btnStop = document.getElementById('btnStop');
+var st = document.getElementById('listenStatus');
+var fill = document.getElementById('listenFill');
+var lt = document.getElementById('listenText');
+if(!btnMain || !panel || !btn) return;
+var playing = false, items = [], idx = 0, curId = 0, watchdog = null, tickTimer = null, itemStart = 0, started = false, attempts = 0, built = false, paused = false;
+function buildItems(){
+  var arr = [];
+  LEVELS.forEach(function(ch, ci){
+    arr.push('第' + (ci + 1) + '章。' + ch.name);
+    ch.lessons.forEach(function(ls){
+      arr.push(ls.title);
+      (ls.teach || []).forEach(function(t){ arr.push(t); });
+    });
+  });
+  return arr;
+}
+function buildText(){
+  lt.innerHTML = '';
+  LEVELS.forEach(function(ch, ci){
+    var h = document.createElement('div');
+    h.style.cssText = 'color:#e8b84a;font-weight:bold;margin:14px 0 6px';
+    h.textContent = '第' + (ci + 1) + '章 ' + ch.name;
+    lt.appendChild(h);
+    ch.lessons.forEach(function(ls){
+      var t = document.createElement('div');
+      t.style.cssText = 'font-weight:bold;margin:10px 0 4px';
+      t.textContent = ls.title;
+      lt.appendChild(t);
+      (ls.teach || []).forEach(function(tx){
+        var p = document.createElement('div');
+        p.style.cssText = 'margin:0 0 8px;white-space:pre-wrap';
+        p.textContent = tx;
+        lt.appendChild(p);
+      });
+    });
+  });
+}
+function pickVoice(){
+  var vs = speechSynthesis.getVoices();
+  for(var i = 0; i < vs.length; i++){ if(vs[i].lang && vs[i].lang.toLowerCase().indexOf('ja') === 0) return vs[i]; }
+  return vs[0] || null;
+}
+function fmt(sec){ var m = Math.floor(sec / 60), s = sec % 60; return m + ':' + (s < 10 ? '0' : '') + s; }
+function setBar(){ if(fill && items.length) fill.style.width = Math.round(idx / items.length * 100) + '%'; }
+function status(){
+  if(!st || !playing) return;
+  var el = Math.floor((Date.now() - itemStart) / 1000);
+  st.textContent = (started ? '再生中 ' : '準備中… ') + (idx + 1) + '/' + items.length + '（' + fmt(el) + '）' + (items[idx] || '').slice(0, 18);
+}
+function clearTimers(){
+  if(watchdog){ clearTimeout(watchdog); watchdog = null; }
+  if(tickTimer){ clearInterval(tickTimer); tickTimer = null; }
+}
+function stop(msg){
+  playing = false; paused = false; curId++; clearTimers();
+  try{ speechSynthesis.cancel(); }catch(e){}
+  btn.textContent = '▶ ブラウザ音声で再生';
+  if(st) st.textContent = msg || '';
+  if(fill) fill.style.width = '0%';
+}
+function armWatchdog(text){
+  if(watchdog) clearTimeout(watchdog);
+  var est = Math.min(45000, Math.max(7000, text.length * 260 + 4000));
+  watchdog = setTimeout(function(){
+    if(!playing) return;
+    curId++;
+    try{ speechSynthesis.cancel(); }catch(e){}
+    idx++; next();
+  }, est);
+}
+function trySpeak(text, useVoice){
+  var my = ++curId;
+  started = false; itemStart = Date.now(); setBar(); status();
+  try{ speechSynthesis.resume(); }catch(e){}
+  var u = new SpeechSynthesisUtterance(String(text).replace(/\n+/g, ' '));
+  u.lang = 'ja-JP'; u.rate = 1.0;
+  var v = useVoice ? pickVoice() : null;
+  if(v) u.voice = v;
+  u.onstart = function(){ if(my === curId){ started = true; status(); } };
+  u.onend = function(){ if(my === curId && playing){ idx++; next(); } };
+  u.onerror = function(){
+    if(my !== curId || !playing) return;
+    if(speechSynthesis.getVoices().length === 0){ stop('音声が見つかりません（この端末では読み上げできません）'); return; }
+    if(useVoice && attempts === 0){ attempts++; trySpeak(text, false); return; }
+    idx++; next();
+  };
+  armWatchdog(text);
+  try{ speechSynthesis.speak(u); }catch(e){ setTimeout(function(){ if(my === curId && playing){ idx++; next(); } }, 300); }
+}
+function next(){
+  if(!playing || paused) return;
+  if(idx >= items.length){ stop('読み上げ終了（全' + items.length + '項目）'); if(fill) fill.style.width = '100%'; return; }
+  attempts = 0;
+  trySpeak(items[idx], true);
+}
+if(btnStop) btnStop.onclick = function(){ if(playing) stop('停止しました'); };
+btnMain.onclick = function(){
+  if(panel.style.display !== 'none'){
+    panel.style.display = 'none';
+    btnMain.textContent = '🎧 リスニング（全レッスン読み上げ）';
+    if(playing) stop('停止しました');
+    return;
+  }
+  if((typeof LEVELS === 'undefined' && typeof NODES === 'undefined')){ return; }
+  if(!built){ buildText(); built = true; }
+  panel.style.display = 'block';
+  btnMain.textContent = '🎧 リスニングを閉じる';
+};
+btn.onclick = function(){
+  if(!('speechSynthesis' in window)){ if(st) st.textContent = 'このブラウザは読み上げに未対応です'; return; }
+  if(playing && !paused){
+    paused = true; curId++; clearTimers();
+    try{ speechSynthesis.cancel(); }catch(e){}
+    btn.textContent = '▶ 再開';
+    if(st) st.textContent = '一時停止中 ' + (idx + 1) + '/' + items.length + '（再開はこの項目の頭から）';
+    return;
+  }
+  if(playing && paused){
+    paused = false;
+    btn.textContent = '⏸ 一時停止';
+    if(st) st.textContent = '再開します';
+    attempts = 0;
+    clearTimers();
+    tickTimer = setInterval(status, 500);
+    trySpeak(items[idx], true);
+    return;
+  }
+  if((typeof LEVELS === 'undefined' && typeof NODES === 'undefined')){ if(st) st.textContent = 'データ読み込みに失敗しました'; return; }
+  items = buildItems(); idx = 0; playing = true; itemStart = Date.now();
+  btn.textContent = '⏸ 一時停止';
+  if(st) st.textContent = '準備中…';
+  if(fill) fill.style.width = '0%';
+  try{ speechSynthesis.cancel(); }catch(e){}
+  clearTimers();
+  tickTimer = setInterval(status, 500);
+  setTimeout(next, 200);
+};
+})();
+</script>
+<script>
+(function(){
+var btn = document.getElementById('btnGallery');
+var gal = document.getElementById('gallery');
+var built = false;
+function build(){
+var html = '';
+if (typeof LEVELS !== 'undefined' && typeof DIAG !== 'undefined') {
+LEVELS.forEach(function(lv, li){
+lv.lessons.forEach(function(ls, i){
+if (DIAG[ls.id]) { html += '<div class="gal-item"><div class="gal-cap">第' + (li+1) + '章 第' + (i+1) + '課：' + ls.title + '</div><div class="gal-diag">' + DIAG[ls.id] + '</div></div>'; }
+});
+});
+} else if (typeof DIAG !== 'undefined') {
+Object.keys(DIAG).forEach(function(k){
+var cap = k;
+if (typeof NODES !== 'undefined' && NODES[k] && NODES[k].title) cap = NODES[k].title;
+html += '<div class="gal-item"><div class="gal-cap">' + cap + '</div><div class="gal-diag">' + DIAG[k] + '</div></div>';
+});
+}
+gal.innerHTML = html || '<div class="gal-cap">図解はありません</div>';
+}
+btn.onclick = function(){
+var show = gal.style.display !== 'block';
+if (show && !built) { build(); built = true; }
+gal.style.display = show ? 'block' : 'none';
+btn.textContent = show ? '🖼 図解一覧（復習用）を隠す' : '🖼 図解一覧（復習用）を表示';
+};
+})();
+</script>
+</div>
+
+<div class="toast" id="toast">💾 保存しました</div>
+
+<script>
+"use strict";
+/* ============ シルエット ============ */
+function sil(extra){
+return '<svg width="150" height="190" viewBox="0 0 120 150">'
++ '<circle cx="60" cy="34" r="17" fill="#13273e"/>'
++ '<path d="M22 150 C22 96 40 66 60 66 C80 66 98 96 98 150 Z" fill="#13273e"/>'
++ (extra || '') + '</svg>';
+}
+const CHARS = {
+sennin: sil('<path d="M28 22 L60 4 L92 22 L84 28 L60 14 L36 28 Z" fill="#e8b84a"/>'
++ '<rect x="40" y="52" width="40" height="7" fill="#f2ead8"/>'
++ '<rect x="86" y="60" width="5" height="76" fill="#8a6a1a"/>'
++ '<circle cx="88" cy="56" r="6" fill="#5bc0de"/>'
++ '<path d="M46 118 L74 118 L68 132 L52 132 Z" fill="#e8b84a"/>'),
+ore: sil(''),
+none: ''
+};
+
+/* ============ カリキュラム ============ */
+const LEVELS = [
+{ name:'第1章 感情の前に構造を ― 税金とは何か', desc:'まず心の置き場所を決め、次に税金の正体を見る章じゃ。会費という見方と、強制の理由から始めよう。', lessons:[
+{ id:'a1', title:'負の感情を、人に向けてはいけない', teach:[
+'ようこそ。わしはカイケイ仙人、長年帳簿と人の心の両方を見てきた者じゃ。最初に、この道場の一番大事な一文を置く。「負の感情を人に向けると、自分も邪悪な人間になる」。これは綺麗事ではない。心の仕組みの話じゃ。',
+'税金で暮らす人への嫌悪感は、昔から多くの人が抱えてきた。だが、その感情を「人」に向け続ける限り、モヤモヤは解けない。相手は大勢で顔が見えず、責めても何も変わらず、残るのは自分の側の苛立ちだけじゃ。感情の矛先を「人」から「仕組み」に移す——それがこの道場の目的の芯であり、自分の不満を解消するための一番の近道でもあるのじゃ。'],
+retry:'「負の感情を人に向けると、自分も邪悪な人間になる」。人を責めてもモヤモヤは解けず、自分の側が蝕まれる。矛先は人ではなく仕組みへ。',
+quiz:{ q:'この道場で、嫌悪感の矛先を向けるべき相手は？', choices:[
+{ t:'税金で暮らしている人々', ok:false }, { t:'特定の政治家や政党', ok:false }, { t:'人ではなく「仕組み」', ok:true } ] } },
+{ id:'a2', title:'税金は「社会の会費」という見方', teach:[
+'では税金の正体じゃ。一つの見方が役に立つ——税金は「社会の会費」である。町内会やマンションの管理費と同じで、共用部分を維持するために会員が分担する金じゃ。道路、上下水道、消防、警察、ごみ収集。どれも「みんなで使うもの」の維持費にあたる。',
+'会費の見方が効くのは、立場が変わるからじゃ。「取られる側」から「払う会員」になる。会員には、使い道を聞く権利も、明細を求める権利もある。この見方は第4章の締めまで通して使う。まず頭の隅に置いておくのじゃ。'],
+retry:'税金は「社会の会費」という見方：共用部分の維持費を会員が分担する。払う側は「取られる側」ではなく、明細を求める権利を持つ会員。',
+quiz:{ q:'「会費」という見方が変えるものは？', choices:[
+{ t:'税金の金額', ok:false }, { t:'自分の立場：「取られる側」から「明細を求める権利を持つ会員」へ', ok:true }, { t:'税金の使い道そのもの', ok:false } ] } },
+{ id:'a3', title:'なぜ強制なのか ― フリーライダー問題', teach:[
+'では、なぜ会費と違って強制なのか。鍵は「払った人だけを守ることができないもの」の存在じゃ。治安、国防、感染症対策、きれいな空気——これらは、払わない人も自動的に守ってしまう。',
+'こういうものが任意払いだと、どうなるか。「払わなくても守られるなら、払わないほうが得だ」という人が必ず出る。これがフリーライダー（ただ乗り）問題じゃ。全員がそう考えれば、会費は集まらず、仕組み自体が崩れる。だから税金は強制徴収という形を取る。強制は意地悪ではなく、ただ乗りへの構造的な答えなのじゃ。'],
+retry:'治安や国防は「払った人だけ」を守れない。任意だとただ乗りが出て崩れる（フリーライダー問題）。強制はその構造的な答え。',
+quiz:{ q:'税金が強制徴収である一番の理由は？', choices:[
+{ t:'国が強いから', ok:false }, { t:'任意だと「ただ乗り」が出て、守る仕組み自体が崩れるから', ok:true }, { t:'昔からの慣習だから', ok:false } ] } },
+{ id:'a4', title:'嫌悪感の正体は「選べなさ」にある', teach:[
+'では、嫌悪感はどこから来るのか。分解してみよう。普通の買い物と比べると、税金には3つの「選べなさ」がある。対価が見えにくい（何にいくら使われたか実感がない）。払う相手を選べない（別の業者に替える、ができない）。明細が届かない（レシートのようなものが来ない）。',
+'人は「選べない」状況に強い苛立ちを覚えるものじゃ。値段に文句があっても、店を選べるなら我慢できる。選べないからこそ、苛立ちの行き場がなく、「税金で暮らす人」という顔の見えない相手への嫌悪に化ける。つまり嫌悪感の正体に近いのは、人の悪さではなく「選べなさ」の構造なのじゃ。感情は否定しない。出どころが分かれば、矛先を直せる。'],
+retry:'嫌悪感の出どころは3つの「選べなさ」：対価が見えにくい、相手を選べない、明細が届かない。人の悪さではなく構造が正体に近い。',
+quiz:{ q:'税金への苛立ちの正体に近いものは？', choices:[
+{ t:'公務員個人の性格', ok:false }, { t:'税率の高さだけ', ok:false }, { t:'対価が見えず、相手を選べず、明細も届かない「選べなさ」の構造', ok:true } ] } },
+]},
+{ name:'第2章 お金はどこへ行くのか ― 使い道の実像', desc:'感情の次は数字じゃ。国の一般会計の内訳と、見えにくい財布、そして「無駄」の本当の姿を見る。数字はすべて約・目安の概数じゃ。', lessons:[
+{ id:'b1', title:'一般会計の地図 ― 約110兆円台の内訳', teach:[
+'国の一般会計の歳出は、近年は約110兆円台という規模じゃ。内訳で一番大きいのは社会保障——年金・医療・介護などで、約3分の1を占める。次が国債費、借金の返済と利払いで約4分の1。この2つで半分を超える。',
+'その後に、地方への交付税、公共事業、教育・科学技術、防衛などが続く。よく話題になる項目が、実は全体では小さな割合だということも多い。まずこの地図を持つことが大事じゃ。「どこに怒るべきか」は、地図があって初めて決められるのじゃ。'],
+retry:'一般会計は約110兆円台。最大は社会保障で約3分の1、次が国債費で約4分の1。この2つで過半数。',
+quiz:{ q:'国の一般会計で一番大きな支出は？', choices:[
+{ t:'公共事業', ok:false }, { t:'社会保障（年金・医療・介護など）で約3分の1', ok:true }, { t:'防衛費', ok:false } ] } },
+{ id:'b2', title:'税収だけでは足りない ― 国債という穴埋め', teach:[
+'歳入の側を見よう。税収は近年、約70兆円台という水準じゃ。歳出が約110兆円台だから、税金だけでは足りない。その差を埋めているのが国債——国の借金じゃ。毎年、新しい借金で不足分を埋める構造が続いておる。',
+'ここで大事なのは、第2位の支出「国債費」約4分の1の意味じゃ。これは過去の借金の返済と利払い。つまり今の支出の約4分の1は、今のサービスではなく過去の穴埋めに消えている。無駄遣いの議論をする前に、この「借金で回している」という土台の事実を押さえるのじゃ。'],
+retry:'税収は約70兆円台で歳出に足りず、差は国債（借金）で穴埋め。支出の約4分の1の国債費は、過去の借金の返済と利払い。',
+quiz:{ q:'歳出の約4分の1を占める国債費とは何か？', choices:[
+{ t:'新しい道路の建設費', ok:false }, { t:'公務員の給与', ok:false }, { t:'過去の借金の返済と利払い', ok:true } ] } },
+{ id:'b3', title:'見えにくい財布 ― 特別会計と基金', teach:[
+'一般会計は表の財布じゃ。だが国には裏側にも財布がある。特定の目的のために分けた「特別会計」と、将来のために積み立てる「基金」じゃ。これ自体は目的を明確にするための仕組みで、悪いものではない。',
+'問題は見えにくさじゃ。財布が分かれるほど、全体像は掴みにくくなる。基金に積み上がったまま使われない金、目的が薄れたのに残り続ける特別会計——表の予算審議だけでは見えない場所に、金が眠ることがある。「明細が届かない」という第1章の苛立ちは、ここにも根があるのじゃ。',
+'ここで一つ、見方を足そう。財政の仕組みは、長年かけて作られてきた「ブラックボックス」でもある。予算と決算の複雑さ、特別会計や基金の多さ、制度の細かさ——それ自体が「素人には分からないから専門家に任せろ」という空気を作り、検証と批判を遠ざけることで、中の側を守ってきた面がある。これはYouTubeのアルゴリズムがブラックボックスであることと同型じゃ。見えないこと自体が、権力になるのじゃ。'],
+retry:'特別会計と基金は「見えにくい財布」。複雑さ自体が「専門家に任せろ」という空気を作り、中の側を守る——アルゴリズムと同じブラックボックスで、見えないこと自体が権力。',
+quiz:{ q:'特別会計・基金の問題点として正しいのは？', choices:[
+{ t:'存在自体が違法である', ok:false }, { t:'財布が分かれて全体が見えにくく、積み残しが表に出にくい', ok:true }, { t:'金額が一般会計より大きい', ok:false } ] } },
+{ id:'b4', title:'「無駄」の実像 ― 目立つ無駄と構造的な無駄', teach:[
+'「無駄遣い」の話をしよう。会計検査院という機関が毎年、国の支出を検査して、不当・不経済な支出を指摘しておる。その指摘は本物じゃ。だが金額で見れば、予算全体からすれば一部にとどまる。',
+'目立つ無駄——派手な失敗や豪華な施設——は怒りやすいが、本丸は別にあるという見方ができる。見つけにくい構造的な無駄じゃ。積み残された基金、目的を終えたのに形骸化して続く事業、誰も止める役を持たない支出。派手な一件より、地味に毎年続く仕組みの無駄のほうが総額は大きくなりやすい。怒りの向け先を、目立つ一件から構造へ——ここでも矛先の話になるのじゃ。'],
+retry:'会計検査院の指摘は実在するが、予算全体から見れば一部。本丸は目立つ無駄より、積み残しの基金や形骸化した事業という構造的な無駄。',
+quiz:{ q:'「無駄」の本丸とされるものは？', choices:[
+{ t:'目立つ派手な失敗の一件', ok:false }, { t:'積み残された基金や、形骸化して続く事業という構造的な無駄', ok:true }, { t:'公務員の人数そのもの', ok:false } ] } },
+]},
+{ name:'第3章 なぜ無駄は生まれるのか ― 人ではなく仕組み', desc:'無駄は誰かの悪意では説明できん。予算の仕組みそのものが、無駄を残す向きに人を動かしておる。その機構を見る章じゃ。', lessons:[
+{ id:'c1', title:'単年度主義と使い切り文化', teach:[
+'国の予算は「単年度主義」——1年ごとに区切るのが原則じゃ。ここから有名な癖が生まれる。予算を使い切らないと「余るなら来年は減らしてよい」と判断され、翌年の予算が削られる。',
+'だから現場は、年度末に予算を使い切ろうとする。使い切り文化と呼ばれるものじゃ。これは現場の人が悪いわけではない。「余らせると損をする」というルールの中で、合理的に動いた結果なのじゃ。無駄を生むのは人の性根ではなく、損得の向きを決めるルールのほうじゃ。'],
+retry:'単年度主義では、余らせると来年の予算が減る。だから使い切るのが合理的になる。悪いのは人ではなくルールの向き。',
+quiz:{ q:'年度末の「使い切り」が起きる理由は？', choices:[
+{ t:'現場の人が贅沢好きだから', ok:false }, { t:'余らせると来年の予算を減らされるから', ok:true }, { t:'法律で使い切りが義務だから', ok:false } ] } },
+{ id:'c2', title:'取る人が得をし、減らす人が損をする', teach:[
+'インセンティブ——損得の向き——をもう一つ見よう。組織の中では「予算を取ってきた人」が評価される。新しい事業を始め、規模を大きくした人が出世しやすい。一方「事業をやめて予算を減らした人」は、実績として見えにくく、むしろ自分の部署の仕事と予算を減らした人になる。',
+'縦割りと前例踏襲も同じ向きじゃ。前年と同じにしておけば責任は問われにくい。変えれば、失敗したときに責任が自分に来る。評価と責任の所在が曖昧なままでは、誰も「やめる」側に回る理由がない。無駄が残るのは、残すほうが全員にとって得だから——これが仕組みの問題の核心じゃ。'],
+retry:'予算を取る人が評価され、減らす人が損をする。縦割り・前例踏襲・責任の曖昧さも「やめない」向きに働く。',
+quiz:{ q:'事業がなかなかやめられない一番の理由は？', choices:[
+{ t:'減らす人が評価されず損をする、インセンティブの向き', ok:true }, { t:'書類の様式が決まっていないから', ok:false }, { t:'国民がやめるなと言っているから', ok:false } ] } },
+{ id:'c3', title:'誰も悪くないのに残る ― 合理性の合成', teach:[
+'立場ごとに分けて見てみよう。政治家は、地元や支持者に応える事業を求める。官僚は、担当分野の予算と組織を守る。業界は、仕事が続くことを望む。それぞれ、自分の立場では合理的に動いておる。嘘もついておらんし、露骨な私腹を肥やしているわけでもない場面が多い。',
+'ところが、その合理性を全部合成すると「誰も止めない支出」が残る。誰か一人の悪意では説明できない——これが構造的な無駄の正体じゃ。だから犯人探しは外れる。直すべきは人ではなく、合理性の向きを決めているルール、評価の仕方、やめる仕組みの有無なのじゃ。'],
+retry:'政治家・官僚・業界、それぞれの立場の合理性を合成すると「誰も止めない支出」が残る。一人の悪意では説明できない。',
+quiz:{ q:'構造的な無駄が生まれる仕組みとして正しいのは？', choices:[
+{ t:'一人の悪人が私腹を肥やしている', ok:false }, { t:'各立場の合理的な行動の合成として、誰も止めない支出が残る', ok:true }, { t:'単なる計算ミスが積み重なったもの', ok:false } ] } },
+{ id:'c4', title:'思い込みの更新 ― 公務員の数と給与', teach:[
+'知識の更新を一つ。「税金で暮らす人が多すぎる・優遇されすぎ」という印象は、数字と比べるとどうじゃろう。公務員の数は、人口あたりで見ると国際比較では日本は少ない側に入ることが多い。給与水準も、民間との比較調査に基づいて決める仕組みがあり、際立って高いとは言いにくい。',
+'もちろん、個別の不祥事や無駄なポストは実在する。そこは批判されてよい。だが「人数や給与そのものが元凶」という思い込みで全体を語ると、矛先が外れる。大きな支出の主役は第2章の通り、社会保障と国債費じゃ。感情の大きさと金額の大きさは、一致しないことが多い——数字で更新する習慣が、モヤモヤを小さくするのじゃ。'],
+retry:'公務員の数は人口あたり国際比較で少ない側、給与も民間比較で決まる仕組み。支出の主役は社会保障と国債費で、感情の大きさと金額の大きさは一致しない。',
+quiz:{ q:'数字で見たとき、支出の主役はどれか？', choices:[
+{ t:'公務員の給与', ok:false }, { t:'社会保障と国債費', ok:true }, { t:'庁舎の維持費', ok:false } ] } },
+]},
+{ name:'第4章 まともな仕組みに変えるには ― 改善の道具と会員の席', desc:'最終章は道具の章じゃ。明細を求める権利、決算の読み方、改善の仕掛け。そして締めは、自分のモヤモヤの話じゃ。', lessons:[
+{ id:'d1', title:'会員には明細を求める権利がある', teach:[
+'第1章の「会費」の見方に戻ろう。会費を払う会員には、明細を求める権利がある。これは感情論ではなく、制度として用意されておる。予算と決算は公開され、会計検査院の報告は誰でも読める。自治体の財政資料も公表されておる。',
+'ポイントは、怒りの表明と明細の請求は別物だということじゃ。怒りは相手に届かなくても、明細の請求は制度が受け止める。「選べない」構造の中にも、会員としての席は残されておる。その席の存在を知ることが、改善の出発点になるのじゃ。'],
+retry:'会費の会員には明細を求める権利がある。予算・決算・会計検査院の報告は公開されており、請求は制度が受け止める。',
+quiz:{ q:'「会費」の見方で、会員に認められるものは？', choices:[
+{ t:'払わない自由', ok:false }, { t:'使い道の明細を求める権利', ok:true }, { t:'職員の人事権', ok:false } ] } },
+{ id:'d2', title:'予算は予定、決算が実績', teach:[
+'財政資料を読むときの基本を一つ。「予算」と「決算」は別物じゃ。予算は「今年はこう使うつもり」という予定。決算は「実際にこう使った」という実績じゃ。ニュースで大きく扱われるのは予算のほうだが、無駄があったかどうかが分かるのは決算のほうなのじゃ。',
+'読み方のコツはシンプルじゃ。まず決算で実績を見て、予算との差を探す。余った分はどこへ行ったか、足りなかった分は何で埋めたか。そして会計検査院の報告で、指摘された中身を確認する。財務省や自治体が出す財政資料は、この順で読むと急に読みやすくなるぞ。'],
+retry:'予算は予定、決算は実績。無駄の有無が分かるのは決算。決算→予算との差→会計検査院の報告、の順で読む。',
+quiz:{ q:'実際にどう使われたかが分かるのは？', choices:[
+{ t:'予算', ok:false }, { t:'決算', ok:true }, { t:'選挙公約', ok:false } ] } },
+{ id:'d3', title:'改善の道具箱 ― サンセットと評価と公開', teach:[
+'仕組みを変える道具は、すでにいくつも考案されておる。代表的なものを並べよう。事業ごとに期限を切る「サンセット」の考え方——終わりの日を先に決め、続けるなら理由を示させる。効果の評価と公表——やった結果を測って外に出す。予算・決算のオープンデータ化——誰でも検証できる形で出す。そしてデジタル化は、監視にかかるコストそのものを下げる。',
+'どれも地味じゃ。だが第3章で見た通り、無駄は「やめる理由がない」構造から生まれる。サンセットは「やめるのが既定、続けるのに理由が要る」へ向きを反転させる道具じゃ。派手な改革より、損得の向きを変える小さな仕掛けのほうが、構造には効くのじゃ。',
+'そして、すべての道具に先立つ第一歩が「可視化」じゃ。財政がブラックボックスであること自体が中の側を守る権力なら、賛否の議論の前に、まず見える形にすることが改善の入口になる。この道場自体が、その可視化の練習じゃ。煽りパターン図鑑でやったこと——見えない型を見える形にして名前を付けること——と、税金でもまったく同じことをしておるのじゃ。'],
+retry:'道具はサンセット、効果の評価と公表、オープンデータ化、デジタル化。そして第一歩は「可視化」——この道場も、煽りパターン図鑑と同じく、見えない型を見える形にする練習。',
+quiz:{ q:'「サンセット」の考え方とは？', choices:[
+{ t:'事業を全部夕方にやめること', ok:false }, { t:'事業に期限を先に切り、続けるなら理由を示させること', ok:true }, { t:'予算を毎年増やすこと', ok:false } ] } },
+{ id:'d4', title:'身近な自治体から ― そして自分のモヤモヤへ', teach:[
+'最後に、届く距離の話じゃ。国政は遠いが、自治体は近い。住民の目が届きやすく、情報公開の請求や、税金の使い道に異議を申し立てる「住民監査請求」という制度もある。会費の明細を求める会員の席は、身近な場所ほど実感しやすいのじゃ。',
+'そして締めじゃ。この道場の一番の目的は、誰かを罰することでも、世の中を一気に変えることでもない。第1章の一文を思い出してほしい——「負の感情を人に向けると、自分も邪悪な人間になる」。仕組みを理解し、少しでも仕組みを変える方向に考える。そのことで、少なくとも自分の不満とモヤモヤは解消できる。モヤモヤは、明細を求める権利の裏返しじゃ。人に向けた嫌悪感を、仕組みへの理解に換えたとき、怒りは自分の側を蝕むものではなく、設計図を描く力になる。それが卒業の証じゃ。'],
+retry:'自治体は近く、住民監査請求という制度もある。締め：目的は誰かを罰することではなく、仕組みを理解して自分のモヤモヤを解消すること。モヤモヤは明細を求める権利の裏返し。',
+quiz:{ q:'この道場の一番の目的は？', choices:[
+{ t:'税金で暮らす人を罰すること', ok:false }, { t:'税金をなくすこと', ok:false }, { t:'仕組みを理解し、自分の不満とモヤモヤを解消すること', ok:true } ] } },
+]},
+{ name:'補講 正直な出発点', desc:'本編の外伝じゃ。仕組みを見る前に、見る側の心を正直に点検する2課。少し耳が痛いが、ここを通ると分析が正確になるのじゃ。', lessons:[
+{ id:'s1', title:'正義感だけではない ― 妬みの告白', teach:[
+'補講の始まりじゃ。まず、正直な告白から始めよう。「こういう思想は、正義感が強い人ほど陥る」——そう言われることがある。だが、この道場の読み手の場合は、少し違う。正義感もある。だが、それだけではない。妬みも、僻みも、混ざっておるのじゃ。',
+'それを隠さず認めることから、この補講は始まる。妬みは恥ではない。誰の心にもある感情じゃ。問題は、あるのに「ないふり」をすることなのじゃ。純粋な正義感だけだと信じ込んだ人は、自分の感情に気づけないぶん、かえって感情に振り回されやすい。逆に「自分の動機は混ざっている」と自覚する人は、一歩引いて仕組みを見られる。妬みを認めることは弱さではなく、分析の正確さのためなのじゃ。'],
+retry:'正義感だけでなく、妬みや僻みも混ざっている——その正直な告白から始める。動機が混ざっていると自覚する人ほど、感情に振り回されず仕組みを見られる。',
+quiz:{ q:'妬みを認めることの意味は？', choices:[
+{ t:'弱さの証拠である', ok:false }, { t:'仕組みを見る資格を失うこと', ok:false }, { t:'分析を正確にするための自覚である', ok:true } ] } },
+{ id:'s2', title:'自分がその立場だったら ― だから仕組みを変える', teach:[
+'では、もう一歩進めた想像をしよう。もし自分が、そのシステムの中で、不正に巨額のお金を得ていたら——満足していたかもしれない。そう正直に想像できるなら、「あの人たちを責める資格が自分にあるか」という話は、空しくなる。資格の話は、誰も前に進めんのじゃ。',
+'人間は誰しも、見えないところで得をするなら、ほとんどの人がそうするものじゃ。これは悲観ではなく、設計の前提じゃ。だからこそ、目指すのは「善人に期待する設計」ではない。「見えないところで得をしても、割に合わない仕組み」。そして「そもそも見える仕組み」なのじゃ。',
+'締めに一文を置く。可視化とは、単に情報を外に出すことではない。「見えないところで得をする余地を消すこと」じゃ。本編で見た明細、決算、オープンデータは、すべてこの一文に繋がっておる。人を変えるのではなく、得をする余地を消す——それが仕組みを変えるということなのじゃ。'],
+retry:'自分がその立場なら満足していたかもしれない、と想像できるなら、人を責める資格の話は空しい。だから善人に期待せず、「見えないところで得をしても割に合わない仕組み」「そもそも見える仕組み」へ。可視化とは、見えないところで得をする余地を消すこと。',
+quiz:{ q:'目指すべき仕組みの変え方は？', choices:[
+{ t:'善人に期待して、人を入れ替えること', ok:false }, { t:'見えないところで得をしても割に合わない、そもそも見える仕組みにすること', ok:true }, { t:'妬みをなくすよう心を教育すること', ok:false } ] } },
+]},
+];
+</script>
+<script>
+"use strict";
+/* ============ エンジン ============ */
+const SAVE_KEY = 'taxSystemSaveV1';
+const TOTAL = LEVELS.reduce((a,l)=>a+l.lessons.length,0);
+let done = {};
+try{ const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); if(s && s.done) done = s.done;}catch(e){}
+let soundOn = true, typing = null, advanceFn = null;
+let cur = { level:0, lesson:0, pages:[], page:0};
+
+const $ = id => document.getElementById(id);
+const bgEl=$('bg'), charEl=$('char'), nameEl=$('namebox'), textEl=$('text'),
+boxEl=$('textbox'), chEl=$('choices'), nextEl=$('nextmark');
+
+function beep(freq, dur, delay, vol){
+if(!soundOn) return;
+try{
+const ctx = beep.ctx || (beep.ctx = new (window.AudioContext||window.webkitAudioContext)());
+if(ctx.state === 'suspended') ctx.resume();
+const o = ctx.createOscillator(), g = ctx.createGain();
+o.type='square'; o.frequency.value = freq || 660;
+g.gain.value = vol || 0.03;
+o.connect(g); g.connect(ctx.destination);
+const t = ctx.currentTime + (delay||0);
+o.start(t); o.stop(t + (dur||0.06));
+}catch(e){}
+}
+function save(){
+try{ localStorage.setItem(SAVE_KEY, JSON.stringify({done})); toast();}catch(e){}
+}
+function toast(){
+const t=$('toast'); t.classList.add('show');
+clearTimeout(toast.tm); toast.tm=setTimeout(()=>t.classList.remove('show'), 900);
+}
+function doneCount(){ return Object.keys(done).filter(k=>done[k]).length;}
+function renderProgress(now){
+$('pDone').textContent = doneCount();
+$('bDone').style.width = (doneCount()/TOTAL*100) + '%';
+if(now) $('pNow').textContent = now;
+}
+function setScene(bg, char, name){
+bgEl.className = 'bg ' + bg;
+charEl.innerHTML = CHARS[char] || '';
+charEl.style.display = char && char!== 'none'? '': 'none';
+if(name){ nameEl.textContent = name; nameEl.style.display='';} else nameEl.style.display='none';
+}
+function typeText(txt, onDoneTyping){ speak(txt);
+clearInterval(typing);
+textEl.textContent=''; nextEl.style.display='none';
+boxEl.scrollTop = 0;
+advanceFn = null;
+let i=0;
+typing = setInterval(()=>{
+i++;
+textEl.textContent = txt.slice(0, i);
+boxEl.scrollTop = boxEl.scrollHeight;
+const ch = txt.charAt(i-1);
+if(ch && ch!== ' ' && ch!== '\n' && i % 2 === 1){
+beep(880 + Math.random()*420, 0.018, 0, 0.012);
+}
+if(i >= txt.length){
+clearInterval(typing); typing=null;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+}
+}, 26);
+boxEl.onclick = ()=>{
+if(typing){
+clearInterval(typing); typing=null;
+textEl.textContent = txt; boxEl.scrollTop = boxEl.scrollHeight;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+} else if(advanceFn){
+const f = advanceFn; advanceFn = null; f();
+}
+};
+}
+document.addEventListener('keydown', e=>{
+if(!typing && advanceFn && (e.key === ' ' || e.key === 'Enter')){
+e.preventDefault();
+const f = advanceFn; advanceFn = null; f();
+}
+});
+function showChoices(items){
+chEl.innerHTML='';
+items.forEach(it=>{
+const b=document.createElement('button');
+b.className='choice' + (it.done? ' done': '');
+b.textContent=it.t;
+b.onclick=()=>{ beep(520,.06); setTimeout(()=>beep(780,.07),70); chEl.classList.remove('show'); it.fn();};
+chEl.appendChild(b);
+});
+chEl.classList.add('show');
+const dg = $('diagram');
+if(dg && dg.style.display === 'block'){
+$('screen').classList.add('diagmenu');
+requestAnimationFrame(()=>{
+const sr = $('screen').getBoundingClientRect();
+const dr = dg.getBoundingClientRect();
+chEl.style.top = Math.max(0, Math.round(dr.bottom - sr.top + 8)) + 'px';
+});
+} else { $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+}
+function hideChoices(){ chEl.classList.remove('show'); chEl.innerHTML=''; chEl.style.top=''; $('screen').classList.remove('diagmenu'); }
+
+/* ============ 図解（8bit風SVG・黒板） ============ */
+function _ar(x1,y1,x2,y2,col){ col=col||'#7fb8a4'; var pts; if(Math.abs(x2-x1)>=Math.abs(y2-y1)){ pts = x2>x1 ? [[x2,y2],[x2-10,y2-6],[x2-10,y2+6]] : [[x2,y2],[x2+10,y2-6],[x2+10,y2+6]]; } else { pts = y2>y1 ? [[x2,y2],[x2-6,y2-10],[x2+6,y2-10]] : [[x2,y2],[x2-6,y2+10],[x2+6,y2+10]]; } return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+col+'" stroke-width="4"/><polygon points="'+pts.map(function(p){return p.join(',');}).join(' ')+'" fill="'+col+'"/>'; }
+function _tx(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#e6f5ee')+'" text-anchor="middle">'+str+'</text>'; }
+function _bx(x,y,w,h,label,fill){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'" stroke="#7fb8a4" stroke-width="2"/><text x="'+(x+w/2)+'" y="'+(y+h/2+5)+'" font-size="12" fill="#fff" text-anchor="middle">'+label+'</text>'; }
+function _tag(x,y,str,col){ var w=str.length*12+12; return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="20" fill="'+col+'"/><text x="'+(x+w/2)+'" y="'+(y+14)+'" font-size="11" fill="#04120d" text-anchor="middle" font-weight="bold">'+str+'</text>'; }
+function _svg(inner){ return '<svg viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'+inner+'</svg>'; }
+var YL='#ffd94a', GN='#7ee787', RD='#ff7b72', DM='#7fb8a4', TL='#2dd4bf';
+const DIAG = {
+a1: _svg(_tx(180,16,'負の感情の矛先',DM,12)
+ + _bx(8,40,160,40,'人へ → 自分が蝕まれる','#4a1420')
+ + _bx(192,40,160,40,'仕組みへ → 設計図になる','#14532d')
+ + _tx(180,108,'「負の感情を人に向けると、自分も邪悪な人間になる」',YL,11)),
+a2: _svg(_tx(180,16,'会費という見方',DM,12)
+ + _bx(8,44,150,38,'取られる側','#4a1420') + _ar(158,63,174,63)
+ + _bx(174,44,178,38,'明細を求める権利を持つ会員','#14532d')
+ + _tx(180,112,'共用部分の維持費を、会員が分担する',YL,12)),
+a3: _svg(_tx(180,16,'フリーライダー問題',DM,12)
+ + _bx(8,44,104,38,'任意払い','#123528') + _ar(112,63,124,63)
+ + _bx(124,44,104,38,'ただ乗りが出る','#7a2e0e') + _ar(228,63,240,63)
+ + _bx(240,44,112,38,'仕組みが崩れる','#4a1420')
+ + _tx(180,112,'治安・国防は「払った人だけ」を守れない',YL,12)),
+a4: _svg(_tx(180,16,'嫌悪感の正体：3つの「選べなさ」',DM,12)
+ + _tag(16,26,'対価が見えにくい',RD)
+ + _tag(16,58,'払う相手を選べない',RD)
+ + _tag(16,90,'明細が届かない',RD)),
+b1: _svg(_tx(180,16,'一般会計 約110兆円台の内訳（目安）',DM,12)
+ + _tag(8,26,'社会保障 約3分の1（最大）',GN)
+ + _tag(8,58,'国債費 約4分の1',YL)
+ + _tag(8,90,'地方交付税・公共事業・教育・防衛など',TL)),
+b2: _svg(_tx(180,16,'税収だけでは足りない',DM,12)
+ + _bx(8,44,150,38,'税収 約70兆円台','#123528') + _ar(158,63,174,63)
+ + _bx(174,44,178,38,'歳出 約110兆円台','#4a1420')
+ + _tx(180,112,'差は国債（借金）で穴埋め',RD,12)),
+b3: _svg(_tx(180,16,'見えにくい財布とブラックボックス',DM,12)
+ + _tag(16,26,'特別会計・基金：全体が見えにくい',YL)
+ + _tag(16,58,'複雑さが「専門家に任せろ」の空気を作る',RD)
+ + _tag(16,90,'見えないこと自体が権力（アルゴリズムと同型）',GN)),
+b4: _svg(_tx(180,16,'2種類の無駄',DM,12)
+ + _bx(8,40,160,40,'目立つ無駄：怒りやすい','#7a2e0e')
+ + _bx(192,40,160,40,'構造的な無駄：本丸','#4a1420')
+ + _tx(180,108,'積み残しの基金・形骸化した事業',YL,12)),
+c1: _svg(_tx(180,16,'単年度主義の連鎖',DM,12)
+ + _bx(8,44,104,38,'予算を余らせる','#123528') + _ar(112,63,124,63)
+ + _bx(124,44,104,38,'来年減らされる','#7a2e0e') + _ar(228,63,240,63)
+ + _bx(240,44,112,38,'だから使い切る','#4a1420')),
+c2: _svg(_tx(180,16,'インセンティブの向き',DM,12)
+ + _tag(16,26,'予算を取る人 → 評価される',GN)
+ + _tag(16,58,'予算を減らす人 → 損をする',RD)
+ + _tag(16,90,'縦割り・前例踏襲・責任の曖昧さ',YL)),
+c3: _svg(_tx(180,16,'合理性の合成',DM,12)
+ + _bx(2,44,112,38,'政治家の合理性','#123528') + _bx(124,44,112,38,'官僚の合理性','#123528') + _bx(246,44,112,38,'業界の合理性','#123528')
+ + _tx(180,112,'合成すると「誰も止めない支出」が残る',RD,12)),
+c4: _svg(_tx(180,16,'思い込みの更新',DM,12)
+ + _tag(16,26,'公務員の数：人口あたり国際比較で少ない側',GN)
+ + _tag(16,58,'給与：民間比較で決める仕組み',TL)
+ + _tag(16,90,'支出の主役は社会保障と国債費',YL)),
+d1: _svg(_tx(180,16,'会員の席',DM,12)
+ + _tag(16,26,'予算・決算は公開されている',GN)
+ + _tag(16,58,'会計検査院の報告は誰でも読める',GN)
+ + _tag(16,90,'明細の請求は、制度が受け止める',YL)),
+d2: _svg(_tx(180,16,'予算と決算',DM,12)
+ + _bx(8,40,160,40,'予算 ＝ 予定','#123528')
+ + _bx(192,40,160,40,'決算 ＝ 実績','#14532d')
+ + _tx(180,108,'無駄の有無が分かるのは決算のほう',YL,12)),
+d3: _svg(_tx(180,16,'改善の道具箱',DM,12)
+ + _tag(8,26,'第一歩：可視化',GN) + _tag(170,26,'サンセット（期限）',YL)
+ + _tag(8,58,'効果の評価と公表',TL) + _tag(170,58,'オープンデータ化',TL)
+ + _tag(60,90,'図鑑と同じ：見えない型を見える形に',GN)),
+d4: _svg(_tx(180,16,'卒業の一文',DM,12)
+ + _tx(180,50,'モヤモヤは、明細を求める',YL,14)
+ + _tx(180,74,'権利の裏返しである',YL,14)
+ + _tx(180,106,'目的は、自分のモヤモヤの解消',GN,12)),
+s1: _svg(_tx(180,16,'正直な出発点：混ざった動機',DM,12)
+ + _tag(16,26,'正義感もある',GN)
+ + _tag(16,58,'妬み・僻みも混ざっている',YL)
+ + _tag(16,90,'自覚する人ほど、仕組みを正確に見られる',TL)),
+s2: _svg(_tx(180,16,'可視化の定義',DM,12)
+ + _bx(8,40,160,40,'見えない得 → 割に合わない','#7a2e0e')
+ + _bx(192,40,160,40,'そもそも見える仕組み','#14532d')
+ + _tx(180,108,'可視化＝見えないところで得をする余地を消すこと',YL,11)),
+};
+function showDiagFor(id){
+const d = $('diagram');
+if(DIAG[id]){ d.innerHTML = DIAG[id]; d.style.display = 'block'; }
+else d.style.display = 'none';
+}
+function hideDiag(){ $('diagram').style.display = 'none'; $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+
+/* ============ 画面遷移 ============ */
+function goLevels(){
+hideChoices();
+hideDiag();
+setScene('bg-city','none','');
+renderProgress('レベル選択');
+const dc = doneCount();
+const intro = dc === 0
+? '「よく来た。わしがカイケイ仙人じゃ」\nテーマは「税金のしくみ」——嫌悪感を人ではなく仕組みに向け、帳簿の地図と改善の道具を学ぶ。全' + TOTAL + '課。\n好きな章からでよい。分かるまで、何度でも付き合うぞ。'
+: '「戻ったか。現在の理解済みは ' + dc + ' / ' + TOTAL + ' 課じゃ」\n続きをやるもよし、済んだ課を復習するもよし。';
+typeText(intro, ()=>{
+showChoices(LEVELS.map((lv, i)=>{
+const c = lv.lessons.filter(l=>done[l.id]).length;
+return { t: lv.name + '（' + c + '/' + lv.lessons.length + ' 済）', done: c === lv.lessons.length,
+fn: ()=>goLessons(i)};
+}));
+});
+}
+function goLessons(li){
+hideChoices();
+hideDiag();
+const lv = LEVELS[li];
+cur.level = li;
+setScene('bg-city','sennin','カイケイ仙人');
+renderProgress(lv.name);
+typeText('\n' + lv.desc + '\n課を選ぶのじゃ。✔ は理解済み。復習は何度でもできるぞ。', ()=>{
+showChoices(
+lv.lessons.map((ls, i)=>({ t: ls.title, done:!!done[ls.id], fn: ()=>startLesson(li, i, false)}))
+.concat([{ t:'レベル選択に戻る', fn: goLevels}])
+);
+});
+}
+function startLesson(li, idx, withRetry){
+hideChoices();
+const ls = LEVELS[li].lessons[idx];
+cur.level = li; cur.lesson = idx;
+cur.pages = ls.teach.slice();
+if(withRetry) cur.pages.push('\n' + ls.retry);
+cur.page = 0;
+setScene('bg-term','sennin','カイケイ仙人');
+renderProgress(LEVELS[li].name + '：' + ls.title);
+showDiagFor(ls.id);
+teachPage();
+}
+function teachPage(){
+const isLast = cur.page >= cur.pages.length - 1;
+typeText('\n' + cur.pages[cur.page], ()=>{
+if(isLast){ showCheck();}
+else { advanceFn = ()=>{ cur.page++; teachPage();};}
+});
+}
+function showCheck(){
+showChoices([
+{ t:'これは分かった！（確認問題へ）', fn: showQuiz},
+{ t:'分からない（もう一度聞く）', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'レッスン一覧に戻る', fn: ()=>goLessons(cur.level)}
+]);
+}
+function showQuiz(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+setScene('bg-term','sennin','カイケイ仙人');
+typeText('\n' + ls.quiz.q, ()=>{
+showChoices(ls.quiz.choices.map(c=>({
+t: c.t,
+fn: ()=>{ if(c.ok) completeLesson(); else wrongAnswer();}
+})));
+});
+}
+function wrongAnswer(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+beep(220,.12); setTimeout(()=>beep(180,.14),120);
+typeText('「むむ、違うぞ。焦らなくてよい」\n' + ls.retry, ()=>{
+showChoices([
+{ t:'もう一度説明を聞く', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'もう一度問題に挑む', fn: showQuiz}
+]);
+});
+}
+function completeLesson(){
+hideDiag();
+const li = cur.level, idx = cur.lesson;
+const ls = LEVELS[li].lessons[idx];
+done[ls.id] = true; save();
+[392,523,659,784].forEach((f,i)=>beep(f,.1,i*0.11));
+renderProgress(LEVELS[li].name + '：' + ls.title + ' ✔');
+const dc = doneCount();
+const levelDone = LEVELS[li].lessons.every(l=>done[l.id]);
+let msg = '「うむ、分かったようじゃな」\n理解済み ✔（合計 ' + dc + ' / ' + TOTAL + ' 課）';
+if(dc >= TOTAL){
+setScene('bg-way','sennin','カイケイ仙人');
+msg += '\n\n――全課、修了じゃ！\n会費という見方、使い道の地図、無駄の生まれる構造、改善の道具——そして可視化の練習を終えた。最後に第1章の一文をもう一度。「負の感情を人に向けると、自分も邪悪な人間になる」。モヤモヤは、明細を求める権利の裏返しじゃ。人ではなく仕組みを見て、自分の不満を解消していくこと。それが卒業の証じゃ。卒業おめでとう！';
+} else if(levelDone){
+msg += '\nこの章は全課修了じゃ。よくやった。';
+}
+typeText(msg, ()=>{
+const items = [];
+if(dc < TOTAL){
+if(idx + 1 < LEVELS[li].lessons.length){
+items.push({ t:'次の課へ（' + LEVELS[li].lessons[idx+1].title + '）', fn: ()=>startLesson(li, idx+1, false)});
+} else if(li + 1 < LEVELS.length){
+items.push({ t:'次の章へ（' + LEVELS[li+1].name + '）', fn: ()=>goLessons(li+1)});
+}
+}
+items.push({ t:'レッスン一覧に戻る', fn: ()=>goLessons(li)});
+items.push({ t:'レベル選択に戻る', fn: goLevels});
+showChoices(items);
+});
+}
+
+/* ============ ボタン類 ============ */
+$('btnEnter').onclick = ()=>{ beep(660,.06); $('title').style.display='none'; goLevels();};
+$('btnLevels').onclick = ()=>{ $('title').style.display='none'; goLevels();};
+$('btnReset').onclick = ()=>{
+done = {}; save(); renderProgress('タイトル');
+$('title').style.display='flex';
+};
+$('btnSound').onclick = (e)=>{
+soundOn =!soundOn;
+e.target.textContent = soundOn? '🔊 音ON': '🔇 音OFF';
+if(soundOn) beep(700,.06);
+};
+renderProgress('タイトル');
+
+let ttsOn = false;
+try{ ttsOn = localStorage.getItem('advTtsV1') === '1'; }catch(e){}
+const btnTts = document.getElementById('btnTts');
+function updTtsBtn(){ if(btnTts) btnTts.textContent = ttsOn ? '🗣 読上ON' : '🗣 読上OFF'; }
+function speak(txt){
+  if(!ttsOn || !('speechSynthesis' in window)) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(String(txt).replace(/\n+/g, ' '));
+    u.lang = 'ja-JP'; u.rate = 1.0;
+    const vs = speechSynthesis.getVoices();
+    const jv = vs.find(v => v.lang && v.lang.toLowerCase().indexOf('ja') === 0) || vs[0];
+    if(jv) u.voice = jv;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+if(btnTts) btnTts.onclick = () => {
+  ttsOn = !ttsOn;
+  try{ localStorage.setItem('advTtsV1', ttsOn ? '1' : '0'); }catch(e){}
+  updTtsBtn();
+  if(ttsOn){ speak(textEl.textContent); setTimeout(checkVoices, 800); }
+  else if('speechSynthesis' in window) speechSynthesis.cancel();
+};
+function checkVoices(){
+  if(!ttsOn || !btnTts || !('speechSynthesis' in window)) return;
+  if(speechSynthesis.getVoices().length === 0) btnTts.textContent = '🗣 音声なし';
+  else updTtsBtn();
+}
+if('speechSynthesis' in window) speechSynthesis.onvoiceschanged = checkVoices;
+updTtsBtn();
+setTimeout(checkVoices, 800);
+</script>
+</body>
+</html>
