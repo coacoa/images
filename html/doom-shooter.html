@@ -1,0 +1,716 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<!-- build: 2026-11-25 16:57:10 JST -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<link rel="icon" href="data:," />
+<title>DOOM SHOOTER ― Emacsコマンド射撃訓練</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0b0e1a; --bg2:#11142a; --panel:#161a33; --panel2:#1d2142;
+    --ink:#e8eaf6; --dim:#9aa3c7; --line:#39406e;
+    --accent:#ffcc33; --good:#51fa7d; --bad:#ff5a6e; --cyan:#4de3ff; --magenta:#ff6ee7;
+    --echo-bg:#05060d; --echo-ink:#7dff9a;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"DotGothic16","Hiragino Kaku Gothic ProN",sans-serif;
+    min-height:100dvh; display:flex; flex-direction:column; align-items:center;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 1px, transparent 1px 4px);
+  }
+  button{font-family:inherit; min-height:44px; cursor:pointer;}
+  .wrap{width:100%; max-width:600px; margin:0 auto; padding:10px 10px 18px; display:flex; flex-direction:column; gap:8px;}
+
+  /* ===== HUD ===== */
+  .hud{
+    display:flex; flex-wrap:wrap; gap:6px; align-items:stretch;
+  }
+  .hud .cell{
+    background:var(--panel); border:2px solid var(--line); padding:5px 10px;
+    font-size:15px; line-height:1.25; flex:1 1 auto; text-align:center; min-width:86px;
+    box-shadow:3px 3px 0 #000;
+  }
+  .hud .cell b{display:block; font-size:19px; color:var(--accent); letter-spacing:.04em;}
+  .hud .cell.combo b{color:var(--magenta);}
+  .hud .cell.stage b{color:var(--cyan); font-size:16px; padding-top:2px;}
+
+  /* ===== お題バナー ===== */
+  .banner{
+    background:var(--panel2); border:3px solid var(--accent); box-shadow:4px 4px 0 #000;
+    padding:8px 12px; text-align:center;
+  }
+  .banner .label{font-size:13px; color:var(--accent); letter-spacing:.25em;}
+  .banner .title{font-size:clamp(22px,6vw,30px); line-height:1.2; margin:2px 0;}
+  .banner .steps{display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin-top:4px; min-height:30px;}
+  .step-chip{
+    border:2px solid var(--line); background:#0d1022; color:var(--dim);
+    padding:3px 10px; font-size:16px;
+  }
+  .step-chip.now{border-color:var(--accent); color:#fff; background:#3a2f05; animation:blink 1s steps(2) infinite;}
+  .step-chip.done{border-color:var(--good); color:var(--good); text-decoration:line-through;}
+  @keyframes blink{50%{background:#241d03;}}
+  @media (prefers-reduced-motion: reduce){ .step-chip.now{animation:none;} }
+
+  /* ===== ゲーム画面 ===== */
+  .stage-frame{
+    position:relative; border:3px solid var(--line); box-shadow:5px 5px 0 #000;
+    background:#070912; line-height:0;
+  }
+  canvas{
+    width:100%; height:auto; display:block; touch-action:none; cursor:crosshair;
+    image-rendering:pixelated;
+  }
+  .overlay{
+    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+    gap:12px; background:rgba(5,6,16,.88); text-align:center; padding:20px 16px; line-height:1.5;
+    overflow-y:auto; overscroll-behavior:contain;
+  }
+  .overlay::before,.overlay::after{content:""; margin:auto;}
+  .overlay > *{flex-shrink:0;}
+  @media (max-width:480px){
+    .overlay{gap:6px; padding:10px 10px;}
+    .overlay::before,.overlay::after{display:none;}
+    .overlay h2{font-size:22px;}
+    .overlay h3{font-size:17px;}
+    .overlay p{font-size:13px; line-height:1.4;}
+    .overlay .small{font-size:11px; line-height:1.4;}
+    .btn{font-size:16px; padding:6px 18px; min-height:40px;}
+    .stage-select{display:grid; grid-template-columns:1fr 1fr; gap:6px; width:100%;}
+    .stage-select button{font-size:12px; padding:4px 4px; min-height:38px;}
+    .zukan{font-size:13px;}
+    .zukan table{font-size:13px;}
+  }
+  .overlay[hidden]{display:none;}
+  .overlay h2{margin:0; font-size:clamp(24px,7vw,34px); color:var(--accent); letter-spacing:.06em;}
+  .overlay h3{margin:0; font-size:20px; color:var(--cyan);}
+  .overlay p{margin:0; font-size:16px; color:var(--ink); max-width:44ch;}
+  .overlay .small{font-size:14px; color:var(--dim);}
+  .btn{
+    background:var(--accent); color:#191200; border:3px solid #000; box-shadow:4px 4px 0 #000;
+    font-size:19px; padding:10px 26px; letter-spacing:.05em;
+  }
+  .btn:active{transform:translate(2px,2px); box-shadow:2px 2px 0 #000;}
+  .btn.sub{background:var(--panel2); color:var(--ink); border-color:var(--line); font-size:16px; padding:8px 18px;}
+  .stage-select{display:flex; gap:8px; flex-wrap:wrap; justify-content:center;}
+  .stage-select button{
+    background:#0d1022; color:var(--dim); border:2px solid var(--line); font-size:15px; padding:6px 12px;
+  }
+  .stage-select button.open{color:var(--cyan); border-color:var(--cyan);}
+  .stage-select button:disabled{opacity:.35; cursor:not-allowed;}
+  .zukan{
+    width:100%; max-height:46%; overflow:auto; text-align:left; background:#0d1022;
+    border:2px solid var(--line); padding:8px 10px; line-height:1.45;
+  }
+  .zukan table{width:100%; border-collapse:collapse; font-size:15px;}
+  .zukan td{padding:4px 6px; border-bottom:1px dashed #2c3260; vertical-align:top;}
+  .zukan td.cmd{color:var(--accent); white-space:nowrap; width:34%;}
+  .zukan td.act{color:var(--ink);}
+
+  /* ===== エコーエリア ===== */
+  .echo{
+    background:var(--echo-bg); border:2px solid var(--line); box-shadow:3px 3px 0 #000;
+    padding:9px 12px; min-height:76px;
+  }
+  .echo .who{font-size:12px; color:#3f7d4e; letter-spacing:.2em; margin-bottom:2px;}
+  .echo .msg{color:var(--echo-ink); font-size:clamp(16px,4.4vw,19px); line-height:1.45; white-space:pre-wrap; word-break:break-word;}
+  .echo .msg.miss{color:#ffb3bc;}
+  .echo .msg.sys{color:#a8e6ff;}
+
+  /* ===== 操作バー ===== */
+  .controls{display:flex; gap:8px; flex-wrap:wrap;}
+  .controls button{
+    flex:1 1 120px; background:var(--panel); color:var(--ink); border:2px solid var(--line);
+    box-shadow:3px 3px 0 #000; font-size:16px; padding:8px 6px;
+  }
+  .controls button.on{border-color:var(--good); color:var(--good);}
+  .howto{font-size:14px; color:var(--dim); line-height:1.6; text-align:center;}
+  .howto b{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HUD -->
+  <div class="hud" aria-label="スコア表示">
+    <div class="cell">SCORE<b id="hudScore">0</b></div>
+    <div class="cell combo">COMBO<b id="hudCombo">×1.0</b></div>
+    <div class="cell stage">STAGE<b id="hudStage">1</b></div>
+    <div class="cell">MISSION<b id="hudMission">- / 10</b></div>
+    <div class="cell">BEST<b id="hudBest">0</b></div>
+  </div>
+
+  <!-- お題バナー -->
+  <div class="banner">
+    <div class="label">― お 題 ―</div>
+    <div class="title" id="missionTitle">スタートボタンを押してね</div>
+    <div class="steps" id="missionSteps"></div>
+  </div>
+
+  <!-- ゲーム画面 -->
+  <div class="stage-frame">
+    <canvas id="game" width="480" height="600" aria-label="シューティング画面"></canvas>
+
+    <!-- スタート画面 -->
+    <div class="overlay" id="ovStart">
+      <h2>DOOM SHOOTER</h2>
+      <p>降ってくる<b style="color:var(--accent)">コマンドの的</b>を撃って、<br />Doom Emacs のキー操作を覚える射撃訓練。</p>
+      <p>お題に合う的を撃つと得点＆説明を読み上げ。<br />手順ミッションは<b style="color:var(--magenta)">順番通り</b>に壊すとコンボボーナス！</p>
+      <div class="stage-select" id="stageSelect"></div>
+      <button class="btn" id="btnStart">▶ ゲームスタート</button>
+      <p class="small">操作はマウス／指だけ：動かして移動、押している間 連射。<br />ミスしてもゲームオーバーなし。コンボが切れるだけ。</p>
+    </div>
+
+    <!-- ステージクリア画面（図鑑） -->
+    <div class="overlay" id="ovClear" hidden>
+      <h3 id="clearTitle">STAGE CLEAR!</h3>
+      <p id="clearText"></p>
+      <div class="zukan" id="zukan"></div>
+      <button class="btn" id="btnNext">▶ つぎのステージへ</button>
+      <button class="btn sub" id="btnAgain">このステージをもう一度</button>
+    </div>
+
+    <!-- 全クリア画面 -->
+    <div class="overlay" id="ovAllClear" hidden>
+      <h2>ALL CLEAR!</h2>
+      <p>Doom Emacs編、全ステージ制覇！<br />リーダーキーと Evil 編集の型が体に入ったはず。</p>
+      <div class="zukan" id="zukanAll"></div>
+      <button class="btn" id="btnFree">▶ フリープレイ（Stage 4）</button>
+      <button class="btn sub" id="btnBackTop">タイトルへ戻る</button>
+    </div>
+  </div>
+
+  <!-- エコーエリア -->
+  <div class="echo" role="status" aria-live="polite">
+    <div class="who">ECHO AREA ― *Messages*</div>
+    <div class="msg sys" id="echoMsg">M-x doom-shooter ― 訓練開始を待っている…</div>
+  </div>
+
+  <!-- 操作バー -->
+  <div class="controls">
+    <button id="btnTts" class="on" aria-pressed="true">🗣 読み上げ ON</button>
+    <button id="btnPause">⏸ 一時停止</button>
+    <button id="btnReset">↺ 最初から</button>
+  </div>
+
+  <p class="howto">
+    <b>遊び方：</b>ポインタで自機を移動（上下左右OK）、クリック／タップを押し続けると連射。
+    お題の手順チップが光っているコマンドが今の正解。順序ボーナスはコンボ倍率で入ります。
+  </p>
+</div>
+
+<script>
+"use strict";
+/* ================================================================
+   DOOM SHOOTER ― データ部（将来の Neovim / NixOS / シェル編は
+   GAME_PACKS にパックを足すだけで拡張できる構造）
+   ================================================================ */
+var GAME_PACKS = {
+  doom: {
+    name: "Doom Emacs編",
+    stages: [
+      {
+        id: 1, name: "リーダーキー基本",
+        commands: {
+          "SPC f f": { act: "ファイルを開く",        desc: "SPC f f ― ファイルを探して開く（find-file）。プロジェクト内なら SPC p f も便利。" },
+          "SPC f s": { act: "ファイルを保存",        desc: "SPC f s ― 今のファイルを保存する（save-file）。こまめな保存が事故を防ぐ。" },
+          "SPC f r": { act: "最近開いたファイル",    desc: "SPC f r ― 最近開いたファイルの履歴から開く。探すより速いことが多い。" },
+          "SPC b b": { act: "バッファ切替",          desc: "SPC b b ― 開いているバッファ（ファイル）へ切り替える。" },
+          "SPC b d": { act: "バッファを閉じる",      desc: "SPC b d ― 今のバッファを閉じる（kill-buffer）。ファイル自体は消えない。" },
+          "SPC w v": { act: "ウィンドウ縦分割",      desc: "SPC w v ― ウィンドウを左右に縦分割する。並べて見比べたいときに。" },
+          "SPC w s": { act: "ウィンドウ横分割",      desc: "SPC w s ― ウィンドウを上下に横分割する。" },
+          "SPC w d": { act: "ウィンドウを閉じる",    desc: "SPC w d ― 今のウィンドウを閉じる。バッファは残るのがポイント。" },
+          "SPC q q": { act: "Emacsを終了",          desc: "SPC q q ― Emacsを終了する。未保存があれば確認してくれる。" }
+        },
+        missions: [
+          { title: "ファイルを開け",            steps: ["SPC f f"] },
+          { title: "ファイルを保存しろ",        steps: ["SPC f s"] },
+          { title: "バッファを切り替えろ",      steps: ["SPC b b"] },
+          { title: "バッファを閉じろ",          steps: ["SPC b d"] },
+          { title: "画面を縦に分割しろ",        steps: ["SPC w v"] },
+          { title: "分割した窓を閉じろ",        steps: ["SPC w d"] },
+          { title: "開いて、すぐ保存",          steps: ["SPC f f", "SPC f s"] },
+          { title: "横に割って、縦にも割れ",    steps: ["SPC w s", "SPC w v"] },
+          { title: "最近のファイルをもう一度",  steps: ["SPC f r"] },
+          { title: "仕事終わり。Emacsを終了",   steps: ["SPC q q"] }
+        ]
+      },
+      {
+        id: 2, name: "Evil編集",
+        commands: {
+          "i":  { act: "挿入モード",        desc: "i ― カーソルの前から挿入モード（Insert）に入る。文字を打てる状態。" },
+          "a":  { act: "後ろから挿入",      desc: "a ― カーソルの1文字後ろから挿入モードに入る（append）。" },
+          "o":  { act: "下に新しい行",      desc: "o ― 下に新しい行を作って挿入モードに入る。改行して書き始めるときの型。" },
+          "dd": { act: "行を削除（カット）", desc: "dd ― 今の行をまるごと削除。消した行はレジスタに入るので p で戻せる。" },
+          "yy": { act: "行をコピー",        desc: "yy ― 今の行をまるごとコピー（yank）する。" },
+          "p":  { act: "貼り付け",          desc: "p ― コピー／カットしたものをカーソルの後ろ（下）に貼り付ける。" },
+          "u":  { act: "アンドゥ",          desc: "u ― 直前の操作を取り消す（undo）。失敗しても怖くない。" },
+          "x":  { act: "1文字削除",         desc: "x ― カーソル位置の1文字を削除する。" },
+          "dw": { act: "単語を削除",        desc: "dw ― カーソル位置から単語1つ分を削除する（delete word）。" }
+        },
+        missions: [
+          { title: "挿入モードに入れ",          steps: ["i"] },
+          { title: "行をコピーして貼り付け",    steps: ["yy", "p"] },
+          { title: "行を消して、下に貼れ（行移動）", steps: ["dd", "p"] },
+          { title: "1文字消せ",                steps: ["x"] },
+          { title: "単語を消せ",                steps: ["dw"] },
+          { title: "やっぱり戻せ（アンドゥ）",  steps: ["u"] },
+          { title: "下に新しい行を開け",        steps: ["o"] },
+          { title: "行を消して、後悔して戻せ",  steps: ["dd", "u"] },
+          { title: "カーソルの後ろから書け",    steps: ["a"] },
+          { title: "コピペを2連発",            steps: ["yy", "p", "p"] }
+        ]
+      },
+      {
+        id: 3, name: "移動と検索",
+        commands: {
+          "gg": { act: "ファイル先頭へ",    desc: "gg ― ファイルの先頭行へジャンプする。" },
+          "G":  { act: "ファイル末尾へ",    desc: "G ― ファイルの最終行へジャンプする。" },
+          "w":  { act: "次の単語へ",        desc: "w ― 次の単語の頭へ進む（word）。文章を速く読む足。" },
+          "b":  { act: "前の単語へ",        desc: "b ― 前の単語の頭へ戻る（back）。w の逆。" },
+          "e":  { act: "単語の末尾へ",      desc: "e ― 今の単語の末尾へ進む（end）。" },
+          "0":  { act: "行頭へ",            desc: "0 ― 行の先頭へ移動する。" },
+          "$":  { act: "行末へ",            desc: "$ ― 行の末尾へ移動する。" },
+          "/":  { act: "検索開始",          desc: "/ ― 前方検索を開始する。文字を打って Enter で確定。" },
+          "n":  { act: "次の一致へ",        desc: "n ― 検索の次の一致へ進む（next）。検索後の移動の基本。" },
+          "N":  { act: "前の一致へ",        desc: "N ― 検索の前の一致へ戻る。n の逆方向。" }
+        },
+        missions: [
+          { title: "先頭へ飛べ",              steps: ["gg"] },
+          { title: "末尾へ飛べ",              steps: ["G"] },
+          { title: "単語を3つ進め",           steps: ["w", "w", "w"] },
+          { title: "進んで、1つ戻れ",         steps: ["w", "b"] },
+          { title: "検索して、次へ次へ",      steps: ["/", "n", "n"] },
+          { title: "検索して、行き過ぎたら戻れ", steps: ["/", "n", "N"] },
+          { title: "行末へ行け",              steps: ["$"] },
+          { title: "行末から行頭へ",          steps: ["$", "0"] },
+          { title: "単語の末尾を取れ",        steps: ["e"] },
+          { title: "末尾から先頭へ一気に戻れ", steps: ["G", "gg"] }
+        ]
+      },
+      {
+        id: 4, name: "応用と連携",
+        commands: {
+          "SPC p f": { act: "プロジェクト内ファイル", desc: "SPC p f ― プロジェクト内のファイルを名前で探して開く。大きな構成で真価を発揮。" },
+          "SPC /":   { act: "プロジェクト検索",      desc: "SPC / ― プロジェクト全体を文字列検索する。定義や使用箇所の洗い出しに。" },
+          "SPC g g": { act: "Magitを開く",           desc: "SPC g g ― Gitクライアント Magit のステータス画面を開く。コミット作業の入口。" },
+          "SPC SPC": { act: "コマンド実行（M-x）",   desc: "SPC SPC ― コマンドを名前で実行する（M-x）。キーを忘れたときの万能キー。" },
+          "SPC f f": { act: "ファイルを開く",        desc: "SPC f f ― ファイルを探して開く（find-file）。基本にして奥義。" },
+          "SPC b b": { act: "バッファ切替",          desc: "SPC b b ― 開いているバッファへ切り替える。" },
+          "yy":      { act: "行をコピー",            desc: "yy ― 今の行をまるごとコピー（yank）する。" },
+          "p":       { act: "貼り付け",              desc: "p ― コピー／カットしたものを貼り付ける。" },
+          "/":       { act: "検索開始",              desc: "/ ― 前方検索を開始する。" },
+          "n":       { act: "次の一致へ",            desc: "n ― 検索の次の一致へ進む（next）。" }
+        },
+        missions: [
+          { title: "プロジェクトからファイルを開け", steps: ["SPC p f"] },
+          { title: "プロジェクト全体を検索しろ",      steps: ["SPC /"] },
+          { title: "Gitの状態を見ろ（Magit）",        steps: ["SPC g g"] },
+          { title: "コマンド名で実行しろ",            steps: ["SPC SPC"] },
+          { title: "開いて、コピーして、貼れ",        steps: ["SPC f f", "yy", "p"] },
+          { title: "検索して、ヒットを巡回",          steps: ["/", "n", "n"] },
+          { title: "ファイルを開いて、バッファ切替",  steps: ["SPC p f", "SPC b b"] },
+          { title: "コピペして、Gitで確認",           steps: ["yy", "p", "SPC g g"] },
+          { title: "検索→移動→プロジェクト検索",     steps: ["/", "n", "SPC /"] },
+          { title: "総仕上げ：開く・書く・貼る・Git", steps: ["SPC p f", "yy", "p", "SPC g g"] }
+        ]
+      }
+    ]
+  }
+  /* 将来追加: neovim: {...}, nixos: {...}, shell: {...} */
+};
+
+/* ================================================================
+   ゲーム本体
+   ================================================================ */
+var SAVE_KEY = "doomShooterSaveV1";
+var pack = GAME_PACKS.doom;
+
+var save = { unlocked: 1, best: 0 };
+try {
+  var raw = localStorage.getItem(SAVE_KEY);
+  if (raw) { var p = JSON.parse(raw); if (p && p.unlocked) save = p; }
+} catch (e) {}
+function persist() {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {}
+}
+
+var cv = document.getElementById("game");
+var ctx = cv.getContext("2d");
+var W = cv.width, H = cv.height;
+
+var state = {
+  running: false, paused: false,
+  stageIdx: 0, missionIdx: 0, stepIdx: 0,
+  score: 0, combo: 0, maxCombo: 0,
+  ship: { x: W / 2, y: H - 70 },
+  pointer: { x: W / 2, y: H - 70, down: false, active: false },
+  bullets: [], targets: [], particles: [], floaters: [],
+  lastShot: 0, lastSpawn: 0, lastTime: 0, shake: 0,
+  tts: true, finished: false
+};
+
+var TARGET_COLORS = ["#ff5a6e", "#4de3ff", "#ff6ee7", "#51fa7d", "#ffa94d", "#b197fc"];
+
+function stage() { return pack.stages[state.stageIdx]; }
+function mission() { return stage().missions[state.missionIdx]; }
+function needCmd() { return mission().steps[state.stepIdx]; }
+function cmdInfo(cmd) { return stage().commands[cmd]; }
+
+/* ---------- HUD / エコーエリア ---------- */
+var el = function (id) { return document.getElementById(id); };
+function comboMult() { return 1 + Math.min(state.combo, 20) * 0.1; }
+function renderHUD() {
+  el("hudScore").textContent = state.score;
+  el("hudCombo").textContent = "×" + comboMult().toFixed(1) + (state.combo > 1 ? " (" + state.combo + "連続)" : "");
+  el("hudStage").textContent = (state.stageIdx + 1) + " " + stage().name;
+  el("hudMission").textContent = state.running ? (state.missionIdx + 1) + " / " + stage().missions.length : "- / " + stage().missions.length;
+  el("hudBest").textContent = Math.max(save.best, state.score);
+}
+function renderMission() {
+  if (!state.running) { el("missionTitle").textContent = "スタートボタンを押してね"; el("missionSteps").innerHTML = ""; return; }
+  el("missionTitle").textContent = mission().title;
+  var html = "";
+  mission().steps.forEach(function (s, i) {
+    var cls = i < state.stepIdx ? "done" : (i === state.stepIdx ? "now" : "");
+    html += '<span class="step-chip ' + cls + '">' + (i + 1) + ". " + s + "</span>";
+  });
+  el("missionSteps").innerHTML = html;
+}
+function echo(text, kind) {
+  var m = el("echoMsg");
+  m.textContent = text;
+  m.className = "msg" + (kind ? " " + kind : "");
+}
+function speak(text) {
+  if (!state.tts) return;
+  try {
+    var synth = window.speechSynthesis;
+    if (!synth) return;
+    synth.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = "ja-JP"; u.rate = 1.05;
+    var vs = synth.getVoices();
+    for (var i = 0; i < vs.length; i++) { if (vs[i].lang && vs[i].lang.indexOf("ja") === 0) { u.voice = vs[i]; break; } }
+    synth.speak(u);
+  } catch (e) {}
+}
+
+/* ---------- 的・弾 ---------- */
+function targetWidth(cmd) { return Math.max(74, cmd.length * 15 + 26); }
+function spawnTarget(forceCmd) {
+  var pool = Object.keys(stage().commands);
+  var cmd = forceCmd || pool[Math.floor(Math.random() * pool.length)];
+  var w = targetWidth(cmd);
+  state.targets.push({
+    cmd: cmd, w: w, h: 40,
+    x: 10 + Math.random() * (W - w - 20),
+    y: -46,
+    vy: 34 + Math.random() * 26 + state.stageIdx * 4,
+    color: TARGET_COLORS[Math.floor(Math.random() * TARGET_COLORS.length)],
+    wob: Math.random() * Math.PI * 2
+  });
+}
+function ensureCorrectTarget() {
+  var need = needCmd();
+  for (var i = 0; i < state.targets.length; i++) if (state.targets[i].cmd === need) return;
+  spawnTarget(need);
+}
+function burst(x, y, color) {
+  for (var i = 0; i < 14; i++) {
+    var a = Math.random() * Math.PI * 2, sp = 40 + Math.random() * 130;
+    state.particles.push({ x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0.45, color: color, s: 3 + Math.random() * 3 });
+  }
+}
+function floater(x, y, text, color) {
+  state.floaters.push({ x: x, y: y, text: text, color: color, life: 1.1 });
+}
+
+/* ---------- 命中判定 ---------- */
+function hitTarget(t) {
+  var need = needCmd();
+  var info = cmdInfo(t.cmd);
+  var cx = t.x + t.w / 2, cy = t.y + t.h / 2;
+  if (t.cmd === need) {
+    state.combo++; state.maxCombo = Math.max(state.maxCombo, state.combo);
+    var gain = Math.round(100 * comboMult());
+    var seqBonus = 0;
+    state.stepIdx++;
+    var missionDone = state.stepIdx >= mission().steps.length;
+    if (missionDone && mission().steps.length > 1) { seqBonus = 150 + state.combo * 10; }
+    state.score += gain + seqBonus;
+    burst(cx, cy, t.color);
+    floater(cx, cy - 8, "+" + gain + (seqBonus ? " BONUS+" + seqBonus : ""), "#ffcc33");
+    echo(info.desc + (missionDone ? "\n▶ ミッション完了！" : "\n▶ 正解！ つぎは「" + needCmd() + "」"), "");
+    speak(info.desc);
+    if (missionDone) nextMission();
+    renderMission();
+  } else {
+    var lost = state.combo;
+    state.combo = 0;
+    state.score = Math.max(0, state.score - 30);
+    state.shake = 6;
+    burst(cx, cy, "#5a6076");
+    floater(cx, cy - 8, "-30", "#ff5a6e");
+    echo("✕ それは「" + t.cmd + "」― " + (info ? info.act : "") + "のコマンド。今のお題は「" + need + "」だ。コンボが切れた…（" + lost + "連続）", "miss");
+    renderMission();
+  }
+  if (state.score > save.best) { save.best = state.score; persist(); }
+  renderHUD();
+}
+
+function nextMission() {
+  state.missionIdx++;
+  state.stepIdx = 0;
+  state.targets = [];
+  if (state.missionIdx >= stage().missions.length) { stageClear(); return; }
+  setTimeout(function () {
+    if (state.running && !state.paused) echo("▶ つぎのお題：「" + mission().title + "」 ― まず「" + needCmd() + "」を狙え。", "sys");
+  }, 600);
+}
+
+function stageClear() {
+  state.running = false; state.finished = true;
+  var st = stage();
+  var firstClear = (st.id >= save.unlocked);
+  if (st.id >= save.unlocked && st.id < pack.stages.length) save.unlocked = st.id + 1;
+  if (state.score > save.best) save.best = state.score;
+  persist(); buildStageSelect(); renderHUD();
+  var isLast = state.stageIdx >= pack.stages.length - 1;
+  speak("ステージクリア！ " + st.name + "、おつかれさま。");
+  if (isLast) {
+    el("zukanAll").innerHTML = zukanHTML(st);
+    showOverlay("ovAllClear");
+  } else {
+    el("clearTitle").textContent = "STAGE " + st.id + " CLEAR!";
+    el("clearText").textContent = st.name + " を制覇！ スコア " + state.score + "点 ／ 最大 " + state.maxCombo + "コンボ。" + (firstClear ? " つぎのステージが解放された。" : "");
+    el("zukan").innerHTML = zukanHTML(st);
+    showOverlay("ovClear");
+  }
+}
+function zukanHTML(st) {
+  var rows = Object.keys(st.commands).map(function (c) {
+    return "<tr><td class='cmd'>" + c + "</td><td class='act'>" + st.commands[c].act + "</td></tr>";
+  }).join("");
+  return "<table>" + rows + "</table>";
+}
+
+/* ---------- オーバーレイ / 進行 ---------- */
+function showOverlay(id) {
+  ["ovStart", "ovClear", "ovAllClear"].forEach(function (o) { el(o).hidden = (o !== id); });
+}
+function hideOverlays() {
+  ["ovStart", "ovClear", "ovAllClear"].forEach(function (o) { el(o).hidden = true; });
+}
+function buildStageSelect() {
+  var box = el("stageSelect"); box.innerHTML = "";
+  pack.stages.forEach(function (st, i) {
+    var b = document.createElement("button");
+    b.textContent = "Stage " + st.id + "：" + st.name;
+    b.disabled = st.id > save.unlocked;
+    if (!b.disabled) b.className = "open";
+    b.addEventListener("click", function () { state.score = 0; startGame(i); });
+    box.appendChild(b);
+  });
+}
+function startGame(stageIdx) {
+  state.stageIdx = stageIdx;
+  state.missionIdx = 0; state.stepIdx = 0;
+  state.combo = 0; state.maxCombo = 0;
+  state.bullets = []; state.targets = []; state.particles = []; state.floaters = [];
+  state.running = true; state.paused = false; state.finished = false;
+  el("btnPause").textContent = "⏸ 一時停止";
+  hideOverlays();
+  ensureCorrectTarget(); spawnTarget(); spawnTarget();
+  echo("▶ Stage " + stage().id + "「" + stage().name + "」開始！ お題：「" + mission().title + "」 ― まず「" + needCmd() + "」を狙え。", "sys");
+  speak("ステージ" + stage().id + "、" + stage().name + "。お題、" + mission().title);
+  renderHUD(); renderMission();
+}
+
+/* ---------- 描画 ---------- */
+function drawShip(x, y) {
+  ctx.save(); ctx.translate(x, y);
+  var px = function (rx, ry, rw, rh, c) { ctx.fillStyle = c; ctx.fillRect(rx, ry, rw, rh); };
+  px(-4, -22, 8, 10, "#e8eaf6");            // 機首
+  px(-10, -12, 20, 8, "#4de3ff");           // 胴体
+  px(-22, -2, 44, 8, "#2b7fd4");            // 主翼
+  px(-26, 4, 10, 8, "#ff5a6e"); px(16, 4, 10, 8, "#ff5a6e"); // 翼端
+  px(-6, 6, 12, 6, "#ffcc33");              // 尾部
+  px(-3, -16, 6, 6, "#ffcc33");             // コックピット
+  var f = 4 + Math.random() * 5;            // 噴射炎
+  px(-4, 12, 8, f, "#ffa94d"); px(-2, 12 + f, 4, 3, "#ff5a6e");
+  ctx.restore();
+}
+function drawTarget(t, time) {
+  var wobX = Math.sin(time / 500 + t.wob) * 4;
+  ctx.save(); ctx.translate(t.x + wobX, t.y);
+  ctx.fillStyle = "#000"; ctx.fillRect(3, 3, t.w, t.h);
+  ctx.fillStyle = "#141830"; ctx.fillRect(0, 0, t.w, t.h);
+  ctx.strokeStyle = t.color; ctx.lineWidth = 3; ctx.strokeRect(1, 1, t.w - 2, t.h - 2);
+  ctx.fillStyle = t.color; ctx.fillRect(0, 0, 6, 6); ctx.fillRect(t.w - 6, 0, 6, 6);
+  ctx.fillRect(0, t.h - 6, 6, 6); ctx.fillRect(t.w - 6, t.h - 6, 6, 6);
+  ctx.fillStyle = "#fff"; ctx.font = "17px 'DotGothic16', monospace";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(t.cmd, t.w / 2, t.h / 2 + 1);
+  ctx.restore();
+}
+var stars = [];
+for (var si = 0; si < 70; si++) stars.push({ x: Math.random() * W, y: Math.random() * H, s: Math.random() * 2 + 1, v: 12 + Math.random() * 30 });
+
+function draw(time) {
+  ctx.fillStyle = "#070912"; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = "#39406e";
+  stars.forEach(function (s) { ctx.globalAlpha = .5; ctx.fillRect(s.x, s.y, s.s, s.s); });
+  ctx.globalAlpha = 1;
+  ctx.save();
+  if (state.shake > 0) ctx.translate((Math.random() - .5) * state.shake, (Math.random() - .5) * state.shake);
+  state.targets.forEach(function (t) { drawTarget(t, time); });
+  ctx.fillStyle = "#ffe066";
+  state.bullets.forEach(function (b) { ctx.fillRect(b.x - 2, b.y - 8, 4, 10); });
+  state.particles.forEach(function (pt) {
+    ctx.globalAlpha = Math.max(0, pt.life / 0.45); ctx.fillStyle = pt.color;
+    ctx.fillRect(pt.x, pt.y, pt.s, pt.s);
+  });
+  ctx.globalAlpha = 1;
+  if (state.running || state.finished) drawShip(state.ship.x, state.ship.y);
+  ctx.font = "16px 'DotGothic16', monospace"; ctx.textAlign = "center";
+  state.floaters.forEach(function (f) {
+    ctx.globalAlpha = Math.max(0, Math.min(1, f.life)); ctx.fillStyle = f.color;
+    ctx.fillText(f.text, f.x, f.y);
+  });
+  ctx.globalAlpha = 1;
+  ctx.restore();
+  if (state.paused) {
+    ctx.fillStyle = "rgba(5,6,16,.6)"; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = "#ffcc33"; ctx.font = "30px 'DotGothic16', monospace"; ctx.textAlign = "center";
+    ctx.fillText("⏸ PAUSED", W / 2, H / 2);
+  }
+}
+
+/* ---------- 更新ループ ---------- */
+function update(dt, time) {
+  stars.forEach(function (s) { s.y += s.v * dt; if (s.y > H) { s.y = -2; s.x = Math.random() * W; } });
+  if (!state.running || state.paused) return;
+
+  // 自機はポインタへ追随
+  var tx = state.pointer.active ? state.pointer.x : state.ship.x;
+  var ty = state.pointer.active ? state.pointer.y : state.ship.y;
+  state.ship.x += (tx - state.ship.x) * Math.min(1, dt * 18);
+  state.ship.y += (ty - state.ship.y) * Math.min(1, dt * 18);
+  state.ship.x = Math.max(28, Math.min(W - 28, state.ship.x));
+  state.ship.y = Math.max(H * 0.35, Math.min(H - 30, state.ship.y));
+
+  // 連射
+  if (state.pointer.down && time - state.lastShot > 130) {
+    state.lastShot = time;
+    state.bullets.push({ x: state.ship.x, y: state.ship.y - 26 });
+  }
+  // スポーン
+  if (time - state.lastSpawn > 950 && state.targets.length < 5) {
+    state.lastSpawn = time; spawnTarget();
+  }
+  ensureCorrectTarget();
+
+  state.bullets = state.bullets.filter(function (b) { b.y -= 460 * dt; return b.y > -14; });
+  state.targets = state.targets.filter(function (t) {
+    t.y += t.vy * dt;
+    if (t.y > H + 10) return false;
+    return true;
+  });
+  // 衝突
+  for (var bi = state.bullets.length - 1; bi >= 0; bi--) {
+    var b = state.bullets[bi], hit = false;
+    for (var ti = state.targets.length - 1; ti >= 0; ti--) {
+      var t = state.targets[ti];
+      if (b.x > t.x - 4 && b.x < t.x + t.w + 4 && b.y > t.y - 4 && b.y < t.y + t.h + 6) {
+        state.targets.splice(ti, 1);
+        hitTarget(t);
+        hit = true; break;
+      }
+    }
+    if (hit) state.bullets.splice(bi, 1);
+    if (!state.running) break; // ステージクリアで中断
+  }
+  state.particles = state.particles.filter(function (pt) {
+    pt.x += pt.vx * dt; pt.y += pt.vy * dt; pt.life -= dt; return pt.life > 0;
+  });
+  state.floaters = state.floaters.filter(function (f) { f.y -= 34 * dt; f.life -= dt; return f.life > 0; });
+  if (state.shake > 0) state.shake = Math.max(0, state.shake - dt * 22);
+}
+function loop(time) {
+  var dt = Math.min(0.05, (time - state.lastTime) / 1000 || 0.016);
+  state.lastTime = time;
+  update(dt, time);
+  draw(time);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* ---------- 入力（マウス／タッチのみ） ---------- */
+function canvasPos(e) {
+  var r = cv.getBoundingClientRect();
+  return { x: (e.clientX - r.left) * (W / r.width), y: (e.clientY - r.top) * (H / r.height) };
+}
+cv.addEventListener("pointermove", function (e) {
+  var p = canvasPos(e); state.pointer.x = p.x; state.pointer.y = p.y - 10; state.pointer.active = true;
+});
+cv.addEventListener("pointerdown", function (e) {
+  var p = canvasPos(e); state.pointer.x = p.x; state.pointer.y = p.y - 10; state.pointer.active = true;
+  state.pointer.down = true;
+  try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+});
+function pointerUp() { state.pointer.down = false; }
+cv.addEventListener("pointerup", pointerUp);
+cv.addEventListener("pointercancel", pointerUp);
+cv.addEventListener("pointerleave", function () { state.pointer.down = false; });
+document.addEventListener("visibilitychange", function () {
+  if (document.hidden && state.running && !state.paused) togglePause();
+});
+
+/* ---------- ボタン ---------- */
+el("btnStart").addEventListener("click", function () { state.score = 0; startGame(0); });
+el("btnNext").addEventListener("click", function () { startGame(Math.min(state.stageIdx + 1, pack.stages.length - 1)); });
+el("btnAgain").addEventListener("click", function () { state.score = 0; startGame(state.stageIdx); });
+el("btnFree").addEventListener("click", function () { startGame(pack.stages.length - 1); });
+el("btnBackTop").addEventListener("click", function () {
+  state.finished = false; state.score = 0; buildStageSelect(); showOverlay("ovStart"); renderHUD();
+});
+el("btnTts").addEventListener("click", function () {
+  state.tts = !state.tts;
+  this.textContent = state.tts ? "🗣 読み上げ ON" : "🔇 読み上げ OFF";
+  this.classList.toggle("on", state.tts);
+  this.setAttribute("aria-pressed", state.tts ? "true" : "false");
+  if (!state.tts) { try { speechSynthesis.cancel(); } catch (e) {} }
+  else speak("読み上げ、オン。");
+});
+function togglePause() {
+  if (!state.running) return;
+  state.paused = !state.paused;
+  el("btnPause").textContent = state.paused ? "▶ 再開" : "⏸ 一時停止";
+  if (state.paused) { try { speechSynthesis.cancel(); } catch (e) {} }
+}
+el("btnPause").addEventListener("click", togglePause);
+el("btnReset").addEventListener("click", function () {
+  state.running = false; state.finished = false; state.paused = false; state.score = 0; state.combo = 0;
+  state.targets = []; state.bullets = []; state.particles = []; state.floaters = [];
+  el("btnPause").textContent = "⏸ 一時停止";
+  try { speechSynthesis.cancel(); } catch (e) {}
+  buildStageSelect(); showOverlay("ovStart");
+  echo("M-x doom-shooter ― 訓練開始を待っている…", "sys");
+  renderHUD(); renderMission();
+});
+
+/* ---------- 初期化 ---------- */
+if (window.speechSynthesis) { try { speechSynthesis.getVoices(); } catch (e) {} }
+buildStageSelect();
+renderHUD(); renderMission();
+</script>
+</body>
+</html>
