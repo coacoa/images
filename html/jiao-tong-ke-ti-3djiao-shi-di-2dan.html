@@ -82,14 +82,18 @@
   .hud.over .hudbar i{background:#ff7a6b}
   .hud.over{border:2px solid #ff1626;box-shadow:0 0 16px rgba(255,22,38,.6)}
   .hud.over .big{color:#ff5b4d}
-  .subtitle{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:5;width:min(94%,980px);
-    display:none;background:rgba(8,16,28,.86);color:#fff;border-radius:10px;
-    padding:10px 18px;font-size:clamp(.95rem,2.2vw,1.2rem);font-weight:700;line-height:1.6;text-align:center;
-    pointer-events:none;
-    display:none;overflow:hidden}
-  .subtitle .cap{display:block;font-size:.7rem;font-weight:800;color:#9fc6f5;letter-spacing:.08em}
-  .subtitle .txt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  .viewerbox:fullscreen .subtitle{display:block}
+  /* 字幕バー: 通常時は出さない。フルスクリーン時はビューワー全体の
+     一番下に全幅ストリップとして常時表示する（3D画面の内側ではない） */
+  .subtitle{display:none}
+  .viewerbox:fullscreen .subtitle,.viewerbox.is-fs .subtitle{display:block;flex:none;width:100%;
+    background:#060d18;color:#fff;border-top:2px solid #000;
+    padding:12px 22px 18px;font-size:clamp(1.05rem,2.4vw,1.4rem);font-weight:700;line-height:1.65;text-align:center}
+  .subtitle .cap{display:block;font-size:.72rem;font-weight:800;color:#9fc6f5;letter-spacing:.08em;margin-bottom:2px}
+  .subtitle .txt{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .tbtn.rec-on{background:#c62f2f;border-color:#c62f2f;color:#fff;animation:recpulse 1.2s ease-in-out infinite}
+  @keyframes recpulse{0%,100%{opacity:1}50%{opacity:.55}}
+  @media (prefers-reduced-motion: reduce){.tbtn.rec-on{animation:none}}
+  .recstatus{font-size:.82rem;color:var(--ink2);font-weight:700}
   .viewerbox:fullscreen .viewtag{bottom:auto;top:10px}
   .transport{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;border-top:1px solid var(--line);background:var(--panel2)}
   .tbtn{border:1.5px solid var(--line);background:var(--panel);color:var(--ink);border-radius:9px;padding:6px 14px;font-weight:700}
@@ -173,7 +177,6 @@
         <div class="fallback" id="fallback">3Dを表示できませんでした。<br>下の解説テキストで同じ内容を学べます。</div>
         <div class="incident" id="incident"></div>
         <div class="hud" id="hud"></div>
-        <div class="subtitle" id="subtitle" aria-hidden="true"><span class="cap">音声解説</span><span class="txt" id="subtitle-txt"></span></div>
         <div class="viewtag" id="viewtag">視点：俯瞰</div>
         <div class="panetag"></div>
         <div class="panetag"></div>
@@ -187,11 +190,14 @@
           <input type="range" id="scrub" min="0" max="1000" value="0" aria-label="再生位置" />
           <span class="clock" id="clock">0.0 / 12.0秒</span>
         </div>
-        <button class="tbtn" id="btn-tts" type="button" aria-pressed="false">🗣 読み上げ OFF</button>
+        <button class="tbtn" id="btn-tts" type="button" aria-pressed="true">🗣 読み上げ ON</button>
         <button class="tbtn" id="btn-fs" type="button">⛶ フルスクリーン</button>
         <button class="tbtn" id="btn-multi" type="button" aria-pressed="false">🖥 同時視点（マルチ）</button>
+        <button class="tbtn" id="btn-rec" type="button" aria-pressed="false" title="このタブを音声ごと録画して保存します">🔴 録画</button>
+        <span class="recstatus" id="rec-status">録画するときは、共有ダイアログで「このタブ」を選び、タブ音声もONにしてください</span>
       </div>
       <div class="cams" id="cams"><span class="cap">視点を切り替える（同じ瞬間を、相手の目で見る）</span></div>
+      <div class="subtitle" id="subtitle"><span class="cap">音声解説（字幕）</span><span class="txt" id="subtitle-txt"></span></div>
     </div>
 
     <aside class="info" id="info" aria-live="polite"></aside>
@@ -357,6 +363,48 @@
     </div>
   </section>
 
+  <section class="block">
+    <h2>罰則はあるのに、なぜ減らないのか ― 執行のギャップ</h2>
+    <p>ここまでで、罰金がいくらか、どんな処分があるかは学べました。それでも残るモヤモヤがあります。<strong>実際には、爆音車は全然減っていないように見える</strong>という感覚です。罰則の条文は存在するのに、適用されるのはごく一部の例だけではないか ― この感覚は、気のせいではなく、仕組みの側に理由があります。誰か個人や特定の団体が悪いという話ではなく、「罰則があること」と「実際に減ること」の間にある距離を、構造として見ていきます。</p>
+    <div class="cards">
+      <div class="card red">
+        <h3>1. 騒音は、その場で消えてしまう</h3>
+        <p>スピード違反には記録が残り、駐車違反には車両そのものが残ります。しかし騒音は違います。車が通り過ぎれば、音はその瞬間に消え、あとには何も残りません。「うるさかった」という住民の実感だけでは、どの車が、何dB出していたのかを後から証明することはできません。<strong>証拠が残りにくい違反は、そもそも立件の出発点に立ちにくい</strong>のです。</p>
+      </div>
+      <div class="card red">
+        <h3>2. 測るには、手続きと機材が要る</h3>
+        <p>騒音は感覚ではなく数値で判断する、というのがこの教室の場面①④で見た原則でした。その裏側では、基準を超えたことを示すには、定められた方法で、適切な機材を使って、その場で測定しなければなりません。測定できる場所・タイミング・人員がそろったときにしか、数値は取れません。「聞けば分かるのに」という現場の実感と、「数値で示さなければ処分できない」という手続きの間には、大きな段差があります。</p>
+      </div>
+      <div class="card">
+        <h3>3. 取り締まる側のリソースは有限で、優先順位が付く</h3>
+        <p>取り締まりに使える人員や時間は限られています。人命に直結する事故の防止や、重大な犯罪への対応が優先されるのは自然な判断です。その結果として、騒音のような「命には直結しにくいが、暮らしを確実に削る」問題は、後回しになりやすい位置に置かれます。これは怠慢の話ではなく、<strong>限られた資源に優先順位を付ければ、構造的にそうなる</strong>という話です。</p>
+      </div>
+      <div class="card">
+        <h3>4. 行動を決めているのは、罰の「重さ」より「確率」</h3>
+        <p>1〜3が重なると、結果として「バレる確率」「捕まる確率」は低くなります。ここが核心です。人の行動を左右するのは、多くの場合、罰則の上限額そのものよりも、<strong>「自分が実際に摘発される確率はどれくらいか」という見込み</strong>です。罰金が何十万円でも、その確率がごく低ければ、抑止としては働きにくい。逆に言えば、罰則をさらに重くしても、確率が変わらなければ減らない ― これが「罰則はあるのに減らない」の正体です。</p>
+      </div>
+    </div>
+    <div class="prompts">
+      <h3>では、どういう仕組みなら減るのか ― 「確率を上げる」設計</h3>
+      <p style="margin:0 0 6px;font-size:.95rem;color:var(--ink2)">方向は、罰を重くすることではなく、<b style="color:var(--ink)">見つかる確率と、繰り返せなくなる確率を上げること</b>にあります。いずれも、特定の誰かを狙い撃ちにするのではなく、仕組みとして淡々と機能させる発想です。</p>
+      <ul>
+        <li><b>騒音の自動計測と記録：</b>消えてしまう音を、記録に変える。騒音を自動で計測し、数値とともに記録する仕組みが広がれば、「その場に人がいなければ測れない」という制約が崩れます。証拠が残ること自体が、確率を上げる第一歩です。</li>
+        <li><b>車検・登録との連動：</b>走行の現場だけでなく、車両が必ず通る関門 ― 車検や点検、登録の場面 ― で基準適合を確認する流れを強める。現場での偶然の摘発に頼らず、「基準外では公道を走り続けられない」状態を作る設計です。認証制度（事例3）は、その土台として既に存在しています。</li>
+        <li><b>常習・繰り返しへの累積的な扱い：</b>一度の違反を重く罰するのではなく、繰り返しを記録し、積み重なりに応じて扱いを段階的に変える。単発では確率が低くても、「何度もやれば必ず積み上がる」ことが分かれば、見込みの計算は変わります。</li>
+        <li><b>考える練習として：</b>自分の身の回りで「ルールはあるのに減らない」と感じることはありますか。その場合、足りないのは罰の重さでしょうか、それとも見つかる確率でしょうか。確率の側から見直すと、打ち手はだいぶ違って見えてきます。</li>
+      </ul>
+    </div>
+    <div class="prompts">
+      <h3>締めに ― 本来の目的は、快適な公共を取り戻すこと</h3>
+      <ul>
+        <li><b>道路は、公共の大きな部分を占めている：</b>家を一歩出れば道路があり、通勤も買い物も散歩も、その多くは道路の上で起きます。暮らしの土台であるはずの場所で、不快やモヤモヤを感じる割合がこれほど大きいのは、それ自体がおかしなことです。爆音やあおりは「道路の問題」であると同時に、「みんなの場所の快適さ」の問題でもあります。</li>
+        <li><b>「正直者がバカを見る」仕組みは、設計の失敗：</b>摘発される確率が低いままでは、ルールを守る人ほど損をし、破る人ほど得をする計算になってしまいます。正直でいることに税金がかかるような状態 ― 守る側だけがコストを払う状態 ― は、守る人の善意の問題ではなく、仕組みの設計が失敗している証拠です。良い仕組みは、正直でいることがそのまま一番楽で、一番得になる形をしています。</li>
+        <li><b>個人を袋叩きにしても、仕組みは変わらない：</b>重大な事故が起きると、起こした個人が大きく取り上げられ、袋叩きのような「祭り」になることがあります。しかし、どれだけ個人を叩いても、証拠の残りにくさも、測定の難しさも、確率の低さも、何一つ変わりません。変わらないどころか、叩くことに使われた関心とエネルギーの分だけ、仕組みを直す議論は遠のきます。争いのエネルギーが、争いそのものに消費されて終わる ― それもまた違う、という感覚は自然なものです。</li>
+        <li><b>目的は、人を罰することではない：</b>本来の目的は、誰かを罰して溜飲を下げることではなく、仕組みによって問題そのものを無くしていき、不快を取り除いて、快適な公共を取り戻すことです。ところが現実には、そのはずの場所が、人間同士が争い、傷つけ合う場所になってしまっている。罰則の知識で終わらず、「どういう仕組みなら起きなくなるか」まで考えること ― それが、この教室の締めとして一番伝えたかったことです。</li>
+      </ul>
+    </div>
+  </section>
+
   <p class="srcs">出典：政府広報オンライン<a href="https://www.gov-online.go.jp/article/202006/entry-10656.html" target="_blank" rel="noopener">「『あおり運転』は犯罪です！一発で免許取消し！」</a>、国土交通省 関東運輸局<a href="https://wwwtb.mlit.go.jp/kanto/content/000350982.pdf" target="_blank" rel="noopener">「6月は『不正改造車を排除する運動』の強化月間」</a>、国土交通省<a href="https://www.mlit.go.jp/report/press/content/001612126.pdf" target="_blank" rel="noopener">違法マフラーに関する資料</a>の内容に基づきます。事例パートは、岐阜県警察<a href="https://www.pref.gifu.lg.jp/uploaded/attachment/169294.pdf" target="_blank" rel="noopener">道路交通法改正資料（妨害運転の創設経緯と東名高速の事件概要）</a>、環境省<a href="https://www.env.go.jp/council/07air-noise/%E3%80%9021-4%E3%80%91.pdf" target="_blank" rel="noopener">マフラー性能等確認制度の資料</a>、および犯罪白書・警察白書に掲載された暴走族構成員数の統計も参照しています。事例は個人が特定されない形で再構成しています。dB表示は場面のイメージをつかむための目安で、実際の測定値ではありません。本ページは学習用の再現です。</p>
 </div>
 
@@ -429,7 +477,11 @@ function resize(){
   renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix();
 }
 window.addEventListener("resize",resize);
-document.addEventListener("fullscreenchange",function(){setTimeout(resize,60); setTimeout(resize,300);});
+document.addEventListener("fullscreenchange",function(){
+  var vb=document.getElementById("viewerbox");
+  if(vb) vb.classList.toggle("is-fs",!!document.fullscreenElement);
+  setTimeout(resize,60); setTimeout(resize,300);
+});
 
 /* ============ world pieces — 白線チカチカ対策 ============
    路面標示は「路面に薄い板を重ねる」方式をやめ、路面そのものの
@@ -1112,7 +1164,7 @@ addActor(aori,[
 </script>
 <script>
 /* ================= UI ================= */
-var ttsOn=false, listenSeq=-1, viewLabel="俯瞰（全体）";
+var ttsOn=true, listenSeq=-1, viewLabel="俯瞰（全体）";
 var playBtn=document.getElementById("btn-play");
 function setPlaying(p){
   playing=p;
@@ -1288,8 +1340,14 @@ document.getElementById("btn-tts").addEventListener("click",function(){
   ttsOn=!ttsOn;
   this.textContent=ttsOn?"🗣 読み上げ ON":"🗣 読み上げ OFF";
   this.setAttribute("aria-pressed",ttsOn?"true":"false");
+  /* 切り替え＝そのシーンを頭から再生し直す。
+     途中で音声だけをON/OFFすると表示と音声がずれるため、
+     ONでもOFFでも再生位置を0に戻して自動再生し、同期を取り直す。 */
+  stopSpeak();
+  timeS=0;
+  setPlaying(true);
+  applyTime();
   if(ttsOn) speak(SCEN[curScenario].narration);
-  else stopSpeak();
 });
 document.getElementById("btn-fs").addEventListener("click",function(){
   var box=document.getElementById("viewerbox");
@@ -1325,6 +1383,85 @@ document.getElementById("btn-listen-stop").addEventListener("click",function(){
   stopSpeak(); setPlaying(false);
 });
 
+/* ================= 録画（タブキャプチャ → MP4 / WebM） =================
+   ブラウザ標準の画面共有で「このタブ＋タブ音声」を録る。
+   MP4で録れる環境ではMP4、そうでない環境ではWebMで保存する。 */
+var recStream=null, recorder=null, recChunks=[], recMime="", recTimer=null, recStart=0;
+var recBtn=document.getElementById("btn-rec"), recStatus=document.getElementById("rec-status");
+function recSupported(){
+  return !!(navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia&&window.MediaRecorder);
+}
+function pickRecMime(){
+  var cands=["video/mp4;codecs=avc1.640028,mp4a.40.2","video/mp4",
+    "video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"];
+  for(var i=0;i<cands.length;i++){
+    try{ if(MediaRecorder.isTypeSupported(cands[i])) return cands[i]; }catch(e){}
+  }
+  return "";
+}
+function updateRecStatus(){
+  var s=Math.floor((Date.now()-recStart)/1000);
+  var mm=Math.floor(s/60), ss=("0"+(s%60)).slice(-2);
+  var ext=(recMime.indexOf("mp4")>=0)?"MP4":"WebM";
+  recStatus.textContent="● 録画中 "+mm+":"+ss+"（停止すると "+ext+" で保存します）";
+}
+function startRec(){
+  if(!recSupported()){
+    recStatus.textContent="このブラウザは画面録画に対応していません。Chrome / Edge / Safari の最新版でお試しください。";
+    return;
+  }
+  var opts={video:{frameRate:{ideal:30,max:30}},audio:true};
+  try{ opts.preferCurrentTab=true; opts.selfBrowserSurface="include"; }catch(e){}
+  navigator.mediaDevices.getDisplayMedia(opts).then(function(stream){
+    recStream=stream; recMime=pickRecMime(); recChunks=[];
+    var ropts={videoBitsPerSecond:2500000,audioBitsPerSecond:128000};
+    if(recMime) ropts.mimeType=recMime;
+    try{ recorder=new MediaRecorder(stream,ropts); }
+    catch(e){ recorder=new MediaRecorder(stream); }
+    recorder.ondataavailable=function(ev){ if(ev.data&&ev.data.size) recChunks.push(ev.data); };
+    recorder.onstop=finishRec;
+    stream.getVideoTracks().forEach(function(t){
+      t.addEventListener("ended",function(){
+        if(recorder&&recorder.state!=="inactive") recorder.stop();
+      });
+    });
+    recorder.start(1000);
+    recStart=Date.now();
+    recBtn.textContent="⏹ 録画を停止"; recBtn.classList.add("rec-on");
+    recBtn.setAttribute("aria-pressed","true");
+    updateRecStatus();
+    recTimer=setInterval(updateRecStatus,500);
+  }).catch(function(err){
+    recStatus.textContent="録画を開始できませんでした（共有がキャンセルされたか、許可されませんでした）。";
+  });
+}
+function finishRec(){
+  if(recTimer){ clearInterval(recTimer); recTimer=null; }
+  if(recStream){ recStream.getTracks().forEach(function(t){ try{t.stop();}catch(e){} }); recStream=null; }
+  recBtn.textContent="🔴 録画"; recBtn.classList.remove("rec-on");
+  recBtn.setAttribute("aria-pressed","false");
+  recorder=null;
+  if(!recChunks.length){ recStatus.textContent="録画データがありませんでした。"; return; }
+  var baseType=(recMime||"video/webm").split(";")[0];
+  var ext=(baseType.indexOf("mp4")>=0)?"mp4":"webm";
+  var blob=new Blob(recChunks,{type:baseType});
+  recChunks=[];
+  var d=new Date();
+  function pad(n){ return ("0"+n).slice(-2); }
+  var name="3d-class2-scene"+(curScenario+1)+"-"+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+
+    "-"+pad(d.getHours())+pad(d.getMinutes())+pad(d.getSeconds())+"."+ext;
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement("a");
+  a.href=url; a.download=name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); },10000);
+  recStatus.textContent="保存しました： "+name+"（"+(blob.size/1048576).toFixed(1)+" MB）";
+}
+recBtn.addEventListener("click",function(){
+  if(recorder&&recorder.state!=="inactive") recorder.stop();
+  else startRec();
+});
+
 /* ================= boot & loop ================= */
 var lastTs=0;
 function loop(ts){
@@ -1357,6 +1494,7 @@ function boot(){
     renderListenList();
     loadScenario(0,false);
     setPlaying(true);
+    if(ttsOn) speak(SCEN[curScenario].narration);
     requestAnimationFrame(loop);
   }catch(e){
     document.getElementById("fallback").style.display="grid";
