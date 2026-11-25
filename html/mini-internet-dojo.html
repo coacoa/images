@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<!-- build: 2026-11-25 13:14:11 JST -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="data:,">
+<title>ミニインターネット道場 ― 自分だけのネットを建てる</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{
+--tb:29%;
+--ink:#e6f5ee; --dim:#7fb8a4; --blue:#2dd4bf; --panel:#0a1f18;
+--win:#123528; --accent:#ffd94a; --good:#7ee787; --bad:#ff7b72;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+body{margin:0;background:#04120d;color:var(--ink);
+font-family:"DotGothic16","Hiragino Kaku Gothic ProN","Noto Sans JP",monospace,sans-serif;
+-webkit-font-smoothing:none;font-smooth:never;
+display:flex;justify-content:center;padding:14px 10px 40px}
+.cab{width:100%;max-width:760px}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{font-weight:900;letter-spacing:2px;font-size:18px;color:#fff;
+text-shadow:2px 2px 0 #0e7a5f, 4px 4px 0 #123528}
+.logo small{display:block;font-size:11px;color:var(--dim);letter-spacing:1px;text-shadow:none}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer}
+.sbtn{background:var(--win);color:var(--ink);border:2px solid var(--dim);
+padding:4px 10px;font-size:12px;border-radius:4px;min-height:36px}
+.sbtn:hover{border-color:#fff;color:#fff}
+.params{display:flex;gap:14px;background:var(--panel);border:2px solid var(--dim);
+padding:6px 12px;font-size:12px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.params b{color:var(--accent)}
+.bar{display:inline-block;width:120px;height:10px;background:#1d4033;vertical-align:middle;margin-left:4px;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--good);display:block}
+.screen{position:relative;border:6px solid var(--dim);border-radius:6px;overflow:hidden;
+aspect-ratio:16/10;background:#000;image-rendering:pixelated}
+.screen::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+background:repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 3px, transparent 3px 6px)}
+.bg{position:absolute;inset:0;transition:opacity.4s}
+.bg-room{background:linear-gradient(#0a2e22 0 55%, #14503a 55% 100%)}
+.bg-room::before{content:"";position:absolute;right:8%;top:8%;width:110px;height:130px;
+background:linear-gradient(#1a5c44,#0a2e22);border:6px solid #03130c;
+box-shadow:0 0 0 4px #2e8a68, inset 0 0 0 3px #2e8a68}
+.bg-term{background:radial-gradient(ellipse at 50% 40%, #0d3325 0%, #04120d 70%)}
+.bg-term::before{content:"MINI-NET ❚ 夜間バッチ ❚ 購読リスト ❚ 段階判定 ❚ キーワード ❚ 顔面積 ❚ OCR ❚ 意味判定 ❚ 深さ ❚ お断りリスト ❚ 突破ログ ❚";
+position:absolute;inset:6%;color:#2dd4bf;font-size:13px;line-height:2.1;opacity:.5;
+font-family:ui-monospace,Menlo,monospace;word-break:break-all}
+.bg-way{background:linear-gradient(#0b2540 0%, #14503a 55%, #c98a3f 82%, #ffd94a 100%)}
+.bg-city{background:linear-gradient(#04120d 0%, #0a2e22 60%, #14503a 100%)}
+.bg-city::before{content:"";position:absolute;left:0;right:0;bottom:29%;height:46%;
+background:
+linear-gradient(#0000 78%, #020a07 78%) ,
+repeating-linear-gradient(90deg, #020a07 0 34px, #0000 34px 46px, #071a12 46px 78px, #0000 78px 92px);
+box-shadow:inset 0 0 60px rgba(45,212,191,.22)}
+.stars{position:absolute;inset:0;z-index:1;
+background-image:radial-gradient(2px 2px at 12% 18%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 32% 8%, #d8fff2 50%, transparent 51%),
+radial-gradient(2px 2px at 55% 22%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 74% 10%, #d8fff2 50%, transparent 51%),
+radial-gradient(2px 2px at 88% 26%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 44% 30%, #a0ffd8 50%, transparent 51%)}
+.char{position:absolute;bottom:var(--tb);left:50%;transform:translateX(-50%);z-index:2;
+filter:drop-shadow(0 0 10px rgba(45,212,191,.7))}
+.char svg{display:block}
+.ground{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:1;
+background:linear-gradient(transparent, rgba(2,10,7,.92) 30%)}
+.namebox{position:absolute;left:14px;bottom:calc(var(--tb) + 8px);z-index:8;color:#ffffff;
+background:var(--win);border:3px solid var(--dim);padding:2px 14px;font-weight:700;font-size:16px;
+letter-spacing:.06em;text-shadow:2px 2px 0 #000}
+.textbox{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:7;color:#ffffff;
+background:rgba(3,16,11,.97);border-top:4px solid var(--dim);
+padding:12px 16px;font-size:18px;line-height:1.8;letter-spacing:.06em;
+text-shadow:2px 2px 0 #000;
+cursor:pointer;white-space:pre-wrap;overflow-y:auto;overflow-x:hidden;
+scrollbar-width:thin;scrollbar-color:#2dd4bf #0a1f18}
+.textbox::-webkit-scrollbar{width:10px}
+.textbox::-webkit-scrollbar-track{background:#0a1f18}
+.textbox::-webkit-scrollbar-thumb{background:#2dd4bf;border:2px solid #03100b}
+.textbox.next{position:absolute;right:12px;bottom:6px;color:var(--accent);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.choices{position:absolute;top:0;left:0;right:0;bottom:calc(var(--tb) + 46px);z-index:9;display:none;flex-direction:column;
+align-items:center;justify-content:center;gap:12px;background:rgba(2,10,7,.80);padding:16px;overflow-y:auto}
+.choices.show{display:flex}
+.choice{width:min(92%,520px);background:#061a12;color:#ffffff;font-weight:700;
+border:3px solid #d8fff2;padding:12px 16px;font-size:18px;letter-spacing:.08em;
+text-shadow:2px 2px 0 #000;text-align:left;border-radius:4px;min-height:44px}
+.choice:hover{border-color:var(--accent);color:#fff;background:#14503a}
+.choice::before{content:"▶ ";color:var(--accent)}
+.choice.done{border-color:var(--good)}
+.choice.done::before{content:"✔ ";color:var(--good)}
+.title{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
+justify-content:center;gap:14px;background:radial-gradient(ellipse at 50% 35%, #14503a 0%, #04120d 75%);text-align:center;padding:16px}
+.title h1{margin:0;font-size:clamp(24px,6vw,42px);letter-spacing:3px;color:#fff;
+text-shadow:3px 3px 0 #0e7a5f, 6px 6px 0 #123528}
+.title p{color:#d8fff2;font-size:14px;margin:0;line-height:1.9}
+.tbtn{background:#061a12;color:#fff;font-weight:700;border:3px solid #d8fff2;padding:10px 26px;font-size:17px;letter-spacing:.08em;border-radius:4px;min-height:44px}
+.tbtn:hover{border-color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
+border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;opacity:0;transition:opacity.3s;z-index:50;pointer-events:none}
+.toast.show{opacity:1}
+#diagram{transition:width .25s}
+.screen.diagmenu #diagram{width:min(430px,74%)}
+.screen.diagmenu .choices{bottom:calc(var(--tb) + 8px);flex-direction:row;flex-wrap:wrap;align-content:flex-start;justify-content:center;gap:8px}
+.screen.diagmenu .choice{flex:1 1 28%;width:auto;margin:0;text-align:center;font-size:14px;padding:10px 8px;line-height:1.5}
+#diagram{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:min(560px,94%);z-index:5;background:rgba(2,10,7,.88);border:2px solid var(--dim);padding:6px;display:none}
+#diagram svg{width:100%;height:auto;display:block}
+footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
+kbd{display:inline-block;background:#123528;border:1px solid var(--dim);border-bottom-width:2px;
+border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+@media (max-width:560px){.textbox{font-size:15px}.char{bottom:var(--tb)}}
+@media (orientation:portrait) and (max-width:760px){
+:root{--tb:46%}
+.screen{aspect-ratio:auto;height:80vh;height:80dvh}
+.textbox{font-size:16px;line-height:1.75}
+.char svg{width:100px;height:127px}
+.choice{font-size:16px;padding:10px 14px}
+.choices{overflow-y:auto}
+.title h1{font-size:24px}
+.title p{font-size:13px}
+.params{gap:8px;font-size:11px}
+.bar{width:80px}
+}
+.choices{justify-content:flex-start;overflow-y:auto}
+.choice:first-child{margin-top:auto}
+.choice:last-child{margin-bottom:auto}
+</style>
+</head>
+<body>
+<div class="cab">
+<header>
+<div class="logo">ミニインターネット道場<small>― 自分だけのネットを建てる 全16課 ―</small></div>
+<div class="btns">
+<button class="sbtn" id="btnSound">🔊 音ON</button><button class="sbtn" id="btnTts">🗣 読上OFF</button>
+<button class="sbtn" id="btnLevels">🏠 レベル選択</button>
+<button class="sbtn" id="btnReset">🗑 進捗リセット</button>
+</div>
+</header>
+
+<div class="params">
+<span>理解済み <b id="pDone">0</b> / 16 課<span class="bar"><i id="bDone" style="width:0%"></i></span></span>
+<span style="color:var(--dim)">現在：<span id="pNow">タイトル</span></span>
+<span style="margin-left:auto;color:var(--dim)">💾 進捗は自動保存（localStorage）</span>
+</div>
+
+<div class="screen" id="screen">
+<div class="bg bg-city" id="bg"></div>
+<div class="stars"></div>
+<div class="ground"></div>
+<div class="char" id="char"></div>
+<div id="diagram"></div>
+<div class="namebox" id="namebox" style="display:none"></div>
+<div class="textbox" id="textbox"><span id="text"></span><span class="next" id="nextmark" style="display:none">▼</span></div>
+<div class="choices" id="choices"></div>
+<div class="title" id="title">
+<h1>ミニインターネット道場</h1>
+<p>おすすめ欄に捌かれる側から、自分のサーバに貯めて捌く側へ。<br>
+夜間バッチで集めて仕分け、朝に開く「自分だけの小さなネット」の設計図。<br>
+深さの制御と、お断りリストと、突破を数える物差しまで。全16課。<br>
+「分かった！」で次へ、「分からない」で何度でもやり直し。</p>
+<button class="tbtn" id="btnEnter">▶ 自分の商店街を建てにいく</button>
+<p>進捗（理解済み ✔）はブラウザに自動保存されます</p>
+</div>
+</div>
+
+<footer>
+遊び方：説明を読んだら「これは分かった！」か「分からない」を選ぶだけ。分かったら確認問題が1問出て、正解でその課は理解済み ✔。
+間違えてもペナルティなし、補足説明を読んで何度でも挑めます。本文クリックで文字送り、長い文は自動スクロール＋手動スクロール可。
+この道場は、君のフィルタ研究（サムネ判定道場の段階判定、ディストピアモード道場のゴミ箱の見返し、YouTube煽りパターン図鑑）の到達点——「理想形」の設計を教材化したものです。push型のおすすめ欄を卒業し、LAN内のNixOSマシンに夜間バッチで集めて仕分けるpull型のミニインターネット。ネットの現象には、歌舞伎町の看板やポストのチラシといった現実世界の対応物を、常に重ねて説明します。
+</footer>
+<style>
+#galleryWrap{margin:16px 0 4px;text-align:center}
+#gallery{display:none;text-align:left;margin-top:12px}
+.gal-item{background:#071a12;border:2px solid #2e8a68;padding:10px 12px;margin:0 0 12px}
+.gal-cap{color:#ffd94a;font-size:14px;margin-bottom:8px}
+.gal-diag svg{width:100%;height:auto;display:block}
+</style>
+<div id="galleryWrap">
+<div style="margin-bottom:10px"><button class="sbtn" id="btnListen">🎧 リスニング（全レッスン読み上げ）</button>
+<div id="listenPanel" style="display:none;text-align:left;margin-top:10px;background:#071a12;border:2px solid #2e8a68;padding:10px 12px">
+<div style="margin-bottom:8px"><button class="sbtn" id="btnPlay">▶ ブラウザ音声で再生</button> <button class="sbtn" id="btnStop">⏹ 停止</button> <span id="listenStatus" style="font-size:12px;color:#a0ffd8"></span></div>
+<div style="height:8px;background:#1d4033;border:1px solid #2e8a68;margin-bottom:8px"><div id="listenFill" style="height:100%;width:0%;background:#ffd94a"></div></div>
+<div style="font-size:12px;color:#a0ffd8;margin-bottom:8px">PCでは Read Aloud 拡張機能で、この下のテキストをそのまま読み上げられます。</div>
+<div id="listenText" style="color:#fff;font-size:15px;line-height:1.7"></div>
+</div></div>
+<button class="sbtn" id="btnGallery">🖼 図解一覧（復習用）を表示</button>
+<div id="gallery"></div>
+</div>
+<script>
+(function(){
+var btnMain = document.getElementById('btnListen');
+var panel = document.getElementById('listenPanel');
+var btn = document.getElementById('btnPlay');
+var btnStop = document.getElementById('btnStop');
+var st = document.getElementById('listenStatus');
+var fill = document.getElementById('listenFill');
+var lt = document.getElementById('listenText');
+if(!btnMain || !panel || !btn) return;
+var playing = false, items = [], idx = 0, curId = 0, watchdog = null, tickTimer = null, itemStart = 0, started = false, attempts = 0, built = false, paused = false;
+function buildItems(){
+  var arr = [];
+  LEVELS.forEach(function(ch, ci){
+    arr.push('第' + (ci + 1) + '章。' + ch.name);
+    ch.lessons.forEach(function(ls){
+      arr.push(ls.title);
+      (ls.teach || []).forEach(function(t){ arr.push(t); });
+    });
+  });
+  return arr;
+}
+function buildText(){
+  lt.innerHTML = '';
+  LEVELS.forEach(function(ch, ci){
+    var h = document.createElement('div');
+    h.style.cssText = 'color:#ffd94a;font-weight:bold;margin:14px 0 6px';
+    h.textContent = '第' + (ci + 1) + '章 ' + ch.name;
+    lt.appendChild(h);
+    ch.lessons.forEach(function(ls){
+      var t = document.createElement('div');
+      t.style.cssText = 'font-weight:bold;margin:10px 0 4px';
+      t.textContent = ls.title;
+      lt.appendChild(t);
+      (ls.teach || []).forEach(function(tx){
+        var p = document.createElement('div');
+        p.style.cssText = 'margin:0 0 8px;white-space:pre-wrap';
+        p.textContent = tx;
+        lt.appendChild(p);
+      });
+    });
+  });
+}
+function pickVoice(){
+  var vs = speechSynthesis.getVoices();
+  for(var i = 0; i < vs.length; i++){ if(vs[i].lang && vs[i].lang.toLowerCase().indexOf('ja') === 0) return vs[i]; }
+  return vs[0] || null;
+}
+function fmt(sec){ var m = Math.floor(sec / 60), s = sec % 60; return m + ':' + (s < 10 ? '0' : '') + s; }
+function setBar(){ if(fill && items.length) fill.style.width = Math.round(idx / items.length * 100) + '%'; }
+function status(){
+  if(!st || !playing) return;
+  var el = Math.floor((Date.now() - itemStart) / 1000);
+  st.textContent = (started ? '再生中 ' : '準備中… ') + (idx + 1) + '/' + items.length + '（' + fmt(el) + '）' + (items[idx] || '').slice(0, 18);
+}
+function clearTimers(){
+  if(watchdog){ clearTimeout(watchdog); watchdog = null; }
+  if(tickTimer){ clearInterval(tickTimer); tickTimer = null; }
+}
+function stop(msg){
+  playing = false; paused = false; curId++; clearTimers();
+  try{ speechSynthesis.cancel(); }catch(e){}
+  btn.textContent = '▶ ブラウザ音声で再生';
+  if(st) st.textContent = msg || '';
+  if(fill) fill.style.width = '0%';
+}
+function armWatchdog(text){
+  if(watchdog) clearTimeout(watchdog);
+  var est = Math.min(45000, Math.max(7000, text.length * 260 + 4000));
+  watchdog = setTimeout(function(){
+    if(!playing) return;
+    curId++;
+    try{ speechSynthesis.cancel(); }catch(e){}
+    idx++; next();
+  }, est);
+}
+function trySpeak(text, useVoice){
+  var my = ++curId;
+  started = false; itemStart = Date.now(); setBar(); status();
+  try{ speechSynthesis.resume(); }catch(e){}
+  var u = new SpeechSynthesisUtterance(String(text).replace(/\n+/g, ' '));
+  u.lang = 'ja-JP'; u.rate = 1.0;
+  var v = useVoice ? pickVoice() : null;
+  if(v) u.voice = v;
+  u.onstart = function(){ if(my === curId){ started = true; status(); } };
+  u.onend = function(){ if(my === curId && playing){ idx++; next(); } };
+  u.onerror = function(){
+    if(my !== curId || !playing) return;
+    if(speechSynthesis.getVoices().length === 0){ stop('音声が見つかりません（この端末では読み上げできません）'); return; }
+    if(useVoice && attempts === 0){ attempts++; trySpeak(text, false); return; }
+    idx++; next();
+  };
+  armWatchdog(text);
+  try{ speechSynthesis.speak(u); }catch(e){ setTimeout(function(){ if(my === curId && playing){ idx++; next(); } }, 300); }
+}
+function next(){
+  if(!playing || paused) return;
+  if(idx >= items.length){ stop('読み上げ終了（全' + items.length + '項目）'); if(fill) fill.style.width = '100%'; return; }
+  attempts = 0;
+  trySpeak(items[idx], true);
+}
+if(btnStop) btnStop.onclick = function(){ if(playing) stop('停止しました'); };
+btnMain.onclick = function(){
+  if(panel.style.display !== 'none'){
+    panel.style.display = 'none';
+    btnMain.textContent = '🎧 リスニング（全レッスン読み上げ）';
+    if(playing) stop('停止しました');
+    return;
+  }
+  if((typeof LEVELS === 'undefined' && typeof NODES === 'undefined')){ return; }
+  if(!built){ buildText(); built = true; }
+  panel.style.display = 'block';
+  btnMain.textContent = '🎧 リスニングを閉じる';
+};
+btn.onclick = function(){
+  if(!('speechSynthesis' in window)){ if(st) st.textContent = 'このブラウザは読み上げに未対応です'; return; }
+  if(playing && !paused){
+    paused = true; curId++; clearTimers();
+    try{ speechSynthesis.cancel(); }catch(e){}
+    btn.textContent = '▶ 再開';
+    if(st) st.textContent = '一時停止中 ' + (idx + 1) + '/' + items.length + '（再開はこの項目の頭から）';
+    return;
+  }
+  if(playing && paused){
+    paused = false;
+    btn.textContent = '⏸ 一時停止';
+    if(st) st.textContent = '再開します';
+    attempts = 0;
+    clearTimers();
+    tickTimer = setInterval(status, 500);
+    trySpeak(items[idx], true);
+    return;
+  }
+  if((typeof LEVELS === 'undefined' && typeof NODES === 'undefined')){ if(st) st.textContent = 'データ読み込みに失敗しました'; return; }
+  items = buildItems(); idx = 0; playing = true; itemStart = Date.now();
+  btn.textContent = '⏸ 一時停止';
+  if(st) st.textContent = '準備中…';
+  if(fill) fill.style.width = '0%';
+  try{ speechSynthesis.cancel(); }catch(e){}
+  clearTimers();
+  tickTimer = setInterval(status, 500);
+  setTimeout(next, 200);
+};
+})();
+</script>
+<script>
+(function(){
+var btn = document.getElementById('btnGallery');
+var gal = document.getElementById('gallery');
+var built = false;
+function build(){
+var html = '';
+if (typeof LEVELS !== 'undefined' && typeof DIAG !== 'undefined') {
+LEVELS.forEach(function(lv, li){
+lv.lessons.forEach(function(ls, i){
+if (DIAG[ls.id]) { html += '<div class="gal-item"><div class="gal-cap">第' + (li+1) + '章 第' + (i+1) + '課：' + ls.title + '</div><div class="gal-diag">' + DIAG[ls.id] + '</div></div>'; }
+});
+});
+} else if (typeof DIAG !== 'undefined') {
+Object.keys(DIAG).forEach(function(k){
+var cap = k;
+if (typeof NODES !== 'undefined' && NODES[k] && NODES[k].title) cap = NODES[k].title;
+html += '<div class="gal-item"><div class="gal-cap">' + cap + '</div><div class="gal-diag">' + DIAG[k] + '</div></div>';
+});
+}
+gal.innerHTML = html || '<div class="gal-cap">図解はありません</div>';
+}
+btn.onclick = function(){
+var show = gal.style.display !== 'block';
+if (show && !built) { build(); built = true; }
+gal.style.display = show ? 'block' : 'none';
+btn.textContent = show ? '🖼 図解一覧（復習用）を隠す' : '🖼 図解一覧（復習用）を表示';
+};
+})();
+</script>
+</div>
+
+<div class="toast" id="toast">💾 保存しました</div>
+
+<script>
+"use strict";
+/* ============ シルエット ============ */
+function sil(extra){
+return '<svg width="150" height="190" viewBox="0 0 120 150">'
++ '<circle cx="60" cy="34" r="17" fill="#0a2e22"/>'
++ '<path d="M22 150 C22 96 40 66 60 66 C80 66 98 96 98 150 Z" fill="#0a2e22"/>'
++ (extra || '') + '</svg>';
+}
+const CHARS = {
+sennin: sil('<path d="M28 22 L60 4 L92 22 L84 28 L60 14 L36 28 Z" fill="#ffd94a"/>'
++ '<rect x="40" y="52" width="40" height="7" fill="#e6f5ee"/>'
++ '<rect x="86" y="60" width="5" height="76" fill="#c98a3f"/>'
++ '<circle cx="88" cy="56" r="6" fill="#2dd4bf"/>'
++ '<path d="M46 118 L74 118 L68 132 L52 132 Z" fill="#2dd4bf"/>'),
+ore: sil(''),
+none: ''
+};
+
+/* ============ カリキュラム ============ */
+const LEVELS = [
+{ name:'第1章 なぜ自前なのか ― 地獄は仕様である', desc:'おすすめ欄がなぜああなのか。目的関数の話から始めよう。直らない理由が分かれば、待つのをやめられる。', lessons:[
+{ id:'a1', title:'アルゴリズムが最適化しているもの', teach:[
+'ようこそ。わしはミニネット仙人、自分のネットを自宅に建てた者じゃ。まず大前提から。YouTubeのおすすめアルゴリズムが最適化しておるのは、君の満足でも情報の質でもない。クリック率と視聴時間——つまり滞在時間じゃ。それが広告収入に直結するからな。',
+'投稿者の煽りは、モラルの低下ではない。その指標への合理的な適応じゃ。隣のサムネより目立たなければ埋もれる以上、変顔もデカ文字も金額の誇張も「正解」として増えていく。誰かが悪いのではなく、物差しがそうなっておる。'],
+retry:'アルゴリズムの目的は満足ではなくクリック率と滞在時間（＝広告収入）。煽りはその指標への合理的な適応。',
+quiz:{ q:'おすすめアルゴリズムが最適化しているのは何か？', choices:[
+{ t:'利用者の満足と情報の質', ok:false }, { t:'クリック率と視聴時間（滞在時間）', ok:true }, { t:'投稿者の収入の公平さ', ok:false } ] } },
+{ id:'a2', title:'ポリシーが禁じるのは「嘘」だけ', teach:[
+'では、なぜ対策が「酷いまま」なのか。YouTubeのポリシーが禁じておるのは「動画に含まれていないものを在ると思わせる」悪質なクリックベイト——つまり嘘だけじゃ。誇張、変顔、デカ文字、赤丸や矢印そのものは、違反ではない。',
+'しかも処分は、削除やストライクの前に、サムネ差し替え・広告制限・おすすめ露出の低下という「静かな減速」で来る。つまり下品さや煽りは、約束さえ守れば今も合法な設計になっておる。線引きがそこにある以上、その内側の地獄は規約では消えんのじゃ。'],
+retry:'ポリシーが禁じるのは「ないものを在ると思わせる」嘘だけ。誇張や下品さは合法で、処分も「静かな減速」から。',
+quiz:{ q:'ポリシーが禁じているクリックベイトとは？', choices:[
+{ t:'変顔とデカ文字を使うこと', ok:false }, { t:'金額を大きく書くこと', ok:false }, { t:'動画にないものを在ると思わせる「嘘」', ok:true } ] } },
+{ id:'a3', title:'おすすめ欄は歌舞伎町を歩く感覚', teach:[
+'現実に重ねてみよう。おすすめ欄を眺めるのは、夜の歌舞伎町を歩く感覚に近い。ネオン看板の派手さ競争は、サムネのデカ文字・原色・デカ顔のエスカレーションと同型じゃ。どちらも「隣より目立たないと埋もれる」から、年々派手になる。',
+'客引きの「3,000円ポッキリ」も同じじゃ。「月30万円稼げる」「無料で教えます」——入口の条件は釣りで、本当の値段は入るまで分からん。席料やチャージの上乗せで1時間5万円になる構造は、無料特典→限定動画→高額教材という階段とまったく同じ。入口は安く、出口で高く取るのじゃ。'],
+retry:'看板の派手さ競争⇔サムネのエスカレーション。「3,000円ポッキリ」⇔「無料で教えます」。入口は安く、出口で高く取る構造が同じ。',
+quiz:{ q:'「3,000円ポッキリ」と「無料で教えます」の共通点は？', choices:[
+{ t:'どちらも入口の条件が釣りで、本当の値段は入るまで分からない', ok:true }, { t:'どちらも法律で禁止されている', ok:false }, { t:'どちらも最後は安く済む', ok:false } ] } },
+{ id:'a4', title:'「お断り」が効かない非対称', teach:[
+'もう一つ、現実の対応物を置く。ポストに「広告お断り」と書いてあるのに、チラシを入れていく業者がおる。意思表示は完璧に明確じゃ。それでも入るのは、破る側のコストがゼロで、捨てる手間は全部受け手の負担だからじゃ。',
+'ネットも構造はまったく同じ。「興味なし」を押す手間、設定を探す手間、ブラウザやアカウントごとに効かない設定をやり直す手間——全部受け手持ちで、押し込む側は1円も払っておらん。だから結論は一つ。プラットフォームの改善を待つのではなく、自分の側に窓を持つ。それがこの道場の出発点じゃ。'],
+retry:'「お断り」を破る側はコストゼロ、捨てる手間は受け手持ち——ネットも現実も同じ非対称。だから自分の側に窓を持つ。',
+quiz:{ q:'「広告お断り」のポストにチラシが入り続ける理由は？', choices:[
+{ t:'業者が文字を読めないから', ok:false }, { t:'破る側のコストがゼロで、捨てる手間が受け手持ちだから', ok:true }, { t:'お断りの書き方が悪かったから', ok:false } ] } },
+]},
+{ name:'第2章 理想形の設計 ― pull型と夜間バッチ', desc:'集める対象を自分で選び、寝ている間に仕分ける。LAN内のNixOSマシンに建てる、小さなネットの設計図じゃ。', lessons:[
+{ id:'b1', title:'pushからpullへ ― 商店街を自宅に作る', teach:[
+'今までのフィルタは、他人が作ったおすすめ欄を、流れてくるそばから捌く形じゃった。これをpush型という。理想形は逆じゃ。集める対象を自分で選ぶ——購読＝ホワイトリストそのもの——pull型に転換するのじゃ。',
+'歌舞伎町の例で言えば、通りの客引きを避け続けるのではなく、自分で選んだ店だけが入った商店街を自宅の中に作る形じゃ。店の顔ぶれは全部、自分が決める。マーケティング費では、この商店街に店を出せん。それがpull型の強さの芯じゃな。'],
+retry:'push＝流れてくるものを捌く。pull＝集める対象を自分で選ぶ（購読）。自分の商店街には、金では店を出せない。',
+quiz:{ q:'pull型の本質は？', choices:[
+{ t:'通知を速く受け取ること', ok:false }, { t:'集める対象（情報源）を自分で選ぶこと', ok:true }, { t:'フィルタを強くすること', ok:false } ] } },
+{ id:'b2', title:'置き場所 ― 常時起動できる一台', teach:[
+'ミニインターネットの置き場所は、LAN内のNixOSマシンじゃ。条件は「常時起動できること」。君の環境なら、64GBメモリのノートPCがその役じゃ。音声家電のサーバと同じ土台に乗る。',
+'逆に、一番速いGPUのマシンが別室で騒がしく、常時起動できないなら、それは土台にはならん。夜間バッチは「夜中に確実に起きている機械」に置くのが設計の鉄則じゃ。性能の最大値ではなく、稼働の確実さで置き場所を決めるのじゃ。'],
+retry:'土台は常時起動できるLAN内のNixOSマシン（64GBノート）。速さより「夜中に確実に起きている」ことが条件。',
+quiz:{ q:'置き場所を決める基準は？', choices:[
+{ t:'GPUの性能が一番高いこと', ok:false }, { t:'画面が大きいこと', ok:false }, { t:'常時起動でき、夜中に確実に起きていること', ok:true } ] } },
+{ id:'b3', title:'夜間バッチ ― 即時性を捨て、判定を全部回す', teach:[
+'集めた情報は、寝ている間にまとめて仕分ける。これが夜間バッチじゃ。即時性は下がる。だが、その代わりに大きなものが手に入る——時間に追われない判定じゃ。',
+'段階判定（キーワード→顔面積→OCR→意味判定）を、全部回せる。特に最後の意味判定は、ローカルAIで1件に数秒かかる。即時表示では諦めるしかなかった重い判定が、夜の処理なら何百件でも困らん。「丁寧なのにヤバいが滲む型」のような、意味でしか捕まらんものまで全件にかけられるのじゃ。'],
+retry:'夜間バッチは即時性と引き換えに、重い意味判定まで全件に回せる。段階判定を全部回すのが強み。',
+quiz:{ q:'夜間バッチの一番の強みは？', choices:[
+{ t:'ニュースが一番速く届くこと', ok:false }, { t:'1件数秒かかる意味判定を全件にかけられること', ok:true }, { t:'電気代がゼロになること', ok:false } ] } },
+{ id:'b4', title:'2本のレーン ― 速報だけは即時に', teach:[
+'ただし、即時性を全部捨てるわけではない。レーンは2本に分けるのじゃ。速報レーンは、災害・気象・交通のように即時性が命のものだけ。公式の発信から、フィルタなし——あるいは最小限——で即時に流す。',
+'通常レーンは全部、夜間バッチじゃ。朝には「通常／薄く／ゴミ箱」に仕分け済みの、小さなインターネットができておる。即時性を捨てるのは通常レーンだけで、失うものは「バズへの乗り遅れ」くらい。それは多分、失って困らないものじゃな。'],
+retry:'レーンは2本：速報レーン（災害・気象など、即時）／通常レーン（全部バッチ、朝に仕分け済み）。',
+quiz:{ q:'速報レーンに入れるべきものは？', choices:[
+{ t:'バズっている動画', ok:false }, { t:'セール情報', ok:false }, { t:'災害・気象など即時性が命の情報', ok:true } ] } },
+]},
+{ name:'第3章 深さとお断り ― 選ぶ権利を取り戻す', desc:'フィルタの単位は「消す／残す」ではない。「深さ」じゃ。そして「お断り」は、記録し、数える対象になる。', lessons:[
+{ id:'c1', title:'フィルタの単位は「深さ」である', teach:[
+'ここからが、この設計の基本原則じゃ。フィルタの単位は「消す／残す」の二択ではない。「深さ」じゃ。深さ2＝全部見る。深さ1＝見出しだけ。深さ0＝ゴミ箱。この3段で情報を扱う。',
+'なぜ二択では足りんのか。アルゴリズムの世界には深さという概念自体がないからじゃ。クリックさせるか否かの二択しかない。だから「見出しだけで十分」なものまで、全部、顔とデカ文字付きで押し込んでくる。深さを持ち込むことが、そのまま設計の反転になるのじゃ。'],
+retry:'単位は二択ではなく深さ：2＝全部見る、1＝見出しだけ、0＝ゴミ箱。',
+quiz:{ q:'この設計でフィルタが扱う単位は？', choices:[
+{ t:'消す／残すの二択', ok:false }, { t:'深さ（2＝全部、1＝見出しだけ、0＝ゴミ箱）', ok:true }, { t:'新しさの順位', ok:false } ] } },
+{ id:'c2', title:'深さ2と深さ1 ― スポーツとPCの実例', teach:[
+'実例で置こう。スポーツなら、深さ2はF1とテニス——君の興味の本体じゃ。PCなら、深さ2はLinux／NixOSのニュース。ここは遠慮なく全部見る。',
+'深さ1は「世間一般の大きな出来事」じゃ。大谷がメジャーリーグで優勝しようと、興味はない。だが優勝速報がテレビのテロップで1行流れるくらいなら、それは社会の共通言語として受け取ってよい。Appleの新製品も同じじゃ。発表は大きな出来事だから1行は知る。だがレビュー動画の顔とデカ文字、アクセサリの広告まで深さ2の顔をして来るのは、マーケティング費が君の画面の深さを買っているからじゃ。pull型では、その買い付けが効かん。'],
+retry:'深さ2＝F1・テニス、Linux。深さ1＝大谷の優勝もAppleの新製品も「1行だけ」。深さを金で買う仕組みはpull型では効かない。',
+quiz:{ q:'大谷の優勝速報への、この設計での正しい扱いは？', choices:[
+{ t:'深さ0：完全に遮断する', ok:false }, { t:'深さ2：特集もフォローも全部見る', ok:false }, { t:'深さ1：見出し1行は受け取り、その先は自分の判断', ok:true } ] } },
+{ id:'c3', title:'「嫌い」なのではない、「強制」が嫌なのだ', teach:[
+'ここを、はっきり言語化しておく。大事な区別じゃ。君は「大谷が嫌い」なのではない。「無理やり見せられるのが嫌」なのじゃ。中身への評価と、強制への拒否は、まったく別の話じゃ。',
+'この区別があるから、設計の目的は「遮断」ではなく「選ぶ権利の回復」になる。その先を掘るかどうかは、こっちの判断——当たり前の権利じゃ。深さ1のレーンがあるのは、この権利を仕組みとして守るためじゃな。世間から切り離されずに、強制だけを止める。それが狙いじゃ。'],
+retry:'「大谷が嫌い」ではなく「強制が嫌」。目的は遮断ではなく、選ぶ権利の回復。',
+quiz:{ q:'この設計の目的として正しいのは？', choices:[
+{ t:'興味のないものを完全に遮断すること', ok:false }, { t:'その先を見るかどうかを自分で選ぶ権利の回復', ok:true }, { t:'世間のニュースから切り離されること', ok:false } ] } },
+{ id:'c4', title:'お断りリストと突破ログ ― 強制力を測る', teach:[
+'最後に「お断り」の仕組みじゃ。見たくないものを明示した「お断りリスト」は、いつでも一覧で見えるようにする。ホワイトリストの裏面にあたるものじゃ。そして、リストに一致するのに出てきた情報は、内容の良し悪しを議論する前に「突破事例」として記録する。お断りを破った時点で悪質——この扱いがブレんことが大事じゃ。',
+'突破の回数と割合を数えれば、それはアルゴリズムの強制力の強さの指標になる。現実で言えば、「広告お断り」のポストに今週何枚チラシが入っていたかを数えるのと同じじゃ。数えるからこそ、悪質さが主観ではなく測定値になる。pull型で突破が起きれば「選んだ情報源が勝手に広げた」、push型なら「プラットフォームが設定を乗り越えた」——出どころの切り分けもできるのじゃ。'],
+retry:'お断りリストは可視化が前提。破って出てきたものは「突破事例」として記録し、回数と割合が強制力の指標になる（チラシを数えるのと同じ）。',
+quiz:{ q:'「突破」を数える意味は？', choices:[
+{ t:'プラットフォームの強制力の強さが測定値になる', ok:true }, { t:'ゴミ箱を早く空にできる', ok:false }, { t:'投稿者に罰金が発生する', ok:false } ] } },
+]},
+{ name:'第4章 暮らし方 ― 朝の点検と学びのループ', desc:'最終章は、建てた後の暮らしの話じゃ。朝の点検、図鑑への還流、そして商店街を持つということ。', lessons:[
+{ id:'d1', title:'朝の点検 ― 仕分け済みのネットを開く', teach:[
+'暮らしの姿を描こう。朝起きると、LANの中の小さなネットには、夜のうちに集められ、仕分けられた情報が並んでおる。通常のものは通常に、微妙なものは薄く、餌はゴミ箱へ。君はそれを、自分の速度で開く。',
+'ここで大事なのは、順番と深さを決めるのが君だということじゃ。おすすめ欄の朝は「相手の都合で並んだ列」を捌くことから始まる。ミニインターネットの朝は「自分の商店街の開店」じゃ。同じ朝でも、主導権の置き場所が正反対なのじゃな。'],
+retry:'朝は仕分け済みのネットを自分の速度で開く。並びも深さも自分が決める——商店街の開店。',
+quiz:{ q:'ミニインターネットの朝が、おすすめ欄の朝と違う点は？', choices:[
+{ t:'情報量が多いこと', ok:false }, { t:'順番と深さを決める主導権が自分にあること', ok:true }, { t:'画面が明るいこと', ok:false } ] } },
+{ id:'d2', title:'ゴミ箱の見返し ― 誤判定と法則の回収', teach:[
+'朝の点検には、ゴミ箱の見返し——ディストピアモード——も含まれる。ただし作法は研究モードじゃ。目的を持って、短く。眺める目的は2つ。誤判定の回収と、法則の発見じゃ。',
+'「これは捨てるほどではなかった」を見つけたら戻す。その誤判定のパターンは、判定ルールの欠陥の記録になる。逆に「こういう型が増えてきた」と気づけば、それは新しい煽りパターンの芽じゃ。どちらも、ゴミ箱をただ捨てる場所にしていたら手に入らん収穫なのじゃ。'],
+retry:'見返しの目的は誤判定の回収と法則の発見。ゴミ箱は捨てる場所ではなく、収穫の場。',
+quiz:{ q:'ゴミ箱の見返しで得られる収穫は？', choices:[
+{ t:'誤判定の回収と、判定ルールの欠陥・新パターンの発見', ok:true }, { t:'ストレージの空き容量', ok:false }, { t:'投稿者への警告文', ok:false } ] } },
+{ id:'d3', title:'図鑑とルールに足していく ― 学びのループ', teach:[
+'見つけたパターンは、その場で終わらせない。煽りパターン図鑑に型として足し、検出ルール——キーワード、スコアの配点、お断りリスト——に反映する。観察が、翌日の仕分けを賢くする。これが学びのループじゃ。',
+'そして世間との接続は、見出しレーンが保ってくれる。深さ1の1行が流れている限り、大きな出来事から切り離されることはない。「掘るかどうかは自分の判断」という原則のまま、社会の共通言語には触れ続けられる。閉じすぎず、流されもしない。その中間の置き場所を、仕組みで作るのじゃ。'],
+retry:'見つけた型は図鑑とルールに足し、翌日の仕分けに還流させる。見出しレーンがあるので世間からも切り離されない。',
+quiz:{ q:'見出しレーン（深さ1）の役割は？', choices:[
+{ t:'広告を流す場所', ok:false }, { t:'大きな出来事とは1行でつながり続け、掘るかは自分で決められること', ok:true }, { t:'ゴミ箱の予備置き場', ok:false } ] } },
+{ id:'d4', title:'自分の商店街を持つ ― 卒業の課', teach:[
+'卒業の課じゃ。振り返れば、情報との付き合いはこう変わった。「流れてくるものを受ける」暮らしから、「自分の商店街を持つ」暮らしへ。店（情報源）は自分で選び、深さは自分で決め、お断りは明示して、突破は数える。夜の間に仕分けられ、朝に自分の速度で開く。',
+'現実の街に重ねれば、当たり前の姿じゃ。自分で選んだ店に通い、ポストにはお断りを貼り、入ったチラシは数える。ネットだけが、その当たり前を奪っておった。——最後に一文を置く。「世界がどう見えるかは、どの窓から見るかで決まる」。窓を他人に任せず、自分の家に建てること。それがこの道場の修了証じゃ。'],
+retry:'「流れてくるものを受ける」から「自分の商店街を持つ」へ。締めの一文：「世界がどう見えるかは、どの窓から見るかで決まる」。',
+quiz:{ q:'この道場の締めの一文は？', choices:[
+{ t:'おすすめ欄は毎日全部見るべし', ok:false }, { t:'フィルタは強ければ強いほどよい', ok:false }, { t:'世界がどう見えるかは、どの窓から見るかで決まる', ok:true } ] } },
+]},
+];
+
+/* ============ エンジン ============ */
+const SAVE_KEY = 'miniInternetSaveV1';
+const TOTAL = LEVELS.reduce((a,l)=>a+l.lessons.length,0);
+let done = {};
+try{ const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); if(s && s.done) done = s.done;}catch(e){}
+let soundOn = true, typing = null, advanceFn = null;
+let cur = { level:0, lesson:0, pages:[], page:0};
+
+const $ = id => document.getElementById(id);
+const bgEl=$('bg'), charEl=$('char'), nameEl=$('namebox'), textEl=$('text'),
+boxEl=$('textbox'), chEl=$('choices'), nextEl=$('nextmark');
+
+function beep(freq, dur, delay, vol){
+if(!soundOn) return;
+try{
+const ctx = beep.ctx || (beep.ctx = new (window.AudioContext||window.webkitAudioContext)());
+if(ctx.state === 'suspended') ctx.resume();
+const o = ctx.createOscillator(), g = ctx.createGain();
+o.type='square'; o.frequency.value = freq || 660;
+g.gain.value = vol || 0.03;
+o.connect(g); g.connect(ctx.destination);
+const t = ctx.currentTime + (delay||0);
+o.start(t); o.stop(t + (dur||0.06));
+}catch(e){}
+}
+function save(){
+try{ localStorage.setItem(SAVE_KEY, JSON.stringify({done})); toast();}catch(e){}
+}
+function toast(){
+const t=$('toast'); t.classList.add('show');
+clearTimeout(toast.tm); toast.tm=setTimeout(()=>t.classList.remove('show'), 900);
+}
+function doneCount(){ return Object.keys(done).filter(k=>done[k]).length;}
+function renderProgress(now){
+$('pDone').textContent = doneCount();
+$('bDone').style.width = (doneCount()/TOTAL*100) + '%';
+if(now) $('pNow').textContent = now;
+}
+function setScene(bg, char, name){
+bgEl.className = 'bg ' + bg;
+charEl.innerHTML = CHARS[char] || '';
+charEl.style.display = char && char!== 'none'? '': 'none';
+if(name){ nameEl.textContent = name; nameEl.style.display='';} else nameEl.style.display='none';
+}
+function typeText(txt, onDoneTyping){ speak(txt);
+clearInterval(typing);
+textEl.textContent=''; nextEl.style.display='none';
+boxEl.scrollTop = 0;
+advanceFn = null;
+let i=0;
+typing = setInterval(()=>{
+i++;
+textEl.textContent = txt.slice(0, i);
+boxEl.scrollTop = boxEl.scrollHeight;
+const ch = txt.charAt(i-1);
+if(ch && ch!== ' ' && ch!== '\n' && i % 2 === 1){
+beep(880 + Math.random()*420, 0.018, 0, 0.012);
+}
+if(i >= txt.length){
+clearInterval(typing); typing=null;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+}
+}, 26);
+boxEl.onclick = ()=>{
+if(typing){
+clearInterval(typing); typing=null;
+textEl.textContent = txt; boxEl.scrollTop = boxEl.scrollHeight;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+} else if(advanceFn){
+const f = advanceFn; advanceFn = null; f();
+}
+};
+}
+document.addEventListener('keydown', e=>{
+if(!typing && advanceFn && (e.key === ' ' || e.key === 'Enter')){
+e.preventDefault();
+const f = advanceFn; advanceFn = null; f();
+}
+});
+function showChoices(items){
+chEl.innerHTML='';
+items.forEach(it=>{
+const b=document.createElement('button');
+b.className='choice' + (it.done? ' done': '');
+b.textContent=it.t;
+b.onclick=()=>{ beep(520,.06); setTimeout(()=>beep(780,.07),70); chEl.classList.remove('show'); it.fn();};
+chEl.appendChild(b);
+});
+chEl.classList.add('show');
+const dg = $('diagram');
+if(dg && dg.style.display === 'block'){
+$('screen').classList.add('diagmenu');
+requestAnimationFrame(()=>{
+const sr = $('screen').getBoundingClientRect();
+const dr = dg.getBoundingClientRect();
+chEl.style.top = Math.max(0, Math.round(dr.bottom - sr.top + 8)) + 'px';
+});
+} else { $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+}
+function hideChoices(){ chEl.classList.remove('show'); chEl.innerHTML=''; chEl.style.top=''; $('screen').classList.remove('diagmenu'); }
+
+/* ============ 図解（8bit風SVG・黒板） ============ */
+function _ar(x1,y1,x2,y2,col){ col=col||'#7fb8a4'; var pts; if(Math.abs(x2-x1)>=Math.abs(y2-y1)){ pts = x2>x1 ? [[x2,y2],[x2-10,y2-6],[x2-10,y2+6]] : [[x2,y2],[x2+10,y2-6],[x2+10,y2+6]]; } else { pts = y2>y1 ? [[x2,y2],[x2-6,y2-10],[x2+6,y2-10]] : [[x2,y2],[x2-6,y2+10],[x2+6,y2+10]]; } return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+col+'" stroke-width="4"/><polygon points="'+pts.map(function(p){return p.join(',');}).join(' ')+'" fill="'+col+'"/>'; }
+function _tx(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#e6f5ee')+'" text-anchor="middle">'+str+'</text>'; }
+function _bx(x,y,w,h,label,fill){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'" stroke="#7fb8a4" stroke-width="2"/><text x="'+(x+w/2)+'" y="'+(y+h/2+5)+'" font-size="12" fill="#fff" text-anchor="middle">'+label+'</text>'; }
+function _tag(x,y,str,col){ var w=str.length*12+12; return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="20" fill="'+col+'"/><text x="'+(x+w/2)+'" y="'+(y+14)+'" font-size="11" fill="#04120d" text-anchor="middle" font-weight="bold">'+str+'</text>'; }
+function _svg(inner){ return '<svg viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'+inner+'</svg>'; }
+var YL='#ffd94a', GN='#7ee787', RD='#ff7b72', DM='#7fb8a4', TL='#2dd4bf';
+const DIAG = {
+a1: _svg(_tx(180,16,'アルゴリズムの目的関数',DM,12)
+ + _bx(8,44,150,38,'目的：満足・質','#123528') + _tx(85,104,'ではない',RD,12)
+ + _ar(158,63,174,63)
+ + _bx(174,44,178,38,'クリック率＋滞在時間','#14503a')
+ + _tx(263,104,'＝広告収入',YL,12)),
+a2: _svg(_tx(180,16,'ポリシーの線引き',DM,12)
+ + _tag(16,26,'禁止：ないものを在ると思わせる嘘',RD)
+ + _tag(16,58,'合法：誇張・変顔・デカ文字・下品さ',YL)
+ + _tag(16,90,'処分はまず「静かな減速」から',GN)),
+a3: _svg(_tx(180,16,'歌舞伎町モデル',DM,12)
+ + _bx(8,36,160,38,'ネオン看板の競争','#123528') + _ar(168,55,184,55)
+ + _bx(184,36,168,38,'サムネのエスカレーション','#14503a')
+ + _tx(180,100,'「3,000円ポッキリ」⇔「無料で教えます」',YL,12)
+ + _tx(180,120,'入口は安く、出口で高く取る',RD,12)),
+a4: _svg(_tx(180,16,'お断りの非対称',DM,12)
+ + _bx(8,40,160,40,'破る側：コスト 0','#4a1420')
+ + _bx(192,40,160,40,'受け手：捨てる手間全部','#123528')
+ + _tx(180,108,'だから自分の側に窓を持つ',YL,12)),
+b1: _svg(_tx(180,16,'push → pull',DM,12)
+ + _bx(8,44,150,38,'push：流れてくる','#4a1420') + _ar(158,63,174,63)
+ + _bx(174,44,178,38,'pull：自分で選んだ店だけ','#14532d')
+ + _tx(180,112,'自宅の中の商店街には金で店を出せない',YL,11)),
+b2: _svg(_tx(180,16,'置き場所の条件',DM,12)
+ + _tag(16,26,'LAN内のNixOSマシン',GN) + _tag(196,26,'常時起動できる',GN)
+ + _tag(16,58,'64GBノートPC（音声家電と同じ土台）',TL)
+ + _tag(16,90,'速さより「夜中に起きている」確実さ',YL)),
+b3: _svg(_tx(180,16,'夜間バッチの段階判定',DM,12)
+ + _bx(2,44,80,38,'キーワード','#123528') + _ar(82,63,92,63)
+ + _bx(92,44,80,38,'顔面積','#123528') + _ar(172,63,182,63)
+ + _bx(182,44,80,38,'OCR','#123528') + _ar(262,63,272,63)
+ + _bx(272,44,86,38,'意味判定','#14532d')
+ + _tx(180,112,'重い判定も夜なら全件に回せる',YL,12)),
+b4: _svg(_tx(180,16,'2本のレーン',DM,12)
+ + _bx(8,30,344,30,'速報レーン：災害・気象・交通（即時）','#7a2e0e')
+ + _bx(8,72,344,30,'通常レーン：全部バッチ（朝に仕分け済み）','#14503a')),
+c1: _svg(_tx(180,16,'フィルタの単位は「深さ」',DM,12)
+ + _bx(8,44,104,38,'深さ2：全部見る','#14532d')
+ + _bx(128,44,104,38,'深さ1：見出しだけ','#7a5a0e')
+ + _bx(248,44,104,38,'深さ0：ゴミ箱','#4a1420')),
+c2: _svg(_tx(180,16,'深さの実例',DM,12)
+ + _tag(8,26,'深さ2：F1・テニス',GN) + _tag(160,26,'深さ2：Linux／NixOS',GN)
+ + _tag(8,58,'深さ1：大谷の優勝（1行）',YL) + _tag(196,58,'深さ1：Apple新製品（1行）',YL)
+ + _tag(40,90,'深さは金（マーケティング費）で買わせない',RD)),
+c3: _svg(_tx(180,16,'評価と強制は別の話',DM,12)
+ + _bx(8,40,160,40,'中身への評価','#123528')
+ + _bx(192,40,160,40,'強制への拒否','#123528')
+ + _tx(180,108,'目的は遮断ではなく「選ぶ権利」の回復',YL,12)),
+c4: _svg(_tx(180,16,'お断りリストと突破ログ',DM,12)
+ + _tag(16,26,'お断りリスト：いつでも可視化',GN)
+ + _tag(16,58,'突破＝内容を問わず悪質として記録',RD)
+ + _tag(16,90,'回数と割合 ＝ 強制力の指標',YL)),
+d1: _svg(_tx(180,16,'朝の点検',DM,12)
+ + _bx(8,44,104,38,'通常','#14532d') + _bx(128,44,104,38,'薄く',YL)
+ + _bx(248,44,104,38,'ゴミ箱','#4a1420')
+ + _tx(180,112,'並びと深さは自分が決める',GN,12)),
+d2: _svg(_tx(180,16,'見返しの収穫',DM,12)
+ + _bx(8,44,160,38,'誤判定 → 戻す','#123528') + _ar(168,63,184,63)
+ + _bx(184,44,168,38,'ルールの欠陥が見える','#14503a')
+ + _tx(180,112,'新しい型の芽もここで見つかる',YL,12)),
+d3: _svg(_tx(180,16,'学びのループ',DM,12)
+ + _bx(2,44,112,38,'観察・発見','#123528') + _ar(114,63,126,63)
+ + _bx(126,44,112,38,'図鑑・ルールへ','#123528') + _ar(238,63,250,63)
+ + _bx(250,44,108,38,'翌日の仕分け','#14532d')),
+d4: _svg(_tx(180,16,'卒業の一文',DM,12)
+ + _tx(180,52,'世界がどう見えるかは',YL,15)
+ + _tx(180,78,'どの窓から見るかで決まる',YL,15)
+ + _tx(180,108,'窓は他人に任せず、自分の家に建てる',GN,12)),
+};
+function showDiagFor(id){
+const d = $('diagram');
+if(DIAG[id]){ d.innerHTML = DIAG[id]; d.style.display = 'block'; }
+else d.style.display = 'none';
+}
+function hideDiag(){ $('diagram').style.display = 'none'; $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+
+/* ============ 画面遷移 ============ */
+function goLevels(){
+hideChoices();
+hideDiag();
+setScene('bg-city','none','');
+renderProgress('レベル選択');
+const dc = doneCount();
+const intro = dc === 0
+? '「よく来た。わしがミニネット仙人じゃ」\nテーマは「ミニインターネット」——おすすめ欄に捌かれる側から、自分のサーバに貯めて捌く側へ移る設計じゃ。全' + TOTAL + '課。\n好きな章からでよい。分かるまで、何度でも付き合うぞ。'
+: '「戻ったか。現在の理解済みは ' + dc + ' / ' + TOTAL + ' 課じゃ」\n続きをやるもよし、済んだ課を復習するもよし。';
+typeText(intro, ()=>{
+showChoices(LEVELS.map((lv, i)=>{
+const c = lv.lessons.filter(l=>done[l.id]).length;
+return { t: lv.name + '（' + c + '/' + lv.lessons.length + ' 済）', done: c === lv.lessons.length,
+fn: ()=>goLessons(i)};
+}));
+});
+}
+function goLessons(li){
+hideChoices();
+hideDiag();
+const lv = LEVELS[li];
+cur.level = li;
+setScene('bg-city','sennin','ミニネット仙人');
+renderProgress(lv.name);
+typeText('\n' + lv.desc + '\n課を選ぶのじゃ。✔ は理解済み。復習は何度でもできるぞ。', ()=>{
+showChoices(
+lv.lessons.map((ls, i)=>({ t: ls.title, done:!!done[ls.id], fn: ()=>startLesson(li, i, false)}))
+.concat([{ t:'レベル選択に戻る', fn: goLevels}])
+);
+});
+}
+function startLesson(li, idx, withRetry){
+hideChoices();
+const ls = LEVELS[li].lessons[idx];
+cur.level = li; cur.lesson = idx;
+cur.pages = ls.teach.slice();
+if(withRetry) cur.pages.push('\n' + ls.retry);
+cur.page = 0;
+setScene('bg-term','sennin','ミニネット仙人');
+renderProgress(LEVELS[li].name + '：' + ls.title);
+showDiagFor(ls.id);
+teachPage();
+}
+function teachPage(){
+const isLast = cur.page >= cur.pages.length - 1;
+typeText('\n' + cur.pages[cur.page], ()=>{
+if(isLast){ showCheck();}
+else { advanceFn = ()=>{ cur.page++; teachPage();};}
+});
+}
+function showCheck(){
+showChoices([
+{ t:'これは分かった！（確認問題へ）', fn: showQuiz},
+{ t:'分からない（もう一度聞く）', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'レッスン一覧に戻る', fn: ()=>goLessons(cur.level)}
+]);
+}
+function showQuiz(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+setScene('bg-term','sennin','ミニネット仙人');
+typeText('\n' + ls.quiz.q, ()=>{
+showChoices(ls.quiz.choices.map(c=>({
+t: c.t,
+fn: ()=>{ if(c.ok) completeLesson(); else wrongAnswer();}
+})));
+});
+}
+function wrongAnswer(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+beep(220,.12); setTimeout(()=>beep(180,.14),120);
+typeText('「むむ、違うぞ。焦らなくてよい」\n' + ls.retry, ()=>{
+showChoices([
+{ t:'もう一度説明を聞く', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'もう一度問題に挑む', fn: showQuiz}
+]);
+});
+}
+function completeLesson(){
+hideDiag();
+const li = cur.level, idx = cur.lesson;
+const ls = LEVELS[li].lessons[idx];
+done[ls.id] = true; save();
+[392,523,659,784].forEach((f,i)=>beep(f,.1,i*0.11));
+renderProgress(LEVELS[li].name + '：' + ls.title + ' ✔');
+const dc = doneCount();
+const levelDone = LEVELS[li].lessons.every(l=>done[l.id]);
+let msg = '「うむ、分かったようじゃな」\n理解済み ✔（合計 ' + dc + ' / ' + TOTAL + ' 課）';
+if(dc >= TOTAL){
+setScene('bg-way','sennin','ミニネット仙人');
+msg += '\n\n――全課、修了じゃ！\n流れてくるものを受ける暮らしから、自分の商店街を持つ暮らしへ。店は自分で選び、深さは自分で決め、お断りは明示し、突破は数える。そして覚えておれ——「世界がどう見えるかは、どの窓から見るかで決まる」。卒業おめでとう！';
+} else if(levelDone){
+msg += '\nこの章は全課修了じゃ。よくやった。';
+}
+typeText(msg, ()=>{
+const items = [];
+if(dc < TOTAL){
+if(idx + 1 < LEVELS[li].lessons.length){
+items.push({ t:'次の課へ（' + LEVELS[li].lessons[idx+1].title + '）', fn: ()=>startLesson(li, idx+1, false)});
+} else if(li + 1 < LEVELS.length){
+items.push({ t:'次の章へ（' + LEVELS[li+1].name + '）', fn: ()=>goLessons(li+1)});
+}
+}
+items.push({ t:'レッスン一覧に戻る', fn: ()=>goLessons(li)});
+items.push({ t:'レベル選択に戻る', fn: goLevels});
+showChoices(items);
+});
+}
+
+/* ============ ボタン類 ============ */
+$('btnEnter').onclick = ()=>{ beep(660,.06); $('title').style.display='none'; goLevels();};
+$('btnLevels').onclick = ()=>{ $('title').style.display='none'; goLevels();};
+$('btnReset').onclick = ()=>{
+done = {}; save(); renderProgress('タイトル');
+$('title').style.display='flex';
+};
+$('btnSound').onclick = (e)=>{
+soundOn =!soundOn;
+e.target.textContent = soundOn? '🔊 音ON': '🔇 音OFF';
+if(soundOn) beep(700,.06);
+};
+renderProgress('タイトル');
+
+let ttsOn = false;
+try{ ttsOn = localStorage.getItem('advTtsV1') === '1'; }catch(e){}
+const btnTts = document.getElementById('btnTts');
+function updTtsBtn(){ if(btnTts) btnTts.textContent = ttsOn ? '🗣 読上ON' : '🗣 読上OFF'; }
+function speak(txt){
+  if(!ttsOn || !('speechSynthesis' in window)) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(String(txt).replace(/\n+/g, ' '));
+    u.lang = 'ja-JP'; u.rate = 1.0;
+    const vs = speechSynthesis.getVoices();
+    const jv = vs.find(v => v.lang && v.lang.toLowerCase().indexOf('ja') === 0) || vs[0];
+    if(jv) u.voice = jv;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+if(btnTts) btnTts.onclick = () => {
+  ttsOn = !ttsOn;
+  try{ localStorage.setItem('advTtsV1', ttsOn ? '1' : '0'); }catch(e){}
+  updTtsBtn();
+  if(ttsOn){ speak(textEl.textContent); setTimeout(checkVoices, 800); }
+  else if('speechSynthesis' in window) speechSynthesis.cancel();
+};
+function checkVoices(){
+  if(!ttsOn || !btnTts || !('speechSynthesis' in window)) return;
+  if(speechSynthesis.getVoices().length === 0) btnTts.textContent = '🗣 音声なし';
+  else updTtsBtn();
+}
+if('speechSynthesis' in window) speechSynthesis.onvoiceschanged = checkVoices;
+updTtsBtn();
+setTimeout(checkVoices, 800);
+</script>
+</body>
+</html>
