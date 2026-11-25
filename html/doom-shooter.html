@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<!-- build: 2026-11-25 16:57:10 JST -->
+<!-- build: 2026-11-25 17:24:00 JST -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="dark" />
@@ -163,6 +163,7 @@
       <h2>DOOM SHOOTER</h2>
       <p>降ってくる<b style="color:var(--accent)">コマンドの的</b>を撃って、<br />Doom Emacs のキー操作を覚える射撃訓練。</p>
       <p>お題に合う的を撃つと得点＆説明を読み上げ。<br />手順ミッションは<b style="color:var(--magenta)">順番通り</b>に壊すとコンボボーナス！</p>
+      <p>後半は <b style="color:var(--cyan)">「:」のExコマンド</b>（:w / :wq / :%s…）や、<br />演算子＋モーションの<b style="color:var(--cyan)">連携コンボ</b>（/→n→ciw など）も登場。</p>
       <div class="stage-select" id="stageSelect"></div>
       <button class="btn" id="btnStart">▶ ゲームスタート</button>
       <p class="small">操作はマウス／指だけ：動かして移動、押している間 連射。<br />ミスしてもゲームオーバーなし。コンボが切れるだけ。</p>
@@ -180,9 +181,9 @@
     <!-- 全クリア画面 -->
     <div class="overlay" id="ovAllClear" hidden>
       <h2>ALL CLEAR!</h2>
-      <p>Doom Emacs編、全ステージ制覇！<br />リーダーキーと Evil 編集の型が体に入ったはず。</p>
+      <p>Doom Emacs編、全ステージ制覇！<br />リーダーキー、Evil 編集、Exコマンド、連携コンボの型が体に入ったはず。</p>
       <div class="zukan" id="zukanAll"></div>
-      <button class="btn" id="btnFree">▶ フリープレイ（Stage 4）</button>
+      <button class="btn" id="btnFree">▶ フリープレイ（Stage 6）</button>
       <button class="btn sub" id="btnBackTop">タイトルへ戻る</button>
     </div>
   </div>
@@ -253,18 +254,22 @@ var GAME_PACKS = {
           "p":  { act: "貼り付け",          desc: "p ― コピー／カットしたものをカーソルの後ろ（下）に貼り付ける。" },
           "u":  { act: "アンドゥ",          desc: "u ― 直前の操作を取り消す（undo）。失敗しても怖くない。" },
           "x":  { act: "1文字削除",         desc: "x ― カーソル位置の1文字を削除する。" },
-          "dw": { act: "単語を削除",        desc: "dw ― カーソル位置から単語1つ分を削除する（delete word）。" }
+          "dw": { act: "単語を削除",        desc: "dw ― 演算子 d（delete）＋モーション w（word）の組み合わせ。カーソル位置から単語1つ分を削除する。" },
+          "d$": { act: "行末まで削除",      desc: "d$ ― 演算子 d（delete）＋モーション $（行末）の組み合わせ。カーソルから行末までを一気に削除する。" },
+          "diw": { act: "単語を丸ごと削除", desc: "diw ― d（delete）＋ iw（inner word＝単語そのもの）。カーソルが単語の途中でも、単語全体を削除する。dw との違いは「単語の頭まで含む」こと。" },
+          "ciw": { act: "単語を変更",       desc: "ciw ― c（change）＋ iw（単語そのもの）。単語を丸ごと消して、そのまま挿入モードに入る。書き換えの最速の型。" },
+          "cw": { act: "単語の途中から変更", desc: "cw ― c（change）＋ w（word）。カーソル位置から単語の終わりまでを消して挿入モード。ciw と違い、単語の前半は残るのが紛らわしいポイント。" }
         },
         missions: [
           { title: "挿入モードに入れ",          steps: ["i"] },
           { title: "行をコピーして貼り付け",    steps: ["yy", "p"] },
           { title: "行を消して、下に貼れ（行移動）", steps: ["dd", "p"] },
           { title: "1文字消せ",                steps: ["x"] },
-          { title: "単語を消せ",                steps: ["dw"] },
-          { title: "やっぱり戻せ（アンドゥ）",  steps: ["u"] },
-          { title: "下に新しい行を開け",        steps: ["o"] },
+          { title: "単語を消せ（d＋w）",       steps: ["dw"] },
+          { title: "行末まで消せ（d＋$）",     steps: ["d$"] },
+          { title: "単語を変更しろ（c＋iw）",  steps: ["ciw"] },
+          { title: "単語を丸ごと消せ（d＋iw）", steps: ["diw"] },
           { title: "行を消して、後悔して戻せ",  steps: ["dd", "u"] },
-          { title: "カーソルの後ろから書け",    steps: ["a"] },
           { title: "コピペを2連発",            steps: ["yy", "p", "p"] }
         ]
       },
@@ -280,7 +285,8 @@ var GAME_PACKS = {
           "$":  { act: "行末へ",            desc: "$ ― 行の末尾へ移動する。" },
           "/":  { act: "検索開始",          desc: "/ ― 前方検索を開始する。文字を打って Enter で確定。" },
           "n":  { act: "次の一致へ",        desc: "n ― 検索の次の一致へ進む（next）。検索後の移動の基本。" },
-          "N":  { act: "前の一致へ",        desc: "N ― 検索の前の一致へ戻る。n の逆方向。" }
+          "N":  { act: "前の一致へ",        desc: "N ― 検索の前の一致へ戻る。n の逆方向。" },
+          "V":  { act: "行選択モード",      desc: "V ― 行単位の選択（Visual Line）モードに入る。gg や G と組み合わせると範囲選択になる。" }
         },
         missions: [
           { title: "先頭へ飛べ",              steps: ["gg"] },
@@ -289,9 +295,9 @@ var GAME_PACKS = {
           { title: "進んで、1つ戻れ",         steps: ["w", "b"] },
           { title: "検索して、次へ次へ",      steps: ["/", "n", "n"] },
           { title: "検索して、行き過ぎたら戻れ", steps: ["/", "n", "N"] },
-          { title: "行末へ行け",              steps: ["$"] },
           { title: "行末から行頭へ",          steps: ["$", "0"] },
-          { title: "単語の末尾を取れ",        steps: ["e"] },
+          { title: "行を選べ（V）",           steps: ["V"] },
+          { title: "先頭から末尾まで全選択",  steps: ["gg", "V", "G"] },
           { title: "末尾から先頭へ一気に戻れ", steps: ["G", "gg"] }
         ]
       },
@@ -307,7 +313,10 @@ var GAME_PACKS = {
           "yy":      { act: "行をコピー",            desc: "yy ― 今の行をまるごとコピー（yank）する。" },
           "p":       { act: "貼り付け",              desc: "p ― コピー／カットしたものを貼り付ける。" },
           "/":       { act: "検索開始",              desc: "/ ― 前方検索を開始する。" },
-          "n":       { act: "次の一致へ",            desc: "n ― 検索の次の一致へ進む（next）。" }
+          "n":       { act: "次の一致へ",            desc: "n ― 検索の次の一致へ進む（next）。" },
+          ":w":      { act: "保存（Exコマンド）",    desc: ":w ― 「:」で始めるExコマンドで保存する。Vim系の基本中の基本。Doomでは SPC f s と同じ仕事。" },
+          ":wq":     { act: "保存して終了（Ex）",    desc: ":wq ― 保存（write）して終了（quit）。:w と :q を1つにまとめたExコマンド。" },
+          ":e":      { act: "ファイルを開く（Ex）",  desc: ":e ― Exコマンドでファイルを開く（edit）。:e ファイル名 と続けて指定する。" }
         },
         missions: [
           { title: "プロジェクトからファイルを開け", steps: ["SPC p f"] },
@@ -316,10 +325,70 @@ var GAME_PACKS = {
           { title: "コマンド名で実行しろ",            steps: ["SPC SPC"] },
           { title: "開いて、コピーして、貼れ",        steps: ["SPC f f", "yy", "p"] },
           { title: "検索して、ヒットを巡回",          steps: ["/", "n", "n"] },
-          { title: "ファイルを開いて、バッファ切替",  steps: ["SPC p f", "SPC b b"] },
-          { title: "コピペして、Gitで確認",           steps: ["yy", "p", "SPC g g"] },
-          { title: "検索→移動→プロジェクト検索",     steps: ["/", "n", "SPC /"] },
-          { title: "総仕上げ：開く・書く・貼る・Git", steps: ["SPC p f", "yy", "p", "SPC g g"] }
+          { title: "Exコマンドで保存しろ",            steps: [":w"] },
+          { title: "コピペして、:wで保存",            steps: ["yy", "p", ":w"] },
+          { title: ":eで開いて、検索して次へ",        steps: [":e", "/", "n"] },
+          { title: "総仕上げ：開く・貼る・保存して終了", steps: ["SPC p f", "p", ":wq"] }
+        ]
+      },
+      {
+        id: 5, name: "Exコマンド（:）",
+        commands: {
+          ":w":   { act: "保存",              desc: ":w ― ファイルを保存する（write）。「:」を押すとコマンドラインが開き、Exコマンドを打って Enter で実行する。" },
+          ":q":   { act: "終了",              desc: ":q ― ウィンドウ／Emacsを終了する（quit）。未保存の変更があると止めてくれる安全装置つき。" },
+          ":wq":  { act: "保存して終了",      desc: ":wq ― 保存（write）＋終了（quit）を一度に。似た姿の :w と :q と取り違えないように。" },
+          ":q!":  { act: "強制終了",          desc: ":q! ― 変更を保存せずに強制終了する。「!」は強制の印。取り返しがつかないので慎重に。" },
+          ":e":   { act: "ファイルを開く",    desc: ":e ― ファイルを開く（edit）。:e ファイル名 の形で使う。今のバッファを読み直すときも :e! を使う。" },
+          ":bn":  { act: "次のバッファ",      desc: ":bn ― 次のバッファへ進む（buffer next）。:bp と対の移動コマンド。" },
+          ":bp":  { act: "前のバッファ",      desc: ":bp ― 前のバッファへ戻る（buffer previous）。:bn の逆方向。" },
+          ":bd":  { act: "バッファを閉じる",  desc: ":bd ― 今のバッファを閉じる（buffer delete）。ファイル自体は消えない。" },
+          ":set number":    { act: "行番号を表示",   desc: ":set number ― 行番号表示をONにする設定コマンド。:set で始まるのが設定系の印。" },
+          ":set nonumber":  { act: "行番号を消す",   desc: ":set nonumber ― 行番号表示をOFFにする。「no」を付けて打ち消すのがVim流の設定の型。number と nonumber は紛らわしいので注意。" },
+          ":noh": { act: "検索ハイライト消去", desc: ":noh ― 検索のハイライト表示だけを消す（no highlight）。検索自体は残るので n でまた進める。" },
+          ":%s/old/new/g": { act: "一括置換", desc: ":%s/old/new/g ― ファイル全体（%）の old を new にすべて（g）置換する。書式は s/置換前/置換後/g。Exコマンドの花形。" }
+        },
+        missions: [
+          { title: "保存しろ（:w）",               steps: [":w"] },
+          { title: "終了しろ（:q）",               steps: [":q"] },
+          { title: "保存して終了（:wq）",          steps: [":wq"] },
+          { title: "保存せず強制終了（:q!）",      steps: [":q!"] },
+          { title: "ファイルを開け（:e）",         steps: [":e"] },
+          { title: "バッファを行ったり来たり",     steps: [":bn", ":bp"] },
+          { title: "行番号を表示しろ",             steps: [":set number"] },
+          { title: "ハイライトを消せ（:noh）",     steps: [":noh"] },
+          { title: "一括置換して保存",             steps: [":%s/old/new/g", ":w"] },
+          { title: "仕上げ：開く→置換→保存して終了", steps: [":e", ":%s/old/new/g", ":wq"] }
+        ]
+      },
+      {
+        id: 6, name: "連携コンボ",
+        commands: {
+          "dw":  { act: "単語を削除",        desc: "dw ― d（delete）＋ w（word）。演算子＋モーションの基本形：何をするか × どの範囲か。" },
+          "d$":  { act: "行末まで削除",      desc: "d$ ― d（delete）＋ $（行末）。カーソルから行末までを削除。dw とモーション違いの紛らわしい相手。" },
+          "diw": { act: "単語を丸ごと削除",  desc: "diw ― d（delete）＋ iw（単語そのもの）。単語の途中からでも全体を削除する。" },
+          "ciw": { act: "単語を変更",        desc: "ciw ― c（change）＋ iw（単語そのもの）。単語を消して挿入モードへ。書き換えの型。" },
+          "yy":  { act: "行をコピー",        desc: "yy ― 行をコピー（yank）。dd と同じ「同じキー2回＝行全体」の型。" },
+          "dd":  { act: "行を削除（カット）", desc: "dd ― 行全体を削除。消した行はレジスタに入るので p で貼って行移動になる。" },
+          "p":   { act: "貼り付け",          desc: "p ― コピー／カットしたものを貼り付ける。yy や dd の相方。" },
+          "u":   { act: "アンドゥ",          desc: "u ― 直前の操作を取り消す。コンボを失敗しても、編集ならこれで戻れる。" },
+          "/":   { act: "検索開始",          desc: "/ ― 前方検索を開始する。検索→移動→編集の連携の起点。" },
+          "n":   { act: "次の一致へ",        desc: "n ― 検索の次の一致へ進む。狙いの場所まで移動してから編集するのが連携の流れ。" },
+          "gg":  { act: "ファイル先頭へ",    desc: "gg ― ファイル先頭へ。全選択コンボ gg→V→G の起点。" },
+          "G":   { act: "ファイル末尾へ",    desc: "G ― ファイル末尾へ。V で選択中に押すと末尾まで選択が伸びる。" },
+          "V":   { act: "行選択モード",      desc: "V ― 行単位の選択モード。gg→V→G でファイル全体を選択できる。" },
+          ":w":  { act: "保存（Exコマンド）", desc: ":w ― 編集コンボの締めに保存。打って Enter で実行するExコマンド。" }
+        },
+        missions: [
+          { title: "単語を消せ（d＋w）",            steps: ["dw"] },
+          { title: "行末まで消せ（d＋$）",          steps: ["d$"] },
+          { title: "単語を変更（c＋iw）",           steps: ["ciw"] },
+          { title: "コピーして貼り付け",            steps: ["yy", "p"] },
+          { title: "行移動：消して貼る",            steps: ["dd", "p"] },
+          { title: "検索→次へ→単語を変更",         steps: ["/", "n", "ciw"] },
+          { title: "全選択（gg→V→G）",             steps: ["gg", "V", "G"] },
+          { title: "検索→次へ→行末まで削除",       steps: ["/", "n", "d$"] },
+          { title: "変更して、:wで保存",            steps: ["ciw", ":w"] },
+          { title: "総仕上げ：検索→変更→保存",     steps: ["/", "n", "ciw", ":w"] }
         ]
       }
     ]
