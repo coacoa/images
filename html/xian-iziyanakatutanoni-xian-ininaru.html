@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<!-- build: 2026-11-26 12:47:44 JST -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<link rel="icon" href="data:," />
+<title>嫌いじゃなかったのに、嫌いになる</title>
+<style>
+  :root{
+    --bg-top:#0d1018;
+    --bg-bot:#171c28;
+    --ink:#eef0f4;
+    --sub:#b2bac8;
+    --accent:#e8543c;
+    --gold:#f0b23c;
+    --line:#465064;
+    --panel:rgba(10,12,18,.82);
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans CJK JP","Yu Gothic UI","Yu Gothic",Meiryo,sans-serif;
+    background:linear-gradient(180deg,var(--bg-top),var(--bg-bot));
+    color:var(--ink);
+    overflow:hidden;
+    -webkit-user-select:none;
+    user-select:none;
+  }
+  /* 上部アクセントバー（進捗を兼ねる） */
+  #topbar{
+    position:fixed; top:0; left:0; height:8px; width:100%;
+    background:rgba(255,255,255,.06); z-index:30;
+  }
+  #topfill{
+    height:100%; width:0%;
+    background:var(--accent);
+    transition:width .35s ease;
+  }
+  #stage{
+    position:fixed; inset:0;
+    display:flex; flex-direction:column;
+    cursor:pointer;
+  }
+  #slide{
+    flex:1 1 auto;
+    display:flex; flex-direction:column; justify-content:center;
+    padding:4vh 6.5vw 2vh;
+    min-height:0;
+  }
+  .slide-inner{ animation:fadein .3s ease; }
+  @keyframes fadein{ from{ opacity:0; } to{ opacity:1; } }
+  @media (prefers-reduced-motion: reduce){
+    .slide-inner{ animation:none; }
+    #topfill{ transition:none; }
+  }
+  .label{
+    color:var(--gold);
+    font-weight:700;
+    font-size:clamp(15px,2.1vw,28px);
+    letter-spacing:.14em;
+    margin:0 0 1.6vh;
+  }
+  .stitle{
+    font-weight:700;
+    font-size:clamp(30px,5.6vw,76px);
+    line-height:1.25;
+    margin:0;
+    overflow-wrap:anywhere;
+  }
+  .is-title .stitle{ font-size:clamp(34px,6.2vw,92px); }
+  .rule{
+    width:170px; height:6px; background:var(--accent);
+    margin:2.6vh 0 3.2vh;
+  }
+  .is-title .rule{ width:230px; }
+  ul.bullets{
+    list-style:none; margin:0; padding:0;
+  }
+  ul.bullets li{
+    position:relative;
+    font-size:clamp(16px,2.45vw,33px);
+    line-height:1.5;
+    padding-left:1.5em;
+    margin:0 0 2.1vh;
+    overflow-wrap:anywhere;
+  }
+  ul.bullets li::before{
+    content:"";
+    position:absolute; left:.1em; top:.52em;
+    border-left:.5em solid var(--accent);
+    border-top:.3em solid transparent;
+    border-bottom:.3em solid transparent;
+  }
+  .is-title ul.bullets li::before{
+    border-left:none; border-top:none; border-bottom:none;
+    content:"・"; color:var(--ink);
+    left:0; top:0;
+  }
+  .is-title ul.bullets li{ padding-left:1.2em; }
+  /* 字幕バー（読み上げ文） */
+  #caption{
+    flex:0 0 auto;
+    background:var(--panel);
+    border-top:1px solid var(--line);
+    padding:10px 6.5vw 12px;
+    font-size:clamp(12px,1.45vw,19px);
+    line-height:1.65;
+    color:var(--sub);
+    max-height:22vh;
+    overflow:hidden;
+  }
+  #caption .cap-text{ color:#d6dbe4; }
+  /* 操作バー */
+  #controls{
+    flex:0 0 auto;
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    padding:8px 12px calc(8px + env(safe-area-inset-bottom));
+    background:rgba(8,10,15,.9);
+    border-top:1px solid var(--line);
+    cursor:default;
+    transition:opacity .4s ease;
+  }
+  #controls button{
+    min-height:40px; min-width:44px;
+    padding:6px 14px;
+    font:inherit; font-size:15px;
+    color:var(--ink);
+    background:#232a3a;
+    border:1px solid var(--line);
+    border-radius:8px;
+    cursor:pointer;
+  }
+  #controls button:hover{ background:#2d3649; }
+  #controls button:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+  #controls button[aria-pressed="true"]{
+    background:var(--accent); border-color:var(--accent); color:#fff; font-weight:700;
+  }
+  #progress{
+    font-size:15px; color:var(--sub);
+    font-variant-numeric:tabular-nums;
+    margin:0 4px;
+    white-space:nowrap;
+  }
+  #controls .spacer{ flex:1 1 auto; }
+  #statemsg{ font-size:13px; color:var(--gold); white-space:nowrap; }
+  /* フルスクリーン時：操作バーはマウスを動かした時だけ出す（OBS録画用） */
+  body.fs #controls{ opacity:0; pointer-events:none; }
+  body.fs #controls.show{ opacity:1; pointer-events:auto; }
+  body.fs #caption{ padding-bottom:14px; }
+  @media (max-width:560px){
+    #slide{ padding:3vh 5vw 1vh; }
+    #caption{ padding-left:5vw; padding-right:5vw; }
+    #controls button{ padding:6px 10px; font-size:14px; }
+    #statemsg{ display:none; }
+  }
+</style>
+</head>
+<body>
+<div id="topbar"><div id="topfill"></div></div>
+
+<div id="stage">
+  <div id="slide" aria-live="off"></div>
+  <div id="caption"><span class="cap-text" id="capText"></span></div>
+  <div id="controls">
+    <button id="btnPrev" type="button" aria-label="前のスライド">◀ 前へ</button>
+    <button id="btnNext" type="button" aria-label="次のスライド">次へ ▶</button>
+    <span id="progress">1 / 13</span>
+    <span class="spacer"></span>
+    <span id="statemsg"></span>
+    <button id="btnVoice" type="button" aria-pressed="true">読み上げ ON</button>
+    <button id="btnAuto" type="button" aria-pressed="false">▶ 自動再生</button>
+    <button id="btnFs" type="button">全画面</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* スライド文言・読み上げ文は osituke-kirai-slides/slides_data.json の13件を一字一句そのまま使用 */
+var SLIDES = [{"bullets":["野球とサッカーは、スポーツの「デフォルト」として強制表示される","本当は嫌いじゃない ― 押し付けられることで、嫌いになっていく","これはスポーツに限らない。全ジャンルに言える、最大の問題点"],"label":"問題提起","narration":"嫌いじゃなかったのに、嫌いになる。ユーチューブでもニュースサイトでも、スポーツといえば野球とサッカーが、最初から標準で入っています。興味を登録した覚えはないのに、毎日、強制的に目に入る。本当は嫌いじゃないんです。むしろ、どうでもよかった。それが、押し付けられることで、だんだん嫌いになっていく。これはスポーツに限った話ではなく、すべてのジャンルに言えることです。そして、私が思う最大の問題点は、ここにあります。","title":"嫌いじゃなかったのに、嫌いになる"},{"bullets":["ユーチューブでもニュースでも、スポーツの既定値は「野球とサッカー」","選んだ覚えのないものが、最初から画面の枠を占めている","消しても戻る ― 枠は個人の意思と無関係に存在する"],"label":"現象","narration":"現象を確認します。ユーチューブでもニュースサイトでも、スポーツの既定値は野球とサッカーです。選んだ覚えのないものが、最初から画面の枠を占めています。前の分析の通り、興味なしを押しても、枠を減らしても、枠そのものは個人の意思と無関係に存在し続けます。つまり私たちは、選んでもいないものを、毎日、見せられ続けているのです。","title":"デフォルト枠 ― 選んでいないのに、入っている"},{"bullets":["押し付けられる → 目に入る → うんざりする → ジャンル自体への嫌悪に変わる","本来は中立だった感情が、強制的な接触でマイナスに振れる","心理学の単純接触効果は「自分で選んだ接触」の話。自由を奪われると反発が生まれる（心理的リアクタンス）"],"label":"悪循環の構造","narration":"悪循環の構造を見ます。押し付けられる、目に入る、うんざりする。その繰り返しで、やがてジャンル自体への嫌悪に変わっていきます。本来は中立だった感情が、強制的な接触によってマイナスに振れるのです。心理学には、繰り返し接すると好感が上がるという単純接触効果がありますが、あれは自分で選んだ接触の話です。逆に、見る自由を奪われると、人は反発します。心理的リアクタンスと呼ばれる反応です。押し付けは、好感ではなく反発を育てるのです。","title":"押し付けが「嫌い」を製造する"},{"bullets":["視聴者 ― 好きでもなかったものを、嫌いにされていく","そのスポーツ自体 ― ファンでもない層に悪印象を持たれ、正当な関心まで色眼鏡で見られる","発信者 ― 本当に届けたい相手に届く前に、枠ごと嫌われる"],"label":"被害は三方","narration":"この悪循環の被害は、三方に及びます。まず視聴者。好きでもなかったものを、嫌いにされていきます。次に、そのスポーツ自体です。ファンでもない層に悪印象を持たれ、正当な関心まで色眼鏡で見られるようになります。そして発信者。本当に届けたい相手に届く前に、枠ごと嫌われてしまいます。誰も得をしていないのに続くのは、枠が全員の平均で作られていて、個人の拒否が届かないからです。","title":"誰も得をしないのに、続く"},{"bullets":["大谷と野球、アップル製品、芸能ニュース、特定のドラマや音楽…","デフォルト枠はジャンルごとに存在し、押し付けの構造は共通","「嫌い」の多くは、コンテンツそのものではなく、押し付けへの反応"],"label":"全ジャンルの話","narration":"これはスポーツだけの話ではありません。大谷と野球、アップル製品、芸能ニュース、特定のドラマや音楽。デフォルトの枠はジャンルごとに存在し、押し付けの構造は共通です。ここで大事なのは、私たちが嫌いだと思っているものの多くは、コンテンツそのものへの評価ではなく、押し付けへの反応だということです。嫌いの出どころを取り違えると、判断まで歪みます。","title":"「嫌い」の出どころは、だいたい押し付け"},{"bullets":["フィルタリングを続けている理由そのものが、これ","問題は情報の質ではなく「選ぶ権利」が奪われていること","製造された嫌悪は、やがて対立や叩きの燃料にもなる"],"label":"なぜ最大の問題か","narration":"私がフィルタリングの仕組みを考え続けている理由は、まさにこれです。問題は、情報の質が良いか悪いかではありません。何を見るかを選ぶ権利が、静かに奪われていることです。しかも押し付けは、感情まで書き換えます。製造された嫌悪は溜まっていき、やがて関係のない対立や、誰かを叩く燃料にもなります。だからこれは、画面の見やすさの話ではなく、自分の感情を守る話なのです。","title":"選ぶ権利と、感情を守る話"},{"bullets":["個人化が精密になれば「全員共通のデフォルト」は技術的には不要になる","一人ひとりに最適化された画面では、押し付けは減らせるはず","ローカルで動くAI判定なら、自分の側で仕分けることも可能になる"],"label":"AI時代 ― 変わりうる面","narration":"では、エーアイの時代に、これはどう変わるのでしょうか。変わりうる面から見ます。個人化の技術が精密になれば、全員共通のデフォルト枠は、技術的には不要になります。一人ひとりに合わせた画面では、興味のないスポーツを毎日出す理由はなくなります。さらに、自分のパソコンで動くエーアイの判定を使えば、向こうの画面を、自分の側で仕分けることも可能になります。技術だけを見れば、押し付けを減らす道具は揃いつつあります。","title":"技術の上では、押し付けは減らせる"},{"bullets":["最適化の目的が滞在時間のままなら、AIは「押し付けの精度」を上げるだけ","嫌悪も学習される ― 「嫌いだけど、つい見てしまう」ものが選ばれる危険","生成AIで供給が爆発し、枠の奪い合いは激化。「なぜこれが出るか」はますます見えなくなる"],"label":"AI時代 ― 変わらない面","narration":"しかし、変わらない面もあります。最適化の目的が滞在時間のままなら、エーアイは押し付けをなくすのではなく、押し付けの精度を上げるだけです。あなたの嫌悪も学習の材料になります。嫌いだけど、ついつい見てしまう。そういうものが選ばれる危険があります。さらに、生成エーアイでコンテンツの供給が爆発すれば、枠の奪い合いは激しくなります。そして個人化が強いほど、なぜこれが出るのかは見えなくなります。","title":"目的が同じなら、精度が上がるだけ"},{"bullets":["AIを「向こうの最適化」に使うか、「自分の仕分け」に使うか","夜間に集めて、ローカルAIで判定し、朝に自分の窓を開く ― 昨日の設計は後者","鍵は技術の新しさではなく、決定権がどちらに置かれているか"],"label":"分岐点","narration":"分岐点はここです。エーアイを、向こうの最適化に使うのか、自分の仕分けに使うのか。夜の間に集めておいて、自分のパソコンのエーアイで判定し、朝、自分の窓を開く。前に設計したミニインターネットは、後者の形です。鍵は、技術が新しいかどうかではありません。何を表示するかの決定権が、向こうに置かれているか、自分の側に置かれているか。それだけです。","title":"決定権を、どちらに置くか"},{"bullets":["選んだものだけが入る「自分の窓」を持つ（ホワイトリスト型）","窓の内側では、押し付けは構造的に起きない","深さの設計：全文で見るもの／見出しだけのもの／箱に入れるものを分ける"],"label":"自分でやれること 1","narration":"自分でやれることの一つ目は、自分の窓を持つことです。選んだものだけが入る、ホワイトリスト型の窓です。その内側では、押し付けは構造的に起きません。あわせて、深さの設計も大事です。全文で見るもの、見出しだけでいいもの、箱に入れるもの。この三段階に分けるだけで、強制的に全文を見せられる場面は消えます。窓と深さは、自分の側で決められます。","title":"自分の窓を持つ"},{"bullets":["お断りリストと突破ログで、押し付けられた回数を記録する","感情で反応する前に、データとして見える形にする","嫌いにされる前に仕分ける ― 仕分けが先、感情はあと"],"label":"自分でやれること 2","narration":"二つ目は、拒否を記録することです。お断りリストと突破ログで、何を、どれだけ押し付けられたかを残します。押し付けが回数として見えれば、うんざりという感情で反応する前に、データとして対処できます。順番が大事です。仕分けが先、感情はあと。記録のない嫌悪は溜まる一方ですが、記録のある押し付けは、ルールの材料になります。","title":"押し付けを、記録して測る"},{"bullets":["その「嫌い」は、コンテンツへのものか、押し付けへのものか","分けて考えると、中立だったもの・本来好きだったものを取り戻せる","定期的な棚卸しが、感情を勝手に書き換えられないための点検になる"],"label":"自分でやれること 3","narration":"三つ目は、嫌いの棚卸しです。自分が嫌いだと思っているものについて、それはコンテンツそのものへの評価なのか、押し付けへの反応なのかを、分けて考えてみます。分けてみると、実は中立だったもの、本来は好きだったはずのものが、かなり混ざっていることに気づきます。この棚卸しは、自分の感情を勝手に書き換えられないための、定期点検です。","title":"「嫌い」を棚卸しする"},{"bullets":["押し付けは、放っておけば「嫌い」を製造し続ける","AI時代、押し付けは消えるのではなく、精度を上げるか、自分の仕分けに置き換わるか","答えは向こうの改善を待つことではなく、自分の窓を持つこと"],"label":"まとめ","narration":"まとめです。押し付けは、放っておけば嫌いを製造し続けます。エーアイの時代に、押し付けが自然に消えることはありません。精度を上げて続くか、自分の仕分けに置き換わるか、そのどちらかです。答えは、向こうの改善を待つことではありません。自分の窓を持ち、決定権を自分の側に置くこと。嫌いじゃなかったものを、嫌いにされないために。","title":"嫌いに、されないために"}];
+var N = SLIDES.length;
+var DECK = "嫌いじゃなかったのに、嫌いになる";
+
+var idx = 0;
+var voiceOn = true;
+var autoplay = false;
+var speakToken = 0;
+var fallbackTimer = null;
+var pollTimer = null;
+var bufferTimer = null;
+var watchdogTimer = null;
+var resumeTimer = null;
+var advancedToken = -1; /* 二重発火ガード：このトークンでは既に送った */
+var hideTimer = null;
+
+var slideEl = document.getElementById("slide");
+var capText = document.getElementById("capText");
+var progressEl = document.getElementById("progress");
+var topfill = document.getElementById("topfill");
+var btnPrev = document.getElementById("btnPrev");
+var btnNext = document.getElementById("btnNext");
+var btnVoice = document.getElementById("btnVoice");
+var btnAuto = document.getElementById("btnAuto");
+var btnFs = document.getElementById("btnFs");
+var controlsEl = document.getElementById("controls");
+var statemsg = document.getElementById("statemsg");
+
+function render() {
+  var s = SLIDES[idx];
+  slideEl.innerHTML = "";
+  var wrap = document.createElement("div");
+  wrap.className = "slide-inner" + (idx === 0 ? " is-title" : "");
+  var lab = document.createElement("p");
+  lab.className = "label";
+  lab.textContent = s.label;
+  var ttl = document.createElement("h1");
+  ttl.className = "stitle";
+  ttl.textContent = s.title;
+  var rule = document.createElement("div");
+  rule.className = "rule";
+  wrap.appendChild(lab);
+  wrap.appendChild(ttl);
+  wrap.appendChild(rule);
+  var ul = document.createElement("ul");
+  ul.className = "bullets";
+  for (var i = 0; i < s.bullets.length; i++) {
+    var li = document.createElement("li");
+    li.textContent = s.bullets[i];
+    ul.appendChild(li);
+  }
+  wrap.appendChild(ul);
+  slideEl.appendChild(wrap);
+  capText.textContent = s.narration;
+  progressEl.textContent = (idx + 1) + " / " + N;
+  topfill.style.width = ((idx + 1) / N * 100) + "%";
+  document.title = (idx === 0) ? DECK : (s.title + " ― " + DECK);
+}
+
+/* ---------- タイマー管理 ---------- */
+function clearTimers() {
+  if (fallbackTimer !== null) { clearTimeout(fallbackTimer); fallbackTimer = null; }
+  if (pollTimer !== null) { clearInterval(pollTimer); pollTimer = null; }
+  if (bufferTimer !== null) { clearTimeout(bufferTimer); bufferTimer = null; }
+  if (watchdogTimer !== null) { clearTimeout(watchdogTimer); watchdogTimer = null; }
+  if (resumeTimer !== null) { clearInterval(resumeTimer); resumeTimer = null; }
+}
+
+function stopSpeak() {
+  speakToken++;
+  clearTimers();
+  if ("speechSynthesis" in window) {
+    try { speechSynthesis.cancel(); } catch (e) {}
+  }
+}
+
+/* 読み上げ時間の推定（日本語 約6.3文字/秒 + 間） */
+function estimateMs(text) {
+  return Math.round(text.length * 160) + 1500;
+}
+
+function pickJaVoice() {
+  if (!("speechSynthesis" in window)) return null;
+  var vs = speechSynthesis.getVoices();
+  for (var i = 0; i < vs.length; i++) {
+    if (vs[i].lang && vs[i].lang.toLowerCase().indexOf("ja") === 0) return vs[i];
+  }
+  return null;
+}
+if ("speechSynthesis" in window && speechSynthesis.onvoiceschanged !== undefined) {
+  speechSynthesis.onvoiceschanged = function () {};
+}
+
+/* ---------- 送り（二重発火ガード付き） ---------- */
+function advanceOnce(token) {
+  if (token !== speakToken || !autoplay) return;
+  if (advancedToken === token) return;
+  advancedToken = token;
+  advance();
+}
+
+function advance() {
+  if (idx >= N - 1) {
+    setAutoplay(false);
+    statemsg.textContent = "最終スライドです";
+    return;
+  }
+  go(idx + 1);
+}
+
+/* 音声不可時のフォールバック：文字数推定＋バッファで送る */
+function scheduleFallbackAdvance(token, ms) {
+  if (fallbackTimer !== null) { clearTimeout(fallbackTimer); fallbackTimer = null; }
+  fallbackTimer = setTimeout(function () {
+    if (token === speakToken && autoplay) advanceOnce(token);
+  }, ms);
+}
+
+/* ---------- 読み上げ（文単位に分割して順に再生） ---------- */
+function splitSentences(text) {
+  var out = [];
+  var cur = "";
+  for (var i = 0; i < text.length; i++) {
+    var ch = text.charAt(i);
+    cur += ch;
+    if (ch === "。" || ch === "！" || ch === "？" || ch === "!" || ch === "?") {
+      while (i + 1 < text.length && "」』）)】".indexOf(text.charAt(i + 1)) >= 0) {
+        i++;
+        cur += text.charAt(i);
+      }
+      out.push(cur);
+      cur = "";
+    }
+  }
+  if (cur.replace(/\s/g, "").length > 0) out.push(cur);
+  var res = [];
+  for (var j = 0; j < out.length; j++) {
+    if (out[j].replace(/\s/g, "").length > 0) res.push(out[j]);
+  }
+  return res;
+}
+
+function speakCurrent() {
+  stopSpeak();
+  var s = SLIDES[idx];
+  var token = speakToken;
+
+  if (!voiceOn || !("speechSynthesis" in window)) {
+    /* 音声OFF／音声不可：文字数推定＋バッファのフォールバック（自動再生のみ） */
+    if (autoplay) scheduleFallbackAdvance(token, estimateMs(s.narration) + 600);
+    return;
+  }
+
+  var sentences = splitSentences(s.narration);
+  if (sentences.length === 0) {
+    if (autoplay) scheduleFallbackAdvance(token, 1200);
+    return;
+  }
+
+  var startedAt = Date.now();
+  var pos = 0;
+  var allDone = false;
+
+  /* Chrome系で読み上げが勝手に止まる事象への定期 resume */
+  resumeTimer = setInterval(function () {
+    if (token !== speakToken) { clearInterval(resumeTimer); resumeTimer = null; return; }
+    try { if (speechSynthesis.paused) speechSynthesis.resume(); } catch (e) {}
+  }, 5000);
+
+  function speakNext() {
+    if (token !== speakToken) return;
+    if (pos >= sentences.length) { onAllSentencesDone(); return; }
+    var text = sentences[pos];
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = "ja-JP";
+    var v = pickJaVoice();
+    if (v) u.voice = v;
+    u.rate = 1.0;
+    u.pitch = 1.0;
+    var stepped = false;
+    function step() {
+      if (stepped || token !== speakToken) return;
+      stepped = true;
+      if (watchdogTimer !== null) { clearTimeout(watchdogTimer); watchdogTimer = null; }
+      pos++;
+      speakNext();
+    }
+    u.onend = step;
+    u.onerror = function () { step(); };
+    /* onend が来ない環境への安全網：この文の推定時間の2倍＋10秒。
+       本来の送りは onend → ポーリング確認 → バッファ の経路だけが担う */
+    watchdogTimer = setTimeout(function () { step(); }, estimateMs(text) * 2 + 10000);
+    try {
+      speechSynthesis.speak(u);
+    } catch (e) {
+      step();
+    }
+  }
+
+  function onAllSentencesDone() {
+    if (allDone || token !== speakToken) return;
+    allDone = true;
+    if (watchdogTimer !== null) { clearTimeout(watchdogTimer); watchdogTimer = null; }
+    if (resumeTimer !== null) { clearInterval(resumeTimer); resumeTimer = null; }
+    if (!autoplay) return;
+
+    /* 無音のまま全 onend が即返った環境（音声が実際には出ていない）への備え：
+       実発話なら最低でも推定の約4割はかかる。それ未満なら残り時間を待つ */
+    var elapsed = Date.now() - startedAt;
+    var minElapsed = estimateMs(s.narration) * 0.4;
+    var waitMore = (elapsed < minElapsed) ? (minElapsed - elapsed) : 0;
+
+    bufferTimer = setTimeout(function () {
+      bufferTimer = null;
+      if (token !== speakToken || !autoplay) return;
+      /* speaking / pending が両方 false になるまでポーリング確認してから送る */
+      pollTimer = setInterval(function () {
+        if (token !== speakToken || !autoplay) {
+          clearInterval(pollTimer); pollTimer = null; return;
+        }
+        var busy = true;
+        try { busy = speechSynthesis.speaking || speechSynthesis.pending; } catch (e) { busy = false; }
+        if (!busy) {
+          clearInterval(pollTimer); pollTimer = null;
+          /* 約0.6秒のバッファを置いてから次へ */
+          bufferTimer = setTimeout(function () {
+            bufferTimer = null;
+            if (token === speakToken && autoplay) advanceOnce(token);
+          }, 600);
+        }
+      }, 120);
+    }, waitMore);
+  }
+
+  speakNext();
+}
+
+function go(n) {
+  idx = Math.max(0, Math.min(N - 1, n));
+  render();
+  speakCurrent();
+}
+
+function setAutoplay(on) {
+  autoplay = on;
+  btnAuto.setAttribute("aria-pressed", on ? "true" : "false");
+  btnAuto.textContent = on ? "⏸ 自動再生中" : "▶ 自動再生";
+  statemsg.textContent = on ? "読み上げに連動して進みます" : "";
+  if (on) {
+    if (idx >= N - 1) idx = 0;
+    render();
+    speakCurrent();
+  } else {
+    stopSpeak();
+  }
+}
+
+btnPrev.addEventListener("click", function (e) { e.stopPropagation(); go(idx - 1); });
+btnNext.addEventListener("click", function (e) { e.stopPropagation(); go(idx + 1); });
+btnVoice.addEventListener("click", function (e) {
+  e.stopPropagation();
+  voiceOn = !voiceOn;
+  btnVoice.setAttribute("aria-pressed", voiceOn ? "true" : "false");
+  btnVoice.textContent = voiceOn ? "読み上げ ON" : "読み上げ OFF";
+  if (!voiceOn) {
+    stopSpeak();
+    if (autoplay) scheduleFallbackAdvance(speakToken, estimateMs(SLIDES[idx].narration) + 600);
+  } else {
+    speakCurrent();
+  }
+});
+btnAuto.addEventListener("click", function (e) { e.stopPropagation(); setAutoplay(!autoplay); });
+btnFs.addEventListener("click", function (e) {
+  e.stopPropagation();
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+  } else if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen();
+  }
+});
+
+document.getElementById("stage").addEventListener("click", function (e) {
+  if (e.target.closest("#controls")) return;
+  go(idx + 1);
+});
+
+document.addEventListener("keydown", function (e) {
+  var tag = (document.activeElement && document.activeElement.tagName) || "";
+  if (e.key === " " && tag === "BUTTON") return; /* ボタン上のスペースはボタンの動作に任せる */
+  if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
+    e.preventDefault(); go(idx + 1);
+  } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+    e.preventDefault(); go(idx - 1);
+  } else if (e.key === "Home") {
+    e.preventDefault(); go(0);
+  } else if (e.key === "End") {
+    e.preventDefault(); go(N - 1);
+  }
+});
+
+/* フルスクリーン時、操作バーはしばらくで隠す */
+function pokeControls() {
+  if (!document.fullscreenElement) return;
+  controlsEl.classList.add("show");
+  if (hideTimer) clearTimeout(hideTimer);
+  hideTimer = setTimeout(function () { controlsEl.classList.remove("show"); }, 2600);
+}
+document.addEventListener("fullscreenchange", function () {
+  document.body.classList.toggle("fs", !!document.fullscreenElement);
+  pokeControls();
+});
+document.addEventListener("mousemove", pokeControls);
+
+render();
+</script>
+</body>
+</html>
