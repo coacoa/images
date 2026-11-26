@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<!-- build: 2026-11-26 12:14:55 JST -->
+<!-- build: 2026-11-26 13:56:00 JST -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="dark" />
@@ -46,8 +46,8 @@
   }
   #slide{
     flex:1 1 auto;
-    display:flex; flex-direction:column; justify-content:center;
-    padding:4vh 6.5vw 2vh;
+    display:flex; flex-direction:column; justify-content:flex-start;
+    padding:2.2vh 6.5vw 1.2vh;
     min-height:0;
   }
   .slide-inner{ animation:fadein .3s ease; }
@@ -61,7 +61,7 @@
     font-weight:700;
     font-size:clamp(15px,2.1vw,28px);
     letter-spacing:.14em;
-    margin:0 0 1.6vh;
+    margin:0 0 1.1vh;
   }
   .stitle{
     font-weight:700;
@@ -71,9 +71,16 @@
     overflow-wrap:anywhere;
   }
   .is-title .stitle{ font-size:clamp(34px,6.2vw,92px); }
+  .slide-progress{
+    color:var(--sub);
+    font-size:clamp(14px,1.6vw,22px);
+    font-variant-numeric:tabular-nums;
+    letter-spacing:.1em;
+    margin:1.4vh 0 0;
+  }
   .rule{
     width:170px; height:6px; background:var(--accent);
-    margin:2.6vh 0 3.2vh;
+    margin:2vh 0 2.6vh;
   }
   .is-title .rule{ width:230px; }
   .subtitle-line{
@@ -110,11 +117,11 @@
     flex:0 0 auto;
     background:var(--panel);
     border-top:1px solid var(--line);
-    padding:10px 6.5vw 12px;
-    font-size:clamp(12px,1.45vw,19px);
-    line-height:1.65;
+    padding:16px 6.5vw 18px;
+    font-size:clamp(15px,1.9vw,26px);
+    line-height:1.6;
     color:var(--sub);
-    max-height:22vh;
+    max-height:32vh;
     overflow:hidden;
   }
   #caption .cap-text{ color:#d6dbe4; }
@@ -156,7 +163,7 @@
   body.fs #controls.show{ opacity:1; pointer-events:auto; }
   body.fs #caption{ padding-bottom:14px; }
   @media (max-width:560px){
-    #slide{ padding:3vh 5vw 1vh; }
+    #slide{ padding:2vh 5vw 1vh; }
     #caption{ padding-left:5vw; padding-right:5vw; }
     #controls button{ padding:6px 10px; font-size:14px; }
     #statemsg{ display:none; }
@@ -337,7 +344,13 @@ var voiceOn = true;
 var autoplay = false;
 var speakToken = 0;
 var fallbackTimer = null;
+var idleTimer = null;
+var bufferTimer = null;
+var advancedToken = -1;
 var hideTimer = null;
+var resumeTimer = null;
+var startTimer = null;
+var watchTimer = null;
 
 var slideEl = document.getElementById("slide");
 var capText = document.getElementById("capText");
@@ -362,10 +375,14 @@ function render() {
   var ttl = document.createElement("h1");
   ttl.className = "stitle";
   ttl.textContent = s.title;
+  var prog = document.createElement("p");
+  prog.className = "slide-progress";
+  prog.textContent = (idx + 1) + " / " + N;
   var rule = document.createElement("div");
   rule.className = "rule";
   wrap.appendChild(lab);
   wrap.appendChild(ttl);
+  wrap.appendChild(prog);
   wrap.appendChild(rule);
   if (s.sub) {
     var sub = document.createElement("p");
@@ -388,16 +405,74 @@ function render() {
   document.title = s.title + " ― なぜ「興味なし」は効かないのか";
 }
 
+function clearAdvanceTimers() {
+  if (idleTimer !== null) { clearInterval(idleTimer); idleTimer = null; }
+  if (bufferTimer !== null) { clearTimeout(bufferTimer); bufferTimer = null; }
+}
+
 function clearFallback() {
   if (fallbackTimer !== null) { clearTimeout(fallbackTimer); fallbackTimer = null; }
+  clearAdvanceTimers();
 }
 
 function stopSpeak() {
   speakToken++;
   clearFallback();
+  if (resumeTimer !== null) { clearInterval(resumeTimer); resumeTimer = null; }
+  if (startTimer !== null) { clearTimeout(startTimer); startTimer = null; }
+  if (watchTimer !== null) { clearTimeout(watchTimer); watchTimer = null; }
   if ("speechSynthesis" in window) {
     try { speechSynthesis.cancel(); } catch (e) {}
   }
+}
+
+/* 読み上げ文を文単位に分割する（文末の句読点は文に含める） */
+function splitSentences(text) {
+  var parts = [];
+  var buf = "";
+  for (var i = 0; i < text.length; i++) {
+    var ch = text.charAt(i);
+    buf += ch;
+    if (ch === "。" || ch === "！" || ch === "？" || ch === "．") {
+      if (buf.trim()) parts.push(buf);
+      buf = "";
+    }
+  }
+  if (buf.trim()) parts.push(buf);
+  if (!parts.length && text.trim()) parts.push(text);
+  return parts;
+}
+
+/* 次スライドへの遷移はここを通す：同一トークンでは一度だけ、前スライドのイベントでは進まない */
+function advanceOnce(token) {
+  if (!autoplay) return;
+  if (token !== speakToken) return;
+  if (advancedToken === token) return;
+  advancedToken = token;
+  clearFallback();
+  advance();
+}
+
+/* 最後の文の再生終了後：合成エンジンが完全に止まるまでポーリングし、さらに約0.6秒置いてから進む */
+function confirmIdleThenAdvance(token) {
+  clearAdvanceTimers();
+  var tries = 0;
+  idleTimer = setInterval(function () {
+    if (token !== speakToken || !autoplay) { clearAdvanceTimers(); return; }
+    tries++;
+    var busy = false;
+    if ("speechSynthesis" in window) {
+      try { busy = !!(speechSynthesis.speaking || speechSynthesis.pending); } catch (e) { busy = false; }
+    }
+    /* 最大約2秒待っても止まらなければ、その時点で進む（固着防止） */
+    if (!busy || tries >= 20) {
+      clearInterval(idleTimer); idleTimer = null;
+      bufferTimer = setTimeout(function () {
+        bufferTimer = null;
+        advanceOnce(token);
+      }, 500);
+    }
+  }, 100);
 }
 
 /* 読み上げ時間の推定（日本語 約6.3文字/秒 + 間） */
@@ -420,8 +495,8 @@ if ("speechSynthesis" in window && speechSynthesis.onvoiceschanged !== undefined
 function scheduleFallbackAdvance(token, ms) {
   clearFallback();
   fallbackTimer = setTimeout(function () {
-    if (token === speakToken && autoplay) advance();
-  }, ms);
+    advanceOnce(token);
+  }, ms + 500); /* 音声不可時も、実音声と同じ約0.5秒のバッファを加える */
 }
 
 function speakCurrent() {
@@ -429,57 +504,121 @@ function speakCurrent() {
   var s = SLIDES[idx];
   if (!autoplay && !voiceOn) return;
   if (!voiceOn || !("speechSynthesis" in window)) {
-    /* 音声が使えない／OFF のときは文字数推定で送る（自動再生のみ） */
+    /* 音声が使えない／OFF のときは文字数推定で送る（自動再生のみ、バッファ込み） */
     if (autoplay) scheduleFallbackAdvance(speakToken, estimateMs(s.narration));
     return;
   }
   var token = speakToken;
-  var startedAt = Date.now();
-  var done = false;
-  var u = new SpeechSynthesisUtterance(s.narration);
-  u.lang = "ja-JP";
-  var v = pickJaVoice();
-  if (v) u.voice = v;
-  u.rate = 1.0;
-  u.pitch = 1.0;
-  function finish() {
-    if (done || token !== speakToken) return;
-    done = true;
-    clearFallback();
-    if (!autoplay) return;
-    /* 無音のまま即終了した場合は推定時間まで待ってから送る */
-    var elapsed = Date.now() - startedAt;
-    var minWait = estimateMs(s.narration) * 0.6;
-    if (elapsed < minWait) {
-      scheduleFallbackAdvance(token, minWait - elapsed);
-    } else {
-      advance();
+  var sentences = splitSentences(s.narration);
+  var pos = 0;
+  var finished = false;
+
+  function speakNext() {
+    if (finished || token !== speakToken) return;
+    if (pos >= sentences.length) {
+      /* 全文を読み終えた。ここではまだ進まず、エンジンの停止確認＋バッファを経て進む */
+      finished = true;
+      clearFallback();
+      if (autoplay) confirmIdleThenAdvance(token);
+      return;
+    }
+    var text = sentences[pos];
+    var isLast = (pos === sentences.length - 1);
+    pos++;
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = "ja-JP";
+    var v = pickJaVoice();
+    if (v) u.voice = v;
+    u.rate = 1.0;
+    u.pitch = 1.0;
+    var settled = false;
+    function clearWatch() {
+      if (watchTimer !== null) { clearTimeout(watchTimer); watchTimer = null; }
+    }
+    /* ウォッチドッグ：想定時間＋余裕を過ぎても onend が来なければ、その文を打ち切って次へ進む。
+       まだ発声中なら短く待ち直す（最大2回）。これで1文で止まり続けることはない */
+    var watchRearms = 0;
+    function armWatch(delay) {
+      clearWatch();
+      watchTimer = setTimeout(function () {
+        watchTimer = null;
+        if (settled || token !== speakToken) return;
+        var busy = false;
+        try { busy = !!speechSynthesis.speaking; } catch (e) { busy = false; }
+        if (busy && watchRearms < 2) {
+          watchRearms++;
+          armWatch(2000);
+          return;
+        }
+        settled = true;
+        try { speechSynthesis.cancel(); } catch (e) {}
+        if (isLast) {
+          finished = true;
+          clearFallback();
+          if (autoplay) confirmIdleThenAdvance(token);
+        } else {
+          startTimer = setTimeout(function () { startTimer = null; speakNext(); }, 120);
+        }
+      }, delay);
+    }
+    armWatch(estimateMs(text) + 2500);
+    u.onend = function () {
+      if (settled || token !== speakToken) return;
+      settled = true;
+      clearWatch();
+      speakNext();
+    };
+    u.onerror = function () {
+      if (settled || token !== speakToken) return;
+      settled = true;
+      clearWatch();
+      if (isLast) {
+        /* 最後の文でエラー：推定時間＋バッファで送る（自動再生のみ） */
+        if (autoplay) {
+          finished = true;
+          scheduleFallbackAdvance(token, estimateMs(text));
+        }
+      } else {
+        /* 途中の文のエラーは読み飛ばして次へ */
+        speakNext();
+      }
+    };
+    try {
+      speechSynthesis.speak(u);
+    } catch (e) {
+      if (autoplay) scheduleFallbackAdvance(token, estimateMs(s.narration));
     }
   }
-  u.onend = finish;
-  u.onerror = function () {
-    if (done || token !== speakToken) return;
-    if (autoplay) {
-      /* エラー時は推定時間で送る */
-      done = true;
-      scheduleFallbackAdvance(token, estimateMs(s.narration) * 0.7);
-    }
-  };
-  try {
-    speechSynthesis.speak(u);
-  } catch (e) {
-    if (autoplay) scheduleFallbackAdvance(token, estimateMs(s.narration));
-    return;
-  }
+  /* cancel() の直後に speak すると文頭の音が欠けることがあるため、少し間を置いてから始める */
+  startTimer = setTimeout(function () {
+    startTimer = null;
+    if (token !== speakToken) return;
+    speakNext();
+  }, 150);
   if (autoplay) {
-    /* onend が来ない環境への安全網（推定＋余裕） */
-    scheduleFallbackAdvance(token, estimateMs(s.narration) + 6000);
-    /* Chrome系で読み上げが止まる事象への定期 resume */
-    var guard = setInterval(function () {
-      if (done || token !== speakToken) { clearInterval(guard); return; }
-      if (speechSynthesis.paused) { try { speechSynthesis.resume(); } catch (e) {} }
-      if (!speechSynthesis.speaking && !speechSynthesis.pending) clearInterval(guard);
-    }, 5000);
+    /* 安全網：文単位ウォッチドッグが働かない万一の環境でも、際限なく止まらないようにする */
+    var safetyRearms = 0;
+    var safetyFire = function () {
+      if (token !== speakToken || !autoplay || finished) return;
+      var busy = false;
+      try { busy = !!(speechSynthesis.speaking || speechSynthesis.pending); } catch (e) { busy = false; }
+      if (busy && safetyRearms < 3) {
+        safetyRearms++;
+        fallbackTimer = setTimeout(safetyFire, 3000);
+        return;
+      }
+      advanceOnce(token);
+    };
+    clearFallback();
+    fallbackTimer = setTimeout(safetyFire, estimateMs(s.narration) + 8000 + 500);
+    /* 長時間発声で停止する既知のブラウザ不具合対策：再生中は数秒ごとに resume() を呼ぶ */
+    if (resumeTimer !== null) { clearInterval(resumeTimer); }
+    resumeTimer = setInterval(function () {
+      if (finished || token !== speakToken) {
+        clearInterval(resumeTimer); resumeTimer = null; return;
+      }
+      try { speechSynthesis.resume(); } catch (e) {}
+    }, 2500);
   }
 }
 

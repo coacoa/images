@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<!-- build: 2026-11-26 12:00:35 JST -->
+<!-- build: 2026-11-26 13:56:00 JST -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="dark" />
@@ -46,8 +46,8 @@
   }
   #slide{
     flex:1 1 auto;
-    display:flex; flex-direction:column; justify-content:center;
-    padding:4vh 6.5vw 2vh;
+    display:flex; flex-direction:column; justify-content:flex-start;
+    padding:2vh 6.5vw 2vh;
     min-height:0;
   }
   .slide-inner{ animation:fadein .3s ease; }
@@ -61,7 +61,15 @@
     font-weight:700;
     font-size:clamp(15px,2.1vw,28px);
     letter-spacing:.14em;
-    margin:0 0 1.6vh;
+    margin:0 0 1vh;
+  }
+  .slide-progress{
+    color:var(--sub);
+    font-weight:700;
+    font-size:clamp(15px,2vw,26px);
+    letter-spacing:.1em;
+    font-variant-numeric:tabular-nums;
+    margin:1.1vh 0 0;
   }
   .stitle{
     font-weight:700;
@@ -73,13 +81,13 @@
   .is-title .stitle{ font-size:clamp(34px,6.2vw,92px); }
   .rule{
     width:170px; height:6px; background:var(--accent);
-    margin:2.6vh 0 3.2vh;
+    margin:1.6vh 0 2.1vh;
   }
   .is-title .rule{ width:230px; }
   .subtitle-line{
     color:var(--sub);
     font-size:clamp(17px,2.5vw,34px);
-    margin:0 0 3.4vh;
+    margin:0 0 2.1vh;
   }
   ul.bullets{
     list-style:none; margin:0; padding:0;
@@ -89,7 +97,7 @@
     font-size:clamp(16px,2.45vw,33px);
     line-height:1.5;
     padding-left:1.5em;
-    margin:0 0 2.1vh;
+    margin:0 0 1.6vh;
     overflow-wrap:anywhere;
   }
   ul.bullets li::before{
@@ -110,11 +118,11 @@
     flex:0 0 auto;
     background:var(--panel);
     border-top:1px solid var(--line);
-    padding:10px 6.5vw 12px;
-    font-size:clamp(12px,1.45vw,19px);
-    line-height:1.65;
+    padding:14px 6.5vw 16px;
+    font-size:clamp(14px,1.85vw,25px);
+    line-height:1.7;
     color:var(--sub);
-    max-height:22vh;
+    max-height:32vh;
     overflow:hidden;
   }
   #caption .cap-text{ color:#d6dbe4; }
@@ -156,7 +164,7 @@
   body.fs #controls.show{ opacity:1; pointer-events:auto; }
   body.fs #caption{ padding-bottom:14px; }
   @media (max-width:560px){
-    #slide{ padding:3vh 5vw 1vh; }
+    #slide{ padding:2vh 5vw 1vh; }
     #caption{ padding-left:5vw; padding-right:5vw; }
     #controls button{ padding:6px 10px; font-size:14px; }
     #statemsg{ display:none; }
@@ -365,6 +373,10 @@ function render() {
   rule.className = "rule";
   wrap.appendChild(lab);
   wrap.appendChild(ttl);
+  var pg = document.createElement("p");
+  pg.className = "slide-progress";
+  pg.textContent = (idx + 1) + " / " + N;
+  wrap.appendChild(pg);
   wrap.appendChild(rule);
   if (s.sub) {
     var sub = document.createElement("p");
@@ -416,11 +428,56 @@ if ("speechSynthesis" in window && speechSynthesis.onvoiceschanged !== undefined
   speechSynthesis.onvoiceschanged = function () {};
 }
 
+/* 次へ進むのは1回だけ（onend二重発火・前スライドの残イベント対策） */
+var advancedToken = -1;
+function tryAdvance(token) {
+  if (token !== speakToken || !autoplay) return;
+  if (advancedToken === token) return;
+  advancedToken = token;
+  advance();
+}
+
 function scheduleFallbackAdvance(token, ms) {
   clearFallback();
   fallbackTimer = setTimeout(function () {
-    if (token === speakToken && autoplay) advance();
+    tryAdvance(token);
   }, ms);
+}
+
+/* 読み上げ文を文単位に分割する（句点・感嘆符・疑問符で区切る） */
+function splitSentences(text) {
+  var out = [];
+  var parts = text.match(/[^。！？]+[。！？]?/g) || [];
+  for (var i = 0; i < parts.length; i++) {
+    var p = parts[i].trim();
+    if (p) out.push(p);
+  }
+  if (out.length === 0 && text.trim()) out.push(text.trim());
+  return out;
+}
+
+/* 最後の文の再生後、speaking/pending が完全に false になるまで
+   短い間隔で確認し、さらに約0.5秒の余白を置いてから次へ進む。
+   確認の上限は約2秒（止まり続けないため） */
+function waitIdleThenAdvance(token) {
+  if (token !== speakToken || !autoplay) return;
+  var waited = 0;
+  var iv = setInterval(function () {
+    if (token !== speakToken || !autoplay) { clearInterval(iv); return; }
+    var busy = false;
+    if ("speechSynthesis" in window) {
+      busy = !!(speechSynthesis.speaking || speechSynthesis.pending);
+    }
+    waited += 100;
+    if (!busy) {
+      clearInterval(iv);
+      setTimeout(function () { tryAdvance(token); }, 500);
+    } else if (waited > 2000) {
+      /* 上限：約2秒待っても終わらなければ進む */
+      clearInterval(iv);
+      tryAdvance(token);
+    }
+  }, 100);
 }
 
 function speakCurrent() {
@@ -428,58 +485,104 @@ function speakCurrent() {
   var s = SLIDES[idx];
   if (!autoplay && !voiceOn) return;
   if (!voiceOn || !("speechSynthesis" in window)) {
-    /* 音声が使えない／OFF のときは文字数推定で送る（自動再生のみ） */
-    if (autoplay) scheduleFallbackAdvance(speakToken, estimateMs(s.narration));
+    /* 音声が使えない／OFF のときは文字数推定で送る（自動再生のみ、同じ余白つき） */
+    if (autoplay) scheduleFallbackAdvance(speakToken, estimateMs(s.narration) + 500);
     return;
   }
   var token = speakToken;
-  var startedAt = Date.now();
-  var done = false;
-  var u = new SpeechSynthesisUtterance(s.narration);
-  u.lang = "ja-JP";
-  var v = pickJaVoice();
-  if (v) u.voice = v;
-  u.rate = 1.0;
-  u.pitch = 1.0;
-  function finish() {
-    if (done || token !== speakToken) return;
-    done = true;
-    clearFallback();
-    if (!autoplay) return;
-    /* 無音のまま即終了した場合は推定時間まで待ってから送る */
-    var elapsed = Date.now() - startedAt;
-    var minWait = estimateMs(s.narration) * 0.6;
-    if (elapsed < minWait) {
-      scheduleFallbackAdvance(token, minWait - elapsed);
-    } else {
-      advance();
+  /* 文単位に分割して順に再生し、最後の文が終わるまで次へ進まない。
+     各文にはウォッチドッグを付け、onend が来なくても止まり続けない */
+  var sentences = splitSentences(s.narration);
+  var totalMs = estimateMs(s.narration);
+  var si = 0;
+  var finished = false;
+  var watchdog = null;
+  var resumeTimer = null;
+
+  function clearWatchdog() {
+    if (watchdog !== null) { clearTimeout(watchdog); watchdog = null; }
+  }
+  function cleanupTimers() {
+    clearWatchdog();
+    if (resumeTimer !== null) { clearInterval(resumeTimer); resumeTimer = null; }
+  }
+
+  /* 長時間発声で再生が停止する既知のブラウザ不具合対策：数秒ごとに resume */
+  resumeTimer = setInterval(function () {
+    if (finished || token !== speakToken) { cleanupTimers(); return; }
+    try { speechSynthesis.resume(); } catch (e) {}
+  }, 2500);
+
+  function speakNext() {
+    if (finished || token !== speakToken) return;
+    if (si >= sentences.length) {
+      finished = true;
+      cleanupTimers();
+      clearFallback();
+      if (autoplay) waitIdleThenAdvance(token);
+      return;
+    }
+    var text = sentences[si];
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = "ja-JP";
+    var v = pickJaVoice();
+    if (v) u.voice = v;
+    u.rate = 1.0;
+    u.pitch = 1.0;
+    var sentDone = false;
+    function sentEnd() {
+      if (sentDone || finished || token !== speakToken) return;
+      sentDone = true;
+      clearWatchdog();
+      si++;
+      speakNext();
+    }
+    u.onend = sentEnd;
+    u.onerror = function () {
+      if (token !== speakToken) return;
+      if (autoplay) {
+        /* エラー時は残りを推定時間で送る（同じ余白つき） */
+        finished = true;
+        cleanupTimers();
+        scheduleFallbackAdvance(token, totalMs * 0.7 + 500);
+      } else {
+        sentEnd();
+      }
+    };
+    /* ウォッチドッグ：文字数から推定した想定時間（余裕つき）を過ぎても
+       onend が来なければ、その文を打ち切って次へ進む */
+    var limit = Math.round(text.length * 160 * 1.8) + 2500;
+    watchdog = setTimeout(function () {
+      watchdog = null;
+      if (sentDone || finished || token !== speakToken) return;
+      sentDone = true;
+      try { speechSynthesis.cancel(); } catch (e) {}
+      setTimeout(function () {
+        if (finished || token !== speakToken) return;
+        si++;
+        speakNext();
+      }, 100);
+    }, limit);
+    try {
+      speechSynthesis.speak(u);
+    } catch (e) {
+      finished = true;
+      cleanupTimers();
+      if (autoplay) scheduleFallbackAdvance(token, totalMs + 500);
     }
   }
-  u.onend = finish;
-  u.onerror = function () {
-    if (done || token !== speakToken) return;
-    if (autoplay) {
-      /* エラー時は推定時間で送る */
-      done = true;
-      scheduleFallbackAdvance(token, estimateMs(s.narration) * 0.7);
-    }
-  };
-  try {
-    speechSynthesis.speak(u);
-  } catch (e) {
-    if (autoplay) scheduleFallbackAdvance(token, estimateMs(s.narration));
-    return;
-  }
+
   if (autoplay) {
-    /* onend が来ない環境への安全網（推定＋余裕） */
-    scheduleFallbackAdvance(token, estimateMs(s.narration) + 6000);
-    /* Chrome系で読み上げが止まる事象への定期 resume */
-    var guard = setInterval(function () {
-      if (done || token !== speakToken) { clearInterval(guard); return; }
-      if (speechSynthesis.paused) { try { speechSynthesis.resume(); } catch (e) {} }
-      if (!speechSynthesis.speaking && !speechSynthesis.pending) clearInterval(guard);
-    }, 5000);
+    /* onend が来ない環境への安全網（全文の推定＋余裕＋余白） */
+    scheduleFallbackAdvance(token, totalMs + 3000 + 500);
   }
+
+  /* cancel() の直後に speak すると文頭の音が欠けることがあるため、
+     わずかな間隔を置いてから再生を始める */
+  setTimeout(function () {
+    if (token !== speakToken) return;
+    speakNext();
+  }, 150);
 }
 
 function go(n) {
@@ -520,7 +623,7 @@ btnVoice.addEventListener("click", function (e) {
   btnVoice.textContent = voiceOn ? "読み上げ ON" : "読み上げ OFF";
   if (!voiceOn) {
     stopSpeak();
-    if (autoplay) scheduleFallbackAdvance(speakToken, estimateMs(SLIDES[idx].narration));
+    if (autoplay) scheduleFallbackAdvance(speakToken, estimateMs(SLIDES[idx].narration) + 500);
   } else {
     speakCurrent();
   }

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<!-- build: 2026-11-26 12:47:44 JST -->
+<!-- build: 2026-11-26 13:56:17 JST -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="dark" />
@@ -46,8 +46,8 @@
   }
   #slide{
     flex:1 1 auto;
-    display:flex; flex-direction:column; justify-content:center;
-    padding:4vh 6.5vw 2vh;
+    display:flex; flex-direction:column; justify-content:flex-start;
+    padding:2.4vh 6.5vw 2vh;
     min-height:0;
   }
   .slide-inner{ animation:fadein .3s ease; }
@@ -71,9 +71,16 @@
     overflow-wrap:anywhere;
   }
   .is-title .stitle{ font-size:clamp(34px,6.2vw,92px); }
+  .sprogress{
+    color:var(--sub);
+    font-size:clamp(14px,1.7vw,24px);
+    font-variant-numeric:tabular-nums;
+    letter-spacing:.08em;
+    margin:1.2vh 0 0;
+  }
   .rule{
     width:170px; height:6px; background:var(--accent);
-    margin:2.6vh 0 3.2vh;
+    margin:1.8vh 0 2.6vh;
   }
   .is-title .rule{ width:230px; }
   ul.bullets{
@@ -105,11 +112,11 @@
     flex:0 0 auto;
     background:var(--panel);
     border-top:1px solid var(--line);
-    padding:10px 6.5vw 12px;
-    font-size:clamp(12px,1.45vw,19px);
-    line-height:1.65;
+    padding:16px 6.5vw 18px;
+    font-size:clamp(15px,1.9vw,26px);
+    line-height:1.7;
     color:var(--sub);
-    max-height:22vh;
+    max-height:34vh;
     overflow:hidden;
   }
   #caption .cap-text{ color:#d6dbe4; }
@@ -151,7 +158,7 @@
   body.fs #controls.show{ opacity:1; pointer-events:auto; }
   body.fs #caption{ padding-bottom:14px; }
   @media (max-width:560px){
-    #slide{ padding:3vh 5vw 1vh; }
+    #slide{ padding:2vh 5vw 1vh; }
     #caption{ padding-left:5vw; padding-right:5vw; }
     #controls button{ padding:6px 10px; font-size:14px; }
     #statemsg{ display:none; }
@@ -192,6 +199,7 @@ var pollTimer = null;
 var bufferTimer = null;
 var watchdogTimer = null;
 var resumeTimer = null;
+var startTimer = null;
 var advancedToken = -1; /* 二重発火ガード：このトークンでは既に送った */
 var hideTimer = null;
 
@@ -218,10 +226,14 @@ function render() {
   var ttl = document.createElement("h1");
   ttl.className = "stitle";
   ttl.textContent = s.title;
+  var sprog = document.createElement("p");
+  sprog.className = "sprogress";
+  sprog.textContent = (idx + 1) + " / " + N;
   var rule = document.createElement("div");
   rule.className = "rule";
   wrap.appendChild(lab);
   wrap.appendChild(ttl);
+  wrap.appendChild(sprog);
   wrap.appendChild(rule);
   var ul = document.createElement("ul");
   ul.className = "bullets";
@@ -245,6 +257,7 @@ function clearTimers() {
   if (bufferTimer !== null) { clearTimeout(bufferTimer); bufferTimer = null; }
   if (watchdogTimer !== null) { clearTimeout(watchdogTimer); watchdogTimer = null; }
   if (resumeTimer !== null) { clearInterval(resumeTimer); resumeTimer = null; }
+  if (startTimer !== null) { clearTimeout(startTimer); startTimer = null; }
 }
 
 function stopSpeak() {
@@ -328,7 +341,7 @@ function speakCurrent() {
 
   if (!voiceOn || !("speechSynthesis" in window)) {
     /* 音声OFF／音声不可：文字数推定＋バッファのフォールバック（自動再生のみ） */
-    if (autoplay) scheduleFallbackAdvance(token, estimateMs(s.narration) + 600);
+    if (autoplay) scheduleFallbackAdvance(token, estimateMs(s.narration) + 500);
     return;
   }
 
@@ -342,11 +355,11 @@ function speakCurrent() {
   var pos = 0;
   var allDone = false;
 
-  /* Chrome系で読み上げが勝手に止まる事象への定期 resume */
+  /* Chrome系で読み上げが勝手に止まる事象への対策：再生中は数秒ごとに resume() を呼ぶ */
   resumeTimer = setInterval(function () {
     if (token !== speakToken) { clearInterval(resumeTimer); resumeTimer = null; return; }
-    try { if (speechSynthesis.paused) speechSynthesis.resume(); } catch (e) {}
-  }, 5000);
+    try { speechSynthesis.resume(); } catch (e) {}
+  }, 2500);
 
   function speakNext() {
     if (token !== speakToken) return;
@@ -368,9 +381,13 @@ function speakCurrent() {
     }
     u.onend = step;
     u.onerror = function () { step(); };
-    /* onend が来ない環境への安全網：この文の推定時間の2倍＋10秒。
-       本来の送りは onend → ポーリング確認 → バッファ の経路だけが担う */
-    watchdogTimer = setTimeout(function () { step(); }, estimateMs(text) * 2 + 10000);
+    /* ウォッチドッグ：推定時間に余裕を持たせた上限を過ぎても onend が来なければ、
+       その文を打ち切って（cancel）次へ進む。止まり続けないための上限 */
+    watchdogTimer = setTimeout(function () {
+      if (stepped || token !== speakToken) return;
+      try { speechSynthesis.cancel(); } catch (e) {}
+      step();
+    }, estimateMs(text) * 1.5 + 3000);
     try {
       speechSynthesis.speak(u);
     } catch (e) {
@@ -394,26 +411,32 @@ function speakCurrent() {
     bufferTimer = setTimeout(function () {
       bufferTimer = null;
       if (token !== speakToken || !autoplay) return;
-      /* speaking / pending が両方 false になるまでポーリング確認してから送る */
+      /* speaking / pending が両方 false になるまでポーリング確認してから送る。
+         ただし上限は約2秒：それ以上は待たずに進む（止まり続けない） */
+      var pollStart = Date.now();
       pollTimer = setInterval(function () {
         if (token !== speakToken || !autoplay) {
           clearInterval(pollTimer); pollTimer = null; return;
         }
         var busy = true;
         try { busy = speechSynthesis.speaking || speechSynthesis.pending; } catch (e) { busy = false; }
-        if (!busy) {
+        if (!busy || Date.now() - pollStart >= 2000) {
           clearInterval(pollTimer); pollTimer = null;
-          /* 約0.6秒のバッファを置いてから次へ */
+          /* 約0.5秒のバッファを置いてから次へ */
           bufferTimer = setTimeout(function () {
             bufferTimer = null;
             if (token === speakToken && autoplay) advanceOnce(token);
-          }, 600);
+          }, 500);
         }
       }, 120);
     }, waitMore);
   }
 
-  speakNext();
+  /* cancel() の直後に speak すると文頭の音が欠けることがあるため、わずかに間を置く */
+  startTimer = setTimeout(function () {
+    startTimer = null;
+    if (token === speakToken) speakNext();
+  }, 150);
 }
 
 function go(n) {
@@ -445,7 +468,7 @@ btnVoice.addEventListener("click", function (e) {
   btnVoice.textContent = voiceOn ? "読み上げ ON" : "読み上げ OFF";
   if (!voiceOn) {
     stopSpeak();
-    if (autoplay) scheduleFallbackAdvance(speakToken, estimateMs(SLIDES[idx].narration) + 600);
+    if (autoplay) scheduleFallbackAdvance(speakToken, estimateMs(SLIDES[idx].narration) + 500);
   } else {
     speakCurrent();
   }

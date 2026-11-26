@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<!-- build: 2026-11-26 12:30:53 JST -->
+<!-- build: 2026-11-26 13:55:47 JST -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="dark" />
@@ -46,8 +46,8 @@
   }
   #slide{
     flex:1 1 auto;
-    display:flex; flex-direction:column; justify-content:center;
-    padding:4vh 6.5vw 2vh;
+    display:flex; flex-direction:column; justify-content:flex-start;
+    padding:1.6vh 6.5vw 1.2vh;
     min-height:0;
   }
   .slide-inner{ animation:fadein .3s ease; }
@@ -61,7 +61,15 @@
     font-weight:700;
     font-size:clamp(15px,2.1vw,28px);
     letter-spacing:.14em;
-    margin:0 0 1.6vh;
+    margin:0 0 .8vh;
+  }
+  .slide-progress{
+    color:var(--sub);
+    font-size:clamp(15px,1.9vw,26px);
+    font-weight:700;
+    font-variant-numeric:tabular-nums;
+    letter-spacing:.08em;
+    margin:.7vh 0 0;
   }
   .stitle{
     font-weight:700;
@@ -73,13 +81,13 @@
   .is-title .stitle{ font-size:clamp(34px,6.2vw,92px); }
   .rule{
     width:170px; height:6px; background:var(--accent);
-    margin:2.6vh 0 3.2vh;
+    margin:1.4vh 0 1.8vh;
   }
   .is-title .rule{ width:230px; }
   .subtitle-line{
     color:var(--sub);
     font-size:clamp(17px,2.5vw,34px);
-    margin:0 0 3.4vh;
+    margin:0 0 1.8vh;
   }
   ul.bullets{
     list-style:none; margin:0; padding:0;
@@ -110,11 +118,12 @@
     flex:0 0 auto;
     background:var(--panel);
     border-top:1px solid var(--line);
-    padding:10px 6.5vw 12px;
-    font-size:clamp(12px,1.45vw,19px);
-    line-height:1.65;
+    padding:16px 6.5vw 18px;
+    font-size:clamp(16px,1.95vw,26px);
+    line-height:1.7;
     color:var(--sub);
-    max-height:22vh;
+    min-height:15vh;
+    max-height:30vh;
     overflow:hidden;
   }
   #caption .cap-text{ color:#d6dbe4; }
@@ -154,9 +163,9 @@
   /* フルスクリーン時：操作バーはマウスを動かした時だけ出す（OBS録画用） */
   body.fs #controls{ opacity:0; pointer-events:none; }
   body.fs #controls.show{ opacity:1; pointer-events:auto; }
-  body.fs #caption{ padding-bottom:14px; }
+  body.fs #caption{ padding-bottom:20px; }
   @media (max-width:560px){
-    #slide{ padding:3vh 5vw 1vh; }
+    #slide{ padding:1.4vh 5vw .8vh; }
     #caption{ padding-left:5vw; padding-right:5vw; }
     #controls button{ padding:6px 10px; font-size:14px; }
     #statemsg{ display:none; }
@@ -348,10 +357,14 @@ function render() {
   var ttl = document.createElement("h1");
   ttl.className = "stitle";
   ttl.textContent = s.title;
+  var prog = document.createElement("p");
+  prog.className = "slide-progress";
+  prog.textContent = (idx + 1) + " / " + N;
   var rule = document.createElement("div");
   rule.className = "rule";
   wrap.appendChild(lab);
   wrap.appendChild(ttl);
+  wrap.appendChild(prog);
   wrap.appendChild(rule);
   if (s.sub) {
     var sub = document.createElement("p");
@@ -410,62 +423,181 @@ function scheduleFallbackAdvance(token, ms) {
   }, ms);
 }
 
+/* 読み上げ文を文単位に分割する（句読点 。！？ を文末として保持） */
+function splitSentences(text) {
+  var parts = String(text || "").match(/[^。！？]+[。！？]+|[^。！？]+$/g);
+  if (!parts) return text ? [text] : [];
+  var out = [];
+  for (var i = 0; i < parts.length; i++) {
+    var t = parts[i].replace(/^\s+|\s+$/g, "");
+    if (t) out.push(t);
+  }
+  return out.length ? out : (text ? [text] : []);
+}
+
 function speakCurrent() {
   stopSpeak();
   var s = SLIDES[idx];
   if (!autoplay && !voiceOn) return;
   if (!voiceOn || !("speechSynthesis" in window)) {
-    /* 音声が使えない／OFF のときは文字数推定で送る（自動再生のみ） */
-    if (autoplay) scheduleFallbackAdvance(speakToken, estimateMs(s.narration));
+    /* 音声が使えない／OFF のときは文字数推定で送る（自動再生のみ）＋バッファ */
+    if (autoplay) scheduleFallbackAdvance(speakToken, estimateMs(s.narration) + 500);
     return;
   }
   var token = speakToken;
   var startedAt = Date.now();
-  var done = false;
-  var u = new SpeechSynthesisUtterance(s.narration);
-  u.lang = "ja-JP";
-  var v = pickJaVoice();
-  if (v) u.voice = v;
-  u.rate = 1.0;
-  u.pitch = 1.0;
-  function finish() {
-    if (done || token !== speakToken) return;
-    done = true;
+  var sentences = splitSentences(s.narration);
+  var pos = 0;
+  var transitioned = false;
+  var allDone = false;
+  var pollTimer = null;
+  var bufferTimer = null;
+  var guard = null;
+  var startTimer = null;
+  var watchdogTimer = null;
+  var slideSafetyTimer = null;
+
+  function cleanupTimers() {
+    if (pollTimer !== null) { clearInterval(pollTimer); pollTimer = null; }
+    if (bufferTimer !== null) { clearTimeout(bufferTimer); bufferTimer = null; }
+    if (guard !== null) { clearInterval(guard); guard = null; }
+    if (startTimer !== null) { clearTimeout(startTimer); startTimer = null; }
+    if (watchdogTimer !== null) { clearTimeout(watchdogTimer); watchdogTimer = null; }
+    if (slideSafetyTimer !== null) { clearTimeout(slideSafetyTimer); slideSafetyTimer = null; }
+  }
+  function clearWatchdog() {
+    if (watchdogTimer !== null) { clearTimeout(watchdogTimer); watchdogTimer = null; }
+  }
+  function doAdvance() {
+    if (transitioned || token !== speakToken || !autoplay) return;
+    transitioned = true;
+    cleanupTimers();
     clearFallback();
-    if (!autoplay) return;
-    /* 無音のまま即終了した場合は推定時間まで待ってから送る */
-    var elapsed = Date.now() - startedAt;
-    var minWait = estimateMs(s.narration) * 0.6;
-    if (elapsed < minWait) {
-      scheduleFallbackAdvance(token, minWait - elapsed);
-    } else {
-      advance();
+    advance();
+  }
+  /* 最後の文の終了後：停止確認ポーリングは上限 約2秒、バッファ約0.5秒で進む */
+  function tryAdvanceAfterSpeech() {
+    if (transitioned || token !== speakToken || !autoplay || allDone === false) return;
+    clearFallback();
+    var pollStarted = Date.now();
+    var minWait = Math.min(estimateMs(s.narration) * 0.6, 4000);
+    pollTimer = setInterval(function () {
+      if (transitioned || token !== speakToken) { cleanupTimers(); return; }
+      if (!autoplay) { cleanupTimers(); return; }
+      var speaking = false;
+      try { speaking = !!(speechSynthesis.speaking || speechSynthesis.pending); } catch (e) { speaking = false; }
+      var elapsed = Date.now() - startedAt;
+      var pollElapsed = Date.now() - pollStarted;
+      /* 無音のまま即終了した場合は推定時間の6割（上限4秒）まで待つ */
+      var ready = !speaking && elapsed >= minWait;
+      /* ポーリング上限 約2秒：それ以上は止まらずに進む */
+      var timedOut = pollElapsed > 2000 && !speaking;
+      if (ready || timedOut || pollElapsed > 2000) {
+        if (pollTimer !== null) { clearInterval(pollTimer); pollTimer = null; }
+        bufferTimer = setTimeout(function () {
+          bufferTimer = null;
+          var still = false;
+          try { still = !!(speechSynthesis.speaking || speechSynthesis.pending); } catch (e) { still = false; }
+          /* バッファ後にまだ話している場合でも、長居はせず進む（上限ガード） */
+          if (still && (Date.now() - pollStarted) < 2600) { tryAdvanceAfterSpeech(); return; }
+          doAdvance();
+        }, 500);
+      }
+    }, 120);
+  }
+  function playNext() {
+    if (transitioned || token !== speakToken) return;
+    if (pos >= sentences.length) {
+      allDone = true;
+      if (autoplay) tryAdvanceAfterSpeech();
+      return;
+    }
+    var text = sentences[pos];
+    var sentenceDone = false;
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = "ja-JP";
+    var v = pickJaVoice();
+    if (v) u.voice = v;
+    u.rate = 1.0;
+    u.pitch = 1.0;
+    function sentenceFinish(isError) {
+      if (sentenceDone || transitioned || token !== speakToken) return;
+      sentenceDone = true;
+      clearWatchdog();
+      pos++;
+      if (pos < sentences.length) {
+        /* 文と文の間にもわずかな間隔を置き、文頭の欠けを防ぐ */
+        startTimer = setTimeout(function () {
+          startTimer = null;
+          playNext();
+        }, 90);
+      } else {
+        allDone = true;
+        if (!autoplay) return;
+        if (isError) {
+          var elapsed = Date.now() - startedAt;
+          var remain = Math.max(0, Math.round(estimateMs(s.narration) * 0.7) - elapsed);
+          remain = Math.min(remain, 2500);
+          if (remain > 0) {
+            clearFallback();
+            fallbackTimer = setTimeout(function () {
+              if (transitioned || token !== speakToken || !autoplay) return;
+              tryAdvanceAfterSpeech();
+            }, remain);
+          } else {
+            tryAdvanceAfterSpeech();
+          }
+        } else {
+          tryAdvanceAfterSpeech();
+        }
+      }
+    }
+    u.onend = function () { sentenceFinish(false); };
+    u.onerror = function () { sentenceFinish(true); };
+    /* ウォッチドッグ：推定時間に余裕を持たせた上限を過ぎても onend が来なければ打ち切って次へ */
+    var limit = Math.max(5000, Math.round(text.length * 160 * 2) + 3000);
+    watchdogTimer = setTimeout(function () {
+      watchdogTimer = null;
+      if (sentenceDone || transitioned || token !== speakToken) return;
+      try { speechSynthesis.cancel(); } catch (e) {}
+      sentenceFinish(true);
+    }, limit);
+    try {
+      speechSynthesis.speak(u);
+    } catch (e) {
+      clearWatchdog();
+      if (autoplay) scheduleFallbackAdvance(token, estimateMs(s.narration) + 500);
+      return;
     }
   }
-  u.onend = finish;
-  u.onerror = function () {
-    if (done || token !== speakToken) return;
-    if (autoplay) {
-      /* エラー時は推定時間で送る */
-      done = true;
-      scheduleFallbackAdvance(token, estimateMs(s.narration) * 0.7);
-    }
-  };
-  try {
-    speechSynthesis.speak(u);
-  } catch (e) {
-    if (autoplay) scheduleFallbackAdvance(token, estimateMs(s.narration));
-    return;
-  }
+  /* 再生中は数秒ごとに resume()（長時間発声で止まる既知のブラウザ不具合対策） */
+  guard = setInterval(function () {
+    if (transitioned || token !== speakToken) { cleanupTimers(); return; }
+    try { speechSynthesis.resume(); } catch (e) {}
+  }, 2500);
+  /* cancel() 直後は文頭が欠けることがあるため、わずかな間隔を置いてから開始 */
+  startTimer = setTimeout(function () {
+    startTimer = null;
+    if (transitioned || token !== speakToken) return;
+    playNext();
+  }, 140);
   if (autoplay) {
-    /* onend が来ない環境への安全網（推定＋余裕） */
-    scheduleFallbackAdvance(token, estimateMs(s.narration) + 6000);
-    /* Chrome系で読み上げが止まる事象への定期 resume */
-    var guard = setInterval(function () {
-      if (done || token !== speakToken) { clearInterval(guard); return; }
-      if (speechSynthesis.paused) { try { speechSynthesis.resume(); } catch (e) {} }
-      if (!speechSynthesis.speaking && !speechSynthesis.pending) clearInterval(guard);
-    }, 5000);
+    /* スライド全体の安全網：推定＋余裕を超えて止まり続けない */
+    slideSafetyTimer = setTimeout(function () {
+      slideSafetyTimer = null;
+      if (transitioned || token !== speakToken || !autoplay) return;
+      var speaking = false;
+      try { speaking = !!(speechSynthesis.speaking || speechSynthesis.pending); } catch (e) { speaking = false; }
+      if (!speaking || allDone) { doAdvance(); return; }
+      /* まだ話している場合は短く様子を見てから進む */
+      var chk = setInterval(function () {
+        if (transitioned || token !== speakToken || !autoplay) { clearInterval(chk); return; }
+        var sp = false;
+        try { sp = !!(speechSynthesis.speaking || speechSynthesis.pending); } catch (e) { sp = false; }
+        if (!sp) { clearInterval(chk); doAdvance(); }
+      }, 200);
+      setTimeout(function () { clearInterval(chk); if (!transitioned && token === speakToken && autoplay) doAdvance(); }, 3000);
+    }, Math.round(estimateMs(s.narration) * 1.6) + 6000);
   }
 }
 
@@ -507,7 +639,7 @@ btnVoice.addEventListener("click", function (e) {
   btnVoice.textContent = voiceOn ? "読み上げ ON" : "読み上げ OFF";
   if (!voiceOn) {
     stopSpeak();
-    if (autoplay) scheduleFallbackAdvance(speakToken, estimateMs(SLIDES[idx].narration));
+    if (autoplay) scheduleFallbackAdvance(speakToken, estimateMs(SLIDES[idx].narration) + 600);
   } else {
     speakCurrent();
   }
