@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<!-- build: 2026-11-26 12:30:53 JST -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<link rel="icon" href="data:," />
+<title>その「枠」は、なぜあるのか ― Googleニュース分析</title>
+<style>
+  :root{
+    --bg-top:#0d1018;
+    --bg-bot:#171c28;
+    --ink:#eef0f4;
+    --sub:#b2bac8;
+    --accent:#e8543c;
+    --gold:#f0b23c;
+    --line:#465064;
+    --panel:rgba(10,12,18,.82);
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans CJK JP","Yu Gothic UI","Yu Gothic",Meiryo,sans-serif;
+    background:linear-gradient(180deg,var(--bg-top),var(--bg-bot));
+    color:var(--ink);
+    overflow:hidden;
+    -webkit-user-select:none;
+    user-select:none;
+  }
+  /* 上部アクセントバー（進捗を兼ねる） */
+  #topbar{
+    position:fixed; top:0; left:0; height:8px; width:100%;
+    background:rgba(255,255,255,.06); z-index:30;
+  }
+  #topfill{
+    height:100%; width:0%;
+    background:var(--accent);
+    transition:width .35s ease;
+  }
+  #stage{
+    position:fixed; inset:0;
+    display:flex; flex-direction:column;
+    cursor:pointer;
+  }
+  #slide{
+    flex:1 1 auto;
+    display:flex; flex-direction:column; justify-content:center;
+    padding:4vh 6.5vw 2vh;
+    min-height:0;
+  }
+  .slide-inner{ animation:fadein .3s ease; }
+  @keyframes fadein{ from{ opacity:0; } to{ opacity:1; } }
+  @media (prefers-reduced-motion: reduce){
+    .slide-inner{ animation:none; }
+    #topfill{ transition:none; }
+  }
+  .label{
+    color:var(--gold);
+    font-weight:700;
+    font-size:clamp(15px,2.1vw,28px);
+    letter-spacing:.14em;
+    margin:0 0 1.6vh;
+  }
+  .stitle{
+    font-weight:700;
+    font-size:clamp(30px,5.6vw,76px);
+    line-height:1.25;
+    margin:0;
+    overflow-wrap:anywhere;
+  }
+  .is-title .stitle{ font-size:clamp(34px,6.2vw,92px); }
+  .rule{
+    width:170px; height:6px; background:var(--accent);
+    margin:2.6vh 0 3.2vh;
+  }
+  .is-title .rule{ width:230px; }
+  .subtitle-line{
+    color:var(--sub);
+    font-size:clamp(17px,2.5vw,34px);
+    margin:0 0 3.4vh;
+  }
+  ul.bullets{
+    list-style:none; margin:0; padding:0;
+  }
+  ul.bullets li{
+    position:relative;
+    font-size:clamp(16px,2.45vw,33px);
+    line-height:1.5;
+    padding-left:1.5em;
+    margin:0 0 2.1vh;
+    overflow-wrap:anywhere;
+  }
+  ul.bullets li::before{
+    content:"";
+    position:absolute; left:.1em; top:.52em;
+    border-left:.5em solid var(--accent);
+    border-top:.3em solid transparent;
+    border-bottom:.3em solid transparent;
+  }
+  .is-title ul.bullets li::before{
+    border-left:none; border-top:none; border-bottom:none;
+    content:"・"; color:var(--ink);
+    left:0; top:0;
+  }
+  .is-title ul.bullets li{ padding-left:1.2em; }
+  /* 字幕バー（読み上げ文） */
+  #caption{
+    flex:0 0 auto;
+    background:var(--panel);
+    border-top:1px solid var(--line);
+    padding:10px 6.5vw 12px;
+    font-size:clamp(12px,1.45vw,19px);
+    line-height:1.65;
+    color:var(--sub);
+    max-height:22vh;
+    overflow:hidden;
+  }
+  #caption .cap-text{ color:#d6dbe4; }
+  /* 操作バー */
+  #controls{
+    flex:0 0 auto;
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    padding:8px 12px calc(8px + env(safe-area-inset-bottom));
+    background:rgba(8,10,15,.9);
+    border-top:1px solid var(--line);
+    cursor:default;
+    transition:opacity .4s ease;
+  }
+  #controls button{
+    min-height:40px; min-width:44px;
+    padding:6px 14px;
+    font:inherit; font-size:15px;
+    color:var(--ink);
+    background:#232a3a;
+    border:1px solid var(--line);
+    border-radius:8px;
+    cursor:pointer;
+  }
+  #controls button:hover{ background:#2d3649; }
+  #controls button:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+  #controls button[aria-pressed="true"]{
+    background:var(--accent); border-color:var(--accent); color:#fff; font-weight:700;
+  }
+  #progress{
+    font-size:15px; color:var(--sub);
+    font-variant-numeric:tabular-nums;
+    margin:0 4px;
+    white-space:nowrap;
+  }
+  #controls .spacer{ flex:1 1 auto; }
+  #statemsg{ font-size:13px; color:var(--gold); white-space:nowrap; }
+  /* フルスクリーン時：操作バーはマウスを動かした時だけ出す（OBS録画用） */
+  body.fs #controls{ opacity:0; pointer-events:none; }
+  body.fs #controls.show{ opacity:1; pointer-events:auto; }
+  body.fs #caption{ padding-bottom:14px; }
+  @media (max-width:560px){
+    #slide{ padding:3vh 5vw 1vh; }
+    #caption{ padding-left:5vw; padding-right:5vw; }
+    #controls button{ padding:6px 10px; font-size:14px; }
+    #statemsg{ display:none; }
+  }
+</style>
+</head>
+<body>
+<div id="topbar"><div id="topfill"></div></div>
+
+<div id="stage">
+  <div id="slide" aria-live="off"></div>
+  <div id="caption"><span class="cap-text" id="capText"></span></div>
+  <div id="controls">
+    <button id="btnPrev" type="button" aria-label="前のスライド">◀ 前へ</button>
+    <button id="btnNext" type="button" aria-label="次のスライド">次へ ▶</button>
+    <span id="progress">1 / 13</span>
+    <span class="spacer"></span>
+    <span id="statemsg"></span>
+    <button id="btnVoice" type="button" aria-pressed="true">読み上げ ON</button>
+    <button id="btnAuto" type="button" aria-pressed="false">▶ 自動再生</button>
+    <button id="btnFs" type="button">全画面</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* スライド文言・読み上げ文は googlenews-waku-slides/slides_data.json のデータをそのまま使用 */
+var SLIDES = [
+  {
+    "bullets": [
+      "グーグルニュースに毎日並ぶ「人事」と「契約」の枠",
+      "興味ゼロなのに消えない、あの違和感の正体を探る",
+      "後半：枠ごと仕分ける、自分のフィルタの設計"
+    ],
+    "label": "分析編",
+    "narration": "その枠は、なぜあるのか。グーグルニュースを開くと、毎日かならず並んでいる枠があります。どの会社の、誰が社長に就任した、退任した、という人事の枠。どの選手が契約を更改した、自由契約になった、というスポーツの枠。興味がゼロなのに、消える気配がありません。前半では、この違和感の正体を、グーグルニュースの仕組みから分析します。後半では、枠ごと仕分ける自分のフィルタの設計を検討します。",
+    "title": "その「枠」は、なぜあるのか"
+  },
+  {
+    "bullets": [
+      "人事枠 ― どの会社の、誰が社長に就任・退任したか",
+      "契約枠 ― どの選手が契約更改・自由契約・移籍したか",
+      "多くの人が「知らねーよ」と思うのに、トップ画面に居座り続ける"
+    ],
+    "label": "現象",
+    "narration": "まず現象です。人事の枠には、どの会社の、誰が社長に就任した、退任した、という記事が並びます。契約の枠には、どの選手が契約を更改した、自由契約になった、移籍した、という記事が並びます。正直、多くの人が、知らねーよ、と突っ込みたくなる内容です。それなのに、この枠はトップ画面に居座り続けます。興味がないと伝えても、枠そのものは消えません。",
+    "title": "興味ゼロの枠が、毎日並ぶ"
+  },
+  {
+    "bullets": [
+      "ユーチューブ ＝ あなたが見るものを予測して並べる装置",
+      "グーグルニュース ＝ 世の中の出来事を棚卸しして並べる装置",
+      "公式にも「トップニュースは全員共通」 ― 個人化されない部分が最初からある"
+    ],
+    "label": "ユーチューブとの違い",
+    "narration": "ユーチューブとの違いから見ます。ユーチューブは、あなたが次に見るものを予測して並べる装置でした。対してグーグルニュースは、世の中で起きた出来事を棚卸しして並べる装置です。グーグル自身、トップニュースは全員に共通のものだと説明しています。つまり、個人化されない部分が、最初から設計に入っています。枠があなたに合わせて消えないのは、この時点で半分決まっているのです。",
+    "title": "おすすめではなく「棚卸し」"
+  },
+  {
+    "bullets": [
+      "人事欄は新聞の伝統的な記録欄 ― 当事者と関係者のためのもの",
+      "「人事を新聞に載せるために上場した」という経営者の言葉まである",
+      "読者の大多数が読まなくても、載ることに意味がある欄だった"
+    ],
+    "label": "枠の正体 1",
+    "narration": "枠の正体の一つ目は、新聞の人事欄の継承です。人事欄は、新聞に昔からある記録欄で、当事者と関係者のためのものでした。会社の社会的な認知の証しとされ、人事を新聞に載せるために上場した、という経営者の言葉まであるほどです。読者の大多数が読まなくても、載ることに意味がある欄でした。グーグルニュースのトピック分類は、この欄の構造をそのまま取り込んでいます。",
+    "title": "新聞の「人事欄」の継承"
+  },
+  {
+    "bullets": [
+      "人事は会社が「発表したい」情報 ― 適時開示とプレスリリースで定期的に供給される",
+      "スポーツの契約も、球団やリーグの発表が起点",
+      "枠は読み手の需要ではなく、発表側の都合と量で満ちていく"
+    ],
+    "label": "枠の正体 2",
+    "narration": "正体の二つ目は、送り手の供給です。人事は、会社が発表したい情報です。上場企業には開示の義務があり、人事は適時開示やプレスリリースの形で、定期的に大量に供給されます。スポーツの契約情報も、球団やリーグの発表が起点です。つまり枠は、読み手が読みたいから満ちるのではありません。発表したい側の都合と、その量によって満ちていくのです。",
+    "title": "送り手の供給で満ちる枠"
+  },
+  {
+    "bullets": [
+      "グーグルの公表する順位付けの要素：関連性・報道量・権威性・新しさ・地域・関心",
+      "人事も契約も、発表が多く各社が報じるため「報道量」が稼げてしまう",
+      "あなたの「関心」は要素の一つにすぎず、枠は共通の棚に残る"
+    ],
+    "label": "枠の正体 3",
+    "narration": "正体の三つ目は、大事さの測り方です。グーグルが公表している順位付けの要素は、関連性、報道量、権威性、新しさ、地域、そして関心です。人事も契約も、発表の数が多く、どの報道機関も同じように報じるため、報道量の点では稼げてしまいます。あなたの関心は、要素の一つにすぎません。報道量で大事と判定された枠は、共通の棚に残り続けます。",
+    "title": "「大事さ」は報道量で測られる"
+  },
+  {
+    "bullets": [
+      "個人化が効くのは、主に「おすすめ」の面と、枠の中の並び順",
+      "「このトピックを減らす」も、ユーチューブの「興味なし」と同じ弱いシグナル",
+      "枠そのものを消す決定権は、利用者には渡されていない"
+    ],
+    "label": "構造",
+    "narration": "では、なぜ設定で消せないのでしょうか。個人化が効くのは、主におすすめの面と、枠の中での並び順です。このトピックの記事を減らす、という操作もありますが、それはユーチューブの興味なしと同じ、弱いシグナルの一つにすぎません。枠そのものを消す決定権は、利用者には渡されていないのです。だから、枠の中で薄めることはできても、枠を無くすことはできません。",
+    "title": "個人化は「枠の中」だけ"
+  },
+  {
+    "bullets": [
+      "町内会の回覧板の「お知らせ」は、読みたい人ではなく「知らせたい側」のためにある",
+      "人事の挨拶ハガキも全戸配布の形式 ― あなた宛ではない",
+      "違和感の正体 ＝ 個人向けのはずの画面に、個人と無関係な共通枠が混ざること"
+    ],
+    "label": "現実世界のたとえ",
+    "narration": "現実世界でたとえると、町内会の回覧板のお知らせに近いものです。あれは、読みたい人のためにあるのではなく、知らせたい側のためにある欄です。人事の挨拶ハガキも、全戸に配られる形式のもので、あなた宛てではありません。違和感の正体はここにあります。個人に合わせてあるはずの画面の中に、個人とは無関係な共通の枠が混ざっている。その混ざり方が、気持ち悪さとして感じられるのです。",
+    "title": "回覧板の「お知らせ」枠"
+  },
+  {
+    "bullets": [
+      "枠は、業界の棚の構造と、発表側の都合が作った共通部品",
+      "消えないのは故障ではなく、その設計の通りの動き",
+      "対処は「向こうの設定」ではなく「自分の窓の仕分け」で行う"
+    ],
+    "label": "分析のまとめ",
+    "narration": "分析のまとめです。その枠は、あなた宛てのものではありません。新聞以来の棚の構造と、発表したい側の都合が作った、共通の部品です。消えないのは故障ではなく、その設計の通りの動きです。だとすれば、対処の場所は向こうの設定画面にはありません。自分の窓で、自分のルールで仕分ける。後半は、その実装の話です。",
+    "title": "その枠は「あなた宛」ではない"
+  },
+  {
+    "bullets": [
+      "人事パターン：就任・退任・人事・執行役員・代表取締役 などの語と会社名の組み合わせ",
+      "契約パターン：契約更改・自由契約・戦力外・移籍・契約満了",
+      "枠にマッチしたら深さ0 ― 1件ごとに「興味なし」を押す作業から解放される"
+    ],
+    "label": "実装 1",
+    "narration": "消し方の一つ目は、枠で判定することです。一件ずつではなく、パターンで見ます。人事パターンは、就任、退任、人事、執行役員、代表取締役といった語と、会社名の組み合わせ。契約パターンは、契約更改、自由契約、戦力外、移籍、契約満了といった語です。枠にマッチしたら深さゼロ。これで、一件ごとに興味なしを押し続ける作業から解放されます。判定の単位が、記事から枠に上がるのがポイントです。",
+    "title": "1件ずつではなく「枠」で判定"
+  },
+  {
+    "bullets": [
+      "ポストの仕分けと同じ ― 人事の束は、丸ごと箱へ運ぶ",
+      "ゴミ箱リストでは「枠ごとの件数」を表示する（今日、人事枠が何件来て、何件仕分けたか）",
+      "枠の存在と量が見えること自体が、押し込まれ具合の可視化になる"
+    ],
+    "label": "実装 2",
+    "narration": "消し方の二つ目は、束で仕分けることです。ポストの仕分けロボットと同じで、人事の束は丸ごと箱へ運びます。そして、ゴミ箱リストでは、枠ごとの件数を見えるようにします。今日、人事の枠が何件来て、何件を仕分けたか。枠の存在と量が見えること自体が、どれだけ押し込まれているかの可視化になります。消して終わりではなく、測れる形で消すのです。",
+    "title": "仕分けロボットは「束」で運ぶ"
+  },
+  {
+    "bullets": [
+      "全部消すのが原則でも、贔屓チームの契約情報だけは深さ1で残せる",
+      "優先順位：例外（人・組織）＞ お断り（枠）＞ パターンスコア",
+      "枠のお断りも突破ログの対象 ― すり抜けたら言い回しを足して育てる"
+    ],
+    "label": "実装 3",
+    "narration": "消し方の三つ目は、例外の扱いです。枠ごと消すのが原則でも、贔屓のチームの契約情報だけは、見出しだけの深さ一で残す、といったことができます。優先順位は、例外、お断り、パターンスコアの順です。そして、枠のお断りも突破ログの対象にします。新しい言い回しですり抜けてきたら、その言い回しをパターンに足す。こうして枠のルールも育っていきます。",
+    "title": "例外は「贔屓」で残す"
+  },
+  {
+    "bullets": [
+      "グーグルニュースの枠は、送り手と業界の都合でできている",
+      "その枠を消す鍵は、向こうの画面の中にはない",
+      "自分の窓で枠ごと仕分けたとき、画面は初めて「自分宛」になる"
+    ],
+    "label": "まとめ",
+    "narration": "まとめです。グーグルニュースのあの枠は、送り手と業界の都合でできています。その枠を消す鍵は、向こうの画面の中にはありません。ポストに仕分けロボットを置くように、自分の窓で枠ごと仕分ける。そのとき初めて、画面は自分宛てのものになります。知らねーよ、で終わらせず、仕分けのルールに変える。それが、この違和感への答えです。",
+    "title": "棚は、自分のものにする"
+  }
+];
+var N = SLIDES.length;
+
+var idx = 0;
+var voiceOn = true;
+var autoplay = false;
+var speakToken = 0;
+var fallbackTimer = null;
+var hideTimer = null;
+
+var slideEl = document.getElementById("slide");
+var capText = document.getElementById("capText");
+var progressEl = document.getElementById("progress");
+var topfill = document.getElementById("topfill");
+var btnPrev = document.getElementById("btnPrev");
+var btnNext = document.getElementById("btnNext");
+var btnVoice = document.getElementById("btnVoice");
+var btnAuto = document.getElementById("btnAuto");
+var btnFs = document.getElementById("btnFs");
+var controlsEl = document.getElementById("controls");
+var statemsg = document.getElementById("statemsg");
+
+function render() {
+  var s = SLIDES[idx];
+  slideEl.innerHTML = "";
+  var wrap = document.createElement("div");
+  wrap.className = "slide-inner" + (idx === 0 ? " is-title" : "");
+  var lab = document.createElement("p");
+  lab.className = "label";
+  lab.textContent = s.label;
+  var ttl = document.createElement("h1");
+  ttl.className = "stitle";
+  ttl.textContent = s.title;
+  var rule = document.createElement("div");
+  rule.className = "rule";
+  wrap.appendChild(lab);
+  wrap.appendChild(ttl);
+  wrap.appendChild(rule);
+  if (s.sub) {
+    var sub = document.createElement("p");
+    sub.className = "subtitle-line";
+    sub.textContent = s.sub;
+    wrap.appendChild(sub);
+  }
+  var ul = document.createElement("ul");
+  ul.className = "bullets";
+  for (var i = 0; i < s.bullets.length; i++) {
+    var li = document.createElement("li");
+    li.textContent = s.bullets[i];
+    ul.appendChild(li);
+  }
+  wrap.appendChild(ul);
+  slideEl.appendChild(wrap);
+  capText.textContent = s.narration;
+  progressEl.textContent = (idx + 1) + " / " + N;
+  topfill.style.width = ((idx + 1) / N * 100) + "%";
+  document.title = s.title + " ― その「枠」は、なぜあるのか";
+}
+
+function clearFallback() {
+  if (fallbackTimer !== null) { clearTimeout(fallbackTimer); fallbackTimer = null; }
+}
+
+function stopSpeak() {
+  speakToken++;
+  clearFallback();
+  if ("speechSynthesis" in window) {
+    try { speechSynthesis.cancel(); } catch (e) {}
+  }
+}
+
+/* 読み上げ時間の推定（日本語 約6.3文字/秒 + 間） */
+function estimateMs(text) {
+  return Math.round(text.length * 160) + 1500;
+}
+
+function pickJaVoice() {
+  if (!("speechSynthesis" in window)) return null;
+  var vs = speechSynthesis.getVoices();
+  for (var i = 0; i < vs.length; i++) {
+    if (vs[i].lang && vs[i].lang.toLowerCase().indexOf("ja") === 0) return vs[i];
+  }
+  return null;
+}
+if ("speechSynthesis" in window && speechSynthesis.onvoiceschanged !== undefined) {
+  speechSynthesis.onvoiceschanged = function () {};
+}
+
+function scheduleFallbackAdvance(token, ms) {
+  clearFallback();
+  fallbackTimer = setTimeout(function () {
+    if (token === speakToken && autoplay) advance();
+  }, ms);
+}
+
+function speakCurrent() {
+  stopSpeak();
+  var s = SLIDES[idx];
+  if (!autoplay && !voiceOn) return;
+  if (!voiceOn || !("speechSynthesis" in window)) {
+    /* 音声が使えない／OFF のときは文字数推定で送る（自動再生のみ） */
+    if (autoplay) scheduleFallbackAdvance(speakToken, estimateMs(s.narration));
+    return;
+  }
+  var token = speakToken;
+  var startedAt = Date.now();
+  var done = false;
+  var u = new SpeechSynthesisUtterance(s.narration);
+  u.lang = "ja-JP";
+  var v = pickJaVoice();
+  if (v) u.voice = v;
+  u.rate = 1.0;
+  u.pitch = 1.0;
+  function finish() {
+    if (done || token !== speakToken) return;
+    done = true;
+    clearFallback();
+    if (!autoplay) return;
+    /* 無音のまま即終了した場合は推定時間まで待ってから送る */
+    var elapsed = Date.now() - startedAt;
+    var minWait = estimateMs(s.narration) * 0.6;
+    if (elapsed < minWait) {
+      scheduleFallbackAdvance(token, minWait - elapsed);
+    } else {
+      advance();
+    }
+  }
+  u.onend = finish;
+  u.onerror = function () {
+    if (done || token !== speakToken) return;
+    if (autoplay) {
+      /* エラー時は推定時間で送る */
+      done = true;
+      scheduleFallbackAdvance(token, estimateMs(s.narration) * 0.7);
+    }
+  };
+  try {
+    speechSynthesis.speak(u);
+  } catch (e) {
+    if (autoplay) scheduleFallbackAdvance(token, estimateMs(s.narration));
+    return;
+  }
+  if (autoplay) {
+    /* onend が来ない環境への安全網（推定＋余裕） */
+    scheduleFallbackAdvance(token, estimateMs(s.narration) + 6000);
+    /* Chrome系で読み上げが止まる事象への定期 resume */
+    var guard = setInterval(function () {
+      if (done || token !== speakToken) { clearInterval(guard); return; }
+      if (speechSynthesis.paused) { try { speechSynthesis.resume(); } catch (e) {} }
+      if (!speechSynthesis.speaking && !speechSynthesis.pending) clearInterval(guard);
+    }, 5000);
+  }
+}
+
+function go(n) {
+  idx = Math.max(0, Math.min(N - 1, n));
+  render();
+  speakCurrent();
+}
+
+function advance() {
+  if (idx >= N - 1) {
+    setAutoplay(false);
+    statemsg.textContent = "最終スライドです";
+    return;
+  }
+  go(idx + 1);
+}
+
+function setAutoplay(on) {
+  autoplay = on;
+  btnAuto.setAttribute("aria-pressed", on ? "true" : "false");
+  btnAuto.textContent = on ? "⏸ 自動再生中" : "▶ 自動再生";
+  statemsg.textContent = on ? "読み上げに連動して進みます" : "";
+  if (on) {
+    if (idx >= N - 1) idx = 0;
+    render();
+    speakCurrent();
+  } else {
+    stopSpeak();
+  }
+}
+
+btnPrev.addEventListener("click", function (e) { e.stopPropagation(); go(idx - 1); });
+btnNext.addEventListener("click", function (e) { e.stopPropagation(); go(idx + 1); });
+btnVoice.addEventListener("click", function (e) {
+  e.stopPropagation();
+  voiceOn = !voiceOn;
+  btnVoice.setAttribute("aria-pressed", voiceOn ? "true" : "false");
+  btnVoice.textContent = voiceOn ? "読み上げ ON" : "読み上げ OFF";
+  if (!voiceOn) {
+    stopSpeak();
+    if (autoplay) scheduleFallbackAdvance(speakToken, estimateMs(SLIDES[idx].narration));
+  } else {
+    speakCurrent();
+  }
+});
+btnAuto.addEventListener("click", function (e) { e.stopPropagation(); setAutoplay(!autoplay); });
+btnFs.addEventListener("click", function (e) {
+  e.stopPropagation();
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+  } else if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen();
+  }
+});
+
+document.getElementById("stage").addEventListener("click", function (e) {
+  if (e.target.closest("#controls")) return;
+  go(idx + 1);
+});
+
+document.addEventListener("keydown", function (e) {
+  var tag = (document.activeElement && document.activeElement.tagName) || "";
+  if (e.key === " " && tag === "BUTTON") return; /* ボタン上のスペースはボタンの動作に任せる */
+  if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
+    e.preventDefault(); go(idx + 1);
+  } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+    e.preventDefault(); go(idx - 1);
+  } else if (e.key === "Home") {
+    e.preventDefault(); go(0);
+  } else if (e.key === "End") {
+    e.preventDefault(); go(N - 1);
+  }
+});
+
+/* フルスクリーン時、操作バーはしばらくで隠す */
+function pokeControls() {
+  if (!document.fullscreenElement) return;
+  controlsEl.classList.add("show");
+  if (hideTimer) clearTimeout(hideTimer);
+  hideTimer = setTimeout(function () { controlsEl.classList.remove("show"); }, 2600);
+}
+document.addEventListener("fullscreenchange", function () {
+  document.body.classList.toggle("fs", !!document.fullscreenElement);
+  pokeControls();
+});
+document.addEventListener("mousemove", pokeControls);
+
+render();
+</script>
+</body>
+</html>
