@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<!-- build: 2026-11-26 12:00:35 JST -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<link rel="icon" href="data:," />
+<title>煽りパターン図鑑 スライド版</title>
+<style>
+  :root{
+    --bg-top:#0d1018;
+    --bg-bot:#171c28;
+    --ink:#eef0f4;
+    --sub:#b2bac8;
+    --accent:#e8543c;
+    --gold:#f0b23c;
+    --line:#465064;
+    --panel:rgba(10,12,18,.82);
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans CJK JP","Yu Gothic UI","Yu Gothic",Meiryo,sans-serif;
+    background:linear-gradient(180deg,var(--bg-top),var(--bg-bot));
+    color:var(--ink);
+    overflow:hidden;
+    -webkit-user-select:none;
+    user-select:none;
+  }
+  /* 上部アクセントバー（進捗を兼ねる） */
+  #topbar{
+    position:fixed; top:0; left:0; height:8px; width:100%;
+    background:rgba(255,255,255,.06); z-index:30;
+  }
+  #topfill{
+    height:100%; width:0%;
+    background:var(--accent);
+    transition:width .35s ease;
+  }
+  #stage{
+    position:fixed; inset:0;
+    display:flex; flex-direction:column;
+    cursor:pointer;
+  }
+  #slide{
+    flex:1 1 auto;
+    display:flex; flex-direction:column; justify-content:center;
+    padding:4vh 6.5vw 2vh;
+    min-height:0;
+  }
+  .slide-inner{ animation:fadein .3s ease; }
+  @keyframes fadein{ from{ opacity:0; } to{ opacity:1; } }
+  @media (prefers-reduced-motion: reduce){
+    .slide-inner{ animation:none; }
+    #topfill{ transition:none; }
+  }
+  .label{
+    color:var(--gold);
+    font-weight:700;
+    font-size:clamp(15px,2.1vw,28px);
+    letter-spacing:.14em;
+    margin:0 0 1.6vh;
+  }
+  .stitle{
+    font-weight:700;
+    font-size:clamp(30px,5.6vw,76px);
+    line-height:1.25;
+    margin:0;
+    overflow-wrap:anywhere;
+  }
+  .is-title .stitle{ font-size:clamp(34px,6.2vw,92px); }
+  .rule{
+    width:170px; height:6px; background:var(--accent);
+    margin:2.6vh 0 3.2vh;
+  }
+  .is-title .rule{ width:230px; }
+  .subtitle-line{
+    color:var(--sub);
+    font-size:clamp(17px,2.5vw,34px);
+    margin:0 0 3.4vh;
+  }
+  ul.bullets{
+    list-style:none; margin:0; padding:0;
+  }
+  ul.bullets li{
+    position:relative;
+    font-size:clamp(16px,2.45vw,33px);
+    line-height:1.5;
+    padding-left:1.5em;
+    margin:0 0 2.1vh;
+    overflow-wrap:anywhere;
+  }
+  ul.bullets li::before{
+    content:"";
+    position:absolute; left:.1em; top:.52em;
+    border-left:.5em solid var(--accent);
+    border-top:.3em solid transparent;
+    border-bottom:.3em solid transparent;
+  }
+  .is-title ul.bullets li::before{
+    border-left:none; border-top:none; border-bottom:none;
+    content:"・"; color:var(--ink);
+    left:0; top:0;
+  }
+  .is-title ul.bullets li{ padding-left:1.2em; }
+  /* 字幕バー（読み上げ文） */
+  #caption{
+    flex:0 0 auto;
+    background:var(--panel);
+    border-top:1px solid var(--line);
+    padding:10px 6.5vw 12px;
+    font-size:clamp(12px,1.45vw,19px);
+    line-height:1.65;
+    color:var(--sub);
+    max-height:22vh;
+    overflow:hidden;
+  }
+  #caption .cap-text{ color:#d6dbe4; }
+  /* 操作バー */
+  #controls{
+    flex:0 0 auto;
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    padding:8px 12px calc(8px + env(safe-area-inset-bottom));
+    background:rgba(8,10,15,.9);
+    border-top:1px solid var(--line);
+    cursor:default;
+    transition:opacity .4s ease;
+  }
+  #controls button{
+    min-height:40px; min-width:44px;
+    padding:6px 14px;
+    font:inherit; font-size:15px;
+    color:var(--ink);
+    background:#232a3a;
+    border:1px solid var(--line);
+    border-radius:8px;
+    cursor:pointer;
+  }
+  #controls button:hover{ background:#2d3649; }
+  #controls button:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+  #controls button[aria-pressed="true"]{
+    background:var(--accent); border-color:var(--accent); color:#fff; font-weight:700;
+  }
+  #progress{
+    font-size:15px; color:var(--sub);
+    font-variant-numeric:tabular-nums;
+    margin:0 4px;
+    white-space:nowrap;
+  }
+  #controls .spacer{ flex:1 1 auto; }
+  #statemsg{ font-size:13px; color:var(--gold); white-space:nowrap; }
+  /* フルスクリーン時：操作バーはマウスを動かした時だけ出す（OBS録画用） */
+  body.fs #controls{ opacity:0; pointer-events:none; }
+  body.fs #controls.show{ opacity:1; pointer-events:auto; }
+  body.fs #caption{ padding-bottom:14px; }
+  @media (max-width:560px){
+    #slide{ padding:3vh 5vw 1vh; }
+    #caption{ padding-left:5vw; padding-right:5vw; }
+    #controls button{ padding:6px 10px; font-size:14px; }
+    #statemsg{ display:none; }
+  }
+</style>
+</head>
+<body>
+<div id="topbar"><div id="topfill"></div></div>
+
+<div id="stage">
+  <div id="slide" aria-live="off"></div>
+  <div id="caption"><span class="cap-text" id="capText"></span></div>
+  <div id="controls">
+    <button id="btnPrev" type="button" aria-label="前のスライド">◀ 前へ</button>
+    <button id="btnNext" type="button" aria-label="次のスライド">次へ ▶</button>
+    <span id="progress">1 / 13</span>
+    <span class="spacer"></span>
+    <span id="statemsg"></span>
+    <button id="btnVoice" type="button" aria-pressed="true">読み上げ ON</button>
+    <button id="btnAuto" type="button" aria-pressed="false">▶ 自動再生</button>
+    <button id="btnFs" type="button">全画面</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* スライド文言・読み上げ文は slides_data.py / build_patterns_only.py の検証済みデータをそのまま使用 */
+var SLIDES = [
+  {
+    label: "パターン編",
+    title: "YouTube煽りパターン図鑑",
+    sub: "タイトルとサムネの「型」を可視化する",
+    bullets: [
+      "おすすめ欄のタイトルとサムネには、使い回される「型」がある",
+      "対象は個人ではなく、繰り返されるパターンそのもの",
+      "型を知り、シグナルに変え、スコアで判定する"
+    ],
+    narration: "ユーチューブ煽りパターン図鑑、パターン編です。おすすめ欄に並ぶタイトルとサムネイルには、驚くほど使い回される型があります。この動画では十二のパターンだけに絞って、要点を紹介します。対象は個人ではなく、繰り返される型そのものです。型として見抜ければ、フィルタのルールにも変換できます。"
+  },
+  {
+    label: "パターン P1",
+    title: "情報商材・LINE誘導型",
+    bullets: [
+      "動画は商品ではなく「入口」。本体は動画の外にある",
+      "どん底 → 師匠との出会い → 成功 → LINE登録 → 高額教材",
+      "「無料・限定・特典」は釣り餌の語彙",
+      "検出：LINE誘導の語と概要欄への誘導（最も重いシグナル）"
+    ],
+    narration: "ピー一、情報商材・ライン誘導型です。動画そのものは商品ではなく入口で、本体は動画の外にあります。どん底の過去、師匠との出会い、成功、そしてライン登録へ進み、無料特典の先に高額教材が待つ、というテンプレートです。無料、限定、特典は釣り餌の語彙であり、ラインへの誘導は、この図鑑で最も重い検出シグナルとして扱います。"
+  },
+  {
+    label: "パターン P2",
+    title: "金額誇大・マウント型",
+    bullets: [
+      "「年収1億」「月収100万円」― 物量で検証する気を削ぐ",
+      "具体的な数字＋短い期間で「再現できそうな錯覚」を作る",
+      "サムネは札束・高級車・収益画面のスクリーンショット風",
+      "検出：金額と期間の正規表現"
+    ],
+    narration: "ピー二、金額誇大・マウント型です。年収一億、月収百万円といった数字と実績の物量で、視聴者が検証する気を削ぐ型です。具体的な数字に、たった三ヶ月、といった短い期間を組み合わせると、再現できそうな錯覚が強まります。サムネイルは札束や高級車、収益画面が定番で、検出には金額と期間の正規表現が有効です。数字の大きさそのものが、コンテンツになっています。"
+  },
+  {
+    label: "パターン P3",
+    title: "恐怖・不安煽り型",
+    bullets: [
+      "「知らないと損」「やらないと終わる」で損失回避を突く",
+      "人は得をする話より、損をする話に強く反応する",
+      "正当な注意喚起もあるため、語だけで即断しない",
+      "検出：「ヤバい」「危険」「終了」「暴露」などを複合で見る"
+    ],
+    narration: "ピー三、恐怖・不安煽り型です。人は得をする話より、損をする話に強く反応します。知らないと損、やらないと終わる、という言い回しは、その損失回避の性質を直接押すものです。ただし、中身が正当な注意喚起である場合もあるため、言葉だけで即断せず、他のシグナルと複合で見る型として扱います。サムネイルは真っ赤な背景と深刻な表情、二文字から四文字の断定語が定番です。"
+  },
+  {
+    label: "パターン P4",
+    title: "権威・肩書き演出型",
+    bullets: [
+      "「元○○」「東大卒の医師」「社長」で検証を飛ばさせる",
+      "肩書きが本物か、中身が見合うかはクリック時点では不明",
+      "チャンネル名自体に肩書きが入っているケースも多い",
+      "検出：肩書き語（タイトルだけでなくチャンネル名も対象）"
+    ],
+    narration: "ピー四、権威・肩書き演出型です。元大手企業の社長、東大卒の医師といった肩書きは、それだけで発言の信頼度を底上げし、中身の検証を飛ばさせます。肩書きが本物かどうかは、クリックした時点では分かりません。チャンネル名自体に肩書きが入っているケースも多く、検出の対象はタイトルだけでなくチャンネル名も含みます。"
+  },
+  {
+    label: "パターン P5",
+    title: "切り抜き・対立煽り型",
+    bullets: [
+      "他人の揉め事の「山場」だけを切り取り、文脈を捨てる",
+      "自分が傷つかずに強い感情を味わえる構造",
+      "サムネは対向する2つの顔と赤い「VS」",
+      "検出：「放送事故」「修羅場」「論破」＋顔2つ以上の配置"
+    ],
+    narration: "ピー五、切り抜き・対立煽り型です。他人の揉め事は、自分が傷つかずに強い感情を味わえるため、商品になります。生配信や番組の事故や修羅場の瞬間だけを切り取り、前後の文脈を捨てて、感情の山場だけを配る型です。サムネイルは、左右に対向する二つの顔と、赤いブイエスの演出が定番です。切り抜き元の当事者が望んだ形とは限らない点も、この型の特徴です。"
+  },
+  {
+    label: "パターン P6",
+    title: "変顔・デカ文字の視覚型",
+    bullets: [
+      "内容ではなく「見た目」の型。全ジャンルに被さる横断パターン",
+      "顔面積は画面の3〜6割、誇張した表情、赤・黄の極太文字",
+      "サムネ内テキストは15文字以内の短い断定",
+      "検出：顔面積比（0.3以上で加点）とOCRの文字"
+    ],
+    narration: "ピー六、変顔・デカ文字の視覚型です。これは内容の型ではなく見た目の型で、真面目なテーマの動画にすら被さってくる横断パターンです。画面の三割から六割を占める大きな顔、誇張した表情、赤や黄色の極太文字、十五文字以内の短い断定。検出の核は、顔の面積比と、サムネイル内の文字を読み取るオーシーアールです。隣の動画より目立つための軍拡競争の結果でもあります。"
+  },
+  {
+    label: "パターン P7",
+    title: "バズ・若者文化型",
+    bullets: [
+      "「今これが来ている」という空気そのものが釣り餌になる",
+      "乗り遅れ不安と「分かる人には分かる」所属感を刺激する",
+      "流行語は寿命が短く、語彙リストの更新が前提",
+      "検出：「界隈」「神回」「しか勝たん」等（単独では弱い）"
+    ],
+    narration: "ピー七、バズ・若者文化型です。今これが来ている、という空気そのものでクリックさせる型で、流行への乗り遅れ不安と、分かる人には分かるという所属感の両方を刺激します。流行語は言葉の寿命が短いため、ゴミ箱ログの集計から新しい語を拾い、リストを更新し続ける運用が前提になります。単独では弱いシグナルです。若者文化そのものが悪いわけではなく、他の型との複合で見ることが大切です。"
+  },
+  {
+    label: "パターン P8",
+    title: "「クソ」接頭辞型",
+    bullets: [
+      "良いことにも悪いことにも、何にでも「クソ」が付く",
+      "強調の接頭辞の席を「超」から「クソ」が奪った",
+      "一語で温度を最大化でき、感情の解像度が下がる",
+      "「クソゲー」は愛着の表現 ― 単独では加点しない"
+    ],
+    narration: "ピー八、クソ接頭辞型です。今のタイトルでは、良いことにも悪いことにも、何にでもクソが付きます。かつて強調の接頭辞だった超の席を、クソが奪ったのが現代の姿だ、というのがこの型の見立てです。一語で温度を最大まで上げられる反面、程度の違いを表す語彙は貧しくなります。なお、クソゲーは愛着の表現でもあるため、単独では加点しません。"
+  },
+  {
+    label: "パターン P9",
+    title: "略しすぎ型（サ終族）",
+    bullets: [
+      "「サポート終了」→「サ終」。何でも略してタイパのつもり",
+      "省いた手間は、読み手の解読コストに転嫁される",
+      "略語は身内であることの合図。外に届けた瞬間に効率は崩れる",
+      "問題は、初見の人に届ける場で解読を前提にすること"
+    ],
+    narration: "ピー九、略しすぎ型です。サポート終了をサ終と言うように、何でも略してタイムパフォーマンスを稼いだつもりになる型です。しかし、省いた手間の分だけ、読み手には解読の手間が移ります。略語は身内の合図としては機能しても、外の人に届けた瞬間に効率は崩れます。問題は略語そのものではなく、初見の場で解読を前提にすることです。"
+  },
+  {
+    label: "パターン P10",
+    title: "台本対話・生徒役型",
+    bullets: [
+      "無知な聞き手役を置き、「先生」役の自分を際立たせる形式",
+      "聞き手は視聴者の代理。驚きが社会的証明の代わりになる",
+      "質問が仕込みなので、都合の悪い疑問は構造的に出てこない",
+      "実質は台本のある一人芝居を、二人で演じている"
+    ],
+    narration: "ピー十、台本対話・生徒役型です。隣に無知な聞き手役を置き、驚かせ続けることで、語り手の自分を知識豊富な先生として際立たせる講座形式です。聞き手は視聴者の代理として機能し、その驚きが社会的証明の代わりになります。質問が仕込みである以上、都合の悪い疑問や反論は構造的に出てきません。実質は、一人芝居を二人で演じている形です。"
+  },
+  {
+    label: "パターン P11",
+    title: "身内ノリ発信・厚顔無恥型",
+    bullets: [
+      "○○先生・○○くん・○○ちゃん ― 身内の呼び名が看板になる",
+      "内輪では親しさの合図でも、公共の場では自己演出として働く",
+      "先生＝権威の看板、くん／ちゃん＝キャラクターの看板",
+      "観察の対象は「ノリ」より「内と外の境界のなさ」"
+    ],
+    narration: "ピー十一、身内ノリ発信型です。先生、くん、ちゃんといった身内の呼び名を、そのまま全世界へ向けて発信してしまう型です。身内の呼び名は本来、関係性の合図ですが、公共の場では看板として働きます。先生は権威の看板、くんやちゃんはキャラクターの看板です。観察の対象はノリそのものより、内と外の境界のなさの方にあります。"
+  },
+  {
+    label: "パターン P12",
+    title: "丁寧なのにヤバいが滲む型",
+    bullets: [
+      "言葉遣いは丁寧でも、中身の極端さが端々から滲み出る",
+      "汚い言葉を使わないため、キーワードフィルタが効かない",
+      "穏やかな断言、敬語の形をしたマウント、心配の形をした支配",
+      "検出は意味でしかできない ― LLM／VLMの担当"
+    ],
+    narration: "ピー十二、丁寧なのにヤバいが滲む型です。話し方は丁寧で穏やかなのに、中身の極端さが端々から湧き出てくる型です。汚い言葉も煽り単語も使わないため、キーワードフィルタは素通りし、丁寧さがかえって警戒を下げます。この型は表面では判定できず、意味でしか捉えられないため、検出はエルエルエムやブイエルエムの担当とはっきり分けます。"
+  }
+];
+var N = SLIDES.length;
+
+var idx = 0;
+var voiceOn = true;
+var autoplay = false;
+var speakToken = 0;
+var fallbackTimer = null;
+var hideTimer = null;
+
+var slideEl = document.getElementById("slide");
+var capText = document.getElementById("capText");
+var progressEl = document.getElementById("progress");
+var topfill = document.getElementById("topfill");
+var btnPrev = document.getElementById("btnPrev");
+var btnNext = document.getElementById("btnNext");
+var btnVoice = document.getElementById("btnVoice");
+var btnAuto = document.getElementById("btnAuto");
+var btnFs = document.getElementById("btnFs");
+var controlsEl = document.getElementById("controls");
+var statemsg = document.getElementById("statemsg");
+
+function render() {
+  var s = SLIDES[idx];
+  slideEl.innerHTML = "";
+  var wrap = document.createElement("div");
+  wrap.className = "slide-inner" + (idx === 0 ? " is-title" : "");
+  var lab = document.createElement("p");
+  lab.className = "label";
+  lab.textContent = s.label;
+  var ttl = document.createElement("h1");
+  ttl.className = "stitle";
+  ttl.textContent = s.title;
+  var rule = document.createElement("div");
+  rule.className = "rule";
+  wrap.appendChild(lab);
+  wrap.appendChild(ttl);
+  wrap.appendChild(rule);
+  if (s.sub) {
+    var sub = document.createElement("p");
+    sub.className = "subtitle-line";
+    sub.textContent = s.sub;
+    wrap.appendChild(sub);
+  }
+  var ul = document.createElement("ul");
+  ul.className = "bullets";
+  for (var i = 0; i < s.bullets.length; i++) {
+    var li = document.createElement("li");
+    li.textContent = s.bullets[i];
+    ul.appendChild(li);
+  }
+  wrap.appendChild(ul);
+  slideEl.appendChild(wrap);
+  capText.textContent = s.narration;
+  progressEl.textContent = (idx + 1) + " / " + N;
+  topfill.style.width = ((idx + 1) / N * 100) + "%";
+  document.title = s.title + " ― 煽りパターン図鑑 スライド版";
+}
+
+function clearFallback() {
+  if (fallbackTimer !== null) { clearTimeout(fallbackTimer); fallbackTimer = null; }
+}
+
+function stopSpeak() {
+  speakToken++;
+  clearFallback();
+  if ("speechSynthesis" in window) {
+    try { speechSynthesis.cancel(); } catch (e) {}
+  }
+}
+
+/* 読み上げ時間の推定（日本語 約6.3文字/秒 + 間） */
+function estimateMs(text) {
+  return Math.round(text.length * 160) + 1500;
+}
+
+function pickJaVoice() {
+  if (!("speechSynthesis" in window)) return null;
+  var vs = speechSynthesis.getVoices();
+  for (var i = 0; i < vs.length; i++) {
+    if (vs[i].lang && vs[i].lang.toLowerCase().indexOf("ja") === 0) return vs[i];
+  }
+  return null;
+}
+if ("speechSynthesis" in window && speechSynthesis.onvoiceschanged !== undefined) {
+  speechSynthesis.onvoiceschanged = function () {};
+}
+
+function scheduleFallbackAdvance(token, ms) {
+  clearFallback();
+  fallbackTimer = setTimeout(function () {
+    if (token === speakToken && autoplay) advance();
+  }, ms);
+}
+
+function speakCurrent() {
+  stopSpeak();
+  var s = SLIDES[idx];
+  if (!autoplay && !voiceOn) return;
+  if (!voiceOn || !("speechSynthesis" in window)) {
+    /* 音声が使えない／OFF のときは文字数推定で送る（自動再生のみ） */
+    if (autoplay) scheduleFallbackAdvance(speakToken, estimateMs(s.narration));
+    return;
+  }
+  var token = speakToken;
+  var startedAt = Date.now();
+  var done = false;
+  var u = new SpeechSynthesisUtterance(s.narration);
+  u.lang = "ja-JP";
+  var v = pickJaVoice();
+  if (v) u.voice = v;
+  u.rate = 1.0;
+  u.pitch = 1.0;
+  function finish() {
+    if (done || token !== speakToken) return;
+    done = true;
+    clearFallback();
+    if (!autoplay) return;
+    /* 無音のまま即終了した場合は推定時間まで待ってから送る */
+    var elapsed = Date.now() - startedAt;
+    var minWait = estimateMs(s.narration) * 0.6;
+    if (elapsed < minWait) {
+      scheduleFallbackAdvance(token, minWait - elapsed);
+    } else {
+      advance();
+    }
+  }
+  u.onend = finish;
+  u.onerror = function () {
+    if (done || token !== speakToken) return;
+    if (autoplay) {
+      /* エラー時は推定時間で送る */
+      done = true;
+      scheduleFallbackAdvance(token, estimateMs(s.narration) * 0.7);
+    }
+  };
+  try {
+    speechSynthesis.speak(u);
+  } catch (e) {
+    if (autoplay) scheduleFallbackAdvance(token, estimateMs(s.narration));
+    return;
+  }
+  if (autoplay) {
+    /* onend が来ない環境への安全網（推定＋余裕） */
+    scheduleFallbackAdvance(token, estimateMs(s.narration) + 6000);
+    /* Chrome系で読み上げが止まる事象への定期 resume */
+    var guard = setInterval(function () {
+      if (done || token !== speakToken) { clearInterval(guard); return; }
+      if (speechSynthesis.paused) { try { speechSynthesis.resume(); } catch (e) {} }
+      if (!speechSynthesis.speaking && !speechSynthesis.pending) clearInterval(guard);
+    }, 5000);
+  }
+}
+
+function go(n) {
+  idx = Math.max(0, Math.min(N - 1, n));
+  render();
+  speakCurrent();
+}
+
+function advance() {
+  if (idx >= N - 1) {
+    setAutoplay(false);
+    statemsg.textContent = "最終スライドです";
+    return;
+  }
+  go(idx + 1);
+}
+
+function setAutoplay(on) {
+  autoplay = on;
+  btnAuto.setAttribute("aria-pressed", on ? "true" : "false");
+  btnAuto.textContent = on ? "⏸ 自動再生中" : "▶ 自動再生";
+  statemsg.textContent = on ? "読み上げに連動して進みます" : "";
+  if (on) {
+    if (idx >= N - 1) idx = 0;
+    render();
+    speakCurrent();
+  } else {
+    stopSpeak();
+  }
+}
+
+btnPrev.addEventListener("click", function (e) { e.stopPropagation(); go(idx - 1); });
+btnNext.addEventListener("click", function (e) { e.stopPropagation(); go(idx + 1); });
+btnVoice.addEventListener("click", function (e) {
+  e.stopPropagation();
+  voiceOn = !voiceOn;
+  btnVoice.setAttribute("aria-pressed", voiceOn ? "true" : "false");
+  btnVoice.textContent = voiceOn ? "読み上げ ON" : "読み上げ OFF";
+  if (!voiceOn) {
+    stopSpeak();
+    if (autoplay) scheduleFallbackAdvance(speakToken, estimateMs(SLIDES[idx].narration));
+  } else {
+    speakCurrent();
+  }
+});
+btnAuto.addEventListener("click", function (e) { e.stopPropagation(); setAutoplay(!autoplay); });
+btnFs.addEventListener("click", function (e) {
+  e.stopPropagation();
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+  } else if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen();
+  }
+});
+
+document.getElementById("stage").addEventListener("click", function (e) {
+  if (e.target.closest("#controls")) return;
+  go(idx + 1);
+});
+
+document.addEventListener("keydown", function (e) {
+  var tag = (document.activeElement && document.activeElement.tagName) || "";
+  if (e.key === " " && tag === "BUTTON") return; /* ボタン上のスペースはボタンの動作に任せる */
+  if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
+    e.preventDefault(); go(idx + 1);
+  } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+    e.preventDefault(); go(idx - 1);
+  } else if (e.key === "Home") {
+    e.preventDefault(); go(0);
+  } else if (e.key === "End") {
+    e.preventDefault(); go(N - 1);
+  }
+});
+
+/* フルスクリーン時、操作バーはしばらくで隠す */
+function pokeControls() {
+  if (!document.fullscreenElement) return;
+  controlsEl.classList.add("show");
+  if (hideTimer) clearTimeout(hideTimer);
+  hideTimer = setTimeout(function () { controlsEl.classList.remove("show"); }, 2600);
+}
+document.addEventListener("fullscreenchange", function () {
+  document.body.classList.toggle("fs", !!document.fullscreenElement);
+  pokeControls();
+});
+document.addEventListener("mousemove", pokeControls);
+
+render();
+</script>
+</body>
+</html>
