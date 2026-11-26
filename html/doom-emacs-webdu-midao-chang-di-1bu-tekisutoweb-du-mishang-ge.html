@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<!-- build: 2026-11-26 15:22:48 JST -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="data:,">
+<title>Doom Emacs Web読み道場 ― 第1部 テキストWeb＋読み上げ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{
+--tb:29%;
+--ink:#fdf3d8; --dim:#c9a86a; --blue:#ffb84d; --panel:#1d1408;
+--win:#2e2110; --accent:#ffd94a; --good:#a5e075; --bad:#ff8a75;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+body{margin:0;background:#120b04;color:var(--ink);
+font-family:"DotGothic16","Hiragino Kaku Gothic ProN","Noto Sans JP",monospace,sans-serif;
+-webkit-font-smoothing:none;font-smooth:never;
+display:flex;justify-content:center;padding:14px 10px 40px}
+.cab{width:100%;max-width:760px}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{font-weight:900;letter-spacing:2px;font-size:18px;color:#fff;
+text-shadow:2px 2px 0 #8a5a12, 4px 4px 0 #2e2110}
+.logo small{display:block;font-size:11px;color:var(--dim);letter-spacing:1px;text-shadow:none}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer}
+.sbtn{background:var(--win);color:var(--ink);border:2px solid var(--dim);
+padding:4px 10px;font-size:12px;border-radius:4px;min-height:36px}
+.sbtn:hover{border-color:#fff;color:#fff}
+.params{display:flex;gap:14px;background:var(--panel);border:2px solid var(--dim);
+padding:6px 12px;font-size:12px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.params b{color:var(--accent)}
+.bar{display:inline-block;width:110px;height:10px;background:#40301a;vertical-align:middle;margin-left:4px;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--good);display:block}
+.bar.mbar i{background:var(--blue)}
+.screen{position:relative;border:6px solid var(--dim);border-radius:6px;overflow:hidden;
+aspect-ratio:16/10;background:#000;image-rendering:pixelated}
+.screen::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+background:repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 3px, transparent 3px 6px)}
+.bg{position:absolute;inset:0;transition:opacity.4s}
+.bg-room{background:linear-gradient(#2a1a08 0 55%, #4a2f10 55% 100%)}
+.bg-room::before{content:"";position:absolute;right:8%;top:8%;width:110px;height:130px;
+background:linear-gradient(#5a3c14,#2a1a08);border:6px solid #170e03;
+box-shadow:0 0 0 4px #8a5a12, inset 0 0 0 3px #8a5a12}
+.bg-term{background:radial-gradient(ellipse at 50% 40%, #33200c 0%, #120b04 70%)}
+.bg-term::before{content:"eww ❚ TAB ❚ RET ❚ l 戻る ❚ r 進む ❚ g 再読込 ❚ R 本文だけ ❚ b ブックマーク ❚ & 外部ブラウザ ❚ elfeed ❚ RSS ❚ Piper ❚ 読み上げ ❚";
+position:absolute;inset:6%;color:#ffb84d;font-size:13px;line-height:2.1;opacity:.5;
+font-family:ui-monospace,Menlo,monospace;word-break:break-all}
+.bg-way{background:linear-gradient(#1a2a4a 0%, #4a2f10 55%, #c98a3f 82%, #ffd94a 100%)}
+.bg-city{background:linear-gradient(#120b04 0%, #2a1a08 60%, #4a2f10 100%)}
+.bg-city::before{content:"";position:absolute;left:0;right:0;bottom:29%;height:46%;
+background:
+linear-gradient(#0000 78%, #0a0602 78%) ,
+repeating-linear-gradient(90deg, #0a0602 0 34px, #0000 34px 46px, #1d1206 46px 78px, #0000 78px 92px);
+box-shadow:inset 0 0 60px rgba(255,184,77,.22)}
+.stars{position:absolute;inset:0;z-index:1;
+background-image:radial-gradient(2px 2px at 12% 18%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 32% 8%, #ffedbe 50%, transparent 51%),
+radial-gradient(2px 2px at 55% 22%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 74% 10%, #ffedbe 50%, transparent 51%),
+radial-gradient(2px 2px at 88% 26%, #fff 50%, transparent 51%),
+radial-gradient(2px 2px at 44% 30%, #ffd9a0 50%, transparent 51%)}
+.char{position:absolute;bottom:var(--tb);left:50%;transform:translateX(-50%);z-index:2;
+filter:drop-shadow(0 0 10px rgba(255,184,77,.7))}
+.char svg{display:block}
+.ground{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:1;
+background:linear-gradient(transparent, rgba(10,6,2,.92) 30%)}
+.namebox{position:absolute;left:14px;bottom:calc(var(--tb) + 8px);z-index:8;color:#ffffff;
+background:var(--win);border:3px solid var(--dim);padding:2px 14px;font-weight:700;font-size:16px;
+letter-spacing:.06em;text-shadow:2px 2px 0 #000}
+.textbox{position:absolute;left:0;right:0;bottom:0;height:var(--tb);z-index:7;color:#ffffff;
+background:rgba(16,10,3,.97);border-top:4px solid var(--dim);
+padding:12px 16px;font-size:18px;line-height:1.8;letter-spacing:.06em;
+text-shadow:2px 2px 0 #000;
+cursor:pointer;white-space:pre-wrap;overflow-y:auto;overflow-x:hidden;
+scrollbar-width:thin;scrollbar-color:#ffb84d #1d1408}
+.textbox::-webkit-scrollbar{width:10px}
+.textbox::-webkit-scrollbar-track{background:#1d1408}
+.textbox::-webkit-scrollbar-thumb{background:#ffb84d;border:2px solid #100a03}
+.textbox.next{position:absolute;right:12px;bottom:6px;color:var(--accent);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.choices{position:absolute;top:0;left:0;right:0;bottom:calc(var(--tb) + 46px);z-index:9;display:none;flex-direction:column;
+align-items:center;justify-content:center;gap:12px;background:rgba(10,6,2,.80);padding:16px;overflow-y:auto}
+.choices.show{display:flex}
+.choice{width:min(92%,520px);background:#1d1206;color:#ffffff;font-weight:700;
+border:3px solid #ffedbe;padding:12px 16px;font-size:18px;letter-spacing:.08em;
+text-shadow:2px 2px 0 #000;text-align:left;border-radius:4px;min-height:44px}
+.choice:hover{border-color:var(--accent);color:#fff;background:#4a2f10}
+.choice::before{content:"▶ ";color:var(--accent)}
+.choice.done{border-color:var(--good)}
+.choice.done::before{content:"✔ ";color:var(--good)}
+.choice.later{border-color:var(--bad)}
+.choice.later::before{content:"⚠ ";color:var(--bad)}
+.title{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;
+justify-content:center;gap:14px;background:radial-gradient(ellipse at 50% 35%, #4a2f10 0%, #120b04 75%);text-align:center;padding:16px}
+.title h1{margin:0;font-size:clamp(22px,5.4vw,38px);letter-spacing:3px;color:#fff;
+text-shadow:3px 3px 0 #8a5a12, 6px 6px 0 #2e2110}
+.title p{color:#ffedbe;font-size:14px;margin:0;line-height:1.9}
+.tbtn{background:#1d1206;color:#fff;font-weight:700;border:3px solid #ffedbe;padding:10px 26px;font-size:17px;letter-spacing:.08em;border-radius:4px;min-height:44px}
+.tbtn:hover{border-color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#000c;color:#fff;
+border:2px solid var(--dim);padding:6px 16px;font-size:12px;border-radius:4px;opacity:0;transition:opacity.3s;z-index:50;pointer-events:none}
+.toast.show{opacity:1}
+#diagram{transition:width .25s}
+.screen.diagmenu #diagram{width:min(430px,74%)}
+.screen.diagmenu .choices{bottom:calc(var(--tb) + 8px);flex-direction:row;flex-wrap:wrap;align-content:flex-start;justify-content:center;gap:8px}
+.screen.diagmenu .choice{flex:1 1 28%;width:auto;margin:0;text-align:center;font-size:14px;padding:10px 8px;line-height:1.5}
+#diagram{position:absolute;left:50%;top:4%;transform:translateX(-50%);width:min(560px,94%);z-index:5;background:rgba(10,6,2,.88);border:2px solid var(--dim);padding:6px;display:none}
+#diagram svg{width:100%;height:auto;display:block}
+footer{margin-top:12px;color:var(--dim);font-size:12px;line-height:1.9}
+kbd{display:inline-block;background:#2e2110;border:1px solid var(--dim);border-bottom-width:2px;
+border-radius:6px;padding:0 7px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+@media (max-width:560px){.textbox{font-size:15px}.char{bottom:var(--tb)}}
+@media (orientation:portrait) and (max-width:760px){
+:root{--tb:46%}
+.screen{aspect-ratio:auto;height:80vh;height:80dvh}
+.textbox{font-size:16px;line-height:1.75}
+.char svg{width:100px;height:127px}
+.choice{font-size:16px;padding:10px 14px}
+.choices{overflow-y:auto}
+.title h1{font-size:22px}
+.title p{font-size:13px}
+.params{gap:8px;font-size:11px}
+.bar{width:70px}
+}
+.choices{justify-content:flex-start;overflow-y:auto}
+.choice:first-child{margin-top:auto}
+.choice:last-child{margin-bottom:auto}
+</style>
+</head>
+<body>
+<div class="cab">
+<header>
+<div class="logo">Doom Emacs Web読み道場<small>― 第1部 テキストWeb＋読み上げ 全14課 ―</small></div>
+<div class="btns">
+<button class="sbtn" id="btnSound">🔊 音ON</button><button class="sbtn" id="btnTts">🗣 読上OFF</button>
+<button class="sbtn" id="btnLevels">🏠 レベル選択</button>
+<button class="sbtn" id="btnReset">🗑 進捗リセット</button>
+</div>
+</header>
+
+<div class="params">
+<span>理解済み <b id="pDone">0</b> / 14 課<span class="bar"><i id="bDone" style="width:0%"></i></span></span>
+<span>🎯 ミッション <b id="pMis">0</b> / 14<span class="bar mbar"><i id="bMis" style="width:0%"></i></span><span id="pMisLeft" style="color:var(--bad)"></span></span>
+<span style="color:var(--dim)">現在：<span id="pNow">タイトル</span></span>
+<span style="margin-left:auto;color:var(--dim)">💾 進捗は自動保存（localStorage）</span>
+</div>
+
+<div class="screen" id="screen">
+<div class="bg bg-city" id="bg"></div>
+<div class="stars"></div>
+<div class="ground"></div>
+<div class="char" id="char"></div>
+<div id="diagram"></div>
+<div class="namebox" id="namebox" style="display:none"></div>
+<div class="textbox" id="textbox"><span id="text"></span><span class="next" id="nextmark" style="display:none">▼</span></div>
+<div class="choices" id="choices"></div>
+<div class="title" id="title">
+<h1>Web読み道場・第1部</h1>
+<p>ブラウザの窓を卒業して、Emacsの中に「本文だけの窓」を持つ。<br>
+ewwで読み、選んだ範囲をPiperに読み上げさせ、elfeedで自分の情報源だけを引く。<br>
+全14課。各課の終わりには、自分のPCでやる「実践ミッション」が1つある。<br>
+「分かった！」で次へ、「分からない」で何度でもやり直し。</p>
+<button class="tbtn" id="btnEnter">▶ 本棚のある部屋へ入る</button>
+<p>進捗（理解済み ✔ とミッション 🎯）はブラウザに自動保存されます</p>
+</div>
+</div>
+
+<footer>
+遊び方：説明を読んだら「これは分かった！」か「分からない」を選ぶだけ。分かったら確認問題が1問出て、正解でその課は理解済み ✔。そのあと「実践ミッション」が1つ出ます。「やった」を押せばミッション完了 🎯、「あとで」を押すと次へ進めますが ⚠ 未完了マークが残り、課の一覧から後で確認できます。間違えてもペナルティなし、補足説明を読んで何度でも挑めます。本文クリックで文字送り、長い文は自動スクロール＋手動スクロール可。
+ミッションで詰まったら、エラーや画面の状態をそのままAI（Muse）に貼って聞くのが一番の近道です。この道場は Doom Emacs 実践カリキュラム第1部（eww / TTS / elfeed）の教材化で、第2部「HTML/MD編集」、第3部「Webコンテンツ制作」へ続きます。前提は NixOS + Doom Emacs、基本操作の既存道場は習得済みとして重複させていません。
+</footer>
+<style>
+#galleryWrap{margin:16px 0 4px;text-align:center}
+#gallery{display:none;text-align:left;margin-top:12px}
+.gal-item{background:#1a1206;border:2px solid #8a5a12;padding:10px 12px;margin:0 0 12px}
+.gal-cap{color:#ffd94a;font-size:14px;margin-bottom:8px}
+.gal-diag svg{width:100%;height:auto;display:block}
+</style>
+<div id="galleryWrap">
+<div style="margin-bottom:10px"><button class="sbtn" id="btnListen">🎧 リスニング（全レッスン読み上げ）</button>
+<div id="listenPanel" style="display:none;text-align:left;margin-top:10px;background:#1a1206;border:2px solid #8a5a12;padding:10px 12px">
+<div style="margin-bottom:8px"><button class="sbtn" id="btnPlay">▶ ブラウザ音声で再生</button> <button class="sbtn" id="btnStop">⏹ 停止</button> <span id="listenStatus" style="font-size:12px;color:#ffe9b8"></span></div>
+<div style="height:8px;background:#40301a;border:1px solid #8a5a12;margin-bottom:8px"><div id="listenFill" style="height:100%;width:0%;background:#ffd94a"></div></div>
+<div style="font-size:12px;color:#ffe9b8;margin-bottom:8px">PCでは Read Aloud 拡張機能で、この下のテキストをそのまま読み上げられます。</div>
+<div id="listenText" style="color:#fff;font-size:15px;line-height:1.7"></div>
+</div></div>
+<button class="sbtn" id="btnGallery">🖼 図解一覧（復習用）を表示</button>
+<div id="gallery"></div>
+</div>
+<script>
+(function(){
+var btnMain = document.getElementById('btnListen');
+var panel = document.getElementById('listenPanel');
+var btn = document.getElementById('btnPlay');
+var btnStop = document.getElementById('btnStop');
+var st = document.getElementById('listenStatus');
+var fill = document.getElementById('listenFill');
+var lt = document.getElementById('listenText');
+if(!btnMain || !panel || !btn) return;
+var playing = false, items = [], idx = 0, curId = 0, watchdog = null, tickTimer = null, itemStart = 0, started = false, attempts = 0, built = false, paused = false;
+function buildItems(){
+  var arr = [];
+  LEVELS.forEach(function(ch, ci){
+    arr.push(ch.name);
+    ch.lessons.forEach(function(ls){
+      arr.push(ls.title);
+      (ls.teach || []).forEach(function(t){ arr.push(t); });
+      if(ls.mission) arr.push('実践ミッション。' + ls.mission);
+    });
+  });
+  return arr;
+}
+function buildText(){
+  lt.innerHTML = '';
+  LEVELS.forEach(function(ch, ci){
+    var h = document.createElement('div');
+    h.style.cssText = 'color:#ffd94a;font-weight:bold;margin:14px 0 6px';
+    h.textContent = ch.name;
+    lt.appendChild(h);
+    ch.lessons.forEach(function(ls){
+      var t = document.createElement('div');
+      t.style.cssText = 'font-weight:bold;margin:10px 0 4px';
+      t.textContent = ls.title;
+      lt.appendChild(t);
+      (ls.teach || []).forEach(function(tx){
+        var p = document.createElement('div');
+        p.style.cssText = 'margin:0 0 8px;white-space:pre-wrap';
+        p.textContent = tx;
+        lt.appendChild(p);
+      });
+      if(ls.mission){
+        var m = document.createElement('div');
+        m.style.cssText = 'margin:0 0 8px;white-space:pre-wrap;color:#ffd9a0';
+        m.textContent = '🎯 実践ミッション：' + ls.mission;
+        lt.appendChild(m);
+      }
+    });
+  });
+}
+function pickVoice(){
+  var vs = speechSynthesis.getVoices();
+  for(var i = 0; i < vs.length; i++){ if(vs[i].lang && vs[i].lang.toLowerCase().indexOf('ja') === 0) return vs[i]; }
+  return vs[0] || null;
+}
+function fmt(sec){ var m = Math.floor(sec / 60), s = sec % 60; return m + ':' + (s < 10 ? '0' : '') + s; }
+function setBar(){ if(fill && items.length) fill.style.width = Math.round(idx / items.length * 100) + '%'; }
+function status(){
+  if(!st || !playing) return;
+  var el = Math.floor((Date.now() - itemStart) / 1000);
+  st.textContent = (started ? '再生中 ' : '準備中… ') + (idx + 1) + '/' + items.length + '（' + fmt(el) + '）' + (items[idx] || '').slice(0, 18);
+}
+function clearTimers(){
+  if(watchdog){ clearTimeout(watchdog); watchdog = null; }
+  if(tickTimer){ clearInterval(tickTimer); tickTimer = null; }
+}
+function stop(msg){
+  playing = false; paused = false; curId++; clearTimers();
+  try{ speechSynthesis.cancel(); }catch(e){}
+  btn.textContent = '▶ ブラウザ音声で再生';
+  if(st) st.textContent = msg || '';
+  if(fill) fill.style.width = '0%';
+}
+function armWatchdog(text){
+  if(watchdog) clearTimeout(watchdog);
+  var est = Math.min(45000, Math.max(7000, text.length * 260 + 4000));
+  watchdog = setTimeout(function(){
+    if(!playing) return;
+    curId++;
+    try{ speechSynthesis.cancel(); }catch(e){}
+    idx++; next();
+  }, est);
+}
+function trySpeak(text, useVoice){
+  var my = ++curId;
+  started = false; itemStart = Date.now(); setBar(); status();
+  try{ speechSynthesis.resume(); }catch(e){}
+  var u = new SpeechSynthesisUtterance(String(text).replace(/\n+/g, ' '));
+  u.lang = 'ja-JP'; u.rate = 1.0;
+  var v = useVoice ? pickVoice() : null;
+  if(v) u.voice = v;
+  u.onstart = function(){ if(my === curId){ started = true; status(); } };
+  u.onend = function(){ if(my === curId && playing){ idx++; next(); } };
+  u.onerror = function(){
+    if(my !== curId || !playing) return;
+    if(speechSynthesis.getVoices().length === 0){ stop('音声が見つかりません（この端末では読み上げできません）'); return; }
+    if(useVoice && attempts === 0){ attempts++; trySpeak(text, false); return; }
+    idx++; next();
+  };
+  armWatchdog(text);
+  try{ speechSynthesis.speak(u); }catch(e){ setTimeout(function(){ if(my === curId && playing){ idx++; next(); } }, 300); }
+}
+function next(){
+  if(!playing || paused) return;
+  if(idx >= items.length){ stop('読み上げ終了（全' + items.length + '項目）'); if(fill) fill.style.width = '100%'; return; }
+  attempts = 0;
+  trySpeak(items[idx], true);
+}
+if(btnStop) btnStop.onclick = function(){ if(playing) stop('停止しました'); };
+btnMain.onclick = function(){
+  if(panel.style.display !== 'none'){
+    panel.style.display = 'none';
+    btnMain.textContent = '🎧 リスニング（全レッスン読み上げ）';
+    if(playing) stop('停止しました');
+    return;
+  }
+  if((typeof LEVELS === 'undefined' && typeof NODES === 'undefined')){ return; }
+  if(!built){ buildText(); built = true; }
+  panel.style.display = 'block';
+  btnMain.textContent = '🎧 リスニングを閉じる';
+};
+btn.onclick = function(){
+  if(!('speechSynthesis' in window)){ if(st) st.textContent = 'このブラウザは読み上げに未対応です'; return; }
+  if(playing && !paused){
+    paused = true; curId++; clearTimers();
+    try{ speechSynthesis.cancel(); }catch(e){}
+    btn.textContent = '▶ 再開';
+    if(st) st.textContent = '一時停止中 ' + (idx + 1) + '/' + items.length + '（再開はこの項目の頭から）';
+    return;
+  }
+  if(playing && paused){
+    paused = false;
+    btn.textContent = '⏸ 一時停止';
+    if(st) st.textContent = '再開します';
+    attempts = 0;
+    clearTimers();
+    tickTimer = setInterval(status, 500);
+    trySpeak(items[idx], true);
+    return;
+  }
+  if((typeof LEVELS === 'undefined' && typeof NODES === 'undefined')){ if(st) st.textContent = 'データ読み込みに失敗しました'; return; }
+  items = buildItems(); idx = 0; playing = true; itemStart = Date.now();
+  btn.textContent = '⏸ 一時停止';
+  if(st) st.textContent = '準備中…';
+  if(fill) fill.style.width = '0%';
+  try{ speechSynthesis.cancel(); }catch(e){}
+  clearTimers();
+  tickTimer = setInterval(status, 500);
+  setTimeout(next, 200);
+};
+})();
+</script>
+<script>
+(function(){
+var btn = document.getElementById('btnGallery');
+var gal = document.getElementById('gallery');
+var built = false;
+function build(){
+var html = '';
+if (typeof LEVELS !== 'undefined' && typeof DIAG !== 'undefined') {
+LEVELS.forEach(function(lv, li){
+lv.lessons.forEach(function(ls, i){
+if (DIAG[ls.id]) { html += '<div class="gal-item"><div class="gal-cap">第' + (li+1) + '章 第' + (i+1) + '課：' + ls.title + '</div><div class="gal-diag">' + DIAG[ls.id] + '</div></div>'; }
+});
+});
+} else if (typeof DIAG !== 'undefined') {
+Object.keys(DIAG).forEach(function(k){
+var cap = k;
+if (typeof NODES !== 'undefined' && NODES[k] && NODES[k].title) cap = NODES[k].title;
+html += '<div class="gal-item"><div class="gal-cap">' + cap + '</div><div class="gal-diag">' + DIAG[k] + '</div></div>';
+});
+}
+gal.innerHTML = html || '<div class="gal-cap">図解はありません</div>';
+}
+btn.onclick = function(){
+var show = gal.style.display !== 'block';
+if (show && !built) { build(); built = true; }
+gal.style.display = show ? 'block' : 'none';
+btn.textContent = show ? '🖼 図解一覧（復習用）を隠す' : '🖼 図解一覧（復習用）を表示';
+};
+})();
+</script>
+</div>
+
+<div class="toast" id="toast">💾 保存しました</div>
+
+<script>
+"use strict";
+/* ============ シルエット ============ */
+function sil(extra){
+return '<svg width="150" height="190" viewBox="0 0 120 150">'
++ '<circle cx="60" cy="34" r="17" fill="#241503"/>'
++ '<path d="M22 150 C22 96 40 66 60 66 C80 66 98 96 98 150 Z" fill="#241503"/>'
++ (extra || '') + '</svg>';
+}
+const CHARS = {
+sennin: sil('<path d="M28 22 L60 4 L92 22 L84 28 L60 14 L36 28 Z" fill="#ffd94a"/>'
++ '<rect x="38" y="46" width="18" height="10" fill="none" stroke="#e6f5ee" stroke-width="3"/>'
++ '<rect x="64" y="46" width="18" height="10" fill="none" stroke="#e6f5ee" stroke-width="3"/>'
++ '<rect x="82" y="58" width="5" height="72" fill="#c98a3f"/>'
++ '<circle cx="84" cy="54" r="6" fill="#ffb84d"/>'
++ '<rect x="38" y="112" width="44" height="30" fill="#ffb84d"/>'
++ '<rect x="44" y="118" width="32" height="4" fill="#241503"/>'
++ '<rect x="44" y="126" width="32" height="4" fill="#241503"/>'),
+ore: sil(''),
+none: ''
+};
+
+/* ============ カリキュラム ============ */
+const LEVELS = [
+{ name:'第1章 eww入門', desc:'Emacs内蔵のテキストブラウザ eww を開き、リンクを渡り歩き、本文だけを取り出して、ブックマークにしまうまで。まずは「本文だけの窓」を自分のものにする章じゃ。', lessons:[
+{ id:'a1', title:'ewwとは・なぜテキストで読むのか', teach:[
+'ようこそ。わしはヨミ仙人、Emacsの中で本と記事を読んで暮らしておる者じゃ。今回の修行は、ブラウザの窓を離れて、Emacsの中に「本文だけの窓」を持つことから始める。その道具が eww（Emacs Web Wowser）——Emacsに標準で入っておるテキストブラウザじゃ。',
+'普通のブラウザは、記事の周りに広告、バナー、おすすめ欄、自動再生の動画まで全部くっつけて運んでくる。ewwは逆じゃ。ページをテキストとして描き直し、見出しと本文とリンクだけを残す。JavaScriptは動かさず、装飾も捨てる。つまり「読むためだけの窓」じゃな。',
+'開き方は M-x eww と打って、読みたいページのURLを入れるだけ。君のメモサイト（GitHub Pages）でも、ニュース記事でもよい。開いたページは普通のEmacsのバッファとして現れる。だから検索も、コピーも、他のバッファとの行き来も、いつもの操作のまま使えるのじゃ。'],
+retry:'ewwはEmacs標準のテキストブラウザ。ページを本文とリンクだけのテキストとして描き直すので、広告も装飾もJavaScriptもない。開いたページはEmacsのバッファになる。',
+quiz:{ q:'ewwで開いたWebページは、Emacsの中では何として扱われるか？', choices:[
+{ t:'別ウィンドウの画像', ok:false }, { t:'普通のバッファ（テキスト）', ok:true }, { t:'ターミナルの出力', ok:false } ] },
+mission:'M-x eww で自分のメモサイト（GitHub Pages）を開く。アドレスは coacoa.github.io/images/html/ じゃ。ページがテキストで表示されたら成功じゃ。' },
+{ id:'a2', title:'リンク移動と履歴', teach:[
+'ewwの移動はキーボードだけじゃ。TAB で次のリンクへ、S-TAB（Shift+TAB）で前のリンクへ移り、RET でそのリンクを開く。マウスに手を伸ばす必要はない。リンクの上では下線や色が付いておるので、TABを押すたびに「次はどこへ行けるか」が順に光って見えるはずじゃ。',
+'読み進めたら戻りたくなる。l で1つ前のページへ戻り、r で進む（l は last、r は…戻ったあとに「やっぱり進む」のキーじゃ）。g は再読み込みで、更新された記事を読み直すときに使う。読み終わったら q で閉じる（正確にはバッファをしまうので、他の作業に戻れる）。',
+'この4つ——TAB/RETで進み、l/rで前後し、gで読み直し、qで閉じる——が eww の足腰じゃ。ブラウザの戻るボタンやタブを思い浮かべる代わりに、指で覚えてしまうのが早い。'],
+retry:'TAB/S-TABでリンク移動、RETで開く。lで戻る、rで進む、gで再読み込み、qで閉じる。',
+quiz:{ q:'ewwで前のページに戻るキーはどれか？', choices:[
+{ t:'g', ok:false }, { t:'q', ok:false }, { t:'l', ok:true } ] },
+mission:'メモサイト内を3ページ渡り歩いて（TABとRETでリンクをたどって）、l で戻ってくる。最後に q で閉じるまでが1セットじゃ。' },
+{ id:'a3', title:'本文だけ表示にする（R = eww-readable）', teach:[
+'ニュース記事を開くと、ewwでも見出しの羅列やメニュー、関連記事のリンクが混ざることがある。そういうときに押すのが R（eww-readable）じゃ。本文らしい部分だけを抜き出して、記事の本文だけの表示に切り替える。もう一度 R を押せば元の表示に戻る、トグル式のキーじゃ。',
+'本文だけになると、行の折り返しも読みやすくなる。ewwの描画は横幅に合わせて折り返すので、ウィンドウ幅を狭めれば1行は短く、広げれば長くなる。自分の読みやすい幅に合わせておくのがコツじゃ。フォントの大きさも Emacs 側の設定そのままなので、目に合わせて調整できる。',
+'読み物の中心はこの R じゃ。「ページを開く → Rで本文だけにする → 最後まで読む」。この型が身につけば、サイトの作りに振り回されず、どの記事も同じ姿で読めるようになる。'],
+retry:'R（eww-readable）は本文だけを抜き出すトグル。本文表示にすれば折り返しも一定で、どの記事も同じ姿で読める。',
+quiz:{ q:'記事の本文だけを抜き出して表示するキーはどれか？', choices:[
+{ t:'R（eww-readable）', ok:true }, { t:'g（再読み込み）', ok:false }, { t:'w（URLをコピー）', ok:false } ] },
+mission:'ニュース記事を1本開いて、R で本文だけ表示にして、最後まで読む。途中で広告や関連リンクに邪魔されず読めたら成功じゃ。' },
+{ id:'a4', title:'ブックマークとダウンロード', teach:[
+'よく読むサイトは、毎回URLを打たずに済ませたい。ewwでページを開いた状態で b を押すと、そのページを eww のブックマークに登録できる。呼び出しは B で一覧を出し、選んで開く。ブラウザのブックマークとは別物で、eww専用の小さな本棚じゃ。',
+'リンク先のファイルを保存したいときは、リンクの上にカーソルを置いて d（eww-download）。PDFや画像、配布ファイルなどを、そのままファイルとして落とせる。ページそのものを保存するのではなく「リンク先」を取るキーだと覚えておくとよい。',
+'b/B の本棚と d の保存。この2つで「いつもの読み物への近道」と「資料の取り込み」が揃う。ブラウザを行き来せず、読む作業がEmacsの中で完結し始めるのじゃ。'],
+retry:'bでブックマーク登録、Bで一覧から呼び出し。dはリンク先のファイルを保存する。',
+quiz:{ q:'ewwで開いているページをブックマークに登録するキーはどれか？', choices:[
+{ t:'d', ok:false }, { t:'b', ok:true }, { t:'R', ok:false } ] },
+mission:'よく読むサイトを2件、b で登録する。登録したら B の一覧から1件開き直して、呼び出せることを確かめるのじゃ。' },
+]},
+{ name:'第2章 読む技術', desc:'開けるだけでは半分。長い記事から目的の節だけを拾い、複数の記事をバッファとして並べ比べ、画像の扱いと「ewwでは読まない」という判断まで。読む側の技術を固める章じゃ。', lessons:[
+{ id:'b1', title:'ページ内検索と見出しジャンプ', teach:[
+'ewwのページはバッファじゃから、探し物はEmacsのいつもの検索がそのまま効く。C-s（isearch）で語句を打ち込めば、ページ内を前へ、 C-r で後ろへ探せる。長い記事でも、目的の語句が出てくる場所へ一気に飛べる。',
+'もう1つの拾い読みは見出しじゃ。ewwは見出しを見出しらしく（大きく、目立って）描くので、まずページをざっと流して見出しだけを追い、「読む節」と「飛ばす節」を決める。必要なら M-x occur で語句を含む行を一覧にし、そこから飛ぶ手もある。',
+'全文を上から律儀に読むのは、長い技術記事では負け戦じゃ。検索で当たりを付け、見出しで地図を作り、目的の節だけを深く読む。この拾い読みが身につくと、読む速さよりも「読まない判断」の速さが上がる。'],
+retry:'ページ内検索は C-s / C-r の isearch がそのまま使える。見出しを地図にして目的の節だけを読むのが拾い読み。',
+quiz:{ q:'ewwのページ内で語句を探す基本操作はどれか？', choices:[
+{ t:'ブラウザの検索バーを開く', ok:false }, { t:'C-s（isearch）で検索する', ok:true }, { t:'ページを印刷して探す', ok:false } ] },
+mission:'長い技術記事を1本開き、isearch と見出しを使って、目的の節だけを見つけて読む。全文を読まずに目的の場所へ着けたか、が判定じゃ。' },
+{ id:'b2', title:'バッファとして扱う', teach:[
+'ewwのページはバッファじゃ、と第1課で言ったな。ならば複数ページは複数のバッファとして並べられる。ページごとにバッファができ、Doomなら SPC b b でバッファ一覧から行き来できる。ブラウザのタブと同じ役目を、Emacsの仕組みでやるわけじゃ。',
+'バッファには名前を付け替えられる（M-x rename-buffer）。記事の題名がそのまま付くことも多いが、自分で「あとで読む・比較用」などと名付けておくと、一覧で迷子にならない。読み比べるときは2つのバッファを並べて表示してもよい。',
+'「ページを開くたびにブラウザへ行く」のではなく「バッファが増えるだけ」と捉えると、読む作業と書く作業の境界が消える。記事を読みながら、横のバッファにメモを書く——それがEmacsで読む一番の旨みじゃ。'],
+retry:'ページ＝バッファ。複数開いて SPC b b で行き来し、名前を付けて整理する。読む作業と書く作業が同じ場所でできる。',
+quiz:{ q:'Doom Emacsでバッファを切り替える基本キーはどれか？', choices:[
+{ t:'SPC b b', ok:true }, { t:'SPC q q', ok:false }, { t:'C-x C-c', ok:false } ] },
+mission:'2つの記事を eww で開いて、SPC b b で行き来しながら読み比べる。片方を読んでもう片方へ移る、を3往復できたら成功じゃ。' },
+{ id:'b3', title:'画像・動画のあるページ', teach:[
+'ewwは画像も表示できる。ページに画像があれば、テキストの間に画像が差し込まれて描かれる。ただし大きな画像は横幅に合わせて縮められるとはいえ、読み込みは重くなるし、文章の流れも切れる。読み物が目的なら、画像は「あると嬉しい挿絵」程度の扱いがちょうどよい。',
+'画像の表示は切り替えられる。Emacsの描画設定（shr-inhibit-images）で画像を出さないようにすれば、ページはさらに軽く、速く、本文だけになる。写真そのものを見たいページでは出し、文章を読むページでは消す、と使い分けるのがよい。',
+'動画は別じゃ。ewwは動画を再生できない。動画が主役のページは eww の領分ではなく、外部ブラウザの仕事じゃ。この線引き——文章と画像はeww、動画と操作はブラウザ——が次の課の「振り分け」につながる。'],
+retry:'画像は表示できるが重い。設定で消せば軽くなる。動画はewwでは再生できないので外部ブラウザの領分。',
+quiz:{ q:'ewwについて正しいのはどれか？', choices:[
+{ t:'動画もそのまま再生できる', ok:false }, { t:'画像の表示は設定で消すことができる', ok:true }, { t:'画像のあるページは開けない', ok:false } ] },
+mission:'画像の多いページを1つ開き、画像あり／なしを切り替えて、読み込みの速さと読みやすさの違いを確認する。どちらの設定が自分の読み物向きか、感じを掴むのじゃ。' },
+{ id:'b4', title:'読めないサイトとの付き合い方', teach:[
+'正直に言おう。ewwで読めないサイトはある。JavaScriptで中身を組み立てるサイト（SNS、動画サイト、銀行や手続き系、ログイン必須の管理画面）は、ewwでは真っ白か、骨組みだけになる。ewwはJavaScriptを実行しないのだから、当然の結果じゃ。',
+'そういうときは & を押す。開いているページを外部ブラウザで開き直すキーじゃ。無理に eww で戦わず、向き先を変える。判断基準はシンプルでよい——「本文が読めるか」。記事やドキュメントのように読むものは eww、操作するもの・観るもの・ログインが要るものはブラウザ。',
+'振り分けは負けではない。むしろ逆で、「ewwで読むもの」を自分で選ぶことこそが、この修行の眼目じゃ。読めないサイトに出会うたびに、自分の振り分け表が1行育っていくと思えばよい。'],
+retry:'JavaScript必須のサイトはewwでは読めない。& で外部ブラウザへ渡す。基準は「本文が読めるかどうか」。',
+quiz:{ q:'ewwで読めないページを外部ブラウザで開き直すキーはどれか？', choices:[
+{ t:'&', ok:true }, { t:'q', ok:false }, { t:'d', ok:false } ] },
+mission:'手元のよく使うサイトを「ewwで読む／ブラウザで開く」に仕分ける。3〜5サイト分、頭の中かメモに振り分け表を作るのじゃ。' },
+]},
+{ name:'第3章 TTS読み上げ', desc:'目で読むだけが読み方ではない。選んだ文章を音声にして耳で読む仕組みを、外部TTS（Piper）への橋渡しで作る。方式の比較から、リージョンを渡す実技、自分用コマンド化、記事を通しで聞くまでじゃ。', lessons:[
+{ id:'c1', title:'読み上げの全体像', teach:[
+'Emacsで文章を読み上げる道は、大きく3つある。1つ目は Emacspeak——Emacs全体を音声で操作する本格派じゃが、導入も習熟も大がかりで、「記事を聞きたい」だけには重すぎる。2つ目は speechd——Linuxの speech-dispatcher につなぐ方式で、仕組みは標準的じゃが日本語の声の質と設定に癖がある。',
+'3つ目が、今回採る方式じゃ。テキストを外部のTTSプログラムへ渡して、音声にしてもらう。使うのは Piper——ローカルで速く動き、オフラインで使えて、日本語の音声モデルもある。君の環境には音声家電の修行で Piper の土台がもうある。新しい大仕掛けを入れず、既にある道具に「渡す」だけ、というのが決め手じゃ。',
+'考え方の要点は分業じゃ。Emacsは「どの文章を読むか」を決める側、Piperは「声にする」側。間は標準入出力という一番単純な橋でつなぐ。部品が単純なら、壊れても直しやすく、声を替えたくなっても差し替えが効く。'],
+retry:'方式はEmacspeak／speechd／外部TTSの3つ。今回は既にあるPiperへテキストを渡す外部TTS方式を採る。Emacsが文章を選び、Piperが声にする分業。',
+quiz:{ q:'この道場で採用する読み上げ方式はどれか？', choices:[
+{ t:'Emacspeakを導入する', ok:false}, { t:'外部TTS（Piper）にテキストを渡す', ok:true}, { t:'ブラウザの読み上げ機能を使う', ok:false}]},
+mission:'自分の環境で使えるTTS手段を1つ確認する。ターミナルで piper コマンドが動くか、日本語モデルが置いてあるかを見てみるのじゃ。'},
+{ id:'c2', title:'リージョンを外部TTSに渡す', teach:[
+'橋渡しの実技じゃ。Emacsには「選んだ範囲（リージョン）をシェルコマンドへ流す」仕組みがある。範囲を選んで M-|（shell-command-on-region）を押すと、そのテキストがコマンドの標準入力に渡される。文章をコマンドへ手渡す、この一手が全ての基礎じゃ。',
+'受け取る側は Piper じゃ。テキストを標準入力で受けて音声データ（wav）を出すので、その出力を再生コマンド（aplay や paplay、ffplay など環境にあるもの）へつなげば声になる。「テキスト → Piper → 再生」という管（パイプ）の組み立てが、この課の本体じゃ。',
+'最初は短い範囲で試すのが鉄則じゃ。1段落だけ選んで渡し、声が出たら成功。いきなり全文を渡すと、失敗したときに原因が分からん。短く試して、管がつながったことを確かめてから長くする——配管工事と同じじゃな。'],
+retry:'M-|（shell-command-on-region）でリージョンをコマンドの標準入力へ。Piperが音声にし、再生コマンドが声にする。まず1段落で試す。',
+quiz:{ q:'選択したリージョンをシェルコマンドへ渡す操作はどれか？', choices:[
+{ t:'M-|（shell-command-on-region）', ok:true}, { t:'C-x C-s（保存）', ok:false}, { t:'M-x eww', ok:false}]},
+mission:'記事の1段落を選択して、実際に読み上げさせる。声が1段落分、最後まで出たら成功じゃ。'},
+{ id:'c3', title:'自分用コマンド化', teach:[
+'毎回コマンドを打ち込むのは面倒じゃ。そこで、やることを1つの elisp 関数にまとめて、自分のコマンドにしてしまう。「リージョンを Piper に渡して再生する」という手順を関数に書き、Doomの config.el に置く。設定ファイルに置けば、Emacsを起動するたびに使える自分の道具になる。',
+'関数は小さくてよい。範囲の始まりと終わりを受け取り、決まったコマンドで shell-command-on-region を呼ぶ——それだけじゃ。凝った作りにせず、まず動く形にする。直したくなったら config.el を直して読み直せばよい。',
+'最後にキーへ割り当てる。Doomなら map! で自分のキー配列に1つ席を作る。「読み上げ」は自分が何度も使う操作じゃから、押しやすい場所に置くのがよい。これで「選んで、キーを押せば、声が出る」が完成する。'],
+retry:'手順をelisp関数にしてconfig.elに置き、map!でキーに割り当てる。小さく作って、自分の道具にする。',
+quiz:{ q:'自分用コマンドの置き場所として正しいのはどれか？', choices:[
+{ t:'毎回メモから貼り付ける', ok:false}, { t:'記事のバッファの中', ok:false}, { t:'Doomの config.el', ok:true}]},
+mission:'「読み上げ」キーを自分のキー配列に1つ作る。config.el に読み上げ関数を置き、キーで1段落を読めたら成功じゃ。'},
+{ id:'c4', title:'記事を丸ごと読み上げる', teach:[
+'仕上げは、記事1本を通しで聞くことじゃ。手順は今までの合わせ技——ewwで開く、Rで本文だけにする、バッファ全体を選んで（C-x h）読み上げコマンドへ渡す。これで「読む記事」が「聞く記事」に変わる。',
+'長い文章には作法が2つある。1つは分割じゃ。全文を一度に渡すと生成に時間がかかり、失敗の切り分けも難しい。段落や節ごとに分けて渡せば、待ち時間も短く、聞き直しもその節だけで済む。もう1つは止め方じゃ。読み上げは裏でプロセスが動いておるので、止めたくなったらそのプロセスを止める（M-x list-processes から kill する等）。止め方を用意してから長く聞くのが、慌てないコツじゃ。',
+'通しで聞く体験は、拾い読みとは別の価値がある。目では飛ばす接続詞や言い回しまで耳に入り、文章の調子が掴める。朝の支度の横で、散歩の供に——「聞く読み物」の席が生活の中にできれば、この章は卒業じゃ。'],
+retry:'Rで本文だけ→C-x hで全体→読み上げへ。長文は分割して渡し、止め方はプロセスを止める。止め方を用意してから通しで聞く。',
+quiz:{ q:'長い記事を通しで聞くときの作法として正しいのはどれか？', choices:[
+{ t:'止め方は考えず、とにかく全文を一度に渡す', ok:false}, { t:'分割して渡し、プロセスを止める方法を用意しておく', ok:true}, { t:'音量を最大にしておく', ok:false}]},
+mission:'記事1本を、本文だけ表示にしてから通しで聞く。途中で止める操作も1回試して、止められることを確かめるのじゃ。'},
+]},
+{ name:'第4章 elfeedと日常化', desc:'最後は「読み物が向こうから来る」仕組みじゃ。RSSリーダー elfeed で、自分で選んだ情報源だけを引く pull 型の読み方を作る。これは君の言うミニインターネット——自分の窓——そのものの日常版じゃ。', lessons:[
+{ id:'d1', title:'elfeed入門', teach:[
+'elfeed は Emacs の RSS リーダーじゃ。RSSというのは、サイトが「新しい記事が出た」と知らせる仕組みで、elfeed は登録したサイトの新着を集めて一覧にする。おすすめ欄が「向こうの都合で流してくる」push型なのに対して、elfeed は「自分で選んだ情報源だけを引く」pull型じゃ。この違いが全てじゃ。',
+'Doomでは rss モジュール（elfeed）を init.el で有効にし、config.el に elfeed-feeds で読みたいサイトのRSSアドレスを登録する。elfeed を開けば未読の一覧が出て、RET で記事を開けば eww で本文が読める。第1章からの流れが、そのままここにつながるわけじゃ。',
+'これは君のミニインターネットの考え方、その日常版じゃ。大きな仕組みを作らなくても、「情報源は自分で選ぶ」「来たものを自分の場所で仕分ける」という形は、elfeed だけでもう実現しておる。まずは小さく、読みたいサイト数件から始めるのがよい。'],
+retry:'elfeedはpull型のRSSリーダー。Doomのrssモジュールで有効化し、elfeed-feedsに情報源を登録。記事はRETでewwで読める。',
+quiz:{ q:'elfeedの読み方を表す言葉はどれか？', choices:[
+{ t:'おすすめが流れてくる push 型', ok:false}, { t:'広告で選ばれる受動型', ok:false}, { t:'自分で選んだ情報源だけを引く pull 型', ok:true}]},
+mission:'読みたいサイトを3件、elfeed に登録して、未読を1本開いて読む。登録した情報源だけが並ぶ一覧を見たら成功じゃ。'},
+{ id:'d2', title:'タグで仕分ける＋卒業ミッション', teach:[
+'情報源が増えると、一覧の仕分けが要る。elfeed では記事にタグを付けられる。フィード登録時に自動で付けるタグ（autotags）を決めておけば、「技術」「ニュース」のように源ごとに色分けでき、検索欄のフィルタ式で +タグ や期間を組み合わせて絞り込める。',
+'もう1つの仕分けが「読み方の深さ」じゃ。全文を eww で読むものと、見出しだけ眺めるものを分ける。定番はスター——大事な記事に印を付ける運用で、elfeed では star というタグを付ける形で代用するのが一般的じゃ。「全文で読む／見出しだけ」の区別をタグとスターで持てば、一覧は自分の優先順位そのものになる。',
+'卒業ミッションは、朝の読み物ルーティンじゃ。elfeed を開く → 気になる記事を eww で読む → 必要なら読み上げで聞く。第1部で作った道具が全部つながる一周じゃ。これが回れば、ブラウザのおすすめ欄を開かずに朝の読み物が済む生活が始まる。——「世界がどう見えるかは、どの窓から見るかで決まる」。その窓を、君はもう自分のEmacsの中に持っておる。'],
+retry:'タグとスター（starタグ）で「全文で読む／見出しだけ」を仕分ける。卒業は朝のルーティン——elfeed→eww→読み上げ——を一周すること。',
+quiz:{ q:'elfeedで「全文で読む／見出しだけ」を仕分ける方法はどれか？', choices:[
+{ t:'タグとスターで印を付けて分ける', ok:true}, { t:'届いた順に全部読む', ok:false}, { t:'未読を全部消す', ok:false}]},
+mission:'朝の読み物ルーティンを1回通して実行する：elfeedを開く → 気になる記事を eww で読む → 必要なら読み上げで聞く。一周できたら第1部は卒業じゃ。'},
+]},
+];
+
+/* ============ 図解データはエンジンの後ろで定義 ============ */
+
+/* ============ エンジン ============ */
+const SAVE_KEY = 'doomWebReadDojoSaveV1';
+const TOTAL = LEVELS.reduce((a,l)=>a+l.lessons.length,0);
+let done = {};
+let mission = {};
+try{ const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}'); if(s && s.done) done = s.done; if(s && s.mission) mission = s.mission;}catch(e){}
+let soundOn = true, typing = null, advanceFn = null;
+let cur = { level:0, lesson:0, pages:[], page:0};
+
+const $ = id => document.getElementById(id);
+const bgEl=$('bg'), charEl=$('char'), nameEl=$('namebox'), textEl=$('text'),
+boxEl=$('textbox'), chEl=$('choices'), nextEl=$('nextmark');
+
+function beep(freq, dur, delay, vol){
+if(!soundOn) return;
+try{
+const ctx = beep.ctx || (beep.ctx = new (window.AudioContext||window.webkitAudioContext)());
+if(ctx.state === 'suspended') ctx.resume();
+const o = ctx.createOscillator(), g = ctx.createGain();
+o.type='square'; o.frequency.value = freq || 660;
+g.gain.value = vol || 0.03;
+o.connect(g); g.connect(ctx.destination);
+const t = ctx.currentTime + (delay||0);
+o.start(t); o.stop(t + (dur||0.06));
+}catch(e){}
+}
+function save(){
+try{ localStorage.setItem(SAVE_KEY, JSON.stringify({done: done, mission: mission})); toast();}catch(e){}
+}
+function toast(){
+const t=$('toast'); t.classList.add('show');
+clearTimeout(toast.tm); toast.tm=setTimeout(()=>t.classList.remove('show'), 900);
+}
+function doneCount(){ return Object.keys(done).filter(k=>done[k]).length;}
+function missionDoneCount(){ return Object.keys(mission).filter(k=>mission[k]==='done').length;}
+function missionLaterCount(){ return Object.keys(mission).filter(k=>mission[k]==='later').length;}
+function renderProgress(now){
+$('pDone').textContent = doneCount();
+$('bDone').style.width = (doneCount()/TOTAL*100) + '%';
+$('pMis').textContent = missionDoneCount();
+$('bMis').style.width = (missionDoneCount()/TOTAL*100) + '%';
+const lc = missionLaterCount();
+$('pMisLeft').textContent = lc ? '（⚠未完了 ' + lc + '）' : '';
+if(now) $('pNow').textContent = now;
+}
+function setScene(bg, char, name){
+bgEl.className = 'bg ' + bg;
+charEl.innerHTML = CHARS[char] || '';
+charEl.style.display = char && char!== 'none'? '': 'none';
+if(name){ nameEl.textContent = name; nameEl.style.display='';} else nameEl.style.display='none';
+}
+function typeText(txt, onDoneTyping){ speak(txt);
+clearInterval(typing);
+textEl.textContent=''; nextEl.style.display='none';
+boxEl.scrollTop = 0;
+advanceFn = null;
+let i=0;
+typing = setInterval(()=>{
+i++;
+textEl.textContent = txt.slice(0, i);
+boxEl.scrollTop = boxEl.scrollHeight;
+const ch = txt.charAt(i-1);
+if(ch && ch!== ' ' && ch!== '\n' && i % 2 === 1){
+beep(880 + Math.random()*420, 0.018, 0, 0.012);
+}
+if(i >= txt.length){
+clearInterval(typing); typing=null;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+}
+}, 26);
+boxEl.onclick = ()=>{
+if(typing){
+clearInterval(typing); typing=null;
+textEl.textContent = txt; boxEl.scrollTop = boxEl.scrollHeight;
+nextEl.style.display='';
+if(onDoneTyping) onDoneTyping();
+} else if(advanceFn){
+const f = advanceFn; advanceFn = null; f();
+}
+};
+}
+document.addEventListener('keydown', e=>{
+if(!typing && advanceFn && (e.key === ' ' || e.key === 'Enter')){
+e.preventDefault();
+const f = advanceFn; advanceFn = null; f();
+}
+});
+function showChoices(items){
+chEl.innerHTML='';
+items.forEach(it=>{
+const b=document.createElement('button');
+b.className='choice' + (it.done? ' done': '') + (it.later? ' later': '');
+b.textContent=it.t;
+b.onclick=()=>{ beep(520,.06); setTimeout(()=>beep(780,.07),70); chEl.classList.remove('show'); it.fn();};
+chEl.appendChild(b);
+});
+chEl.classList.add('show');
+const dg = $('diagram');
+if(dg && dg.style.display === 'block'){
+$('screen').classList.add('diagmenu');
+requestAnimationFrame(()=>{
+const sr = $('screen').getBoundingClientRect();
+const dr = dg.getBoundingClientRect();
+chEl.style.top = Math.max(0, Math.round(dr.bottom - sr.top + 8)) + 'px';
+});
+} else { $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+}
+function hideChoices(){ chEl.classList.remove('show'); chEl.innerHTML=''; chEl.style.top=''; $('screen').classList.remove('diagmenu'); }
+
+/* ============ 図解（8bit風SVG・黒板） ============ */
+function _ar(x1,y1,x2,y2,col){ col=col||'#c9a86a'; var pts; if(Math.abs(x2-x1)>=Math.abs(y2-y1)){ pts = x2>x1 ? [[x2,y2],[x2-10,y2-6],[x2-10,y2+6]] : [[x2,y2],[x2+10,y2-6],[x2+10,y2+6]]; } else { pts = y2>y1 ? [[x2,y2],[x2-6,y2-10],[x2+6,y2-10]] : [[x2,y2],[x2-6,y2+10],[x2+6,y2+10]]; } return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+col+'" stroke-width="4"/><polygon points="'+pts.map(function(p){return p.join(',');}).join(' ')+'" fill="'+col+'"/>'; }
+function _tx(x,y,str,col,size){ return '<text x="'+x+'" y="'+y+'" font-size="'+(size||12)+'" fill="'+(col||'#fdf3d8')+'" text-anchor="middle">'+str+'</text>'; }
+function _bx(x,y,w,h,label,fill){ return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'" stroke="#c9a86a" stroke-width="2"/><text x="'+(x+w/2)+'" y="'+(y+h/2+5)+'" font-size="12" fill="#fff" text-anchor="middle">'+label+'</text>'; }
+function _tag(x,y,str,col){ var w=str.length*12+12; return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="20" fill="'+col+'"/><text x="'+(x+w/2)+'" y="'+(y+14)+'" font-size="11" fill="#120b04" text-anchor="middle" font-weight="bold">'+str+'</text>'; }
+function _svg(inner){ return '<svg viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'+inner+'</svg>'; }
+var YL='#ffd94a', GN='#a5e075', RD='#ff8a75', DM='#c9a86a', OR='#ffb84d';
+const DIAG = {
+a1: _svg(_tx(180,16,'ブラウザの窓 と 本文だけの窓',DM,12)
+ + _bx(8,40,160,40,'広告＋装飾＋おすすめ','#4a1c10')
+ + _bx(192,40,160,40,'本文＋リンクだけ','#2e4a10')
+ + _tx(180,106,'eww ＝ M-x eww で開く、Emacsのバッファ',YL,12)),
+a2: _svg(_tx(180,16,'ewwの足腰',DM,12)
+ + _tag(16,26,'TAB / S-TAB リンク移動',GN) + _tag(196,26,'RET 開く',GN)
+ + _tag(16,58,'l 戻る ・ r 進む',OR)
+ + _tag(16,90,'g 再読み込み ・ q 閉じる',YL)),
+a3: _svg(_tx(180,16,'R ＝ 本文だけ表示（トグル）',DM,12)
+ + _bx(8,40,160,40,'メニュー＋関連記事＋本文','#4a1c10') + _ar(168,59,184,59)
+ + _bx(184,40,168,40,'本文だけ','#2e4a10')
+ + _tx(180,106,'もう一度 R で元に戻る',YL,12)),
+a4: _svg(_tx(180,16,'本棚と取り込み',DM,12)
+ + _tag(16,26,'b 登録 ・ B 一覧から開く',GN)
+ + _tag(16,58,'d リンク先ファイルを保存',OR)
+ + _tag(16,90,'読む作業がEmacsの中で完結する',YL)),
+b1: _svg(_tx(180,16,'拾い読みの道具',DM,12)
+ + _tag(16,26,'C-s / C-r isearchで語句へ飛ぶ',GN)
+ + _tag(16,58,'見出しを地図にして節を選ぶ',OR)
+ + _tag(16,90,'M-x occur 語句のある行を一覧に',YL)),
+b2: _svg(_tx(180,16,'ページ ＝ バッファ',DM,12)
+ + _bx(8,44,104,38,'記事A','#2e2110') + _bx(128,44,104,38,'記事B','#2e2110') + _bx(248,44,104,38,'メモ','#2e4a10')
+ + _tx(180,108,'SPC b b で行き来 ・ 名前を付けて整理',YL,12)),
+b3: _svg(_tx(180,16,'画像と動画の線引き',DM,12)
+ + _tag(16,26,'画像：表示できる（設定で消せる）',GN)
+ + _tag(16,58,'重いページは画像オフで軽く',OR)
+ + _tag(16,90,'動画：ewwでは再生できない',RD)),
+b4: _svg(_tx(180,16,'振り分けの基準',DM,12)
+ + _bx(8,40,160,40,'本文が読める → eww','#2e4a10')
+ + _bx(192,40,160,40,'JS必須・操作系 → ブラウザ','#4a1c10')
+ + _tx(180,106,'& で外部ブラウザへ渡す',YL,12)),
+c1: _svg(_tx(180,16,'読み上げ 3つの方式',DM,12)
+ + _tag(16,26,'Emacspeak：本格的だが大がかり',RD)
+ + _tag(16,52,'speechd：標準的だが日本語に癖',OR)
+ + _tag(16,78,'外部TTS（Piper）：渡すだけ・採用',GN)
+ + _tx(180,118,'Emacsが文章を選び、Piperが声にする',YL,12)),
+c2: _svg(_tx(180,16,'読み上げの管（パイプ）',DM,12)
+ + _bx(2,44,104,38,'リージョン','#2e2110') + _ar(106,63,118,63)
+ + _bx(118,44,104,38,'M-| → Piper','#4a2f10') + _ar(222,63,234,63)
+ + _bx(234,44,124,38,'再生 → 声','#2e4a10')
+ + _tx(180,108,'まず1段落で管がつながるか試す',YL,12)),
+c3: _svg(_tx(180,16,'自分用コマンド化',DM,12)
+ + _bx(8,44,104,38,'elisp関数','#2e2110') + _ar(112,63,124,63)
+ + _bx(124,44,104,38,'config.el','#4a2f10') + _ar(228,63,240,63)
+ + _bx(240,44,112,38,'キー割当','#2e4a10')
+ + _tx(180,108,'選んでキーを押せば声が出る',YL,12)),
+c4: _svg(_tx(180,16,'記事を通しで聞く',DM,12)
+ + _tag(16,26,'R 本文だけ → C-x h 全体を選ぶ',GN)
+ + _tag(16,58,'長文は分割して渡す',OR)
+ + _tag(16,90,'止め方＝プロセスを止める',YL)),
+d1: _svg(_tx(180,16,'push → pull',DM,12)
+ + _bx(8,44,150,38,'push：流れてくる','#4a1c10') + _ar(158,63,174,63)
+ + _bx(174,44,178,38,'pull：選んだ情報源だけ','#2e4a10')
+ + _tx(180,112,'elfeed ＝ ミニインターネットの日常版',YL,11)),
+d2: _svg(_tx(180,16,'仕分けと卒業ルーティン',DM,12)
+ + _tag(16,24,'タグ：源ごとに色分け・フィルタ式で絞る',GN)
+ + _tag(16,52,'スター（starタグ）：全文で読む印',OR)
+ + _tag(16,80,'朝：elfeed → ewwで読む → 読み上げ',YL)
+ + _tx(180,118,'窓は自分のEmacsの中にある',GN,12)),
+};
+function showDiagFor(id){
+const d = $('diagram');
+if(DIAG[id]){ d.innerHTML = DIAG[id]; d.style.display = 'block'; }
+else d.style.display = 'none';
+}
+function hideDiag(){ $('diagram').style.display = 'none'; $('screen').classList.remove('diagmenu'); chEl.style.top = ''; }
+
+/* ============ 画面遷移 ============ */
+function missionMark(ls){
+if(!done[ls.id]) return '';
+if(mission[ls.id] === 'done') return ' 🎯済';
+if(mission[ls.id] === 'later') return ' ⚠ミッション未完了';
+return ' 🎯未';
+}
+function goLevels(){
+hideChoices();
+hideDiag();
+setScene('bg-city','none','');
+renderProgress('レベル選択');
+const dc = doneCount();
+const intro = dc === 0
+? '「よく来た。わしがヨミ仙人じゃ」\nテーマは「テキストWeb＋読み上げ」——ブラウザの窓を離れ、Emacsの中に本文だけの窓を持つ修行じゃ。全' + TOTAL + '課。\n好きな章からでよい。分かるまで、何度でも付き合うぞ。'
+: '「戻ったか。現在の理解済みは ' + dc + ' / ' + TOTAL + ' 課、ミッション完了は ' + missionDoneCount() + ' 件じゃ」\n続きをやるもよし、済んだ課を復習するもよし。⚠ の付いた課はミッションが残っておるぞ。';
+typeText(intro, ()=>{
+showChoices(LEVELS.map((lv, i)=>{
+const c = lv.lessons.filter(l=>done[l.id]).length;
+const m = lv.lessons.filter(l=>mission[l.id]==='done').length;
+return { t: lv.name + '（理解 ' + c + '/' + lv.lessons.length + '・🎯 ' + m + '/' + lv.lessons.length + '）', done: c === lv.lessons.length && m === lv.lessons.length,
+fn: ()=>goLessons(i)};
+}));
+});
+}
+function goLessons(li){
+hideChoices();
+hideDiag();
+const lv = LEVELS[li];
+cur.level = li;
+setScene('bg-city','sennin','ヨミ仙人');
+renderProgress(lv.name);
+typeText('\n' + lv.desc + '\n課を選ぶのじゃ。✔ は理解済み、🎯済 はミッション完了、⚠ はミッション未完了。復習は何度でもできるぞ。', ()=>{
+showChoices(
+lv.lessons.map((ls, i)=>({ t: ls.title + missionMark(ls), done:!!done[ls.id] && mission[ls.id]==='done', later: mission[ls.id]==='later', fn: ()=>startLesson(li, i, false)}))
+.concat([{ t:'レベル選択に戻る', fn: goLevels}])
+);
+});
+}
+function startLesson(li, idx, withRetry){
+hideChoices();
+const ls = LEVELS[li].lessons[idx];
+cur.level = li; cur.lesson = idx;
+cur.pages = ls.teach.slice();
+if(withRetry) cur.pages.push('\n' + ls.retry);
+cur.page = 0;
+setScene('bg-term','sennin','ヨミ仙人');
+renderProgress(LEVELS[li].name + '：' + ls.title);
+showDiagFor(ls.id);
+teachPage();
+}
+function teachPage(){
+const isLast = cur.page >= cur.pages.length - 1;
+typeText('\n' + cur.pages[cur.page], ()=>{
+if(isLast){ showCheck();}
+else { advanceFn = ()=>{ cur.page++; teachPage();};}
+});
+}
+function showCheck(){
+showChoices([
+{ t:'これは分かった！（確認問題へ）', fn: showQuiz},
+{ t:'分からない（もう一度聞く）', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'レッスン一覧に戻る', fn: ()=>goLessons(cur.level)}
+]);
+}
+function showQuiz(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+setScene('bg-term','sennin','ヨミ仙人');
+typeText('\n' + ls.quiz.q, ()=>{
+showChoices(ls.quiz.choices.map(c=>({
+t: c.t,
+fn: ()=>{ if(c.ok) completeLesson(); else wrongAnswer();}
+})));
+});
+}
+function wrongAnswer(){
+hideChoices();
+const ls = LEVELS[cur.level].lessons[cur.lesson];
+beep(220,.12); setTimeout(()=>beep(180,.14),120);
+typeText('「むむ、違うぞ。焦らなくてよい」\n' + ls.retry, ()=>{
+showChoices([
+{ t:'もう一度説明を聞く', fn: ()=>startLesson(cur.level, cur.lesson, true)},
+{ t:'もう一度問題に挑む', fn: showQuiz}
+]);
+});
+}
+function completeLesson(){
+hideDiag();
+const li = cur.level, idx = cur.lesson;
+const ls = LEVELS[li].lessons[idx];
+const isNew = !done[ls.id];
+done[ls.id] = true; save();
+[392,523,659,784].forEach((f,i)=>beep(f,.1,i*0.11));
+renderProgress(LEVELS[li].name + '：' + ls.title + ' ✔');
+const msg = '「うむ、分かったようじゃな」\n理解済み ✔（合計 ' + doneCount() + ' / ' + TOTAL + ' 課）\n\nでは仕上げに、実践ミッションじゃ。頭で分かったことを、手で1回やってみる。それが身につくということじゃ。';
+typeText(msg, ()=>showMission());
+}
+function showMission(){
+const li = cur.level, idx = cur.lesson;
+const ls = LEVELS[li].lessons[idx];
+setScene('bg-room','sennin','ヨミ仙人');
+renderProgress(LEVELS[li].name + '：' + ls.title + ' ― 実践ミッション');
+const already = mission[ls.id] === 'done';
+typeText('\n🎯 実践ミッション\n' + ls.mission + '\n\n詰まったら、エラーや画面の状態をそのままAI（Muse）に貼って聞くのじゃ。それが一番の近道じゃぞ。', ()=>{
+const items = [];
+items.push({ t:'やった（ミッション完了）', done: already, fn: ()=>{ mission[ls.id]='done'; save(); renderProgress(); finishLesson('「よくやった！」\nミッション完了 🎯（合計 ' + missionDoneCount() + ' / ' + TOTAL + ' 件）'); }});
+items.push({ t:'あとで（次へ進む）', later: mission[ls.id]==='later', fn: ()=>{ if(mission[ls.id] !== 'done'){ mission[ls.id]='later'; save(); } renderProgress(); finishLesson('「承知した」\nミッションは ⚠ 未完了として残しておいた。一覧の ⚠ から、いつでも戻って来られるぞ。'); }});
+showChoices(items);
+});
+}
+function finishLesson(headMsg){
+const li = cur.level, idx = cur.lesson;
+const dc = doneCount();
+const allDone = dc >= TOTAL;
+const allMission = missionDoneCount() >= TOTAL;
+const levelDone = LEVELS[li].lessons.every(l=>done[l.id]);
+let msg = headMsg;
+if(allDone && allMission){
+setScene('bg-way','sennin','ヨミ仙人');
+msg += '\n\n――全課修了、ミッションも全て完了じゃ！卒業おめでとう。\n開く窓は自分で選び、本文だけを取り出し、耳でも読み、情報源は自分で引く。「世界がどう見えるかは、どの窓から見るかで決まる」——その窓はもう、君のEmacsの中にある。次は第2部「HTML/MD編集」で会おう。';
+} else if(allDone){
+msg += '\n\n全課の理解は修了じゃ。残るはミッション ' + (TOTAL - missionDoneCount()) + ' 件。一覧の ⚠ を潰していけば卒業じゃ。';
+} else if(levelDone){
+msg += '\nこの章は全課修了じゃ。よくやった。';
+}
+typeText(msg, ()=>{
+const items = [];
+if(dc < TOTAL || !allMission){
+if(idx + 1 < LEVELS[li].lessons.length){
+items.push({ t:'次の課へ（' + LEVELS[li].lessons[idx+1].title + '）', fn: ()=>startLesson(li, idx+1, false)});
+} else if(li + 1 < LEVELS.length){
+items.push({ t:'次の章へ（' + LEVELS[li+1].name + '）', fn: ()=>goLessons(li+1)});
+}
+}
+items.push({ t:'レッスン一覧に戻る', fn: ()=>goLessons(li)});
+items.push({ t:'レベル選択に戻る', fn: goLevels});
+showChoices(items);
+});
+}
+
+/* ============ ボタン類 ============ */
+$('btnEnter').onclick = ()=>{ beep(660,.06); $('title').style.display='none'; goLevels();};
+$('btnLevels').onclick = ()=>{ $('title').style.display='none'; goLevels();};
+$('btnReset').onclick = ()=>{
+done = {}; mission = {}; save(); renderProgress('タイトル');
+$('title').style.display='flex';
+};
+$('btnSound').onclick = (e)=>{
+soundOn =!soundOn;
+e.target.textContent = soundOn? '🔊 音ON': '🔇 音OFF';
+if(soundOn) beep(700,.06);
+};
+renderProgress('タイトル');
+
+let ttsOn = false;
+try{ ttsOn = localStorage.getItem('advTtsV1') === '1'; }catch(e){}
+const btnTts = document.getElementById('btnTts');
+function updTtsBtn(){ if(btnTts) btnTts.textContent = ttsOn ? '🗣 読上ON' : '🗣 読上OFF'; }
+function speak(txt){
+  if(!ttsOn || !('speechSynthesis' in window)) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(String(txt).replace(/\n+/g, ' '));
+    u.lang = 'ja-JP'; u.rate = 1.0;
+    const vs = speechSynthesis.getVoices();
+    const jv = vs.find(v => v.lang && v.lang.toLowerCase().indexOf('ja') === 0) || vs[0];
+    if(jv) u.voice = jv;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+if(btnTts) btnTts.onclick = () => {
+  ttsOn = !ttsOn;
+  try{ localStorage.setItem('advTtsV1', ttsOn ? '1' : '0'); }catch(e){}
+  updTtsBtn();
+  if(ttsOn){ speak(textEl.textContent); setTimeout(checkVoices, 800); }
+  else if('speechSynthesis' in window) speechSynthesis.cancel();
+};
+function checkVoices(){
+  if(!ttsOn || !btnTts || !('speechSynthesis' in window)) return;
+  if(speechSynthesis.getVoices().length === 0) btnTts.textContent = '🗣 音声なし';
+  else updTtsBtn();
+}
+if('speechSynthesis' in window) speechSynthesis.onvoiceschanged = checkVoices;
+updTtsBtn();
+setTimeout(checkVoices, 800);
+</script>
+</body>
+</html>
