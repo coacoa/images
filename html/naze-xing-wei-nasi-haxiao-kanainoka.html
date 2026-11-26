@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<!-- build: 2026-11-26 12:14:55 JST -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<link rel="icon" href="data:," />
+<title>なぜ「興味なし」は効かないのか</title>
+<style>
+  :root{
+    --bg-top:#0d1018;
+    --bg-bot:#171c28;
+    --ink:#eef0f4;
+    --sub:#b2bac8;
+    --accent:#e8543c;
+    --gold:#f0b23c;
+    --line:#465064;
+    --panel:rgba(10,12,18,.82);
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans CJK JP","Yu Gothic UI","Yu Gothic",Meiryo,sans-serif;
+    background:linear-gradient(180deg,var(--bg-top),var(--bg-bot));
+    color:var(--ink);
+    overflow:hidden;
+    -webkit-user-select:none;
+    user-select:none;
+  }
+  /* 上部アクセントバー（進捗を兼ねる） */
+  #topbar{
+    position:fixed; top:0; left:0; height:8px; width:100%;
+    background:rgba(255,255,255,.06); z-index:30;
+  }
+  #topfill{
+    height:100%; width:0%;
+    background:var(--accent);
+    transition:width .35s ease;
+  }
+  #stage{
+    position:fixed; inset:0;
+    display:flex; flex-direction:column;
+    cursor:pointer;
+  }
+  #slide{
+    flex:1 1 auto;
+    display:flex; flex-direction:column; justify-content:center;
+    padding:4vh 6.5vw 2vh;
+    min-height:0;
+  }
+  .slide-inner{ animation:fadein .3s ease; }
+  @keyframes fadein{ from{ opacity:0; } to{ opacity:1; } }
+  @media (prefers-reduced-motion: reduce){
+    .slide-inner{ animation:none; }
+    #topfill{ transition:none; }
+  }
+  .label{
+    color:var(--gold);
+    font-weight:700;
+    font-size:clamp(15px,2.1vw,28px);
+    letter-spacing:.14em;
+    margin:0 0 1.6vh;
+  }
+  .stitle{
+    font-weight:700;
+    font-size:clamp(30px,5.6vw,76px);
+    line-height:1.25;
+    margin:0;
+    overflow-wrap:anywhere;
+  }
+  .is-title .stitle{ font-size:clamp(34px,6.2vw,92px); }
+  .rule{
+    width:170px; height:6px; background:var(--accent);
+    margin:2.6vh 0 3.2vh;
+  }
+  .is-title .rule{ width:230px; }
+  .subtitle-line{
+    color:var(--sub);
+    font-size:clamp(17px,2.5vw,34px);
+    margin:0 0 3.4vh;
+  }
+  ul.bullets{
+    list-style:none; margin:0; padding:0;
+  }
+  ul.bullets li{
+    position:relative;
+    font-size:clamp(16px,2.45vw,33px);
+    line-height:1.5;
+    padding-left:1.5em;
+    margin:0 0 2.1vh;
+    overflow-wrap:anywhere;
+  }
+  ul.bullets li::before{
+    content:"";
+    position:absolute; left:.1em; top:.52em;
+    border-left:.5em solid var(--accent);
+    border-top:.3em solid transparent;
+    border-bottom:.3em solid transparent;
+  }
+  .is-title ul.bullets li::before{
+    border-left:none; border-top:none; border-bottom:none;
+    content:"・"; color:var(--ink);
+    left:0; top:0;
+  }
+  .is-title ul.bullets li{ padding-left:1.2em; }
+  /* 字幕バー（読み上げ文） */
+  #caption{
+    flex:0 0 auto;
+    background:var(--panel);
+    border-top:1px solid var(--line);
+    padding:10px 6.5vw 12px;
+    font-size:clamp(12px,1.45vw,19px);
+    line-height:1.65;
+    color:var(--sub);
+    max-height:22vh;
+    overflow:hidden;
+  }
+  #caption .cap-text{ color:#d6dbe4; }
+  /* 操作バー */
+  #controls{
+    flex:0 0 auto;
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    padding:8px 12px calc(8px + env(safe-area-inset-bottom));
+    background:rgba(8,10,15,.9);
+    border-top:1px solid var(--line);
+    cursor:default;
+    transition:opacity .4s ease;
+  }
+  #controls button{
+    min-height:40px; min-width:44px;
+    padding:6px 14px;
+    font:inherit; font-size:15px;
+    color:var(--ink);
+    background:#232a3a;
+    border:1px solid var(--line);
+    border-radius:8px;
+    cursor:pointer;
+  }
+  #controls button:hover{ background:#2d3649; }
+  #controls button:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+  #controls button[aria-pressed="true"]{
+    background:var(--accent); border-color:var(--accent); color:#fff; font-weight:700;
+  }
+  #progress{
+    font-size:15px; color:var(--sub);
+    font-variant-numeric:tabular-nums;
+    margin:0 4px;
+    white-space:nowrap;
+  }
+  #controls .spacer{ flex:1 1 auto; }
+  #statemsg{ font-size:13px; color:var(--gold); white-space:nowrap; }
+  /* フルスクリーン時：操作バーはマウスを動かした時だけ出す（OBS録画用） */
+  body.fs #controls{ opacity:0; pointer-events:none; }
+  body.fs #controls.show{ opacity:1; pointer-events:auto; }
+  body.fs #caption{ padding-bottom:14px; }
+  @media (max-width:560px){
+    #slide{ padding:3vh 5vw 1vh; }
+    #caption{ padding-left:5vw; padding-right:5vw; }
+    #controls button{ padding:6px 10px; font-size:14px; }
+    #statemsg{ display:none; }
+  }
+</style>
+</head>
+<body>
+<div id="topbar"><div id="topfill"></div></div>
+
+<div id="stage">
+  <div id="slide" aria-live="off"></div>
+  <div id="caption"><span class="cap-text" id="capText"></span></div>
+  <div id="controls">
+    <button id="btnPrev" type="button" aria-label="前のスライド">◀ 前へ</button>
+    <button id="btnNext" type="button" aria-label="次のスライド">次へ ▶</button>
+    <span id="progress">1 / 14</span>
+    <span class="spacer"></span>
+    <span id="statemsg"></span>
+    <button id="btnVoice" type="button" aria-pressed="true">読み上げ ON</button>
+    <button id="btnAuto" type="button" aria-pressed="false">▶ 自動再生</button>
+    <button id="btnFs" type="button">全画面</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* スライド文言・読み上げ文は kyouminashi-slides/slides_data.json のデータをそのまま使用 */
+var SLIDES = [
+  {
+    "bullets": [
+      "押しても戻ってくるのは、気のせいではない",
+      "理由はYouTubeのアルゴリズムの構造にある",
+      "後半：自分のフィルタで「本物の興味なし」を実装する条件"
+    ],
+    "label": "分析編",
+    "narration": "なぜ、興味なしは効かないのか。ユーチューブのおすすめで、興味なしを押したのに、似た動画が何度も戻ってくる。その感覚は気のせいではなく、実測でも裏づけられています。前半は、その理由をアルゴリズムの構造から分析します。後半は、自分のフィルタで本物の興味なしを実現するには、どう実装すべきかをまとめます。",
+    "title": "なぜ「興味なし」は効かないのか"
+  },
+  {
+    "bullets": [
+      "「興味なし」を押した動画の類似品が、数日後にはまた並ぶ",
+      "「チャンネルをおすすめに表示しない」でも完全には止まらない",
+      "ポストに「広告お断り」と貼ってもチラシが入る、あの風景と同じ"
+    ],
+    "label": "現象",
+    "narration": "まず現象の確認です。興味なしを押しても、数日たつと似た動画がおすすめに戻ってくる。チャンネルをおすすめに表示しない、を使っても完全には止まらない。これは、ポストに広告お断りと貼ってもチラシが入ってくる、あの風景とよく似ています。拒否は伝えたはずなのに、現実が変わらないのです。",
+    "title": "押しても、戻ってくる"
+  },
+  {
+    "bullets": [
+      "Mozilla財団の調査（2022年）：22,722人、約5億6,800万本のおすすめを分析",
+      "防げた割合 ― 興味なし 約11%／低評価 約12%／履歴削除 約29%",
+      "最強の「チャンネル非表示」でも約43%。半分も止まらなかった",
+      "利用者アンケートでは約6割が「効かない、またはまちまち」と回答"
+    ],
+    "label": "実測データ",
+    "narration": "実測データがあります。二千二十二年、モジラ財団が二万二千人以上の協力者と、約五億六千八百万本のおすすめを分析しました。望まないおすすめを防げた割合は、興味なしで約十一パーセント。低評価で約十二パーセント。再生履歴の削除で約二十九パーセント。最も強いチャンネル非表示でも約四十三パーセントで、半分も止まりませんでした。利用者へのアンケートでも、約六割が、効かない、またはまちまち、と答えています。",
+    "title": "「興味なし」で防げたのは約11%"
+  },
+  {
+    "bullets": [
+      "ミシガン大学の実験では、ホーム画面では約88%減った",
+      "しかし「次の動画」のおすすめでは、ほとんど効かなかった",
+      "つまり「効く／効かない」は面と測り方で変わる ― 保証にはならない"
+    ],
+    "label": "実測データの留保",
+    "narration": "ただし、留保も必要です。ミシガン大学の実験では、興味なしによってホーム画面の望まないおすすめが約八十八パーセント減った一方、次の動画のおすすめでは、ほとんど効きませんでした。つまり、効くかどうかは、どの画面か、どう測るかで変わります。ある面では効いても、全体の保証にはならない、というのが実態です。",
+    "title": "面によっては、効くこともある"
+  },
+  {
+    "bullets": [
+      "アルゴリズムが最大化するのは、視聴者の満足ではなく滞在時間と広告",
+      "公式説明でも「興味なし」は判断材料の一つにすぎない",
+      "再生履歴・検索履歴・登録・高評価など大量のシグナルと合算され、薄まる"
+    ],
+    "label": "理由 1",
+    "narration": "理由の一つ目は、目的の違いです。アルゴリズムが最大化しようとするのは、視聴者一人ひとりの満足ではなく、滞在時間と広告の成果です。ユーチューブ自身の説明でも、興味なしは、おすすめを決める判断材料の一つにすぎません。再生履歴、検索履歴、登録チャンネル、高評価。大量のシグナルの中に合算されるため、あなたの一票は構造的に薄まります。",
+    "title": "目的が違う ― 満足ではなく滞在時間"
+  },
+  {
+    "bullets": [
+      "「興味なし」は基本、その動画への反応として処理される",
+      "話題全体・別のチャンネル・新しい言い回しには広がらない",
+      "似ていても「別の動画」は、再び候補に入ってくる"
+    ],
+    "label": "理由 2",
+    "narration": "理由の二つ目は、一般化しないことです。興味なしは基本的に、その動画への反応として処理されます。だから、話題そのもの、別のチャンネルの同じ話題、新しい言い回しの動画には広がりません。似ていても別の動画は、まっさらな候補として、再びおすすめに入ってきます。あなたは話題を拒否したつもりでも、システムは一本の動画への反応としてしか受け取っていないのです。",
+    "title": "一般化しない ― 「その動画」だけの反応"
+  },
+  {
+    "bullets": [
+      "フィードバックの効き目は、時間とともに薄れる設計",
+      "アルゴリズムには「探索」があり、反応を見るため似たものを再提示する",
+      "戻ってくるのはバグではなく、仕様の一部"
+    ],
+    "label": "理由 3",
+    "narration": "理由の三つ目は、減衰と探索です。フィードバックの効き目は、時間とともに薄れるように設計されています。さらにアルゴリズムには探索の役割があり、視聴者の反応を確かめるために、似たものをわざわざ再び出してきます。つまり、戻ってくるのはバグではなく、仕様の一部です。忘れさせる力と、試し直す力の両方が、システム側に組み込まれています。",
+    "title": "減衰と探索 ― 戻す仕組みがある"
+  },
+  {
+    "bullets": [
+      "拒否を破る側のコストはゼロ。設定と確認の手間は全部、受け手持ち",
+      "ボタンは「︙」メニューの奥 ― 押されにくい場所に置かれている",
+      "効き具合の最終決定権は、プラットフォーム側にある"
+    ],
+    "label": "理由 4",
+    "narration": "理由の四つ目は、コストの非対称です。拒否を破る側のコストはゼロで、設定する手間も、効いているか確認する手間も、全部受け手の負担です。ボタン自体も、縦三点メニューの奥という、押されにくい場所にあります。なお、モジラの調査に対してユーチューブは、実態を反映していないと反論しました。どちらの言い分にせよ、効き具合を最終的に決めるのは、プラットフォーム側です。",
+    "title": "拒否のコストが、受け手にだけかかる"
+  },
+  {
+    "bullets": [
+      "「興味なし」は命令ではなく、相手への「お願い」",
+      "お願いは、相手の都合で薄められ、期限切れになり、試し直される",
+      "本物にするには、決定権を自分の側に移すしかない"
+    ],
+    "label": "分析のまとめ",
+    "narration": "分析のまとめです。ユーチューブの興味なしは、電源スイッチではなく、調整つまみです。押す行為は、命令ではなく、相手へのお願いとして処理されます。お願いである以上、相手の都合で薄められ、時間で期限切れになり、探索で試し直されます。本物の興味なしにするには、決定権そのものを、自分の側に移すしかありません。",
+    "title": "「スイッチ」ではなく「調整つまみ」"
+  },
+  {
+    "bullets": [
+      "① 決定的 ― 合算で薄めず、ローカルで即座に効く",
+      "② 減衰しない ― 期限は自分が決める（デフォルトは無期限）",
+      "③ 一般化する ― 動画から、チャンネル・話題・型へ広げる",
+      "④ 可視化できる ― 拒否リストをいつでも見て、直せる",
+      "⑤ 突破を記録できる ― すり抜けたら証拠が残る"
+    ],
+    "label": "実装の条件",
+    "narration": "では、本物の興味なしに必要な条件を五つ挙げます。一つ、決定的であること。シグナルの合算で薄めず、自分の側で即座に効くこと。二つ、減衰しないこと。期限は自分が決め、基本は無期限です。三つ、一般化すること。一本の動画から、チャンネル、話題、型へと広げて効かせること。四つ、可視化できること。拒否のリストをいつでも見て、直せること。五つ、突破を記録できること。すり抜けて表示されたら、証拠が残ることです。",
+    "title": "本物の「興味なし」に必要な5つ"
+  },
+  {
+    "bullets": [
+      "ホワイトリスト型フィルタの土台で、お断り＝深さ0として処理",
+      "優先順位：例外（人）＞ お断り（話題）＞ パターンスコア",
+      "マッチしたものは表示側に出さず、ゴミ箱リストへ隔離（削除ではない）"
+    ],
+    "label": "実装 1",
+    "narration": "実装の一つ目は、お断りリストです。ホワイトリスト型フィルタの土台の上で、お断りに登録された話題やチャンネルは、深さゼロとして処理します。優先順位は、例外、お断り、パターンスコアの順です。マッチしたものは表示側に出さず、ゴミ箱リストへ隔離します。削除ではないので、誤判定はいつでも見返して戻せます。ここでは、拒否はお願いではなく、自分の側で執行される法律です。",
+    "title": "お断りリスト ― 自分の側の法律"
+  },
+  {
+    "bullets": [
+      "お断りにマッチしたのに表示されたら、それは定義上「突破」",
+      "突破の記録が、アルゴリズムの強制力のものさしになる",
+      "ゴミ箱レビューで新しい言い回し・チャンネルを拾い、お断りに追加"
+    ],
+    "label": "実装 2",
+    "narration": "実装の二つ目は、突破ログです。お断りにマッチしたはずのものが表示されたら、それは定義の上でも突破です。その記録は、相手のアルゴリズムがどれだけ拒否を押し切ってくるか、つまり強制力を測るものさしになります。そしてゴミ箱リストを見返すときに、新しい言い回しや新しいチャンネルを拾って、お断りに追加する。判定、隔離、見返し、追加。この循環で、ルールが育っていきます。",
+    "title": "突破ログ ― すり抜けを測り、ルールを育てる"
+  },
+  {
+    "bullets": [
+      "「広告お断り」のステッカーは、配る側への「お願い」 ― 破っても罰はない",
+      "必要なハガキと不要なチラシが混ざって届き、仕分ける手間は全部こちら持ち",
+      "必要なのは、ポストから家の中に運び込み、自分のルールで仕分けてくれるロボット",
+      "大事な郵便は机へ、チラシは箱へ（捨てない＝隔離）。お断りの差出人から来たら記録する"
+    ],
+    "label": "現実世界のたとえ",
+    "narration": "現実世界でたとえると、こうなります。ポストの広告お断りのステッカーは、配る側へのお願いで、破っても罰はありません。プラットフォームの興味なしも、同じ立場です。しかも、本当に必要なハガキと不要なチラシは混ざって届くので、仕分ける手間は全部こちら持ちになります。そこで必要なのが、ポストから家の中へ運び込み、自分のルールで仕分けてくれるロボットです。大事な郵便は机の上へ、チラシは箱の中へ。捨てるのではなく隔離して、あとで見返せるようにします。お断りしたはずの差出人のものが届いたら、それも記録します。これが、自分のフィルタのあるべき姿です。",
+    "title": "ポストと「仕分けロボット」"
+  },
+  {
+    "bullets": [
+      "プラットフォームの「興味なし」は、送って終わりの感想",
+      "自分のフィルタの「興味なし」は、自分の窓の仕様",
+      "押すボタンを増やすのではなく、決定権の置き場所を変える"
+    ],
+    "label": "まとめ",
+    "narration": "まとめです。プラットフォームの興味なしは、送って終わりの感想でした。自分のフィルタの興味なしは、自分の窓の仕様です。問題は、ボタンの押し方や回数ではありません。決定権がどこに置かれているかです。決定権を自分の側に置いたとき、興味なしは初めて、本物の拒否になります。",
+    "title": "感想から、仕様へ"
+  }
+];
+var N = SLIDES.length;
+
+var idx = 0;
+var voiceOn = true;
+var autoplay = false;
+var speakToken = 0;
+var fallbackTimer = null;
+var hideTimer = null;
+
+var slideEl = document.getElementById("slide");
+var capText = document.getElementById("capText");
+var progressEl = document.getElementById("progress");
+var topfill = document.getElementById("topfill");
+var btnPrev = document.getElementById("btnPrev");
+var btnNext = document.getElementById("btnNext");
+var btnVoice = document.getElementById("btnVoice");
+var btnAuto = document.getElementById("btnAuto");
+var btnFs = document.getElementById("btnFs");
+var controlsEl = document.getElementById("controls");
+var statemsg = document.getElementById("statemsg");
+
+function render() {
+  var s = SLIDES[idx];
+  slideEl.innerHTML = "";
+  var wrap = document.createElement("div");
+  wrap.className = "slide-inner" + (idx === 0 ? " is-title" : "");
+  var lab = document.createElement("p");
+  lab.className = "label";
+  lab.textContent = s.label;
+  var ttl = document.createElement("h1");
+  ttl.className = "stitle";
+  ttl.textContent = s.title;
+  var rule = document.createElement("div");
+  rule.className = "rule";
+  wrap.appendChild(lab);
+  wrap.appendChild(ttl);
+  wrap.appendChild(rule);
+  if (s.sub) {
+    var sub = document.createElement("p");
+    sub.className = "subtitle-line";
+    sub.textContent = s.sub;
+    wrap.appendChild(sub);
+  }
+  var ul = document.createElement("ul");
+  ul.className = "bullets";
+  for (var i = 0; i < s.bullets.length; i++) {
+    var li = document.createElement("li");
+    li.textContent = s.bullets[i];
+    ul.appendChild(li);
+  }
+  wrap.appendChild(ul);
+  slideEl.appendChild(wrap);
+  capText.textContent = s.narration;
+  progressEl.textContent = (idx + 1) + " / " + N;
+  topfill.style.width = ((idx + 1) / N * 100) + "%";
+  document.title = s.title + " ― なぜ「興味なし」は効かないのか";
+}
+
+function clearFallback() {
+  if (fallbackTimer !== null) { clearTimeout(fallbackTimer); fallbackTimer = null; }
+}
+
+function stopSpeak() {
+  speakToken++;
+  clearFallback();
+  if ("speechSynthesis" in window) {
+    try { speechSynthesis.cancel(); } catch (e) {}
+  }
+}
+
+/* 読み上げ時間の推定（日本語 約6.3文字/秒 + 間） */
+function estimateMs(text) {
+  return Math.round(text.length * 160) + 1500;
+}
+
+function pickJaVoice() {
+  if (!("speechSynthesis" in window)) return null;
+  var vs = speechSynthesis.getVoices();
+  for (var i = 0; i < vs.length; i++) {
+    if (vs[i].lang && vs[i].lang.toLowerCase().indexOf("ja") === 0) return vs[i];
+  }
+  return null;
+}
+if ("speechSynthesis" in window && speechSynthesis.onvoiceschanged !== undefined) {
+  speechSynthesis.onvoiceschanged = function () {};
+}
+
+function scheduleFallbackAdvance(token, ms) {
+  clearFallback();
+  fallbackTimer = setTimeout(function () {
+    if (token === speakToken && autoplay) advance();
+  }, ms);
+}
+
+function speakCurrent() {
+  stopSpeak();
+  var s = SLIDES[idx];
+  if (!autoplay && !voiceOn) return;
+  if (!voiceOn || !("speechSynthesis" in window)) {
+    /* 音声が使えない／OFF のときは文字数推定で送る（自動再生のみ） */
+    if (autoplay) scheduleFallbackAdvance(speakToken, estimateMs(s.narration));
+    return;
+  }
+  var token = speakToken;
+  var startedAt = Date.now();
+  var done = false;
+  var u = new SpeechSynthesisUtterance(s.narration);
+  u.lang = "ja-JP";
+  var v = pickJaVoice();
+  if (v) u.voice = v;
+  u.rate = 1.0;
+  u.pitch = 1.0;
+  function finish() {
+    if (done || token !== speakToken) return;
+    done = true;
+    clearFallback();
+    if (!autoplay) return;
+    /* 無音のまま即終了した場合は推定時間まで待ってから送る */
+    var elapsed = Date.now() - startedAt;
+    var minWait = estimateMs(s.narration) * 0.6;
+    if (elapsed < minWait) {
+      scheduleFallbackAdvance(token, minWait - elapsed);
+    } else {
+      advance();
+    }
+  }
+  u.onend = finish;
+  u.onerror = function () {
+    if (done || token !== speakToken) return;
+    if (autoplay) {
+      /* エラー時は推定時間で送る */
+      done = true;
+      scheduleFallbackAdvance(token, estimateMs(s.narration) * 0.7);
+    }
+  };
+  try {
+    speechSynthesis.speak(u);
+  } catch (e) {
+    if (autoplay) scheduleFallbackAdvance(token, estimateMs(s.narration));
+    return;
+  }
+  if (autoplay) {
+    /* onend が来ない環境への安全網（推定＋余裕） */
+    scheduleFallbackAdvance(token, estimateMs(s.narration) + 6000);
+    /* Chrome系で読み上げが止まる事象への定期 resume */
+    var guard = setInterval(function () {
+      if (done || token !== speakToken) { clearInterval(guard); return; }
+      if (speechSynthesis.paused) { try { speechSynthesis.resume(); } catch (e) {} }
+      if (!speechSynthesis.speaking && !speechSynthesis.pending) clearInterval(guard);
+    }, 5000);
+  }
+}
+
+function go(n) {
+  idx = Math.max(0, Math.min(N - 1, n));
+  render();
+  speakCurrent();
+}
+
+function advance() {
+  if (idx >= N - 1) {
+    setAutoplay(false);
+    statemsg.textContent = "最終スライドです";
+    return;
+  }
+  go(idx + 1);
+}
+
+function setAutoplay(on) {
+  autoplay = on;
+  btnAuto.setAttribute("aria-pressed", on ? "true" : "false");
+  btnAuto.textContent = on ? "⏸ 自動再生中" : "▶ 自動再生";
+  statemsg.textContent = on ? "読み上げに連動して進みます" : "";
+  if (on) {
+    if (idx >= N - 1) idx = 0;
+    render();
+    speakCurrent();
+  } else {
+    stopSpeak();
+  }
+}
+
+btnPrev.addEventListener("click", function (e) { e.stopPropagation(); go(idx - 1); });
+btnNext.addEventListener("click", function (e) { e.stopPropagation(); go(idx + 1); });
+btnVoice.addEventListener("click", function (e) {
+  e.stopPropagation();
+  voiceOn = !voiceOn;
+  btnVoice.setAttribute("aria-pressed", voiceOn ? "true" : "false");
+  btnVoice.textContent = voiceOn ? "読み上げ ON" : "読み上げ OFF";
+  if (!voiceOn) {
+    stopSpeak();
+    if (autoplay) scheduleFallbackAdvance(speakToken, estimateMs(SLIDES[idx].narration));
+  } else {
+    speakCurrent();
+  }
+});
+btnAuto.addEventListener("click", function (e) { e.stopPropagation(); setAutoplay(!autoplay); });
+btnFs.addEventListener("click", function (e) {
+  e.stopPropagation();
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+  } else if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen();
+  }
+});
+
+document.getElementById("stage").addEventListener("click", function (e) {
+  if (e.target.closest("#controls")) return;
+  go(idx + 1);
+});
+
+document.addEventListener("keydown", function (e) {
+  var tag = (document.activeElement && document.activeElement.tagName) || "";
+  if (e.key === " " && tag === "BUTTON") return; /* ボタン上のスペースはボタンの動作に任せる */
+  if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
+    e.preventDefault(); go(idx + 1);
+  } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+    e.preventDefault(); go(idx - 1);
+  } else if (e.key === "Home") {
+    e.preventDefault(); go(0);
+  } else if (e.key === "End") {
+    e.preventDefault(); go(N - 1);
+  }
+});
+
+/* フルスクリーン時、操作バーはしばらくで隠す */
+function pokeControls() {
+  if (!document.fullscreenElement) return;
+  controlsEl.classList.add("show");
+  if (hideTimer) clearTimeout(hideTimer);
+  hideTimer = setTimeout(function () { controlsEl.classList.remove("show"); }, 2600);
+}
+document.addEventListener("fullscreenchange", function () {
+  document.body.classList.toggle("fs", !!document.fullscreenElement);
+  pokeControls();
+});
+document.addEventListener("mousemove", pokeControls);
+
+render();
+</script>
+</body>
+</html>
