@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<!-- build: 2026-11-27 11:12:11 JST -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<link rel="icon" href="data:," />
+<title>ポータルは、自分の家に</title>
+<style>
+  :root{
+    --bg-top:#0d1018;
+    --bg-bot:#171c28;
+    --ink:#eef0f4;
+    --sub:#b2bac8;
+    --accent:#e8543c;
+    --gold:#f0b23c;
+    --line:#465064;
+    --panel:rgba(10,12,18,.82);
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans CJK JP","Yu Gothic UI","Yu Gothic",Meiryo,sans-serif;
+    background:linear-gradient(180deg,var(--bg-top),var(--bg-bot));
+    color:var(--ink);
+    overflow:hidden;
+    -webkit-user-select:none;
+    user-select:none;
+  }
+  /* 上部アクセントバー（進捗を兼ねる） */
+  #topbar{
+    position:fixed; top:0; left:0; height:8px; width:100%;
+    background:rgba(255,255,255,.06); z-index:30;
+  }
+  #topfill{
+    height:100%; width:0%;
+    background:var(--accent);
+    transition:width .35s ease;
+  }
+  #stage{
+    position:fixed; inset:0;
+    display:flex; flex-direction:column;
+    cursor:pointer;
+  }
+  #slide{
+    flex:1 1 auto;
+    display:flex; flex-direction:column; justify-content:flex-start;
+    padding:3vh 6.5vw 2vh;
+    min-height:0;
+  }
+  .slide-inner{ animation:fadein .3s ease; }
+  @keyframes fadein{ from{ opacity:0; } to{ opacity:1; } }
+  @media (prefers-reduced-motion: reduce){
+    .slide-inner{ animation:none; }
+    #topfill{ transition:none; }
+  }
+  .label{
+    color:var(--gold);
+    font-weight:700;
+    font-size:clamp(15px,2.1vw,28px);
+    letter-spacing:.14em;
+    margin:0 0 1.6vh;
+  }
+  .stitle{
+    font-weight:700;
+    font-size:clamp(30px,5.6vw,76px);
+    line-height:1.25;
+    margin:0;
+    overflow-wrap:anywhere;
+  }
+  .is-title .stitle{ font-size:clamp(34px,6.2vw,92px); }
+  .rule{
+    width:170px; height:6px; background:var(--accent);
+    margin:2.2vh 0 1.5vh;
+  }
+  .is-title .rule{ width:230px; }
+  /* タイトル直下の進捗表記（全画面・OBS録画時にも見える） */
+  .slide-progress{
+    color:var(--sub);
+    font-size:clamp(15px,1.9vw,26px);
+    font-variant-numeric:tabular-nums;
+    letter-spacing:.1em;
+    margin:0 0 2.8vh;
+  }
+  .subtitle-line{
+    color:var(--sub);
+    font-size:clamp(17px,2.5vw,34px);
+    margin:0 0 3.4vh;
+  }
+  ul.bullets{
+    list-style:none; margin:0; padding:0;
+  }
+  ul.bullets li{
+    position:relative;
+    font-size:clamp(16px,2.45vw,33px);
+    line-height:1.5;
+    padding-left:1.5em;
+    margin:0 0 2.1vh;
+    overflow-wrap:anywhere;
+  }
+  ul.bullets li::before{
+    content:"";
+    position:absolute; left:.1em; top:.52em;
+    border-left:.5em solid var(--accent);
+    border-top:.3em solid transparent;
+    border-bottom:.3em solid transparent;
+  }
+  .is-title ul.bullets li::before{
+    border-left:none; border-top:none; border-bottom:none;
+    content:"・"; color:var(--ink);
+    left:0; top:0;
+  }
+  .is-title ul.bullets li{ padding-left:1.2em; }
+  /* 字幕バー（読み上げ文） */
+  #caption{
+    flex:0 0 auto;
+    background:var(--panel);
+    border-top:1px solid var(--line);
+    padding:16px 6.5vw 18px;
+    font-size:clamp(15px,1.85vw,26px);
+    line-height:1.7;
+    color:var(--sub);
+    min-height:14vh;
+    max-height:32vh;
+    overflow:hidden;
+  }
+  #caption .cap-text{ color:#d6dbe4; }
+  /* 操作バー */
+  #controls{
+    flex:0 0 auto;
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    padding:8px 12px calc(8px + env(safe-area-inset-bottom));
+    background:rgba(8,10,15,.9);
+    border-top:1px solid var(--line);
+    cursor:default;
+    transition:opacity .4s ease;
+  }
+  #controls button{
+    min-height:40px; min-width:44px;
+    padding:6px 14px;
+    font:inherit; font-size:15px;
+    color:var(--ink);
+    background:#232a3a;
+    border:1px solid var(--line);
+    border-radius:8px;
+    cursor:pointer;
+  }
+  #controls button:hover{ background:#2d3649; }
+  #controls button:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+  #controls button[aria-pressed="true"]{
+    background:var(--accent); border-color:var(--accent); color:#fff; font-weight:700;
+  }
+  #progress{
+    font-size:15px; color:var(--sub);
+    font-variant-numeric:tabular-nums;
+    margin:0 4px;
+    white-space:nowrap;
+  }
+  #controls .spacer{ flex:1 1 auto; }
+  #statemsg{ font-size:13px; color:var(--gold); white-space:nowrap; }
+  /* フルスクリーン時：操作バーはマウスを動かした時だけ出す（OBS録画用） */
+  body.fs #controls{ opacity:0; pointer-events:none; }
+  body.fs #controls.show{ opacity:1; pointer-events:auto; }
+  body.fs #caption{ padding-bottom:14px; }
+  @media (max-width:560px){
+    #slide{ padding:3vh 5vw 1vh; }
+    #caption{ padding-left:5vw; padding-right:5vw; }
+    #controls button{ padding:6px 10px; font-size:14px; }
+    #statemsg{ display:none; }
+  }
+</style>
+</head>
+<body>
+<div id="topbar"><div id="topfill"></div></div>
+
+<div id="stage">
+  <div id="slide" aria-live="off"></div>
+  <div id="caption"><span class="cap-text" id="capText"></span></div>
+  <div id="controls">
+    <button id="btnPrev" type="button" aria-label="前のスライド">◀ 前へ</button>
+    <button id="btnNext" type="button" aria-label="次のスライド">次へ ▶</button>
+    <span id="progress">1 / 12</span>
+    <span class="spacer"></span>
+    <span id="statemsg"></span>
+    <button id="btnVoice" type="button" aria-pressed="true">読み上げ ON</button>
+    <button id="btnAuto" type="button" aria-pressed="false">▶ 自動再生</button>
+    <button id="btnFs" type="button">全画面</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* スライド本文・読み上げ文は slides_data.json の12件を一字一句そのまま使用
+   （body の改行を行に分け、既存デッキと同じ箇条書き表示にする） */
+var RAW = [
+  {
+    title: "ポータルは、自分の家に",
+    body: "入口を、人任せにしない。\nフィルタリングの話の行き着く先は、結局ここでした。",
+    narration: "ポータルは、自分の家に。入口を、人任せにしない、という話です。フィルタリングの話の行き着く先は、結局ここでした。"
+  },
+  {
+    title: "毎日の情報は「入口」から始まる",
+    body: "ブラウザを開いて最初に見る画面。\nその並び方が、その日に目に入る情報をほぼ決めてしまいます。\n入口は小さいけれど、支配力は大きい場所です。",
+    narration: "毎日の情報は、入口から始まります。ブラウザを開いて最初に見る画面。その並び方が、その日に目に入る情報を、ほぼ決めてしまいます。入口は小さいけれど、支配力は大きい場所です。"
+  },
+  {
+    title: "他人の入口は、他人の土地",
+    body: "GoogleやYahoo!のトップページは、彼らの土地にある玄関です。\n何を目立つ場所に置くか、広告をどこに出すか、おすすめをどう並べるか。\n全部、あちらの都合で決まります。",
+    narration: "他人の入口は、他人の土地です。グーグルやヤフーのトップページは、彼らの土地にある玄関です。何を目立つ場所に置くか、広告をどこに出すか、おすすめをどう並べるか。全部、あちらの都合で決まります。"
+  },
+  {
+    title: "ルールは、あちらのもの",
+    body: "仕様変更は通告だけで、気に入らなくても従うしかありません。\nアカウントが止まれば、入口そのものを失います。\nこれは間借り人の立場です。",
+    narration: "ルールは、あちらのものです。仕様変更は通告だけで、気に入らなくても従うしかありません。アカウントが止まれば、入口そのものを失います。これは、間借り人の立場です。"
+  },
+  {
+    title: "自分の入口なら、ルールは自分",
+    body: "LAN内の自分のPCに置いたHTMLが入口なら話は逆です。\n並べ方も、出さないものも、自分のルールで決まります。\n広告は、自分が置かない限り存在しません。",
+    narration: "自分の入口なら、ルールは自分です。ラン内の自分のピーシーに置いたエイチティーエムエルが入口なら、話は逆です。並べ方も、出さないものも、自分のルールで決まります。広告は、自分が置かない限り存在しません。"
+  },
+  {
+    title: "たとえ：モールの入口と、自宅の玄関",
+    body: "ショッピングモールの入口は、配置を変え、宣伝を流し、客の動きを記録します。\n自宅の玄関は違います。靴箱の置き方も、郵便の仕分けも、自分の決めた通り。\nポータルサイトの違いは、これと同じです。",
+    narration: "たとえで言うと、ショッピングモールの入口と、自宅の玄関です。モールの入口は、配置を変え、宣伝を流し、客の動きを記録します。自宅の玄関は違います。靴箱の置き方も、郵便の仕分けも、自分の決めた通り。ポータルサイトの違いは、これと同じです。"
+  },
+  {
+    title: "フィルタリングとの関係",
+    body: "ホワイトリストも、深さの仕分けも、根は同じです。\n「入口を自分のルールで運営する」という話。\n入口が他人のものだと、仕分けはいつも後手の対策に回ります。",
+    narration: "フィルタリングとの関係です。ホワイトリストも、深さの仕分けも、根は同じです。入口を自分のルールで運営する、という話です。入口が他人のものだと、仕分けはいつも後手の対策に回ります。"
+  },
+  {
+    title: "実装は、もう手元にある",
+    body: "ミニインターネットの「朝の窓」は、自分のPCにある入口そのものです。\n8bitダッシュボード計画も、同じLANポータルの仲間。\n新しい話ではなく、やってきたことの名前が付いた、という状態です。",
+    narration: "実装は、もう手元にあります。ミニインターネットの朝の窓は、自分のピーシーにある入口そのものです。エイトビットダッシュボード計画も、同じランポータルの仲間です。新しい話ではなく、やってきたことに名前が付いた、という状態です。"
+  },
+  {
+    title: "正直な弱み",
+    body: "維持は自分持ちです。壊れたら自分で直す。\n検索の強さは大手に勝てません。\nセキュリティも、自分の責任になります。",
+    narration: "正直な弱みも言っておきます。維持は自分持ちです。壊れたら自分で直す。検索の強さは大手に勝てません。セキュリティも、自分の責任になります。"
+  },
+  {
+    title: "弱みの返し方：奥は借りればいい",
+    body: "全部を自作する必要はありません。\n入口だけを自分の土地に置き、検索などは大手へのリンクで済ませる。\n並べ方と仕分けだけを自分のルールにすれば、弱みはほぼ消えます。",
+    narration: "弱みの返し方があります。全部を自作する必要はありません。入口だけを自分の土地に置き、検索などは大手へのリンクで済ませる。並べ方と仕分けだけを自分のルールにすれば、弱みはほぼ消えます。"
+  },
+  {
+    title: "支配の単位は「入口」",
+    body: "サービスそのものを置き換える必要はないのです。\n毎日最初に触れる一点を自分の土地へ移すだけで、\n立場が「従う側」から「決める側」に変わります。",
+    narration: "支配の単位は、入口です。サービスそのものを置き換える必要はないのです。毎日最初に触れる一点を自分の土地へ移すだけで、立場が、従う側から、決める側に変わります。"
+  },
+  {
+    title: "まとめ",
+    body: "ポータルを自分のPCに置くことは、情報生活の玄関を持ち家にすること。\nルールは自分、仕分けは自分、データは家の中。\n入口を取り戻すと、残りの話はだいぶ楽になります。",
+    narration: "まとめです。ポータルを自分のピーシーに置くことは、情報生活の玄関を持ち家にすることです。ルールは自分、仕分けは自分、データは家の中。入口を取り戻すと、残りの話はだいぶ楽になります。"
+  }
+];
+var SLIDES = RAW.map(function (r) {
+  return {
+    title: r.title,
+    bullets: r.body.split("\n"),
+    narration: r.narration
+  };
+});
+var N = SLIDES.length;
+
+var idx = 0;
+var voiceOn = true;
+var autoplay = false;
+var speakToken = 0;
+var fallbackTimer = null;
+var hideTimer = null;
+
+var slideEl = document.getElementById("slide");
+var capText = document.getElementById("capText");
+var progressEl = document.getElementById("progress");
+var topfill = document.getElementById("topfill");
+var btnPrev = document.getElementById("btnPrev");
+var btnNext = document.getElementById("btnNext");
+var btnVoice = document.getElementById("btnVoice");
+var btnAuto = document.getElementById("btnAuto");
+var btnFs = document.getElementById("btnFs");
+var controlsEl = document.getElementById("controls");
+var statemsg = document.getElementById("statemsg");
+
+function render() {
+  var s = SLIDES[idx];
+  slideEl.innerHTML = "";
+  var wrap = document.createElement("div");
+  wrap.className = "slide-inner" + (idx === 0 ? " is-title" : "");
+  var ttl = document.createElement("h1");
+  ttl.className = "stitle";
+  ttl.textContent = s.title;
+  var rule = document.createElement("div");
+  rule.className = "rule";
+  wrap.appendChild(ttl);
+  wrap.appendChild(rule);
+  var sprog = document.createElement("p");
+  sprog.className = "slide-progress";
+  sprog.textContent = (idx + 1) + " / " + N;
+  wrap.appendChild(sprog);
+  var ul = document.createElement("ul");
+  ul.className = "bullets";
+  for (var i = 0; i < s.bullets.length; i++) {
+    var li = document.createElement("li");
+    li.textContent = s.bullets[i];
+    ul.appendChild(li);
+  }
+  wrap.appendChild(ul);
+  slideEl.appendChild(wrap);
+  capText.textContent = s.narration;
+  progressEl.textContent = (idx + 1) + " / " + N;
+  topfill.style.width = ((idx + 1) / N * 100) + "%";
+  document.title = s.title + " ― ポータルは、自分の家に";
+}
+
+function clearFallback() {
+  if (fallbackTimer !== null) { clearTimeout(fallbackTimer); fallbackTimer = null; }
+}
+
+function stopSpeak() {
+  speakToken++;
+  clearFallback();
+  if ("speechSynthesis" in window) {
+    try { speechSynthesis.cancel(); } catch (e) {}
+  }
+}
+
+/* 読み上げ時間の推定（日本語 約6.3文字/秒 + 間） */
+function estimateMs(text) {
+  return Math.round(text.length * 160) + 1500;
+}
+
+function pickJaVoice() {
+  if (!("speechSynthesis" in window)) return null;
+  var vs = speechSynthesis.getVoices();
+  for (var i = 0; i < vs.length; i++) {
+    if (vs[i].lang && vs[i].lang.toLowerCase().indexOf("ja") === 0) return vs[i];
+  }
+  return null;
+}
+if ("speechSynthesis" in window && speechSynthesis.onvoiceschanged !== undefined) {
+  speechSynthesis.onvoiceschanged = function () {};
+}
+
+/* 次へ進むのは1回だけ（onend二重発火・前スライドの残イベント対策） */
+var advancedToken = -1;
+function tryAdvance(token) {
+  if (token !== speakToken || !autoplay) return;
+  if (advancedToken === token) return;
+  advancedToken = token;
+  advance();
+}
+
+function scheduleFallbackAdvance(token, ms) {
+  clearFallback();
+  fallbackTimer = setTimeout(function () {
+    tryAdvance(token);
+  }, ms);
+}
+
+/* 読み上げ文を文単位に分割する（句点・感嘆符・疑問符で区切る） */
+function splitSentences(text) {
+  var out = [];
+  var parts = text.match(/[^。！？]+[。！？]?/g) || [];
+  for (var i = 0; i < parts.length; i++) {
+    var p = parts[i].trim();
+    if (p) out.push(p);
+  }
+  if (out.length === 0 && text.trim()) out.push(text.trim());
+  return out;
+}
+
+/* 最後の文の再生後、speaking/pending が完全に false になるまで
+   短い間隔で確認し、さらに約0.5秒の余白を置いてから次へ進む。
+   確認の上限は約2秒（長く止まり続けない） */
+function waitIdleThenAdvance(token) {
+  if (token !== speakToken || !autoplay) return;
+  var waited = 0;
+  var iv = setInterval(function () {
+    if (token !== speakToken || !autoplay) { clearInterval(iv); return; }
+    var busy = false;
+    if ("speechSynthesis" in window) {
+      busy = !!(speechSynthesis.speaking || speechSynthesis.pending);
+    }
+    waited += 100;
+    if (!busy) {
+      clearInterval(iv);
+      setTimeout(function () { tryAdvance(token); }, 500);
+    } else if (waited > 2000) {
+      /* 上限：約2秒待っても終わらなければ進む */
+      clearInterval(iv);
+      tryAdvance(token);
+    }
+  }, 100);
+}
+
+function speakCurrent() {
+  stopSpeak();
+  var s = SLIDES[idx];
+  if (!autoplay && !voiceOn) return;
+  if (!voiceOn || !("speechSynthesis" in window)) {
+    /* 音声が使えない／OFF のときは文字数推定で送る（自動再生のみ、同じ余白つき） */
+    if (autoplay) scheduleFallbackAdvance(speakToken, estimateMs(s.narration) + 500);
+    return;
+  }
+  var token = speakToken;
+  /* 文単位に分割して順に再生し、最後の文が終わるまで次へ進まない */
+  var sentences = splitSentences(s.narration);
+  var totalMs = estimateMs(s.narration);
+  var si = 0;
+  var finished = false;
+  var guard = null;
+
+  function clearGuard() {
+    if (guard !== null) { clearInterval(guard); guard = null; }
+  }
+
+  function speakNext() {
+    if (finished || token !== speakToken) return;
+    if (si >= sentences.length) {
+      finished = true;
+      clearFallback();
+      clearGuard();
+      if (autoplay) waitIdleThenAdvance(token);
+      return;
+    }
+    var text = sentences[si];
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = "ja-JP";
+    var v = pickJaVoice();
+    if (v) u.voice = v;
+    u.rate = 1.0;
+    u.pitch = 1.0;
+    var sentDone = false;
+    /* ウォッチドッグ：文字数から推定した想定時間に余裕を持たせた上限を
+       過ぎても onend が来なければ、その文を打ち切って次へ進む */
+    var wd = setTimeout(function () {
+      if (sentDone || finished || token !== speakToken) return;
+      sentDone = true;
+      try { speechSynthesis.cancel(); } catch (e) {}
+      si++;
+      setTimeout(function () { speakNext(); }, 80);
+    }, Math.round(estimateMs(text) * 1.5) + 2000);
+    function sentEnd() {
+      if (sentDone || finished || token !== speakToken) return;
+      sentDone = true;
+      clearTimeout(wd);
+      si++;
+      speakNext();
+    }
+    u.onend = sentEnd;
+    u.onerror = function (e) {
+      if (sentDone || finished || token !== speakToken) return;
+      if (e && (e.error === "canceled" || e.error === "interrupted")) {
+        /* 自分の cancel() によるものは通常終了として扱う */
+        sentEnd();
+        return;
+      }
+      sentDone = true;
+      clearTimeout(wd);
+      if (autoplay) {
+        /* エラー時は残りを推定時間で送る（同じ余白つき） */
+        finished = true;
+        clearGuard();
+        scheduleFallbackAdvance(token, totalMs * 0.7 + 500);
+      } else {
+        si++;
+        speakNext();
+      }
+    };
+    try {
+      speechSynthesis.speak(u);
+    } catch (e) {
+      sentDone = true;
+      clearTimeout(wd);
+      finished = true;
+      clearGuard();
+      if (autoplay) scheduleFallbackAdvance(token, totalMs + 500);
+    }
+  }
+
+  /* cancel() の直後に speak すると文頭の音が欠けることがあるため、
+     わずかな間隔を置いてから再生を始める */
+  setTimeout(function () {
+    if (token !== speakToken) return;
+    speakNext();
+  }, 120);
+
+  if (autoplay) {
+    /* onend が来ない環境への安全網（全文の推定＋余裕＋余白） */
+    scheduleFallbackAdvance(token, Math.round(totalMs * 1.5) + 3000);
+  }
+  /* 長時間の発声で止まる既知のブラウザ不具合対策：
+     再生中は数秒ごとに resume() を呼ぶ */
+  guard = setInterval(function () {
+    if (finished || token !== speakToken) { clearGuard(); return; }
+    try { speechSynthesis.resume(); } catch (e) {}
+    if (!speechSynthesis.speaking && !speechSynthesis.pending) clearGuard();
+  }, 2500);
+}
+
+function go(n) {
+  idx = Math.max(0, Math.min(N - 1, n));
+  render();
+  speakCurrent();
+}
+
+function advance() {
+  if (idx >= N - 1) {
+    setAutoplay(false);
+    statemsg.textContent = "最終スライドです";
+    return;
+  }
+  go(idx + 1);
+}
+
+function setAutoplay(on) {
+  autoplay = on;
+  btnAuto.setAttribute("aria-pressed", on ? "true" : "false");
+  btnAuto.textContent = on ? "⏸ 自動再生中" : "▶ 自動再生";
+  statemsg.textContent = on ? "読み上げに連動して進みます" : "";
+  if (on) {
+    if (idx >= N - 1) idx = 0;
+    render();
+    speakCurrent();
+  } else {
+    stopSpeak();
+  }
+}
+
+btnPrev.addEventListener("click", function (e) { e.stopPropagation(); go(idx - 1); });
+btnNext.addEventListener("click", function (e) { e.stopPropagation(); go(idx + 1); });
+btnVoice.addEventListener("click", function (e) {
+  e.stopPropagation();
+  voiceOn = !voiceOn;
+  btnVoice.setAttribute("aria-pressed", voiceOn ? "true" : "false");
+  btnVoice.textContent = voiceOn ? "読み上げ ON" : "読み上げ OFF";
+  if (!voiceOn) {
+    stopSpeak();
+    if (autoplay) scheduleFallbackAdvance(speakToken, estimateMs(SLIDES[idx].narration) + 500);
+  } else {
+    speakCurrent();
+  }
+});
+btnAuto.addEventListener("click", function (e) { e.stopPropagation(); setAutoplay(!autoplay); });
+btnFs.addEventListener("click", function (e) {
+  e.stopPropagation();
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+  } else if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen();
+  }
+});
+
+document.getElementById("stage").addEventListener("click", function (e) {
+  if (e.target.closest("#controls")) return;
+  go(idx + 1);
+});
+
+document.addEventListener("keydown", function (e) {
+  var tag = (document.activeElement && document.activeElement.tagName) || "";
+  if (e.key === " " && tag === "BUTTON") return; /* ボタン上のスペースはボタンの動作に任せる */
+  if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
+    e.preventDefault(); go(idx + 1);
+  } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+    e.preventDefault(); go(idx - 1);
+  } else if (e.key === "Home") {
+    e.preventDefault(); go(0);
+  } else if (e.key === "End") {
+    e.preventDefault(); go(N - 1);
+  }
+});
+
+/* フルスクリーン時、操作バーはしばらくで隠す */
+function pokeControls() {
+  if (!document.fullscreenElement) return;
+  controlsEl.classList.add("show");
+  if (hideTimer) clearTimeout(hideTimer);
+  hideTimer = setTimeout(function () { controlsEl.classList.remove("show"); }, 2600);
+}
+document.addEventListener("fullscreenchange", function () {
+  document.body.classList.toggle("fs", !!document.fullscreenElement);
+  pokeControls();
+});
+document.addEventListener("mousemove", pokeControls);
+
+render();
+</script>
+</body>
+</html>
