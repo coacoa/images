@@ -200,7 +200,7 @@
           <input type="range" id="scrub" min="0" max="1000" value="0" aria-label="再生位置" />
           <span class="clock" id="clock">0.0 / 12.0秒</span>
         </div>
-        <button class="tbtn" id="btn-tts" type="button" aria-pressed="false">🗣 読み上げ OFF</button>
+        <button class="tbtn" id="btn-tts" type="button" aria-pressed="true">🗣 読み上げ ON</button>
         <button class="tbtn" id="btn-fs" type="button">⛶ フルスクリーン</button>
         <button class="tbtn" id="btn-multi" type="button" aria-pressed="false">🖥 同時視点（マルチ）</button>
       </div>
@@ -1318,7 +1318,7 @@ window.NAR_DATA={
 </script>
 <script>
 /* ================= UI ================= */
-var ttsOn=false, listenSeq=-1, viewLabel="俯瞰（全体）";
+var ttsOn=true, listenSeq=-1, viewLabel="俯瞰（全体）";
 var playBtn=document.getElementById("btn-play");
 function setPlaying(p){
   playing=p;
@@ -1552,8 +1552,12 @@ document.getElementById("btn-tts").addEventListener("click",function(){
   ttsOn=!ttsOn;
   this.textContent=ttsOn?"🗣 読み上げ ON":"🗣 読み上げ OFF";
   this.setAttribute("aria-pressed",ttsOn?"true":"false");
+  /* 切り替え＝そのシーンを頭から再生し直す（第2弾と同じ仕様）。
+     途中で音声だけをON/OFFすると表示と音声がずれるため、
+     ONでもOFFでも再生位置を0に戻して自動再生し、同期を取り直す。 */
+  stopSpeak();
+  timeS=0; setPlaying(true); applyTime();
   if(ttsOn) speakScene(curScenario);
-  else stopSpeak();
 });
 document.getElementById("btn-fs").addEventListener("click",function(){
   var box=document.getElementById("viewerbox");
