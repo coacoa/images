@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+<!-- build: 2026-11-27 13:41:57 JST -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" href="data:," />
+    <title>声はどうやって出るのか ― 読み上げのしくみ</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0e1216;
+        --bg-stage: #131a21;
+        --panel: #1a232e;
+        --panel-edge: #2c3947;
+        --ink: #f4f1e8;
+        --ink-dim: #b9c2cc;
+        --accent: #f0a832;
+        --accent-ink: #1a1206;
+        --teal: #57c7b8;
+        --bar-bg: #0a0e12;
+        --btn-bg: #232f3d;
+        --btn-bg-hover: #2e3e50;
+        --focus: #ffd166;
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", "Noto Sans JP", "Meiryo", sans-serif;
+        display: flex;
+        flex-direction: column;
+        height: 100dvh;
+        overflow: hidden;
+      }
+
+      /* ---------- stage ---------- */
+      .stage {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        background: var(--bg-stage);
+        padding: clamp(14px, 3vh, 30px) clamp(18px, 5vw, 64px) 12px;
+        cursor: pointer;
+      }
+      .slide-title {
+        margin: 0;
+        font-size: clamp(26px, 4.2vw, 44px);
+        line-height: 1.3;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+      }
+      .slide-progress {
+        margin: 6px 0 0;
+        font-size: clamp(15px, 1.8vw, 19px);
+        color: var(--accent);
+        font-variant-numeric: tabular-nums;
+        font-weight: 700;
+      }
+      .progress-track {
+        margin-top: 8px;
+        height: 6px;
+        border-radius: 3px;
+        background: var(--panel-edge);
+        overflow: hidden;
+      }
+      .progress-fill {
+        height: 100%;
+        width: 0%;
+        background: var(--accent);
+        border-radius: 3px;
+        transition: width 0.35s ease;
+      }
+      .slide-body {
+        margin-top: clamp(12px, 2.4vh, 24px);
+        font-size: clamp(19px, 2.7vw, 30px);
+        line-height: 1.85;
+        white-space: pre-wrap;
+        overflow-y: auto;
+        min-height: 0;
+        color: var(--ink);
+      }
+
+      /* ---------- subtitle bar ---------- */
+      .subtitle-bar {
+        flex: 0 0 auto;
+        min-height: 14vh;
+        max-height: 33vh;
+        overflow-y: auto;
+        background: var(--bar-bg);
+        border-top: 2px solid var(--panel-edge);
+        padding: 14px clamp(18px, 5vw, 64px);
+        font-size: clamp(20px, 2.5vw, 27px);
+        line-height: 1.75;
+        color: var(--ink-dim);
+      }
+      .subtitle-bar .seg { border-radius: 4px; padding: 0 1px; }
+      .subtitle-bar .seg.active {
+        color: var(--ink);
+        background: rgba(240, 168, 50, 0.22);
+        box-shadow: 0 0 0 1px rgba(240, 168, 50, 0.35);
+      }
+      .subtitle-label {
+        display: block;
+        font-size: 13px;
+        letter-spacing: 0.14em;
+        color: var(--teal);
+        margin-bottom: 4px;
+        font-weight: 700;
+      }
+
+      /* ---------- controls ---------- */
+      .controls {
+        flex: 0 0 auto;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
+        background: var(--panel);
+        border-top: 1px solid var(--panel-edge);
+      }
+      .controls button {
+        min-height: 48px;
+        min-width: 48px;
+        padding: 10px 18px;
+        font-size: 17px;
+        font-family: inherit;
+        font-weight: 700;
+        color: var(--ink);
+        background: var(--btn-bg);
+        border: 1px solid var(--panel-edge);
+        border-radius: 10px;
+        cursor: pointer;
+      }
+      .controls button:hover { background: var(--btn-bg-hover); }
+      .controls button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+      .controls button.primary {
+        background: var(--accent);
+        color: var(--accent-ink);
+        border-color: var(--accent);
+      }
+      .controls button[aria-pressed="true"] {
+        background: var(--teal);
+        color: #06231f;
+        border-color: var(--teal);
+      }
+      .controls .spacer { flex: 1 1 auto; }
+
+      /* ---------- fullscreen: hide controls, keep the slide ---------- */
+      :fullscreen .controls { display: none; }
+      :fullscreen .stage { padding-top: clamp(18px, 4vh, 40px); }
+      :fullscreen .subtitle-bar { min-height: 15vh; }
+
+      @media (max-width: 640px) {
+        .controls button { padding: 10px 13px; font-size: 16px; }
+        .controls .spacer { display: none; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .progress-fill { transition: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="stage" id="stage" aria-label="スライド表示エリア（クリックで次へ）">
+      <h1 class="slide-title" id="slideTitle"></h1>
+      <p class="slide-progress" id="slideProgress"></p>
+      <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="slide-body" id="slideBody"></div>
+    </main>
+
+    <section class="subtitle-bar" id="subtitleBar" aria-label="読み上げテキスト">
+      <span class="subtitle-label">読み上げ</span>
+      <span id="subtitleText"></span>
+    </section>
+
+    <nav class="controls" aria-label="スライド操作">
+      <button type="button" id="btnPrev">← 前へ</button>
+      <button type="button" id="btnNext">次へ →</button>
+      <span class="spacer"></span>
+      <button type="button" id="btnTts" aria-pressed="true">読み上げ ON</button>
+      <button type="button" id="btnAuto" class="primary" aria-pressed="false">▶ 自動再生</button>
+      <button type="button" id="btnFull">全画面</button>
+    </nav>
+
+    <script>
+      "use strict";
+      var SLIDES = [{"body":"今日ついに鳴った、Piperで日本語をしゃべらせる仕組みを、最初から復習する。\n「どこで何が起きているか」が分かれば、次に止まっても自分で切り分けられる。","narration":"こえは どうやって でるのか。よみあげの しくみ。きょう ついに なった、パイパーで にほんごを しゃべらせる しくみを、さいしょから ふくしゅうします。どこで なにが おきているかが わかれば、つぎに とまっても じぶんで きりわけられます。","title":"声はどうやって出るのか ― 読み上げのしくみ"},{"body":"アプリ（ブラウザ／Emacs）\n→ speech-dispatcher（窓口）\n→ モジュール（担当）\n→ 合成エンジン（声の本人）\n→ スピーカー\n声は、この順番にリレーされて出てくる。","narration":"ぜんたいぞう。こえが でるまでの よっつの えき。アプリ、スピーチディスパッチャー、モジュール、ごうせいエンジン、そして スピーカー。この じゅんばんに リレーされて、こえは でてきます。アプリは ブラウザや イーマクス、スピーチディスパッチャーは まどぐち、モジュールは たんとう、ごうせいエンジンは こえの ほんにんです。","title":"全体像「声が出るまでの4つの駅」"},{"body":"どのアプリから頼まれても、読み上げの注文はまず受付（speech-dispatcher）が受ける。\n受付は注文を担当モジュールに回すだけで、自分ではしゃべらない。\nDefaultModule ＝「代表の転送先」の設定。","narration":"スピーチディスパッチャーは うけつけです。どの アプリから たのまれても、よみあげの ちゅうもんは まず うけつけが うけます。うけつけは ちゅうもんを たんとうモジュールに まわすだけで、じぶんでは しゃべりません。デフォルトモジュールというのは、だいひょうの てんそうさきの せっていのことです。","title":"speech-dispatcher は「受付」"},{"body":"espeak-ng … ロボット声。漢字を読み分けられず、文字の連呼になる\npico／flite … 英語寄りの軽量な声\nsd_generic … 何でもつなげる汎用アダプタ。今回はこれで Piper をつないだ\nspd-say -O で、いま登録されている担当の一覧が見える。","narration":"モジュールという たんとうしゃたち。イースピークエヌジーは ロボットごえ。かんじを よみわけられず、もじの れんこに なります。ピコと フライトは、えいごよりの けいりょうな こえ。エスディージェネリックは、なんでも つなげる はんようアダプタで、こんかいは これで パイパーを つなぎました。エスピーディーセイの オーオプションで、いま とうろくされている たんとうの いちらんが みえます。","title":"モジュールという「担当者」たち"},{"body":"システム側の speechd.conf は、サンプル文が全部コメントアウトされた状態だった。\nつまり「代表の転送先」が未設定で、パッケージ更新のたびに自動選択が漂っていた。\n受付が壊れていたのではなく、転送先が決まっていなかっただけ。\n対策：自分の設定ファイルで DefaultModule を明示して固定する（漂わせない）。","narration":"なぜ ロボットごえに なったのか。システムがわの せっていファイルは、サンプルぶんが ぜんぶ コメントアウトされた じょうたいでした。つまり、だいひょうの てんそうさきが みせっていで、パッケージ こうしんの たびに じどうせんたくが ただよっていたのです。うけつけが こわれていたのではなく、てんそうさきが きまっていなかっただけ。たいさくは、じぶんの せっていファイルで デフォルトモジュールを めいじして こていすること。ただよわせないのが げんそくです。","title":"なぜロボット声になったのか"},{"body":"Piper は合成エンジン本体。常駐はしない。\n発話のたびにコマンドが1回走って、音声ファイルを作って、終わる。\nVOICEVOX のようにエンジンを起動しっぱなしにする必要がない ＝ 常駐ゼロ。","narration":"パイパーは、ごうせいエンジンの ほんたいです。じょうちゅうは しません。はつわの たびに コマンドが いっかい はしって、おんせいファイルを つくって、おわる。ボイスボックスのように エンジンを きどうしっぱなしに する ひつようが ない。つまり じょうちゅう ゼロです。","title":"Piper は「都度呼ばれる本人」"},{"body":".onnx ＝ 声の脳みそ本体\n.onnx.json ＝ その設定書（分け方・話者・音質などが書いてある）\n2つが同じフォルダに揃っていないと、Piper は「Unable to find voice」で止まる。\n配置場所：~/.local/share/piper/voices/","narration":"こえモデルは にてんセットです。オーエヌエヌエックスが こえの のうみそ ほんたい。オーエヌエヌエックスジェイソンが その せっていしょで、わけかたや わしゃや おんしつが かいてあります。ふたつが おなじ フォルダに そろっていないと、パイパーは こえが みつからないと いって とまります。はいちばしょは、ホームの ローカルシェア、パイパー、ボイシズの フォルダです。","title":"声モデルは2点セット"},{"body":"設定書の phoneme_type ＝「文章を、音の部品にどう分けるか」の方式指定。\nhi_fi_captain の型は \"japanese\" ＝ OpenJTalk で形態素解析して分ける方式。漢字の読みとアクセントが取れる。\nespeak 方式とは部品の分け方が違うので、型が合わないモデルは読み込めない。","narration":"フォニームタイプという かた。せっていしょの フォニームタイプは、ぶんしょうを おとの ぶひんに どう わけるかの ほうしきしていです。ハイファイキャプテンの かたは ジャパニーズ、つまり オープンジェイトークで けいたいそ かいせきして わける ほうしき。かんじの よみと アクセントが とれます。イースピーク ほうしきとは ぶひんの わけかたが ちがうので、かたが あわない モデルは よみこめません。","title":"phoneme_type という「型」"},{"body":"piper 1.4.2 は \"japanese\" 型を知らない → 設定書の解釈でエラーになり、合成以前に落ちる。\n日本語対応（OpenJTalk連携）は piper 1.7.0 で追加された。\n同じ「piper」でも、バージョンで対応表の中身が違う。\nエラーの文面：'japanese' is not a valid PhonemeType","narration":"バージョンの かべ。こんかいの ほんまるです。パイパー いちてんよんてんには、ジャパニーズの かたを しりません。せっていしょの かいしゃくで エラーに なり、ごうせいの まえに おちます。にほんごたいおう、オープンジェイトーク れんけいは、パイパー いちてんななてんぜろで ついかされました。おなじ パイパーでも、バージョンで たいおうひょうの なかみが ちがうのです。","title":"バージョンの壁（今回の本丸）"},{"body":"flake の inputs ＝ 仕入れ先のリスト。普段の仕入れ先は nixos-26.05。\noverlay ＝「この1品だけ、別の仕入れ先から取る」という指定。\n今回は piper-tts だけを nixos-unstable（新しい問屋）から取るようにした。\n全部を新しい問屋に替える必要はない。1品だけ替えるのが overlay の仕事。","narration":"ニックスの しいれの こうぞう。フレークの インプッツは、しいれさきの リストです。ふだんの しいれさきは ニックスオーエス にいろく。オーバーレイは、この いっぴんだけ、べつの しいれさきから とるという してい。こんかいは パイパーティーティーエスだけを、ニックスオーエス アンステーブル、あたらしい どんやから とるように しました。ぜんぶを あたらしい どんやに かえる ひつようは ありません。いっぴんだけ かえるのが オーバーレイの しごとです。","title":"Nix の「仕入れ」の構造"},{"body":"ende の設定は home-manager.useGlobalPkgs = true。\n＝ home 側はシステム側と pkgs を共有する。\nだからシステム側に書いた overlay は、home 側（Emacs の piper も、piper.conf 内のパスも）にそのまま効く。二重に書かなくていい。\n逆に、ホストごとのファイル（home.ende.nix／home.elsa.nix）を取り違えると、rebuild しても別の機械の設定が変わるだけ。","narration":"ホームマネージャーとの かんけい。エンデの せっていは、ホームマネージャー ユーズグローバルパッケージズが トゥルー。つまり ホームがわは システムがわと パッケージを きょうゆうします。だから システムがわに かいた オーバーレイは、ホームがわ、イーマクスの パイパーも、せっていファイルないの パスも、そのまま ききます。にじゅうに かかなくて いい。ぎゃくに、ホストごとの ファイルを とりちがえると、リビルドしても べつの きかいの せっていが かわるだけです。","title":"home-manager との関係"},{"body":"① import の差し替えを elsa 用ファイルに書いて、ende で rebuild していた\n② 手作りの speechd.conf が home-manager の管理ファイルと衝突した（消す順番でリンクを消した）\n③ 「鳴らない」の正体は設定ミスではなく、piper のバージョンと声の「型」の不一致だった\nどれも、実物（ファイルの中身・ls・エラー文）を見たら切り分けられた。","narration":"こんかい つまった さんてんを ふくしゅうします。いち、インポートの さしかえを エルザよう ファイルに かいて、エンデで リビルドしていた。に、てづくりの せっていファイルが、ホームマネージャーの かんりファイルと しょうとつした。さん、ならないの しょうたいは せっていミスではなく、パイパーの バージョンと こえの かたの ふいっちだった。どれも、じつぶつ、ファイルの なかみや エラーぶんを みたら きりわけられました。","title":"今回詰まった3点（復習）"},{"body":"spd-say -O … 登録されている担当モジュールの一覧\ncat ~/.config/speech-dispatcher/speechd.conf … 代表の転送先は誰か\nls ~/.local/share/piper/voices/ … 声の2点セットが揃っているか\npiper 直接実行 … 本人がしゃべれるか（speech-dispatcher を経由しない確認）\npkill -f speech-dispatcher … 受付の再起動（設定を変えたら）","narration":"こまったときの かくにんコマンドしゅう。エスピーディーセイの オーで、とうろくされている たんとうモジュールの いちらん。キャットで、だいひょうの てんそうさきは だれか。エルエスで、こえの にてんセットが そろっているか。パイパー ちょくせつじっこうで、ほんにんが しゃべれるか。ピーキルの スピーチディスパッチャーで、うけつけの さいきどう。せっていを かえたら これです。","title":"困ったときの確認コマンド集"},{"body":"声の経路は「アプリ → 受付 → 担当 → 本人」。\n鳴らないときは、慌てず駅を1つずつ確かめる。\n受付はいるか、転送先は合っているか、担当は登録されているか、本人はしゃべれるか。\n今回の仕組みは常駐ゼロで、ende の eww 読み上げとブラウザの speechSynthesis の土台になる。","narration":"まとめ。えきごとに たしかめる。こえの けいろは、アプリ、うけつけ、たんとう、ほんにん。ならないときは、あわてず えきを ひとつずつ たしかめます。うけつけは いるか、てんそうさきは あっているか、たんとうは とうろくされているか、ほんにんは しゃべれるか。こんかいの しくみは じょうちゅう ゼロで、エンデの イーダブリュダブリュー よみあげと、ブラウザの よみあげの どだいに なります。","title":"まとめ「駅ごとに確かめる」"}];
+      var TOTAL = SLIDES.length;
+
+      var elTitle = document.getElementById("slideTitle");
+      var elProgress = document.getElementById("slideProgress");
+      var elFill = document.getElementById("progressFill");
+      var elBody = document.getElementById("slideBody");
+      var elSubtitle = document.getElementById("subtitleText");
+      var elStage = document.getElementById("stage");
+      var btnPrev = document.getElementById("btnPrev");
+      var btnNext = document.getElementById("btnNext");
+      var btnTts = document.getElementById("btnTts");
+      var btnAuto = document.getElementById("btnAuto");
+      var btnFull = document.getElementById("btnFull");
+
+      var idx = 0;
+      var ttsOn = true;
+      var autoplay = false;
+
+      /* ============ speech engine ============ */
+      var synth = ("speechSynthesis" in window) ? window.speechSynthesis : null;
+      var playSeq = 0;          // session token: bumping it kills the old session
+      var watchdogTimer = null;
+      var resumeTimer = null;
+      var pendingTimers = [];
+
+      function later(fn, ms) { var t = setTimeout(fn, ms); pendingTimers.push(t); return t; }
+      function clearPending() {
+        pendingTimers.forEach(function (t) { clearTimeout(t); });
+        pendingTimers = [];
+        if (watchdogTimer) { clearTimeout(watchdogTimer); watchdogTimer = null; }
+        if (resumeTimer) { clearInterval(resumeTimer); resumeTimer = null; }
+      }
+
+      function splitSentences(text) {
+        var m = String(text).match(/[^。！？…]+[。！？…]?/g);
+        if (!m) return [String(text)];
+        return m.map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });
+      }
+      /* rough speaking time for Japanese at rate 1.0: ~6 chars/sec */
+      function estMs(text) { return Math.max(900, (text.length / 6.0) * 1000); }
+
+      function pickVoice() {
+        if (!synth) return null;
+        var vs = [];
+        try { vs = synth.getVoices() || []; } catch (e) { vs = []; }
+        for (var i = 0; i < vs.length; i++) {
+          if (/^ja([-_]|$)/i.test(vs[i].lang || "")) return vs[i];
+        }
+        return null;
+      }
+      function hasAnyVoice() {
+        if (!synth) return false;
+        try { return (synth.getVoices() || []).length > 0; } catch (e) { return false; }
+      }
+      if (synth && synth.onvoiceschanged !== undefined) {
+        synth.onvoiceschanged = function () { /* voices warm up lazily; nothing to store */ };
+      }
+
+      function renderSubtitle(sentences, activeIdx) {
+        elSubtitle.textContent = "";
+        sentences.forEach(function (s, i) {
+          var span = document.createElement("span");
+          span.className = "seg" + (i === activeIdx ? " active" : "");
+          span.textContent = s;
+          elSubtitle.appendChild(span);
+        });
+      }
+
+      function stopSpeech() {
+        playSeq++;
+        clearPending();
+        if (synth) { try { synth.cancel(); } catch (e) {} }
+      }
+
+      /* Speak the current slide's narration sentence by sentence.
+         onFinish fires exactly once, only if this session is still current. */
+      function speakCurrent(onFinish) {
+        stopSpeech();
+        var seq = playSeq;
+        var sentences = splitSentences(SLIDES[idx].narration);
+        renderSubtitle(sentences, -1);
+        var finished = false;
+        function finish() {
+          if (finished || seq !== playSeq) return;
+          finished = true;
+          clearPending();
+          if (typeof onFinish === "function") onFinish();
+        }
+
+        /* No voice at all -> fall back to estimated durations. */
+        function fallbackPlay() {
+          var i = 0;
+          function step() {
+            if (seq !== playSeq || finished) return;
+            if (i >= sentences.length) { later(finish, 500); return; }
+            renderSubtitle(sentences, i);
+            var wait = estMs(sentences[i]);
+            i++;
+            later(step, wait);
+          }
+          step();
+        }
+
+        if (!synth) { fallbackPlay(); return; }
+
+        /* Give voices a brief chance to load, then decide. */
+        later(function () {
+          if (seq !== playSeq || finished) return;
+          if (!hasAnyVoice() && !pickVoice()) { fallbackPlay(); return; }
+          startUtterances();
+        }, 60);
+
+        function startUtterances() {
+          /* keep long utterances alive on Chrome/Android */
+          resumeTimer = setInterval(function () {
+            if (seq !== playSeq) return;
+            try { if (synth.speaking) synth.resume(); } catch (e) {}
+          }, 2500);
+
+          /* after cancel(), wait ~140ms before speaking (first-syllable clipping) */
+          later(function () { playSentence(0); }, 140);
+        }
+
+        function playSentence(i) {
+          if (seq !== playSeq || finished) return;
+          if (i >= sentences.length) { finalConfirm(); return; }
+          renderSubtitle(sentences, i);
+          var text = sentences[i];
+          var u = new SpeechSynthesisUtterance(text);
+          u.lang = "ja-JP";
+          var v = pickVoice();
+          if (v) u.voice = v;
+          u.rate = 1.0;
+          var advanced = false;
+          function advance(withDelay) {
+            if (advanced) return;
+            advanced = true;
+            if (watchdogTimer) { clearTimeout(watchdogTimer); watchdogTimer = null; }
+            if (withDelay) later(function () { playSentence(i + 1); }, 140);
+            else playSentence(i + 1);
+          }
+          u.onend = function () { advance(false); };
+          u.onerror = function () { advance(false); };
+          /* watchdog: est x1.8, extra capped at +2800ms; cuts a stuck sentence */
+          var est = estMs(text);
+          var wd = Math.min(est * 1.8, est + 2800);
+          watchdogTimer = setTimeout(function () {
+            if (seq !== playSeq || finished || advanced) return;
+            try { synth.cancel(); } catch (e) {}
+            advance(true);
+          }, wd);
+          try { synth.speak(u); } catch (e) { advance(false); }
+        }
+
+        /* final idle confirmation: poll up to ~2s, then +0.5s buffer */
+        function finalConfirm() {
+          var waited = 0;
+          function poll() {
+            if (seq !== playSeq || finished) return;
+            var idle = true;
+            try { idle = !synth.speaking && !synth.pending; } catch (e) { idle = true; }
+            if (idle || waited >= 2000) { later(finish, 500); return; }
+            waited += 200;
+            later(poll, 200);
+          }
+          poll();
+        }
+      }
+
+      /* ============ slide rendering / navigation ============ */
+      function render() {
+        var s = SLIDES[idx];
+        elTitle.textContent = s.title;
+        elBody.textContent = s.body;
+        elProgress.textContent = (idx + 1) + " / " + TOTAL;
+        elFill.style.width = ((idx + 1) / TOTAL * 100) + "%";
+        btnPrev.disabled = (idx === 0);
+        btnNext.disabled = (idx === TOTAL - 1);
+        if (!autoplay) renderSubtitle(splitSentences(s.narration), -1);
+      }
+
+      function goTo(n, fromAutoplay) {
+        idx = Math.max(0, Math.min(TOTAL - 1, n));
+        render();
+        if (autoplay) {
+          speakCurrent(function () {
+            if (!autoplay) return;
+            if (idx < TOTAL - 1) goTo(idx + 1, true);
+            else stopAutoplay();
+          });
+        } else if (ttsOn) {
+          speakCurrent(null);
+        } else {
+          stopSpeech();
+          renderSubtitle(splitSentences(SLIDES[idx].narration), -1);
+        }
+      }
+
+      function next() { if (idx < TOTAL - 1) goTo(idx + 1, false); }
+      function prev() { if (idx > 0) goTo(idx - 1, false); }
+
+      /* ============ autoplay / toggles ============ */
+      function startAutoplay() {
+        autoplay = true;
+        btnAuto.textContent = "■ 自動再生を止める";
+        btnAuto.setAttribute("aria-pressed", "true");
+        if (idx >= TOTAL - 1) idx = 0;
+        goTo(idx, true);
+      }
+      function stopAutoplay() {
+        autoplay = false;
+        btnAuto.textContent = "▶ 自動再生";
+        btnAuto.setAttribute("aria-pressed", "false");
+        stopSpeech();
+        renderSubtitle(splitSentences(SLIDES[idx].narration), -1);
+      }
+
+      btnNext.addEventListener("click", function () { next(); });
+      btnPrev.addEventListener("click", function () { prev(); });
+      btnAuto.addEventListener("click", function () { autoplay ? stopAutoplay() : startAutoplay(); });
+      btnTts.addEventListener("click", function () {
+        ttsOn = !ttsOn;
+        btnTts.textContent = ttsOn ? "読み上げ ON" : "読み上げ OFF";
+        btnTts.setAttribute("aria-pressed", ttsOn ? "true" : "false");
+        if (!ttsOn) {
+          if (autoplay) stopAutoplay();
+          else { stopSpeech(); renderSubtitle(splitSentences(SLIDES[idx].narration), -1); }
+        } else {
+          speakCurrent(null);
+        }
+      });
+      btnFull.addEventListener("click", function () {
+        if (document.fullscreenElement) document.exitFullscreen();
+        else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+      });
+      document.addEventListener("fullscreenchange", function () {
+        btnFull.textContent = document.fullscreenElement ? "全画面を終わる" : "全画面";
+      });
+
+      elStage.addEventListener("click", function () { next(); });
+
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "ArrowRight" || e.key === "PageDown") { e.preventDefault(); next(); }
+        else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); prev(); }
+        else if (e.key === " " && !/BUTTON/.test(document.activeElement.tagName)) { e.preventDefault(); next(); }
+        else if (e.key === "Home") { e.preventDefault(); goTo(0, false); }
+        else if (e.key === "End") { e.preventDefault(); goTo(TOTAL - 1, false); }
+      });
+
+      render();
+    </script>
+  </body>
+</html>
