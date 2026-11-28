@@ -1,0 +1,1789 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Doom Emacs Org-mode 修行道場 ― 1から学ぶアウトライン＆タスク管理 全16課</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --panel2: #1f2630;
+    --border: #484f58;
+    --border-hi: #f0c674;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #7ee787;
+    --accent2: #79c0ff;
+    --warn: #ffa657;
+    --danger: #ff7b72;
+    --gold: #f0c674;
+    --purple: #d2a8ff;
+    --font-mono: "Courier New", Consolas, Monaco, "MS Gothic", monospace;
+    --font-sans: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    line-height: 1.7;
+    min-height: 100vh;
+    padding: 12px;
+    background-image:
+      radial-gradient(#21262d 1px, transparent 1px),
+      radial-gradient(#161b22 1px, #0d1117 1px);
+    background-size: 24px 24px;
+    background-position: 0 0, 12px 12px;
+  }
+
+  .container {
+    max-width: 920px;
+    margin: 0 auto;
+    background: var(--panel);
+    border: 4px solid var(--border);
+    box-shadow:
+      0 0 0 4px #010409,
+      0 12px 32px rgba(0, 0, 0, 0.7);
+  }
+
+  /* Header */
+  header {
+    background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+    border-bottom: 4px solid var(--border);
+    padding: 14px 16px;
+  }
+
+  .title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  h1 {
+    font-size: 1.25rem;
+    color: var(--gold);
+    letter-spacing: 0.04em;
+    text-shadow: 2px 2px 0 #000;
+  }
+
+  .subtitle {
+    font-size: 0.85rem;
+    color: var(--accent2);
+    margin-top: 2px;
+  }
+
+  /* Control bar */
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+    align-items: center;
+  }
+
+  .btn-8bit {
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    font-weight: bold;
+    padding: 6px 12px;
+    background: var(--panel2);
+    color: var(--text);
+    border: 2px solid var(--border);
+    box-shadow: inset -2px -2px 0 #090c10, inset 2px 2px 0 #30363d;
+    cursor: pointer;
+    transition: transform 0.05s;
+    user-select: none;
+  }
+
+  .btn-8bit:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  .btn-8bit:active {
+    transform: translate(1px, 1px);
+  }
+
+  .btn-8bit.active {
+    background: #1b3826;
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .btn-primary {
+    background: #238636;
+    border-color: var(--accent);
+    color: #fff;
+    font-size: 1rem;
+    padding: 10px 20px;
+    box-shadow: inset -3px -3px 0 #144620, inset 3px 3px 0 #3fb950;
+  }
+
+  .btn-primary:hover {
+    background: #2ea043;
+    color: #fff;
+  }
+
+  .btn-warn {
+    background: #4d2d00;
+    border-color: var(--warn);
+    color: var(--warn);
+  }
+
+  .btn-danger {
+    border-color: #6e3630;
+    color: var(--danger);
+  }
+
+  /* Status bar */
+  .status-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    background: #0d1117;
+    padding: 8px 16px;
+    border-bottom: 3px solid var(--border);
+    font-size: 0.85rem;
+  }
+
+  .progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .progress-bar {
+    width: 140px;
+    height: 14px;
+    background: #21262d;
+    border: 2px solid var(--border);
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--accent),
+      var(--accent) 8px,
+      #3fb950 8px,
+      #3fb950 12px
+    );
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+
+  .save-indicator {
+    color: var(--muted);
+    font-size: 0.78rem;
+  }
+
+  /* Main stage */
+  main {
+    padding: 16px;
+  }
+
+  /* ADV Stage (Master + Diagram) */
+  .adv-stage {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  @media (max-width: 680px) {
+    .adv-stage {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .character-box {
+    background: #0d1117;
+    border: 3px solid var(--border);
+    padding: 10px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .pixel-canvas {
+    width: 112px;
+    height: 112px;
+    image-rendering: pixelated;
+    margin-bottom: 6px;
+  }
+
+  .char-name {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: var(--gold);
+    background: #1f2630;
+    padding: 2px 10px;
+    border: 1px solid var(--border);
+  }
+
+  .char-mood {
+    font-size: 0.75rem;
+    color: var(--accent2);
+    margin-top: 4px;
+  }
+
+  .diagram-box {
+    background: #090d13;
+    border: 3px solid var(--border);
+    padding: 12px;
+    font-family: var(--font-mono);
+    font-size: 0.84rem;
+    overflow-x: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .diagram-title {
+    font-size: 0.78rem;
+    color: var(--gold);
+    border-bottom: 1px dashed var(--border);
+    padding-bottom: 4px;
+    margin-bottom: 8px;
+    font-family: var(--font-sans);
+    font-weight: bold;
+  }
+
+  .diagram-content pre {
+    font-family: var(--font-mono);
+    line-height: 1.45;
+    color: #c9d1d9;
+    white-space: pre;
+  }
+
+  .hl-gold { color: var(--gold); font-weight: bold; }
+  .hl-green { color: var(--accent); font-weight: bold; }
+  .hl-blue { color: var(--accent2); font-weight: bold; }
+  .hl-warn { color: var(--warn); font-weight: bold; }
+  .hl-purple { color: var(--purple); font-weight: bold; }
+  .hl-red { color: var(--danger); font-weight: bold; }
+
+  /* Dialogue Window */
+  .dialogue-window {
+    background: #0d1117;
+    border: 4px solid var(--text);
+    box-shadow: inset 0 0 0 3px #0d1117, inset 0 0 0 5px var(--border);
+    padding: 16px 18px;
+    min-height: 210px;
+    max-height: 360px;
+    overflow-y: auto;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .dialogue-window h2 {
+    font-size: 1.08rem;
+    color: var(--gold);
+    margin-bottom: 10px;
+    border-bottom: 2px solid #21262d;
+    padding-bottom: 6px;
+  }
+
+  .dialogue-text {
+    font-size: 0.96rem;
+    line-height: 1.85;
+    white-space: pre-wrap;
+  }
+
+  .dialogue-text code, .supp-box code, .quiz-box code, .review-card code {
+    background: #21262d;
+    color: var(--gold);
+    padding: 1px 6px;
+    border: 1px solid #30363d;
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+  }
+
+  .cursor-blink {
+    display: inline-block;
+    color: var(--gold);
+    animation: blink 0.8s infinite;
+    margin-left: 4px;
+    font-weight: bold;
+  }
+
+  @keyframes blink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+  }
+
+  /* Action Area */
+  .action-area {
+    margin-top: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .action-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+
+  /* Supplement / Hint Box */
+  .supp-box {
+    margin-top: 14px;
+    background: #1c1917;
+    border: 3px solid var(--warn);
+    padding: 14px;
+    display: none;
+  }
+
+  .supp-box.visible {
+    display: block;
+  }
+
+  .supp-title {
+    color: var(--warn);
+    font-weight: bold;
+    margin-bottom: 6px;
+    font-size: 0.95rem;
+  }
+
+  /* Quiz Box */
+  .quiz-box {
+    margin-top: 14px;
+    background: #111b27;
+    border: 3px solid var(--accent2);
+    padding: 16px;
+    display: none;
+  }
+
+  .quiz-box.visible {
+    display: block;
+  }
+
+  .quiz-title {
+    color: var(--accent2);
+    font-weight: bold;
+    margin-bottom: 8px;
+    font-size: 0.98rem;
+  }
+
+  .quiz-q {
+    margin-bottom: 12px;
+    font-weight: bold;
+  }
+
+  .quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .quiz-opt {
+    text-align: left;
+    padding: 10px 14px;
+    background: #161b22;
+    border: 2px solid var(--border);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 0.92rem;
+    font-family: var(--font-sans);
+  }
+
+  .quiz-opt:hover {
+    border-color: var(--gold);
+    background: #1f2630;
+  }
+
+  .quiz-feedback {
+    margin-top: 12px;
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    display: none;
+  }
+
+  .quiz-feedback.ok {
+    display: block;
+    background: #12261e;
+    border: 2px solid var(--accent);
+    color: var(--accent);
+  }
+
+  .quiz-feedback.ng {
+    display: block;
+    background: #2b1414;
+    border: 2px solid var(--danger);
+    color: var(--danger);
+  }
+
+  /* Level Select Grid */
+  .level-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .stage-card {
+    background: #0d1117;
+    border: 3px solid var(--border);
+    padding: 12px;
+  }
+
+  .stage-card h3 {
+    font-size: 0.95rem;
+    color: var(--gold);
+    margin-bottom: 8px;
+    border-bottom: 2px solid #21262d;
+    padding-bottom: 4px;
+  }
+
+  .lesson-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .lesson-btn {
+    text-align: left;
+    padding: 7px 10px;
+    background: var(--panel2);
+    border: 2px solid var(--border);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 0.84rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .lesson-btn:hover {
+    border-color: var(--gold);
+  }
+
+  .lesson-btn.done {
+    border-color: var(--accent);
+    background: #12241a;
+  }
+
+  .badge-done {
+    color: var(--accent);
+    font-weight: bold;
+    flex-shrink: 0;
+  }
+
+  /* Listening & Diagram Review Footer */
+  .extra-tools {
+    border-top: 4px solid var(--border);
+    padding: 14px 16px;
+    background: #0d1117;
+  }
+
+  .tool-section {
+    margin-bottom: 12px;
+  }
+
+  .tool-section:last-child {
+    margin-bottom: 0;
+  }
+
+  .tool-title {
+    font-size: 0.92rem;
+    font-weight: bold;
+    color: var(--gold);
+    margin-bottom: 6px;
+  }
+
+  .tool-note {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  .review-panel, .transcript-panel {
+    margin-top: 12px;
+    display: none;
+  }
+
+  .review-panel.visible, .transcript-panel.visible {
+    display: block;
+  }
+
+  .review-card {
+    background: var(--panel);
+    border: 2px solid var(--border);
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+
+  .review-card h4 {
+    color: var(--accent2);
+    margin-bottom: 6px;
+    font-size: 0.92rem;
+  }
+
+  .review-card pre {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    overflow-x: auto;
+    background: #090d13;
+    padding: 8px;
+    border: 1px solid #30363d;
+    line-height: 1.45;
+  }
+
+  .transcript-item {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    font-size: 0.88rem;
+  }
+
+  .transcript-item h4 {
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    background: #1f2630;
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    padding: 6px 14px;
+    font-size: 0.82rem;
+    font-weight: bold;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+    z-index: 999;
+  }
+
+  .toast.show {
+    opacity: 1;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="title-row">
+      <div>
+        <h1>Doom Emacs Org-mode 修行道場</h1>
+        <div class="subtitle">― 8bit風ADV：アウトライン・タスク・スケジュール・知識整理を1から習得 全16課 ―</div>
+      </div>
+      <div class="controls">
+        <button id="btn-sound" class="btn-8bit active" title="8bit効果音のON/OFF">🔊 音ON</button>
+        <button id="btn-tts" class="btn-8bit" title="自動読み上げのON/OFF">🗣 読上OFF</button>
+        <button id="btn-home" class="btn-8bit">🏠 レベル選択</button>
+        <button id="btn-reset" class="btn-8bit btn-danger">🗑 進捗リセット</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="status-bar">
+    <div class="progress-wrap">
+      <span>理解済み <strong id="done-count">0</strong> / 16 課</span>
+      <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
+    </div>
+    <div id="current-loc">現在：タイトル</div>
+    <div class="save-indicator">💾 進捗は自動保存（localStorage）</div>
+  </div>
+
+  <main id="main-stage">
+    <!-- Dynamic Screen Content -->
+  </main>
+
+  <section class="extra-tools">
+    <div class="tool-section">
+      <div class="tool-title">🎧 リスニング（全レッスン読み上げ）</div>
+      <div class="action-group">
+        <button id="btn-play-all" class="btn-8bit">▶ ブラウザ音声で再生</button>
+        <button id="btn-stop-all" class="btn-8bit">⏹ 停止</button>
+        <button id="btn-toggle-transcript" class="btn-8bit">📜 全文テキスト表示/非表示</button>
+      </div>
+      <div class="tool-note">PCでは Read Aloud 拡張機能で、下の全文テキストをそのまま読み上げられます。</div>
+      <div id="transcript-panel" class="transcript-panel"></div>
+    </div>
+
+    <div class="tool-section">
+      <div class="tool-title">🖼 図解＆チートシート一覧（復習用）</div>
+      <button id="btn-toggle-diagrams" class="btn-8bit">🖼 図解一覧（復習用）を表示</button>
+      <div id="review-panel" class="review-panel"></div>
+    </div>
+  </section>
+</div>
+
+<div id="toast" class="toast">💾 保存しました</div>
+
+<script>
+// ============================================================
+// 1. 8bit Web Audio Synthesizer (No external audio files)
+// ============================================================
+const SoundFX = (() => {
+  let ctx = null;
+  let enabled = true;
+
+  function ensureCtx() {
+    if (!ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) ctx = new AudioCtx();
+    }
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+  }
+
+  function tone(freq, duration, type = 'square', gainVal = 0.06, delay = 0) {
+    if (!enabled) return;
+    ensureCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime + delay;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, now);
+    gain.gain.setValueAtTime(gainVal, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + duration);
+  }
+
+  return {
+    isEnabled: () => enabled,
+    toggle: () => { enabled = !enabled; return enabled; },
+    blip: () => tone(520, 0.035, 'square', 0.03),
+    click: () => tone(660, 0.06, 'square', 0.06),
+    hint: () => {
+      tone(330, 0.08, 'triangle', 0.08, 0);
+      tone(294, 0.12, 'triangle', 0.08, 0.08);
+    },
+    correct: () => {
+      tone(523.25, 0.09, 'square', 0.07, 0);
+      tone(659.25, 0.09, 'square', 0.07, 0.09);
+      tone(783.99, 0.09, 'square', 0.07, 0.18);
+      tone(1046.50, 0.22, 'square', 0.08, 0.27);
+    },
+    wrong: () => {
+      tone(220, 0.12, 'sawtooth', 0.07, 0);
+      tone(175, 0.22, 'sawtooth', 0.07, 0.12);
+    }
+  };
+})();
+
+// ============================================================
+// 2. Pixel Art Renderer (Org-mode Hermit / ユニコーン仙人)
+// ============================================================
+function drawMasterPixelArt(canvas, mood = 'normal') {
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 16, 16);
+
+  // Palette: Org-mode Teal & Gold Hermit
+  const P = {
+    '.': null,
+    'K': '#0d1117', // outline
+    'H': '#37946e', // org-mode teal hood/hat
+    'L': '#6abe30', // light teal/green accent
+    'G': '#f0c674', // gold trim / horn
+    'S': '#f4cca1', // skin
+    'W': '#e6edf3', // white beard / eyes
+    'E': '#1f2630', // eye pupil
+    'R': '#ff7b72', // blush / surprised
+    'B': '#2b5c4f'  // robe dark
+  };
+
+  let sprite = [
+    '......GG........',
+    '.....GHHG.......',
+    '....KHHHHK......',
+    '...KHHHHHHK.....',
+    '..KGGGGGGGGK....',
+    '..KSSSSSSSSK....',
+    '..KSESSSSESK....',
+    '..KSSSSSSSSK....',
+    '.KWWWWWWWWWWK...',
+    '.KWWWWWWWWWWK...',
+    '..KBBBBBBBBK....',
+    '.KBBGGBBGGBBK...',
+    '.KBBBBBBBBBBK...',
+    '.KSSKBBBBKSSK...',
+    '....KBBBBK......',
+    '...KKK..KKK.....'
+  ];
+
+  if (mood === 'happy') {
+    sprite[6] = '..KS^SSSS^SK....';
+    sprite[7] = '..KSRSSSSRSK....';
+    P['^'] = '#0d1117';
+  } else if (mood === 'think') {
+    sprite[6] = '..KS-SSSS-SK....';
+    sprite[2] = '....KHHHHK..G...';
+    P['-'] = '#0d1117';
+  }
+
+  for (let y = 0; y < 16; y++) {
+    for (let x = 0; x < 16; x++) {
+      const ch = sprite[y][x];
+      if (P[ch]) {
+        ctx.fillStyle = P[ch];
+        ctx.fillRect(x, y, 1, 1);
+      }
+    }
+  }
+}
+
+// ============================================================
+// 3. 16-Lesson Curriculum Data (Doom Emacs Org-mode)
+// ============================================================
+const STAGES = [
+  { id: 1, title: '第1章：基礎と階層操作', lessons: [1, 2, 3, 4] },
+  { id: 2, title: '第2章：タスク管理と状態', lessons: [5, 6, 7, 8] },
+  { id: 3, title: '第3章：時間管理とAgenda', lessons: [9, 10, 11, 12] },
+  { id: 4, title: '第4章：文書作成と知識整理', lessons: [13, 14, 15, 16] }
+];
+
+const LESSONS = [
+  {
+    id: 1,
+    stage: '第1章：基礎と階層操作',
+    title: '第1課：Org-modeとは何か？「ただのテキスト」の最強進化系',
+    diagramTitle: '図解1：1つの .org ファイルが果たす4つの役割',
+    diagram: `<pre>
+  <span class="hl-gold">notes.org（実体はただのプレーンテキスト！）</span>
+       │
+       ├──▶ <span class="hl-green">[1] アウトライナー</span>   (* 見出しを折りたたんで構造化)
+       ├──▶ <span class="hl-blue">[2] タスク管理</span>       (TODO / DONE / 締切 / 優先度)
+       ├──▶ <span class="hl-warn">[3] スケジュール帳</span>   (Org Agenda で全予定を自動集計)
+       └──▶ <span class="hl-purple">[4] 文書＆コード実行</span> (Markdown/HTML/PDF変換・Babel実行)
+</pre>`,
+    body: `ようこそ「Doom Emacs Org-mode 修行道場」へ！わしがOrg仙人じゃ。
+まず最初に覚えておくべき鉄則は一つ。Org-modeの正体は「拡張子が <code>.org</code> のただのプレーンテキストファイル」じゃ！
+
+専用の重たいデータベースや独自バイナリは一切使わん。Gitで差分管理もできるし、10年後も確実に読める。それでいて Doom Emacs の中で開くと、アウトライナー・タスク管理・カレンダー・知識ベースへと化けるのじゃ。
+
+Doom Emacs では標準で <code>:lang org</code> が有効になっておる。まずは適当に <code>SPC f f</code>（ファイルを開く）から <code>~/org/test.org</code> を新規作成して開いてみよ。それが修行の第一歩じゃ！`,
+    supplement: `補足：Doom Emacs のリーダーキーは <code>SPC</code>（スペースキー）じゃ。
+<code>SPC f f</code> と順番に押してファイル名を入力し <code>Enter</code> を押せば、存在しないファイルでも新規バッファとして開くぞ。保存は <code>SPC f s</code>（または Evil の <code>:w</code>）じゃ。`,
+    quiz: {
+      question: 'Org-mode で扱うファイルの保存形式として正しいものはどれか？',
+      options: [
+        'Emacs専用の特殊なバイナリ形式で保存される',
+        '拡張子 .org のプレーンテキストファイルとして保存される',
+        '必ずSQLiteデータベースに自動格納される'
+      ],
+      answer: 1,
+      explanation: '正解！Orgファイルは純粋なプレーンテキストなので、Gitでのバージョン管理やgrep検索とも相性抜群じゃ。'
+    }
+  },
+  {
+    id: 2,
+    stage: '第1章：基礎と階層操作',
+    title: '第2課：見出しと折りたたみ（TAB と S-TAB）',
+    diagramTitle: '図解2：アスタリスク（*）による階層と折りたたみサイクル',
+    diagram: `<pre>
+<span class="hl-gold">* 第1章：企画立案</span>          ← レベル1（* 1個）
+<span class="hl-green">** ターゲット調査</span>        ← レベル2（* 2個）
+<span class="hl-blue">*** アンケート集計</span>       ← レベル3（* 3個）
+    ここに本文テキストを書く。
+
+【見出しの上で TAB を押すたび循環】
+  <span class="hl-warn">FOLDED（折りたたみ）</span> ──▶ <span class="hl-green">CHILDREN（直下の子のみ）</span> ──▶ <span class="hl-blue">SUBTREE（全展開）</span>
+  ※ 画面全体の見出しを一括で開閉したい時は <span class="hl-gold">S-TAB（Shift + TAB）</span>！
+</pre>`,
+    body: `Org-mode の基本骨格は「アスタリスク <code>*</code> と半角スペース」で作る見出し（Heading）じゃ。
+<code>* 大見出し</code>、<code>** 中見出し</code>、<code>*** 小見出し</code> のように、星の数がそのまま階層の深さになる。Markdown の <code>#</code> と同じ役割じゃな。
+
+そして見出し行にカーソルを置いて <code>TAB</code> キーを押してみよ！
+「折りたたみ → 直下の子見出しだけ表示 → すべて展開」の3状態が気持ちよく切り替わる。
+
+さらにファイル全体の見出しを一気にたたんだり開いたりしたい時は <code>S-TAB</code>（Shift + TAB）じゃ。何千行もある巨大メモでも、一瞬で全体像を見渡せるぞ！`,
+    supplement: `補足：Doom Emacs（evil-mode）では、ノーマルモードで見出し行にカーソルを置いて <code>TAB</code> を押すだけで開閉できるぞ。
+「今どの章を書いているか迷子になる」という悩みは、<code>S-TAB</code> 一発で解決じゃ！`,
+    quiz: {
+      question: 'バッファ全体のすべての見出し階層を一括で折りたたんだり展開したりするキーはどれか？',
+      options: [
+        'S-TAB（Shift + TAB）',
+        'Ctrl + c Ctrl + c',
+        'SPC q q'
+      ],
+      answer: 0,
+      explanation: '見事！単一の見出し開閉は TAB、ファイル全体の見出し一括開閉は S-TAB と覚えよう。'
+    }
+  },
+  {
+    id: 3,
+    stage: '第1章：基礎と階層操作',
+    title: '第3課：爆速アウトライン編集（M-RET と M-矢印）',
+    diagramTitle: '図解3：Meta（Alt/Option）キーを使った構造編集',
+    diagram: `<pre>
+  <span class="hl-gold">M-RET</span>（Alt + Enter）  : 同じ階層の新しい見出しを挿入
+
+  <span class="hl-green">M-← / M-→</span>           : 見出しの階層レベルを昇格 / 降格（* を増減）
+  <span class="hl-blue">M-↑ / M-↓</span>           : 見出しブロックごと上下に移動（中身も一緒に動く！）
+
+  <span class="hl-warn">M-S-← / M-S-→</span>       : 子見出し（サブツリー）も道連れにして昇格 / 降格
+</pre>`,
+    body: `文章の構成を練るとき、コピペで段落を入れ替えるのは面倒じゃろう？Org-mode では <code>M-</code>（Metaキー：Windows/Linuxなら Alt、Macなら Option）が魔法の杖になる。
+
+まず、新しい見出しを足したい時は <code>M-RET</code>（Alt + Enter）。現在の見出しと同じ星の数の見出しが即座に生まれる。
+
+さらに凄いのが <code>M-矢印キー</code> じゃ！
+・<code>M-←</code> / <code>M-→</code>：見出しの階層（<code>*</code> の数）を上げ下げする。
+・<code>M-↑</code> / <code>M-↓</code>：見出しとその配下の本文を<strong>まるごと</strong>上下に入れ替える！
+
+思考の順番が変わっても、<code>M-↑</code> と <code>M-↓</code> を連打するだけで章立てが自由自在に組み替わるのじゃ。`,
+    supplement: `補足：Doom Emacs の Evil モードでは、ノーマルモード中に <code>gh</code> / <code>gl</code>（階層変更）や <code>gk</code> / <code>gj</code>（見出し間移動）などの便利バインドも用意されておるが、まずは標準の <code>M-RET</code> と <code>M-矢印</code> を指に覚えさせるのが一番確実じゃ！`,
+    quiz: {
+      question: '現在の見出しを「配下の本文や子見出しごと」上の見出しと丸ごと入れ替えるキー操作はどれか？',
+      options: [
+        'M-↑（Alt + 上矢印）',
+        'TAB',
+        'SPC b d'
+      ],
+      answer: 0,
+      explanation: 'その通り！M-↑ / M-↓ を使えば、カット＆ペーストなしで章や節を丸ごと移動できるぞ。'
+    }
+  },
+  {
+    id: 4,
+    stage: '第1章：基礎と階層操作',
+    title: '第4課：リスト・チェックボックス・リンクの基本',
+    diagramTitle: '図解4：見出しの中で使う構造化パーツ',
+    diagram: `<pre>
+* 買い物と調査リスト [1/3]     ← <span class="hl-gold">[/] と書くと完了数を自動計算！</span>
+  - [X] 牛乳を買う             ← <span class="hl-green">C-c C-c で [ ] と [X] をトグル</span>
+  - [ ] 卵を買う               ← <span class="hl-blue">M-S-RET で新しいチェックボックス追加</span>
+  - [ ] 参考リンクを見る：
+        <span class="hl-purple">[[https://orgmode.org][Org公式サイト]]</span>  ← <span class="hl-warn">RET で開く / SPC m l l で作成</span>
+</pre>`,
+    body: `見出しの配下には、箇条書きリストやチェックボックス、リンクを自由に配置できる。
+
+・箇条書きは行頭に <code>- </code> を書く。次の項目は <code>M-RET</code> で増やせるぞ。
+・<code>- [ ] タスク</code> のように角括弧を入れるとチェックボックスになる。チェックのON/OFFは <code>C-c C-c</code>（またはノーマルモードで <code>RET</code>）じゃ！
+・さらに親見出しの末尾に <code>[/]</code> や <code>[%]</code> と書いておくと、チェックを入れるたびに <code>[1/3]</code> や <code>[33%]</code> と進捗率を自動更新してくれる。
+
+リンクは <code>[[URLまたはファイルパス][表示名]]</code> という書式じゃ。Doom Emacs では <code>SPC m l l</code>（または <code>C-c C-l</code>）で対話的にリンクを作成し、リンク上で <code>RET</code> を押せばブラウザや別ファイルへジャンプできるぞ！`,
+    supplement: `補足：Doom Emacs では Org-mode 専用のコマンド群が <code>SPC m</code>（ローカルリーダー）に集約されておる。<code>SPC m</code> を押して少し待つと、画面下にコマンド一覧（which-key）が出るので迷ったら押してみるがよい！`,
+    quiz: {
+      question: 'チェックボックス `- [ ]` の完了・未完了を切り替える標準キーバインドはどれか？',
+      options: [
+        'C-c C-c',
+        'S-TAB',
+        'M-←'
+      ],
+      answer: 0,
+      explanation: '正解！C-c C-c は Org-mode における「コンテキストに応じた実行・切り替え万能キー」じゃ。'
+    }
+  },
+  {
+    id: 5,
+    stage: '第2章：タスク管理と状態',
+    title: '第5課：見出しをタスクに変える（TODO キーワード）',
+    diagramTitle: '図解5：見出しがそのままタスク管理ボードになる',
+    diagram: `<pre>
+  <span class="hl-blue">* 企画書を作成する</span>
+          │
+          ▼  <span class="hl-gold">S-→ / S-←</span> または <span class="hl-gold">SPC m t</span>
+  <span class="hl-red">* TODO 企画書を作成する</span>      ← 未着手・進行中タスク
+          │
+          ▼  <span class="hl-gold">S-→ / S-←</span> または <span class="hl-gold">SPC m t</span>
+  <span class="hl-green">* DONE 企画書を作成する</span>      ← 完了タスク！
+    <span class="hl-warn">CLOSED: [2026-11-28 Sat 11:50]</span>  ← 完了日時が自動記録されることも
+</pre>`,
+    body: `ここから第2章、タスク管理の極意じゃ！
+Org-mode では、専用アプリのように「タスク登録画面」を開く必要はない。<strong>さっき作った「見出し」の先頭に <code>TODO</code> と書くだけ</strong>で、その見出しがタスクに変わるのじゃ！
+
+見出し行にカーソルを置いて、<code>S-→</code>（Shift + 右矢印）または Doom の <code>SPC m t</code> を押してみよ。
+普通の見出し → <code>TODO</code> → <code>DONE</code> → なし、と状態が切り替わる。
+
+Doom Emacs の初期設定では、<code>TODO</code>、<code>PROJ</code>（プロジェクト）、<code>STRT</code>（着手中）、<code>WAIT</code>（待機中）、<code>HOLD</code>（保留）、<code>DONE</code>、<code>KILL</code>（中止）など多彩な状態が最初から使えるようになっておるぞ！`,
+    supplement: `補足：Todo見出しを新しく作りたい時は <code>M-S-RET</code>（Alt + Shift + Enter）を押すと、最初から <code>* TODO </code> の形で新しい見出しが挿入されるぞ。爆速じゃ！`,
+    quiz: {
+      question: '既存の見出しを TODO や DONE に切り替える操作として正しいものはどれか？',
+      options: [
+        'S-→（Shift + 右矢印）または SPC m t',
+        'SPC f s',
+        'S-TAB'
+      ],
+      answer: 0,
+      explanation: 'その通り！Doom Emacs では SPC m t を押すと状態一覧から直接選ぶこともできて非常に便利じゃ。'
+    }
+  },
+  {
+    id: 6,
+    stage: '第2章：タスク管理と状態',
+    title: '第6課：優先度（Priority）と進捗トラッキング',
+    diagramTitle: '図解6：優先度ラベルと親タスクの自動集計',
+    diagram: `<pre>
+* PROJ 新規Webサイト公開 <span class="hl-gold">[1/3]</span>      ← 子タスクの完了数を自動集計
+** <span class="hl-red">TODO [#A]</span> サーバー契約をする      ← 最高優先度 [#A]
+** <span class="hl-warn">TODO [#B]</span> デザイン案をレビュー    ← 標準優先度 [#B]
+** <span class="hl-blue">TODO [#C]</span> 旧ページのアーカイブ    ← 低優先度   [#C]
+** <span class="hl-green">DONE [#A]</span> ドメインを取得する
+
+  【優先度の変更】見出し上で <span class="hl-gold">S-↑ / S-↓</span> または <span class="hl-gold">SPC m p</span>
+</pre>`,
+    body: `タスクが増えてきたら「どれから手をつけるべきか」の優先度をつけよう。
+Org-mode では見出しの中に <code>[#A]</code>・<code>[#B]</code>・<code>[#C]</code> というタグを入れることで優先度を表現する。
+
+操作は直感的じゃ。見出し行で <code>S-↑</code>（Shift + 上矢印）や <code>S-↓</code> を押すか、<code>SPC m p</code> を押せば優先度が切り替わる。
+
+さらに、親見出し（プロジェクト見出し）のタイトルに <code>[/]</code> や <code>[%]</code> を入れておくと、配下の <code>TODO</code> が <code>DONE</code> に変わるたびに親の進捗率が自動で更新される。サブタスクを潰す快感がクセになるぞ！`,
+    supplement: `補足：<code>S-↑</code> / <code>S-↓</code> はカーソルがタイムスタンプ（日付）の上にある時は「日付の増減」として働き、それ以外の見出し上では「優先度の変更」として働く賢い設計になっておるぞ。`,
+    quiz: {
+      question: '親見出しの配下にある子タスク（TODO/DONE）の完了割合をパーセントで自動表示させたい場合、親見出しに何と書けばよいか？',
+      options: [
+        '[%]',
+        '[#A]',
+        '[TODO]'
+      ],
+      answer: 0,
+      explanation: '正解！[%] を書けば [50%] のようにパーセントで、[/] を書けば [2/4] のように分数で自動計算されるぞ。'
+    }
+  },
+  {
+    id: 7,
+    stage: '第2章：タスク管理と状態',
+    title: '第7課：タグ（Tags）による横断分類と絞り込み',
+    diagramTitle: '図解7：階層を超えた横断検索を可能にするタグ',
+    diagram: `<pre>
+* TODO 経費精算書を提出する                  <span class="hl-gold">:office:urgent:</span>
+* TODO 牛乳とコーヒー豆を買う                <span class="hl-green">:errand:</span>
+* TODO Doom Emacsの設定を見直す            <span class="hl-blue">:emacs:home:</span>
+
+  ・タグ付与：<span class="hl-gold">SPC m q</span>（または <span class="hl-gold">C-c C-q</span>）
+  ・タグ検索：<span class="hl-warn">SPC m / m</span>（または <span class="hl-warn">C-c / m</span>）で一致見出しだけ抽出！
+  ※ 親見出しにタグを付けると、子見出しにも自動で継承（Inherit）される！
+</pre>`,
+    body: `フォルダや見出し階層は「1つの場所にしか置けない」という弱点がある。それを補うのが見出しの右端につける「タグ」じゃ！
+書式は <code>:tag1:tag2:</code> のようにコロンで挟む。
+
+タグを付ける時は、見出し行で <code>SPC m q</code>（または <code>C-c C-q</code>）を押す。するとすでにファイル内で使われているタグ候補が補完されるので、表記ゆれも防げるのじゃ。
+
+しかも Org-mode のタグには<strong>「継承（Inheritance）」</strong>という強力な性質がある。親見出しに <code>:work:</code> と付けておけば、その下にあるすべてのタスクも自動的に <code>:work:</code> タグ持ちとして検索できるのじゃ！`,
+    supplement: `補足：ファイル内の特定のタグだけを一覧表示したい時は <code>C-c / m</code>（スパースツリー検索）を押してタグ名を入力してみよ。該当する見出しのツリーだけが浮かび上がり、他が自動で折りたたまれるぞ！`,
+    quiz: {
+      question: '見出しにタグを対話的に付与・編集するキーバインドはどれか？',
+      options: [
+        'SPC m q（または C-c C-q）',
+        'M-RET',
+        'S-TAB'
+      ],
+      answer: 0,
+      explanation: '大正解！q は Query / Tag の覚え方じゃ。ファイル内の既存タグが候補に出るので素早く付けられるぞ。'
+    }
+  },
+  {
+    id: 8,
+    stage: '第2章：タスク管理と状態',
+    title: '第8課：プロパティ（Properties）とドロワーでメタ情報管理',
+    diagramTitle: '図解8：普段は折りたたんで隠せるメタデータ領域（ドロワー）',
+    diagram: `<pre>
+* TODO 技術書『Mastering Emacs』を読む
+  <span class="hl-purple">:PROPERTIES:</span>          ← <span class="hl-gold">TAB で開閉可能！普段は1行に折りたたまれる</span>
+  <span class="hl-blue">:AUTHOR:</span>   Mickey Petersen
+  <span class="hl-blue">:URL:</span>      https://www.masteringemacs.org/
+  <span class="hl-blue">:EFFORT:</span>   4:00
+  <span class="hl-purple">:END:</span>
+
+  ・プロパティ追加：<span class="hl-gold">SPC m o</span>（または <span class="hl-gold">C-c C-x p</span>）
+</pre>`,
+    body: `タスクやメモに「URL」「担当者」「見積もり時間（Effort）」「書籍の著者」などの定型メタデータを記録したい時、本文にダラダラ書くと見づらくなる。
+そんな時は <code>:PROPERTIES:</code> 〜 <code>:END:</code> という「ドロワー（引き出し）」を使うのじゃ！
+
+見出しの直下に <code>:KEY: VALUE</code> の形式でデータを格納でき、<code>:PROPERTIES:</code> の行で <code>TAB</code> を押せば普段はピタッと閉じて視界の邪魔をしない。
+
+プロパティを追加したい時は <code>SPC m o</code>（または <code>C-c C-x p</code>）を押すだけ。プロパティ名と値を入力すれば、正しい書式で自動挿入してくれるぞ。`,
+    supplement: `補足：<code>:EFFORT: 1:30</code> のように見積もり時間をプロパティに入れておくと、後で学ぶ「Agenda画面」で見積もり時間の合計を集計することもできるのじゃ！`,
+    quiz: {
+      question: '`:PROPERTIES:` から `:END:` までのメタデータ領域を普段隠しておくために折りたたむキーはどれか？',
+      options: [
+        '`:PROPERTIES:` の行で TAB を押す',
+        'SPC f d を押す',
+        'M-↓ を押す'
+      ],
+      answer: 0,
+      explanation: 'その通り！見出しと同じく、ドロワーも TAB キーひとつで開閉できるのじゃ。'
+    }
+  },
+  {
+    id: 9,
+    stage: '第3章：時間管理とAgenda',
+    title: '第9課：日付・SCHEDULED（着手日）・DEADLINE（締切）',
+    diagramTitle: '図解9：2種類の予定日を使い分けてパンクを防ぐ',
+    diagram: `<pre>
+* TODO 四半期レポートを提出する
+  <span class="hl-green">SCHEDULED: &lt;2026-11-30 Mon&gt;</span>  <span class="hl-red">DEADLINE: &lt;2026-12-04 Fri&gt;</span>
+
+  ・<span class="hl-green">SCHEDULED（SPC m d s / C-c C-s）</span>：
+    「この日に作業を始める・取り組む」予定日。当日になるとAgendaに登場！
+  ・<span class="hl-red">DEADLINE （SPC m d d / C-c C-d）</span>：
+    「この日までに絶対終わらせる」締切日。数日前から警告カウントダウン開始！
+</pre>`,
+    body: `第3章は Org-mode 最大の武器「時間管理と Agenda」じゃ！
+タスク管理で失敗する一番の原因は、「締切日（Deadline）」と「作業する日（Scheduled）」をごっちゃにすることじゃ。Org-mode はこの2つを明確に分けて管理する。
+
+・<strong>SCHEDULED</strong>（<code>SPC m d s</code> または <code>C-c C-s</code>）：「いつ作業に取りかかるか」の着手予定日。
+・<strong>DEADLINE</strong>（<code>SPC m d d</code> または <code>C-c C-d</code>）：「いつまでに完了すべきか」の最終締切日。
+
+コマンドを押すとミニバッファにカレンダーが開くので、<code>+3d</code>（3日後）や <code>fri</code>（次の金曜）、あるいは <code>S-矢印</code> で日付を選んで <code>Enter</code> を押すだけ！
+さらに <code>&lt;2026-11-30 Mon +1w&gt;</code> のように <code>+1w</code> を付ければ「毎週繰り返す定期タスク」にもなるぞ！`,
+    supplement: `補足：定期タスク（<code>+1w</code> や <code>+1d</code> が付いたタスク）を <code>DONE</code> にすると、完了ログを残しつつ自動的に来週・翌日の <code>TODO</code> へと日付が繰り上がるのじゃ。習慣トラッカーとしても最強じゃぞ！`,
+    quiz: {
+      question: '「締切はまだ先だが、月曜日に作業を開始する予定」を設定したい時に使うコマンドはどれか？',
+      options: [
+        'SCHEDULED（SPC m d s / C-c C-s）',
+        'DEADLINE（SPC m d d / C-c C-d）',
+        'CLOSED'
+      ],
+      answer: 0,
+      explanation: '完璧じゃ！着手予定日は SCHEDULED、最終期限は DEADLINE と使い分けることで、締切直前に慌てなくなるぞ。'
+    }
+  },
+  {
+    id: 10,
+    stage: '第3章：時間管理とAgenda',
+    title: '第10課：Org Agenda で全ファイルの予定を1画面に集約',
+    diagramTitle: '図解10：複数の .org ファイルから今日の予定を自動生成',
+    diagram: `<pre>
+  ~/org/work.org   ──┐
+  ~/org/home.org   ──┼──▶ <span class="hl-gold">SPC o A</span>（Org Agenda）──▶ <span class="hl-green">【今週の予定＆全TODO一覧】</span>
+  ~/org/study.org  ──┘                               ・今日やるべきタスク
+                                                     ・締切まであと3日の警告
+                                                     ・未完了TODOの横断リスト
+</pre>`,
+    body: `仕事用、プライベート用、学習用と <code>.org</code> ファイルが複数に分かれていても心配いらん。それらを串刺しにして「今日やるべきこと」を1画面に自動集計してくれる司令塔が <strong>Org Agenda</strong> じゃ！
+
+Doom Emacs では <code>SPC o A</code>（または <code>SPC n a</code>）でアジェンダメニューが開く。
+・<code>a</code> を押すと「今週のカレンダービュー（Daily/Weekly Agenda）」
+・<code>t</code> を押すと「すべてのファイルの未完了 TODO 一覧」が表示される。
+
+しかも、アジェンダ画面はただの閲覧画面ではない！アジェンダ上のタスク行で <code>t</code> を押せばその場で <code>DONE</code> にできるし、<code>RET</code> を押せば元の <code>.org</code> ファイルの該当行へ一瞬でジャンプできるのじゃ！`,
+    supplement: `補足：Doom Emacs の初期設定では <code>org-agenda-files</code> に <code>~/org/</code> ディレクトリが指定されておる。つまり <code>~/org/</code> 以下に置いた <code>.org</code> ファイルは、何も設定しなくても自動的に Agenda の集計対象になるぞ！`,
+    quiz: {
+      question: 'Doom Emacs で Org Agenda のメニューを開く標準キーバインドはどれか？',
+      options: [
+        'SPC o A（または SPC n a）',
+        'SPC f r',
+        'C-c C-c'
+      ],
+      answer: 0,
+      explanation: 'その通り！SPC o は Open（開く）のプレフィックス、A は Agenda じゃ。毎朝まずこれを叩く習慣をつけよう！'
+    }
+  },
+  {
+    id: 11,
+    stage: '第3章：時間管理とAgenda',
+    title: '第11課：Org Capture で思考を0.5秒でメモに放り込む',
+    diagramTitle: '図解11：作業中の画面を閉じずに即メモするポップアップ機構',
+    diagram: `<pre>
+  【コーディング中 / 調査中】
+          │
+          ▼  <span class="hl-gold">SPC X</span>（Org Capture 起動！）
+  ┌───────────────────────────────────────┐
+  │ ポップアップウィンドウが開く          │
+  │  [t] Todo    → ~/org/todo.org へ追記  │
+  │  [n] Note    → ~/org/notes.org へ追記 │
+  │  [j] Journal → 日記ファイルへ日時付記 │
+  └───────────────────────────────────────┘
+          │
+          ▼  書き終えたら <span class="hl-green">C-c C-c</span> で確定保存＆元の画面へ復帰！
+</pre>`,
+    body: `作業中にふと「あ、牛乳買わなきゃ」「このバグ後で直そう」と思いついた時、わざわざファイルを探して開いていたら集中力が切れてしまう。
+そこで使うのが <strong>Org Capture</strong> じゃ！
+
+Doom Emacs ではどこにいても <code>SPC X</code>（大文字の X）を押すだけで、画面下部に小さなキャプチャ用ウィンドウがポップアップする。
+テンプレート（<code>t</code> でTodo、<code>n</code> でメモなど）を選んでサッと書き、<code>C-c C-c</code> を押せば、裏側で所定の <code>.org</code> ファイルへ自動的に追記してウィンドウを閉じ、元の作業へ瞬時に戻してくれる！
+
+逆に「やっぱりメモをやめる」という時は <code>C-c C-k</code> で破棄できるぞ。`,
+    supplement: `補足：<code>SPC X</code> は Emacs のどこにいても使えるグローバルな緊急メモボタンじゃ。vterm で作業中でも、コードを書いている最中でも、思いついたら即 <code>SPC X</code> → 入力 → <code>C-c C-c</code> じゃ！`,
+    quiz: {
+      question: 'Org Capture のポップアップ画面でメモを書き終えた後、内容を保存して元の作業画面に戻るキーはどれか？',
+      options: [
+        'C-c C-c',
+        'C-c C-k',
+        'S-TAB'
+      ],
+      answer: 0,
+      explanation: '正解！C-c C-c で確定・保存、C-c C-k でキャンセル（破棄）じゃ。この2つはセットで覚えよう！'
+    }
+  },
+  {
+    id: 12,
+    stage: '第3章：時間管理とAgenda',
+    title: '第12課：タイムトラッキング（Clocking）で作業時間を実測',
+    diagramTitle: '図解12：見出しごとにストップウォッチを回して実績記録',
+    diagram: `<pre>
+* STRT API設計書を書く
+  <span class="hl-purple">:LOGBOOK:</span>
+  <span class="hl-green">CLOCK: [2026-11-28 Sat 10:00]--[2026-11-28 Sat 11:15] =>  1:15</span>
+  <span class="hl-purple">:END:</span>
+
+  ・計測開始（Clock In） ：<span class="hl-gold">SPC m c i</span>（または <span class="hl-gold">C-c C-x C-i</span>）
+  ・計測終了（Clock Out）：<span class="hl-warn">SPC m c o</span>（または <span class="hl-warn">C-c C-x C-o</span>）
+  ・作業時間テーブル生成 ：<span class="hl-blue">C-c C-x C-r</span>（Clock Table）
+</pre>`,
+    body: `「この作業、実際どれくらい時間がかかったんだろう？」を正確に測りたいなら、Org-mode 内蔵のタイムトラッキング（Clocking）の出番じゃ！
+
+タスクの見出しにカーソルを置いて <code>SPC m c i</code>（Clock In）を押すと、モードライン（画面下のバー）に現在のタスク名と経過時間が表示され、タイマーが回り始める。
+作業が終わったら <code>SPC m c o</code>（Clock Out）を押す。すると開始時刻・終了時刻・合計時間が <code>:LOGBOOK:</code> ドロワー内に自動記録されるのじゃ！
+
+しかも、別のタスクで新しく <code>SPC m c i</code> を押せば、前のタスクは自動的に Clock Out してくれる賢さじゃ。月末には <code>C-c C-x C-r</code> で作業時間の集計表（Clock Table）も一発生成できるぞ！`,
+    supplement: `補足：もし Clock Out を押し忘れて席を離れてしまっても、記録された <code>CLOCK: [時刻]--[時刻]</code> の数字を直接テキストとして書き換え、その行で <code>C-c C-c</code> を押せば合計時間（<code>=> 1:15</code>）が自動再計算されるぞ！`,
+    quiz: {
+      question: '現在カーソルがあるタスクの作業時間計測を開始（Clock In）する Doom Emacs のキーはどれか？',
+      options: [
+        'SPC m c i',
+        'SPC m c o',
+        'SPC X'
+      ],
+      answer: 0,
+      explanation: '見事！c は Clock、i は In、o は Out の頭文字じゃ。シンプルで覚えやすいじゃろう！'
+    }
+  },
+  {
+    id: 13,
+    stage: '第4章：文書作成と知識整理',
+    title: '第13課：爆速テーブル（表）作成と自動計算機能',
+    diagramTitle: '図解13：パイプ（|）と TAB だけで整列・計算する表エディタ',
+    diagram: `<pre>
+  | 項目名     | 単価 | 個数 | 小計 |
+  |------------+------+------+------|
+  | 抹茶ラテ   |  500 |    2 | 1000 |
+  | 団子セット |  350 |    3 | 1050 |
+  <span class="hl-purple">#+TBLFM: $4=$2*$3</span>   ← <span class="hl-gold">C-c C-c で全行の計算を一括実行！</span>
+
+  ・<span class="hl-green">TAB</span>：次のセルへ移動しつつ、列幅を自動整形！
+  ・<span class="hl-blue">|-</span> と打って <span class="hl-green">TAB</span>：横の区切り線を自動生成！
+</pre>`,
+    body: `第4章は、文書作成とエンジニア向け機能の真骨頂じゃ！
+Markdown で表（テーブル）を作ると縦線がガタガタになってイライラすることがあるが、Org-mode のテーブル機能は次元が違う。
+
+まず <code>| 項目 | 単価 | 個数 |</code> と書いて <code>TAB</code> を押してみよ。次のセルへ移動すると同時に、<strong>全列の縦棒 <code>|</code> の位置がピシッと自動整形される</strong>のじゃ！
+2行目に <code>|-</code> と打って <code>TAB</code> を押せば、きれいな区切り線 <code>|---+---|</code> が引かれる。
+
+さらに <code>M-矢印</code> で行や列を丸ごと入れ替えたり、表の下に <code>#+TBLFM: $4=$2*$3</code> のような数式（Table Formula）を書いて <code>C-c C-c</code> を押せば、簡易スプレッドシートのように計算までこなすのじゃ！`,
+    supplement: `補足：表の最後のセルで <code>TAB</code> を押すと、自動的に新しい空行が下に追加されるぞ。キーボードから一切手を離さずに表がどんどん作れる快感を味わうがよい！`,
+    quiz: {
+      question: 'Org-mode の表の中で次のセルへ移動すると同時に、すべての縦線の幅を自動整列させるキーはどれか？',
+      options: [
+        'TAB',
+        'SPC m q',
+        'C-c C-s'
+      ],
+      answer: 0,
+      explanation: 'その通り！Org-mode のテーブルは TAB を押すたびに美しく整形されるため、崩れるストレスがゼロじゃ！'
+    }
+  },
+  {
+    id: 14,
+    stage: '第4章：文書作成と知識整理',
+    title: '第14課：Org Babel（文書内でコードを直接実行する）',
+    diagramTitle: '図解14：ソースコードブロックと実行結果の埋め込み',
+    diagram: `<pre>
+  <span class="hl-blue">#+begin_src python</span> :results output
+  items = ["Org", "Doom", "Emacs"]
+  print(" + ".join(items))
+  <span class="hl-blue">#+end_src</span>
+
+        │  ブロック内で <span class="hl-gold">C-c C-c</span> を押す！
+        ▼
+  <span class="hl-green">#+RESULTS:</span>
+  <span class="hl-green">: Org + Doom + Emacs</span>
+</pre>`,
+    body: `エンジニアや研究者にとって Org-mode が手放せなくなる最大の理由が <strong>Org Babel</strong> じゃ！
+文書の中に <code>#+begin_src 言語名</code> 〜 <code>#+end_src</code> でコードブロックを書き、その中で <code>C-c C-c</code> を押すと、<strong>Emacs がその場でコードを実行し、直下に <code>#+RESULTS:</code> として実行結果を自動挿入してくれる</strong>のじゃ！
+
+Python、Shell（bash）、JavaScript、SQL、Elisp など数十種類の言語に対応しておる。
+手順書や調査メモにコマンドと実行結果をそのまま残せる「文芸的プログラミング（Literate Programming）」環境が標準搭載されておるのじゃ！`,
+    supplement: `補足：コードブロックを素早く挿入したい時は、Doom Emacs の <code>SPC i s</code>（スニペット挿入）を使うか、<code>&lt;s</code> と打って <code>TAB</code>（または <code>C-c C-,</code>）を押すとテンプレートが一発で展開されるぞ！`,
+    quiz: {
+      question: '`#+begin_src` で囲まれたコードブロックにカーソルを置いて、その場でコードを実行し結果を出力するキーはどれか？',
+      options: [
+        'C-c C-c',
+        'S-TAB',
+        'SPC X'
+      ],
+      answer: 0,
+      explanation: '大正解！またしても C-c C-c じゃ。チェックボックス、表の再計算、そしてコード実行もすべて C-c C-c が受け止めるのじゃ！'
+    }
+  },
+  {
+    id: 15,
+    stage: '第4章：文書作成と知識整理',
+    title: '第15課：エクスポート（HTML / Markdown / PDF への変換）',
+    diagramTitle: '図解15：1つの .org ソースからあらゆる配布形式へ出力',
+    diagram: `<pre>
+                      ┌──▶ <span class="hl-gold">[h o] HTMLファイル生成＆ブラウザ表示</span>
+                      │
+  <span class="hl-green">report.org</span> ──▶ <span class="hl-blue">SPC m e</span> ┼──▶ <span class="hl-blue">[m m] Markdown (.md) へ変換</span>
+  （マスター原稿）    │
+                      └──▶ <span class="hl-purple">[l p] LaTeX経由で美しいPDF出力</span>
+</pre>`,
+    body: `自分用のメモとして書いた <code>.org</code> ファイルを、チームメンバーやクライアントに共有したくなったら「エクスポート（Export）」機能の出番じゃ！
+
+Doom Emacs では <code>SPC m e</code>（または <code>C-c C-e</code>）を押すと、エクスポート専用メニューが画面下に現れる。
+・<code>h o</code>：綺麗なCSS付きのHTMLに変換して、そのままブラウザで開く
+・<code>m m</code>：GitHub 等で使える Markdown ファイルに変換する
+・<code>l p</code>：LaTeX を経由して本格的な PDF ドキュメントを生成する
+
+元の <code>.org</code> ファイルは一切汚さず、用途に合わせて好きなフォーマットへ何度でも出力できるのじゃ！`,
+    supplement: `補足：ファイルの先頭に <code>#+TITLE: タイトル名</code> や <code>#+AUTHOR: 名前</code>、<code>#+OPTIONS: toc:2</code>（目次をレベル2まで自動生成）などを書いておくと、HTMLやPDF出力時に立派な表紙や目次が自動で作られるぞ！`,
+    quiz: {
+      question: '編集中の Org ファイルを HTML や Markdown、PDF などに変換出力するためのメニューを開くキーはどれか？',
+      options: [
+        'SPC m e（または C-c C-e）',
+        'SPC m t',
+        'SPC o A'
+      ],
+      answer: 0,
+      explanation: 'その通り！e は Export の e じゃ。まずは SPC m e のあとに h o を押してHTMLプレビューを試してみるがよい！'
+    }
+  },
+  {
+    id: 16,
+    stage: '第4章：文書作成と知識整理',
+    title: '第16課：日常運用の型と知識ネットワーク（Org-roam入門）',
+    diagramTitle: '図解16：毎日のサイクルと知識の網の目（Zettelkasten）',
+    diagram: `<pre>
+  【日常の基本ルーティン】
+   朝  ：<span class="hl-gold">SPC o A</span> で今日の予定と締切を確認
+   日中：<span class="hl-green">SPC X</span> で思いつき・タスクを即キャプチャ
+   作業：<span class="hl-blue">TAB / M-矢印</span> で思考整理、必要に応じて <span class="hl-warn">C-c C-c</span> でコード実行
+   夕方：<span class="hl-purple">SPC m t</span> で完了タスクを DONE にし、残りを翌日へリスケ
+
+  【さらに先の世界：Org-roam（+roam2 フラグ）】
+   [[id:xxxx][ノートA]] ◀──双方向リンク──▶ [[id:yyyy][ノートB]]
+   1テーマ1ファイルの小さなメモを網の目のように繋ぐ「第二の脳」へ！
+</pre>`,
+    body: `ついに最終第16課じゃ！ここまで修めたお主なら、もう Org-mode の基礎は完全に身についたと言える。
+
+最初からすべての機能を使おうとする必要はない。まずは以下の<strong>「最小ルーティン」</strong>だけ回してみよ。
+1. <code>~/org/todo.org</code> と <code>~/org/notes.org</code> の2つだけ用意する
+2. 朝 <code>SPC o A</code> でアジェンダを見る
+3. 思いついたら <code>SPC X</code> で放り込む
+
+そしてさらに知識を網の目のように繋げたくなったら、Doom Emacs の <code>init.el</code> で <code>(org +roam2)</code> を有効にして <strong>Org-roam</strong> の世界へ踏み出すがよい。ノート同士を双方向リンクで結ぶ「Zettelkasten（知識のネットワーク）」が構築できるぞ。
+
+さあ、最後の試練を突破して免許皆伝じゃ！`,
+    supplement: `補足：設定をカスタマイズしたくなったら <code>SPC f p</code>（Doom の設定ディレクトリ <code>~/.config/doom/</code> を開く）から <code>config.el</code> に <code>(setq org-directory "~/org/")</code> などを書けばよい。道具は育ててこそ自分の手足になるのじゃ！`,
+    quiz: {
+      question: 'Org-mode を日常に定着させるための最も現実的で推奨される始め方はどれか？',
+      options: [
+        '最初から全機能と複雑な設定を完璧に組んでから使い始める',
+        'まず少数の .org ファイルで、朝の Agenda 確認（SPC o A）と即メモ（SPC X）の基本サイクルから始める',
+        '毎回 .org ファイルを破棄して新規作成し直す'
+      ],
+      answer: 1,
+      explanation: '免許皆伝じゃ！！小さな基本サイクルを毎日回しながら、必要に応じて機能を増やしていくのが Org-mode 長続きの秘訣じゃ！'
+    }
+  }
+];
+
+// ============================================================
+// 4. App State & LocalStorage Persistence
+// ============================================================
+const STORAGE_KEY = 'doom_org_dojo_progress_v1';
+let state = {
+  screen: 'title', // 'title' | 'select' | 'lesson'
+  currentLessonId: 1,
+  completed: [], // array of lesson IDs
+  ttsEnabled: false,
+  quizVisible: false,
+  suppVisible: false,
+  typingDone: false
+};
+
+let typingTimer = null;
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed.completed)) {
+        state.completed = parsed.completed;
+      }
+    }
+  } catch (e) {}
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      completed: state.completed
+    }));
+    showToast('💾 保存しました');
+  } catch (e) {}
+  updateStatusBar();
+}
+
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => el.classList.remove('show'), 1400);
+}
+
+// ============================================================
+// 5. Speech Synthesis (TTS)
+// ============================================================
+function stripHtml(html) {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || '';
+}
+
+function speakText(text) {
+  if (!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'ja-JP';
+  utter.rate = 1.08;
+  window.speechSynthesis.speak(utter);
+}
+
+function stopSpeech() {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
+}
+
+// ============================================================
+// 6. UI Rendering
+// ============================================================
+function updateStatusBar() {
+  const count = state.completed.length;
+  document.getElementById('done-count').textContent = count;
+  document.getElementById('progress-fill').style.width = `${(count / LESSONS.length) * 100}%`;
+
+  const locEl = document.getElementById('current-loc');
+  if (state.screen === 'title') {
+    locEl.textContent = '現在：タイトル';
+  } else if (state.screen === 'select') {
+    locEl.textContent = '現在：レベル選択';
+  } else {
+    const lesson = LESSONS.find(l => l.id === state.currentLessonId);
+    locEl.textContent = `現在：第${lesson.id}課 / 全16課`;
+  }
+}
+
+function renderTitle() {
+  stopTyping();
+  state.screen = 'title';
+  updateStatusBar();
+
+  const main = document.getElementById('main-stage');
+  main.innerHTML = `
+    <div class="adv-stage">
+      <div class="character-box">
+        <canvas id="master-canvas" class="pixel-canvas" width="16" height="16"></canvas>
+        <div class="char-name">Org仙人</div>
+        <div class="char-mood">「階層と時間の理を説こう」</div>
+      </div>
+      <div class="diagram-box">
+        <div class="diagram-title">📜 修行の全体マップ（全4章・16課）</div>
+        <div class="diagram-content">
+<pre>
+  <span class="hl-gold">第1章：基礎と階層操作</span>   (1〜4課)  ── プレーンテキスト・TAB開閉・M-矢印
+  <span class="hl-green">第2章：タスク管理と状態</span> (5〜8課)  ── TODO/DONE・優先度・タグ・ドロワー
+  <span class="hl-blue">第3章：時間管理とAgenda</span> (9〜12課) ── SCHEDULED/DEADLINE・Agenda・Capture
+  <span class="hl-purple">第4章：文書作成と知識</span>   (13〜16課)── 表計算・Babelコード実行・Export・Roam
+</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="dialogue-window" style="cursor: default;">
+      <h2># Doom Emacs Org-mode 修行道場</h2>
+      <div class="dialogue-text">Org仙人のもとで、アウトライン作成・タスク管理・スケジュール統合・文書生成を Doom Emacs の Org-mode で1から身につける実践道場じゃ。
+基礎と階層操作・タスク管理・時間管理とAgenda・文書作成と知識整理、各4課ずつ全16課。
+主役はプレーンテキストの <code>.org</code> ファイル。「分かった！」で次へ、「分からない」で何度でもやり直しじゃ。
+
+<strong>遊び方：</strong>
+説明を読んだら「これは分かった！」か「分からない」を選ぶだけ。分かったら確認問題が1問出て、正解でその課は理解済み ✔ になる。
+間違えてもペナルティなし、補足説明を読んで何度でも挑めるぞ。本文クリックで文字送りスキップ、長い文は自動スクロール＋手動スクロール可じゃ。
+キーはすべて Doom Emacs の既定（<code>evil-mode</code>、<code>:lang org</code> 前提）。実際に Doom を開いて <code>~/org/test.org</code> を作り、読みながら指を動かすと一番効くぞ！</div>
+    </div>
+
+    <div class="action-area">
+      <div class="action-group">
+        <button id="btn-enter-dojo" class="btn-8bit btn-primary">▶ 道場に入る</button>
+        <button id="btn-continue-dojo" class="btn-8bit">📖 続きから学ぶ</button>
+      </div>
+      <div style="font-size: 0.82rem; color: var(--muted);">進捗（理解済み ✔）はブラウザに自動保存されます</div>
+    </div>
+  `;
+
+  drawMasterPixelArt(document.getElementById('master-canvas'), 'normal');
+
+  document.getElementById('btn-enter-dojo').onclick = () => {
+    SoundFX.click();
+    renderSelect();
+  };
+
+  document.getElementById('btn-continue-dojo').onclick = () => {
+    SoundFX.click();
+    const nextUnfinished = LESSONS.find(l => !state.completed.includes(l.id)) || LESSONS[0];
+    renderLesson(nextUnfinished.id);
+  };
+}
+
+function renderSelect() {
+  stopTyping();
+  state.screen = 'select';
+  updateStatusBar();
+
+  const main = document.getElementById('main-stage');
+  let stagesHtml = '<div class="level-grid">';
+
+  for (const st of STAGES) {
+    stagesHtml += `<div class="stage-card"><h3>${st.title}</h3><div class="lesson-list">`;
+    for (const lid of st.lessons) {
+      const lesson = LESSONS.find(l => l.id === lid);
+      const isDone = state.completed.includes(lid);
+      stagesHtml += `
+        <button class="lesson-btn ${isDone ? 'done' : ''}" data-lid="${lid}">
+          <span>${lesson.title.replace(/^第\d+課：/, `第${lid}課 `)}</span>
+          <span class="badge-done">${isDone ? '✔' : '▶'}</span>
+        </button>
+      `;
+    }
+    stagesHtml += '</div></div>';
+  }
+  stagesHtml += '</div>';
+
+  main.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+      <h2 style="color:var(--gold); font-size:1.05rem;">🏯 修行コース選択（全16課）</h2>
+      <button id="btn-back-title" class="btn-8bit">◀ タイトルへ戻る</button>
+    </div>
+    ${stagesHtml}
+  `;
+
+  document.getElementById('btn-back-title').onclick = () => {
+    SoundFX.click();
+    renderTitle();
+  };
+
+  main.querySelectorAll('.lesson-btn').forEach(btn => {
+    btn.onclick = () => {
+      SoundFX.click();
+      const lid = Number(btn.getAttribute('data-lid'));
+      renderLesson(lid);
+    };
+  });
+}
+
+function stopTyping() {
+  if (typingTimer) {
+    clearInterval(typingTimer);
+    typingTimer = null;
+  }
+}
+
+function renderLesson(lessonId) {
+  stopTyping();
+  stopSpeech();
+
+  state.screen = 'lesson';
+  state.currentLessonId = lessonId;
+  state.quizVisible = false;
+  state.suppVisible = false;
+  state.typingDone = false;
+  updateStatusBar();
+
+  const lesson = LESSONS.find(l => l.id === lessonId);
+  const isDone = state.completed.includes(lessonId);
+
+  const main = document.getElementById('main-stage');
+  main.innerHTML = `
+    <div class="adv-stage">
+      <div class="character-box">
+        <canvas id="master-canvas" class="pixel-canvas" width="16" height="16"></canvas>
+        <div class="char-name">Org仙人</div>
+        <div id="char-mood" class="char-mood">${isDone ? '「免許皆伝済みじゃ！」' : '「よく聞くのじゃ」'}</div>
+      </div>
+      <div class="diagram-box">
+        <div class="diagram-title">${lesson.diagramTitle}</div>
+        <div class="diagram-content">${lesson.diagram}</div>
+      </div>
+    </div>
+
+    <div id="dialogue-win" class="dialogue-window" title="クリックで全文を即表示">
+      <h2>${lesson.title} ${isDone ? '<span style="color:var(--accent); font-size:0.85rem;">[理解済み ✔]</span>' : ''}</h2>
+      <div id="dialogue-body" class="dialogue-text"></div>
+    </div>
+
+    <div class="action-area">
+      <div class="action-group">
+        <button id="btn-understood" class="btn-8bit btn-primary">✔ これは分かった！</button>
+        <button id="btn-not-understood" class="btn-8bit btn-warn">❓ 分からない（補足を見る）</button>
+      </div>
+      <div class="action-group">
+        <button id="btn-prev" class="btn-8bit" ${lessonId <= 1 ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>◀ 前の課</button>
+        <button id="btn-next" class="btn-8bit" ${lessonId >= LESSONS.length ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>次の課 ▶</button>
+      </div>
+    </div>
+
+    <div id="supp-box" class="supp-box">
+      <div class="supp-title">💡 Org仙人の補足解説</div>
+      <div>${lesson.supplement}</div>
+    </div>
+
+    <div id="quiz-box" class="quiz-box">
+      <div class="quiz-title">⚔ 確認問題（正解で第${lesson.id}課クリア！）</div>
+      <div class="quiz-q">${lesson.quiz.question}</div>
+      <div id="quiz-options" class="quiz-options"></div>
+      <div id="quiz-feedback" class="quiz-feedback"></div>
+    </div>
+  `;
+
+  const canvas = document.getElementById('master-canvas');
+  drawMasterPixelArt(canvas, isDone ? 'happy' : 'normal');
+
+  // Typewriter effect
+  const dialogueWin = document.getElementById('dialogue-win');
+  const bodyEl = document.getElementById('dialogue-body');
+  const fullHtml = lesson.body;
+
+  // Tokenize HTML so tags are appended intact during typing
+  const tokens = fullHtml.match(/(<[^>]+>|[^<])/g) || [];
+  let idx = 0;
+  let rendered = '';
+
+  function finishTyping() {
+    stopTyping();
+    state.typingDone = true;
+    bodyEl.innerHTML = fullHtml + '<span class="cursor-blink">▼</span>';
+  }
+
+  typingTimer = setInterval(() => {
+    if (idx >= tokens.length) {
+      finishTyping();
+      return;
+    }
+    const tok = tokens[idx++];
+    rendered += tok;
+    if (!tok.startsWith('<')) {
+      if (idx % 3 === 0) SoundFX.blip();
+    }
+    bodyEl.innerHTML = rendered + '<span class="cursor-blink">▼</span>';
+    dialogueWin.scrollTop = dialogueWin.scrollHeight;
+  }, 16);
+
+  dialogueWin.onclick = () => {
+    if (!state.typingDone) {
+      finishTyping();
+    }
+  };
+
+  if (state.ttsEnabled) {
+    speakText(lesson.title + '。' + stripHtml(lesson.body));
+  }
+
+  // Buttons
+  document.getElementById('btn-understood').onclick = () => {
+    if (!state.typingDone) finishTyping();
+    SoundFX.click();
+    showQuiz(lesson);
+  };
+
+  document.getElementById('btn-not-understood').onclick = () => {
+    if (!state.typingDone) finishTyping();
+    SoundFX.hint();
+    drawMasterPixelArt(canvas, 'think');
+    document.getElementById('char-mood').textContent = '「噛み砕いて説明しよう」';
+    const suppBox = document.getElementById('supp-box');
+    suppBox.classList.add('visible');
+    suppBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  };
+
+  if (lessonId > 1) {
+    document.getElementById('btn-prev').onclick = () => {
+      SoundFX.click();
+      renderLesson(lessonId - 1);
+    };
+  }
+
+  if (lessonId < LESSONS.length) {
+    document.getElementById('btn-next').onclick = () => {
+      SoundFX.click();
+      renderLesson(lessonId + 1);
+    };
+  }
+}
+
+function showQuiz(lesson) {
+  const quizBox = document.getElementById('quiz-box');
+  const optsEl = document.getElementById('quiz-options');
+  const fbEl = document.getElementById('quiz-feedback');
+  const canvas = document.getElementById('master-canvas');
+
+  quizBox.classList.add('visible');
+  fbEl.className = 'quiz-feedback';
+  fbEl.innerHTML = '';
+  optsEl.innerHTML = '';
+
+  lesson.quiz.options.forEach((optText, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'quiz-opt';
+    btn.textContent = `${idx + 1}. ${optText}`;
+    btn.onclick = () => {
+      if (idx === lesson.quiz.answer) {
+        SoundFX.correct();
+        drawMasterPixelArt(canvas, 'happy');
+        document.getElementById('char-mood').textContent = '「見事じゃ！合格！」';
+
+        if (!state.completed.includes(lesson.id)) {
+          state.completed.push(lesson.id);
+          saveState();
+        }
+
+        const nextBtnHtml = lesson.id < LESSONS.length
+          ? `<div style="margin-top:10px;"><button id="btn-quiz-next" class="btn-8bit btn-primary">次の第${lesson.id + 1}課へ進む ▶</button></div>`
+          : `<div style="margin-top:10px;"><button id="btn-quiz-finish" class="btn-8bit btn-primary">🎉 全16課制覇！レベル選択へ</button></div>`;
+
+        fbEl.className = 'quiz-feedback ok';
+        fbEl.innerHTML = `✔ ${lesson.quiz.explanation}${nextBtnHtml}`;
+
+        const qNext = document.getElementById('btn-quiz-next');
+        if (qNext) {
+          qNext.onclick = () => {
+            SoundFX.click();
+            renderLesson(lesson.id + 1);
+          };
+        }
+        const qFin = document.getElementById('btn-quiz-finish');
+        if (qFin) {
+          qFin.onclick = () => {
+            SoundFX.click();
+            renderSelect();
+          };
+        }
+      } else {
+        SoundFX.wrong();
+        drawMasterPixelArt(canvas, 'think');
+        document.getElementById('char-mood').textContent = '「むむ、もう一息じゃ！」';
+        fbEl.className = 'quiz-feedback ng';
+        fbEl.innerHTML = `✖ 惜しい！もう一度上の説明や「分からない（補足を見る）」を確認して再挑戦じゃ！`;
+        document.getElementById('supp-box').classList.add('visible');
+      }
+    };
+    optsEl.appendChild(btn);
+  });
+
+  quizBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ============================================================
+// 7. Extra Tools (Listening Transcript & Diagram Cheat Sheet)
+// ============================================================
+function buildExtraPanels() {
+  const transcriptPanel = document.getElementById('transcript-panel');
+  const reviewPanel = document.getElementById('review-panel');
+
+  transcriptPanel.innerHTML = LESSONS.map(l => `
+    <div class="transcript-item">
+      <h4>${l.title}</h4>
+      <p>${stripHtml(l.body)}</p>
+      <p style="color:var(--warn); margin-top:4px;">${stripHtml(l.supplement)}</p>
+    </div>
+  `).join('');
+
+  reviewPanel.innerHTML = LESSONS.map(l => `
+    <div class="review-card">
+      <h4>第${l.id}課：${l.diagramTitle}</h4>
+      ${l.diagram}
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// 8. Global Controls Initialization
+// ============================================================
+document.getElementById('btn-sound').onclick = function () {
+  const on = SoundFX.toggle();
+  this.textContent = on ? '🔊 音ON' : '🔇 音OFF';
+  this.classList.toggle('active', on);
+  if (on) SoundFX.click();
+};
+
+document.getElementById('btn-tts').onclick = function () {
+  state.ttsEnabled = !state.ttsEnabled;
+  this.textContent = state.ttsEnabled ? '🗣 読上ON' : '🗣 読上OFF';
+  this.classList.toggle('active', state.ttsEnabled);
+  if (!state.ttsEnabled) stopSpeech();
+  SoundFX.click();
+};
+
+document.getElementById('btn-home').onclick = () => {
+  SoundFX.click();
+  stopSpeech();
+  renderSelect();
+};
+
+document.getElementById('btn-reset').onclick = () => {
+  if (confirm('学習の進捗（理解済み ✔）をすべてリセットしますか？')) {
+    state.completed = [];
+    saveState();
+    SoundFX.wrong();
+    if (state.screen === 'select') renderSelect();
+    else if (state.screen === 'lesson') renderLesson(state.currentLessonId);
+    else renderTitle();
+  }
+};
+
+document.getElementById('btn-play-all').onclick = () => {
+  SoundFX.click();
+  const fullScript = LESSONS.map(l => `${l.title}。${stripHtml(l.body)}`).join('
+');
+  speakText(fullScript);
+  showToast('🎧 全レッスン読み上げを開始しました');
+};
+
+document.getElementById('btn-stop-all').onclick = () => {
+  SoundFX.click();
+  stopSpeech();
+};
+
+document.getElementById('btn-toggle-transcript').onclick = () => {
+  SoundFX.click();
+  document.getElementById('transcript-panel').classList.toggle('visible');
+};
+
+document.getElementById('btn-toggle-diagrams').onclick = function () {
+  SoundFX.click();
+  const panel = document.getElementById('review-panel');
+  const visible = panel.classList.toggle('visible');
+  this.textContent = visible ? '🖼 図解一覧（復習用）を隠す' : '🖼 図解一覧（復習用）を表示';
+};
+
+// Boot
+loadState();
+buildExtraPanels();
+renderTitle();
+</script>
+</body>
+</html>
